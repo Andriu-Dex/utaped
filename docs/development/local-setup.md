@@ -34,3 +34,5 @@ En backend: `./mvnw spring-boot:run` o `./mvnw.cmd spring-boot:run` en Windows. 
 - E2E: scripts/test-e2e.ps1 genera .env.e2e local e inicia proyecto utaped-e2e separado, instala Chromium y ejecuta frontend/tests/e2e. Puertos 18080, 15433, 18025 y 15173. Los datos E2E son ficticios, pueden conservarse entre ejecuciones; el script borra solo contadores de intentos de esa DB de pruebas.
 
 No hay envío hacia buzones reales en pruebas: Mailpit captura SMTP. SMTP institucional todavía debe configurarse para publicación.
+
+AUDIT_EXPORT_MAX_ROWS limita filas de CSV administrativo (10000 por defecto, ajuste válido 1–100000). Superar el límite exige refinar filtros; no hay truncamiento silencioso. Notificaciones internas se consultan por sesión y no usan SMTP. No se habilita correo/push de avisos ni firma/revisión institucional por esta configuración.

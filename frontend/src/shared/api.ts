@@ -2,6 +2,11 @@ export class ApiError extends Error {
   status: number
   constructor(message: string, status: number) { super(message); this.status = status }
 }
+export async function download(path: string, filename: string) {
+  const response = await fetch('/api' + path, { credentials: 'same-origin' })
+  if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const error = await response.json().catch(() => ({ message: 'No se pudo descargar el archivo.' })); throw new ApiError(error.message, response.status) }
+  const url = URL.createObjectURL(await response.blob()); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 let csrf: { headerName: string; token: string } | undefined
 export async function refreshCsrf() {
   const response = await fetch('/api/auth/csrf', { credentials: 'same-origin' })

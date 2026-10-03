@@ -26,3 +26,6 @@ Documentación en español para revisión institucional; identificadores técnic
 - [Configuración versionada de flujos](api/workflow-configuration.md).
 - [Directorio y perfiles](api/administrative-directory.md).
 - [Auditoría e historial](api/audit-history.md).
+
+- [Seguimiento personal](api/tracking.md).
+- [Notificaciones internas](api/notifications.md).

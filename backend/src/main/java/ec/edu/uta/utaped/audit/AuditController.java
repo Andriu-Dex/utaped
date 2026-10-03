@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.*;
 
 @RestController
 @Validated
@@ -13,6 +14,13 @@ public class AuditController {
     private final AuditQueryService service;
     public AuditController(AuditQueryService service) { this.service=service; }
     @GetMapping("/api/admin/audit-events/actions") public List<String> actions(Principal p) { return service.actions(p.getName()); }
+    @GetMapping("/api/admin/audit-events/export") public ResponseEntity<byte[]> export(Principal p,
+        @RequestParam(defaultValue="") @Size(max=80) String action,@RequestParam(required=false) UUID actorId,@RequestParam(required=false) UUID targetId,
+        @RequestParam(required=false) OffsetDateTime from,@RequestParam(required=false) OffsetDateTime to) {
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+            .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"utaped-auditoria.csv\"").cacheControl(CacheControl.noStore().cachePrivate())
+            .body(service.export(p.getName(),action,actorId,targetId,from,to));
+    }
     @GetMapping("/api/admin/audit-events") public AuditQueryService.Page administration(Principal p,
         @RequestParam(defaultValue="") @Size(max=80) String action,@RequestParam(required=false) UUID actorId,@RequestParam(required=false) UUID targetId,
         @RequestParam(required=false) OffsetDateTime from,@RequestParam(required=false) OffsetDateTime to,
