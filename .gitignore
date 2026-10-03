@@ -25,3 +25,14 @@ Thumbs.db
 /backups/
 # Frozen prototype stays outside this repository
 /Prototipos/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Private key stores and Python caches
+*.pem
+*.p8
+*.jks
+*.keystore
+__pycache__/
+*.py[cod]

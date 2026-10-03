@@ -2,7 +2,7 @@
 
 ## Scope and sources
 
-This repository builds the modular production application for academic document management at FISEI / UTA. Current phase: documentation and design.
+This repository builds the modular production application for academic document management at FISEI / UTA. Current phase: production foundation and incremental module delivery.
 
 The frozen mockup is external at `C:\Documentos\Documentos\Universidad UTA\Ingenieria De Software\Semestre 7\Gestion de Proyectos\Proyecto\Prototipos`. Do not modify it or import DEMO persistence, credentials or simulated signatures as production mechanisms.
 
@@ -22,7 +22,7 @@ Preserve the general conventions below. Spanish stakeholder documentation and UI
 
 Update implementation-status.md for delivered functionality. Create new reports in docs/reports and update the index; never restore deleted reports. Report only checks actually performed. Do not commit, push, deploy or publish unless authorized by the task.
 
-Select stack versions, migrations and providers through documented decisions. Inherited model names are not verified availability. No production framework has been bootstrapped.
+Stack decision: docs/architecture/adr/0001-production-foundation.md. Frontend: React/TypeScript/Vite; backend: Java 21/Spring Boot; DB: PostgreSQL/Flyway. Local credentials, server-side JDBC sessions and CSRF are mandatory. No tokens or passwords in browser storage. Run frontend lint/build and isolated PostgreSQL integration tests for affected logic; Playwright for affected flows. Preserve independent feature branches and PRs to develop; main is reserved for completed releases. Inherited AI model names are not verified availability.
 
 ---
 

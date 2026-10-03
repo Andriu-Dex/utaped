@@ -31,7 +31,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-002",
@@ -41,7 +42,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-003",
@@ -51,7 +53,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-004",
@@ -61,7 +64,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-005",
@@ -71,7 +75,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-001",
@@ -81,7 +86,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-002",
@@ -91,7 +97,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-003",
@@ -101,7 +108,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-004",
@@ -131,7 +139,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-001",
@@ -141,7 +150,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-002",
@@ -151,7 +161,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-003",
@@ -161,7 +172,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "UT-SEC-006",
@@ -1221,7 +1233,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     }
   ]
 }
