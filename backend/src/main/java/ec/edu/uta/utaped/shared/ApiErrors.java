@@ -17,6 +17,7 @@ public class ApiErrors {
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class,
+        jakarta.validation.ConstraintViolationException.class,
         org.springframework.http.converter.HttpMessageNotReadableException.class})
     ResponseEntity<Map<String, String>> invalid(Exception error) {
         return ResponseEntity.badRequest().body(Map.of("message", "Revise los campos y sus formatos."));

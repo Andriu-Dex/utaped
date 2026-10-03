@@ -203,7 +203,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: identidad, grupo y periodo; datos institucionales manuales",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-002",
@@ -233,7 +234,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: fecha civil al crear borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-005",
@@ -253,7 +255,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-CONT-002",
@@ -263,7 +266,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-CONT-003",
