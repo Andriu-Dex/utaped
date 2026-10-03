@@ -3,6 +3,7 @@ import { Access, ChangePassword } from './identity/Access'
 import { Administration } from './institution/Administration'
 import { WorkPlans } from './planning/WorkPlans'
 import { TrackingDashboard } from './planning/TrackingDashboard'
+import { Notifications, NotificationIndicator, type NotificationTarget } from './notifications/Notifications'
 import { api, ApiError, refreshCsrf, type Account, type Group, type Member, type Period } from './shared/api'
 import './App.css'
 
@@ -14,8 +15,9 @@ export default function App() {
   const [selected,setSelected] = useState(''); const [members,setMembers] = useState<Member[]>([])
   const [draftDirty,setDraftDirty] = useState(false)
   const [documentTarget,setDocumentTarget] = useState<string | null>(null)
-  function navigate(next: 'home'|'admin'|'password'|'documents', targetDocId: string | null = null) { if (next === view) return; if (!draftDirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) { setDraftDirty(false); setDocumentTarget(targetDocId); setView(next) } }
-  const [view,setView] = useState<'home'|'admin'|'password'|'documents'>('home')
+  function navigate(next: 'home'|'admin'|'password'|'documents'|'notifications', targetDocId: string | null = null) { if (next === view) return; if (!draftDirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) { setDraftDirty(false); setDocumentTarget(targetDocId); setView(next) } }
+  const [view,setView] = useState<'home'|'admin'|'password'|'documents'|'notifications'>('home')
+  async function openNotification(target: NotificationTarget) { if (target.type === 'WORK_PLAN') navigate('documents', target.id); else { await load(); setSelected(target.id); navigate('home') } }
   useEffect(() => {
     const expired = () => { setAccount(null); setSelected(''); setView('home'); setError('Su sesión expiró. Ingrese nuevamente.'); refreshCsrf().catch(() => {}) }
     window.addEventListener('session-expired', expired)
@@ -47,8 +49,8 @@ export default function App() {
   return <div className="shell"><header><div><strong>UTAPED</strong><span>Gestión Documental Académica</span></div><div><span>{account.displayName}</span><button className="secondary" onClick={logout}>Cerrar sesión</button></div></header>
     <main>{error && <p className="error" role="alert">{error}</p>}
     {account.mustChangePassword ? <ChangePassword temporary onComplete={() => { setAccount(null); setView('home') }} /> : <>
-      <nav aria-label="Navegación principal"><button aria-current={view === 'home' ? 'page' : undefined} onClick={() => navigate('home')}>Inicio</button><button aria-current={view === 'documents' ? 'page' : undefined} onClick={() => navigate('documents')}>Documentos</button>{account.systemRole === 'ADMIN' && <button aria-current={view === 'admin' ? 'page' : undefined} onClick={() => navigate('admin')}>Administración</button>}<button aria-current={view === 'password' ? 'page' : undefined} onClick={() => navigate('password')}>Mi contraseña</button></nav>
-      {view === 'documents' ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={() => {setAccount(null);setView('home')}} /> : view === 'admin' ? <Administration onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : <>
+      <nav aria-label="Navegación principal"><button aria-current={view === 'home' ? 'page' : undefined} onClick={() => navigate('home')}>Inicio</button><button aria-current={view === 'documents' ? 'page' : undefined} onClick={() => navigate('documents')}>Documentos</button>{account.systemRole === 'ADMIN' && <button aria-current={view === 'admin' ? 'page' : undefined} onClick={() => navigate('admin')}>Administración</button>}<NotificationIndicator onOpen={() => navigate('notifications')} /><button aria-current={view === 'password' ? 'page' : undefined} onClick={() => navigate('password')}>Mi contraseña</button></nav>
+      {view === 'notifications' ? <Notifications onOpen={openNotification} /> : view === 'documents' ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={() => {setAccount(null);setView('home')}} /> : view === 'admin' ? <Administration onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : <>
         <h1>Bienvenido, {account.displayName}</h1><p>Seleccione un grupo. Su identidad se conserva al cambiar de contexto.</p>
         <TrackingDashboard onOpen={id => navigate('documents', id)} />
         <section className="card"><h2>Grupos institucionales</h2>{groups.length === 0 ? <p>No tiene grupos disponibles.</p> : <label>Contexto de grupo<select aria-label="Contexto de grupo" value={selected} onChange={e => setSelected(e.target.value)}><option value="">Seleccione un grupo</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>}

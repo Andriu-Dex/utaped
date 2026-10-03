@@ -64,12 +64,12 @@ public class InstitutionController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un grupo activo.");
         if (jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active",Integer.class,data.userId())==0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un usuario activo.");
-        jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT(user_id,group_id) DO UPDATE SET membership_role=excluded.membership_role",data.userId(),id,data.membershipRole());
-        audit.record(actor.id(),"MEMBERSHIP_ASSIGNED",id,data.userId());
+        int changed=jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT(user_id,group_id) DO UPDATE SET membership_role=excluded.membership_role WHERE membership.membership_role IS DISTINCT FROM excluded.membership_role",data.userId(),id,data.membershipRole());
+        if(changed>0) audit.record(actor.id(),"MEMBERSHIP_ASSIGNED",id,data.userId());
     }
     @DeleteMapping("/admin/groups/{id}/members/{userId}") @Transactional public void removeMember(@PathVariable UUID id,@PathVariable UUID userId,Principal principal) {
-        jdbc.update("DELETE FROM membership WHERE group_id=? AND user_id=?",id,userId);
-        audit.record(accounts.current(principal.getName()).id(),"MEMBERSHIP_REMOVED",id,userId);
+        int changed=jdbc.update("DELETE FROM membership WHERE group_id=? AND user_id=?",id,userId);
+        if(changed>0) audit.record(accounts.current(principal.getName()).id(),"MEMBERSHIP_REMOVED",id,userId);
     }
     @GetMapping("/periods") public List<Map<String,Object>> periods() {
         var periods=jdbc.queryForList("SELECT * FROM academic_period ORDER BY starts_on DESC");
