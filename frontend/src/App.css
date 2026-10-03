@@ -14,3 +14,13 @@ dt { font-weight: 600; } dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 h1, h2, li { overflow-wrap: anywhere; }
 .document-page { display: block; max-width: 100%; height: auto; margin: 1.5rem auto; border: 1px solid #c7d3de; }
 .danger { background: #a72d34; color: white; }
+.audit-id { overflow-wrap: anywhere; font-size: .8rem; }
+small.audit-id { display: block; }
+.history-table { table-layout: fixed; } .history-table td { overflow-wrap: anywhere; }
+@media (max-width:600px) {
+  .history-table thead { display: none; }
+  .history-table tbody, .history-table tr { display: block; }
+  .history-table tr { padding: .75rem 0; border-bottom: 1px solid #dbe4ed; }
+  .history-table td { display: grid; grid-template-columns: 6rem minmax(0,1fr); gap: .5rem; padding: .4rem 0; border: 0; }
+  .history-table td::before { content: attr(data-label); font-weight: 600; }
+}

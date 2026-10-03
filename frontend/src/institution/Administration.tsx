@@ -3,6 +3,7 @@ import { api, type Group, type User, type Member } from '../shared/api'
 import { PlanningAdministration } from '../planning/PlanningAdministration'
 import { WorkflowAdministration } from '../workflow/WorkflowAdministration'
 import { DirectoryAdministration } from './DirectoryAdministration'
+import { AuditViewer } from '../audit/AuditViewer'
 
 export function Administration({ onChange, onDirtyChange }: { onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -53,5 +54,6 @@ export function Administration({ onChange, onDirtyChange }: { onChange: () => Pr
     <DirectoryAdministration groups={groups} reload={reload} suggestedQuery={directoryQuery} onChange={async () => { await load(); await onChange() }} onDirtyChange={setProfileDirty} />
     <PlanningAdministration groups={groups} />
     <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />
+    <AuditViewer />
   </section>
 }

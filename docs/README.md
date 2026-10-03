@@ -22,3 +22,7 @@
 - [Reconciliación](validation/reconciliation.md), [permisos](validation/permission-matrix.md) y [validación](validation/validation-plan.md).
 
 Documentación en español para revisión institucional; identificadores técnicos en inglés.
+
+- [Configuración versionada de flujos](api/workflow-configuration.md).
+- [Directorio y perfiles](api/administrative-directory.md).
+- [Auditoría e historial](api/audit-history.md).

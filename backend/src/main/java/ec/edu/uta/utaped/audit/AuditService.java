@@ -12,6 +12,6 @@ public class AuditService {
         record(actor,action,target,null);
     }
     public void record(UUID actor,String action,UUID target,UUID subjectUser) {
-        jdbc.update("INSERT INTO audit_event(id, actor_id, action, target_id, subject_user_id) VALUES (?, ?, ?, ?, ?)", UUID.randomUUID(), actor, action, target,subjectUser);
+        jdbc.update("INSERT INTO audit_event(id, actor_id, action, target_id, subject_user_id, actor_display_name) VALUES (?, ?, ?, ?, ?, (SELECT display_name FROM app_user WHERE id=?))", UUID.randomUUID(), actor, action, target,subjectUser,actor);
     }
 }

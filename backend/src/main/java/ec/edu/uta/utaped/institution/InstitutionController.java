@@ -29,7 +29,7 @@ public class InstitutionController {
     @GetMapping("/groups") public List<Map<String,Object>> groups(Principal principal) {
         var actor=accounts.current(principal.getName());
         return jdbc.queryForList("""
-            SELECT g.id,g.name,g.group_type,g.active,g.collective_label,m.membership_role
+            SELECT g.id,g.name,g.group_type,g.active,g.collective_label,g.row_version,m.membership_role
             FROM institutional_group g LEFT JOIN membership m ON m.group_id=g.id AND m.user_id=?
             WHERE g.active AND (? OR m.user_id IS NOT NULL) ORDER BY g.name
             """,actor.id(),actor.systemRole().equals("ADMIN"));
@@ -41,7 +41,7 @@ public class InstitutionController {
         return jdbc.queryForList("SELECT u.id,u.display_name,m.membership_role FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name",id);
     }
     public record GroupInput(@NotBlank @Size(max=160) String name,@NotBlank @Pattern(regexp="COMMISSION|UNIT|CLUB|OTHER") String groupType) {}
-    @GetMapping("/admin/groups") public List<Map<String,Object>> adminGroups() { return jdbc.queryForList("SELECT id,name,group_type,active,collective_label,row_version FROM institutional_group ORDER BY name,id"); }
+    @GetMapping("/admin/groups") public List<Map<String,Object>> adminGroups() { return jdbc.queryForList("SELECT id,name,group_type,active,collective_label,row_version,NULL::varchar AS membership_role FROM institutional_group ORDER BY name,id"); }
     public record GroupUpdate(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=160) String name,
         @NotBlank @Pattern(regexp="COMMISSION|UNIT|CLUB|OTHER") String groupType,@NotNull Boolean active) {}
     @PutMapping("/admin/groups/{id}") @Transactional public void updateGroup(@PathVariable UUID id,@Valid @RequestBody GroupUpdate data,Principal principal) {

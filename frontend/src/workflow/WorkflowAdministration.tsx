@@ -9,9 +9,10 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
   const [draft, setDraft] = useState<Definition>({ name: '', stages: [] }); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [revision, setRevision] = useState<Revision | null>(null)
   const [search, setSearch] = useState(''); const [page, setPage] = useState(0); const [options, setOptions] = useState<{ items: User[]; total: number }>({ items: [], total: 0 })
-  const [known, setKnown] = useState<Record<string, User>>({})
-  useEffect(() => { setKnown(previous => ({ ...previous, ...Object.fromEntries(users.map(u => [u.id, u])) })) }, [users])
-  useEffect(() => { if (suggestedQuery) { setSearch(suggestedQuery); setPage(0) } }, [suggestedQuery])
+  const [cachedUsers, setKnown] = useState<Record<string, User>>({})
+  const known = { ...cachedUsers, ...Object.fromEntries(users.map(u => [u.id, u])) }
+  const [previousSuggestion, setPreviousSuggestion] = useState(suggestedQuery)
+  if (previousSuggestion !== suggestedQuery) { setPreviousSuggestion(suggestedQuery); setSearch(suggestedQuery); setPage(0) }
   useEffect(() => { let active = true; if (group) api<{ items: User[]; total: number }>('/admin/users/directory?' + new URLSearchParams({ query: search, page: String(page), size: '20', active: 'true' })).then(data => { if (active) { setOptions(data); setKnown(previous => ({ ...previous, ...Object.fromEntries(data.items.map(u => [u.id, u])) })) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [search, page, group])
   const path = '/admin/groups/' + group + '/workflows/' + type
   const dirty = state !== null && JSON.stringify(draft) !== JSON.stringify(state.draft)
