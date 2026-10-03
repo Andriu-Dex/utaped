@@ -549,7 +549,7 @@ Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción:
 
 ## UT-SEC-017
 
-Fuente: §17 — NOTA DE DATOS PERSONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §17 — NOTA DE DATOS PERSONALES. Estado: HEREDADO. Producción: PARCIAL: CONDICIÓN EXPLÍCITA EN BORRADOR.
 
 La plantilla institucional contempla una nota de protección de datos personales.
 
@@ -561,7 +561,7 @@ La condición debe ser explícita/configurable.
 
 ## FR-ANX-001
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El docente selecciona:
 
@@ -570,7 +570,7 @@ El docente selecciona:
 
 ## FR-ANX-002
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Si selecciona Sí:
 
@@ -581,7 +581,7 @@ Si selecciona Sí:
 
 ## FR-ANX-003
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 La numeración será automática:
 
@@ -591,25 +591,25 @@ La numeración será automática:
 
 ## FR-ANX-004
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Eliminar un anexo reordena la secuencia.
 
 ## FR-ANX-005
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Anexos del documento no son evidencias de actividades.
 
 ## UT-SEC-019
 
-Fuente: §19 — PREVISUALIZACIÓN T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §19 — PREVISUALIZACIÓN T1. Estado: HEREDADO. Producción: PARCIAL: PREVISUALIZACIÓN T1; ACEPTACIÓN INSTITUCIONAL PENDIENTE.
 
 El documento debe representar fielmente el formato oficial.
 
 ## UT-SEC-020
 
-Fuente: §20 — ENCABEZADO T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §20 — ENCABEZADO T1. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe contener:
 
@@ -624,7 +624,7 @@ La estructura exacta debe seguir el formato institucional de referencia.
 
 ## UT-SEC-021
 
-Fuente: §21 — PORTADA T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §21 — PORTADA T1. Estado: HEREDADO. Producción: PARCIAL: PORTADA T1; CAMPOS INSTITUCIONALES MANUALES.
 
 La composición central debe respetar el formato institucional real.
 
@@ -644,7 +644,7 @@ El bloque principal debe quedar aproximadamente en la zona media vertical del A4
 
 ## UT-SEC-022
 
-Fuente: §22 — PIE DE PÁGINA T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §22 — PIE DE PÁGINA T1. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe mostrarse en una única fila visual.
 
@@ -660,7 +660,7 @@ No agregar doble línea superior si el formato original utiliza una.
 
 ## UT-SEC-023
 
-Fuente: §23 — ÍNDICES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §23 — ÍNDICES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El T1 debe generar automáticamente:
 
@@ -673,7 +673,7 @@ La numeración debe derivarse de las páginas reales.
 
 ## UT-SEC-024
 
-Fuente: §24 — FIRMAS T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §24 — FIRMAS T1. Estado: HEREDADO. Producción: PARCIAL: ELABORADOR; FLUJO Y FIRMA PENDIENTES.
 
 Sección:
 
@@ -697,7 +697,7 @@ Debe derivarse del flujo real configurado.
 
 ## UT-SEC-025
 
-Fuente: §25 — HISTORIAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §25 — HISTORIAL. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Título exacto:
 

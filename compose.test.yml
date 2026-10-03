@@ -14,7 +14,9 @@ services:
   mail:
     image: axllent/mailpit:v1.31.1
   tests:
-    image: maven:3.9-eclipse-temurin-21
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
     working_dir: /app
     volumes:
       - ./backend:/app
@@ -26,6 +28,7 @@ services:
       COOKIE_SECURE: "false"
       SMTP_HOST: mail
       TEST_MAIL_URL: http://mail:8025
+      DOCUMENT_STORAGE_ROOT: /tmp/utaped-test-documents
     command: [mvn, -B, -q, test]
     depends_on:
       db:

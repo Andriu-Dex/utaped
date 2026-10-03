@@ -15,10 +15,10 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     headers[csrf!.headerName] = csrf!.token
   }
   const form = body instanceof URLSearchParams
-  if (body) headers['Content-Type'] = form ? 'application/x-www-form-urlencoded' : 'application/json'
+  if (body && !(body instanceof FormData)) headers['Content-Type'] = form ? 'application/x-www-form-urlencoded' : 'application/json'
   const response = await fetch('/api' + path, {
     method, credentials: 'same-origin', headers,
-    body: body ? form ? body.toString() : JSON.stringify(body) : undefined,
+    body: body instanceof FormData ? body : body ? form ? body.toString() : JSON.stringify(body) : undefined,
   })
   if (!response.ok) {
     if (response.status === 401 && !['/auth/me', '/auth/login'].includes(path)) window.dispatchEvent(new Event('session-expired'))

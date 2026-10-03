@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-03. Base fusionada mediante PR #1 y borradores T1 mediante PR #2 (merge 49a71bf). Entrega actual en feature/work-plan-activities desde develop; pendiente de commit/publicación.
+Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1, #2 y #3 fusionados; último merge b24b531. Entrega actual en feature/t1-document-preparation desde develop; publicación autorizada hacia develop para revisión del propietario.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -16,7 +16,9 @@ Inicio: 2026-10-02. Actualización: 2026-10-03. Base fusionada mediante PR #1 y 
 | Borradores T1 | Primera entrega parcial implementada | Creación, información general, justificación/objetivo, lista filtrada/paginada, persistencia, aislamiento y concurrencia. |
 | Actividades y matriz T1 | Primera entrega implementada | Catálogos por grupo, obligatorias/opcionales/Otra, fechas, responsables múltiples/colectivos, recursos/medios, fuente, resumen y persistencia atómica. |
 | Catálogos y feriados | Administración inicial implementada | Altas, edición/desactivación de actividades/recursos/medios; denominación colectiva; feriados y restricción configurable por período. |
-| T1 completo/T2, firma, revisión, evidencias | Pendientes en producto | Anexos y artefactos oficiales aún no entregados; mockup no cuenta como entrega productiva. |
+| Anexos T1 | Implementados en alcance inicial | PDFs privados, sí/no, metadata, orden, etiquetas automáticas, baja lógica y concurrencia. |
+| Preparación/previsualización T1 | Implementada en alcance inicial | Plantilla DOCX oficial, páginas T1 A4, matriz horizontal, índices reales, snapshot/PDF inmutables y visor paginado. |
+| T1 completo/T2, firma, revisión, evidencias | Pendientes en producto | Preparación T1 no equivale a firma, finalización o aprobación; T2 y evidencias aún no entregados. |
 | SMTP institucional/HTTPS/operación | Pendiente | Mailpit captura correo local; Compose local no es publicación institucional. |
 
 ## Trazabilidad
@@ -43,4 +45,16 @@ La matriz comparte el contador técnico del Plan y no permite sobrescrituras ent
 
 Q-001/Q-002 siguen pendientes; no se ha fijado el asistente completo ni cambiado la unicidad provisional. El agente interno código/Trello sigue documentado y no implementado.
 
-Evidencia y validaciones: [reporte de actividades y matriz](docs/reports/2026-10-03-05-work-plan-activities.md). Siguiente entrega propuesta: anexos T1 y contrato de almacenamiento, antes del motor documental y firma. Validar límites, retención y formatos oficiales antes de implementar sus reglas definitivas.
+Evidencia anterior: [reporte de actividades y matriz](docs/reports/2026-10-03-05-work-plan-activities.md); entrega fusionada por PR #3. Anexos y preparación documental se incorporan en la entrega siguiente descrita abajo.
+
+## Anexos y preparación documental T1
+
+FR-ANX-001–005 implementados en alcance inicial. UT-SEC-017 parcial: condición explícita de nota de datos personales. UT-SEC-019 parcial hasta aceptación institucional; UT-SEC-020/022/023/025 cubiertos en previsualización inicial. UT-SEC-021 parcial con campos institucionales manuales; UT-SEC-024 parcial: solo elaborador conocido, sin firma ni workflow institucional supuesto.
+
+El propietario confirmó almacenamiento local privado persistente con 10 MB/anexo y 20 anexos ajustables, y A4 manteniendo estructura/estilo. Q-010/Q-013 parcialmente resueltas; retención, aceptación final y operación institucional siguen pendientes. [ADR-0002](docs/architecture/adr/0002-t1-document-preparation.md), [API](docs/api/t1-document-preparation.md) y [respaldo](docs/development/document-storage.md).
+
+Flyway V6 incorpora archivos privados, anexos y artefactos. PDF real validado, hash comprobado en lecturas, snapshot independiente y PDFs anteriores conservados tras editar/quitar anexos. pageCount y espacios de elaboración derivados de composición real. Generar no altera versión formal, estado ni contador de edición.
+
+Validación: 22 pruebas backend con PostgreSQL aislado; frontend build/lint; E2E ampliado con Vite y Nginx/Docker. Revisión visual de las 8 páginas del escenario con anexos y 9 del escenario de contenido largo. [Reporte de entrega](docs/reports/2026-10-03-07-t1-document-preparation.md).
+
+Siguen pendientes firma real, flujos por grupo, revisión/observaciones, T2, evidencias y agente interno código/Trello. [Publicación autorizada](docs/reports/2026-10-03-08-t1-publication.md); revisión y fusión a cargo del propietario. Próxima entrega sugerida: configurar flujos por grupo y bandeja de revisión, definiendo primero Q-003/Q-007 y sin simular firmas productivas.

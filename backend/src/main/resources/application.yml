@@ -7,6 +7,10 @@ spring:
     password: ${DB_PASSWORD}
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: ${DOCUMENT_MAX_FILE_BYTES:10485760}B
+      max-request-size: ${DOCUMENT_MAX_REQUEST_BYTES:12582912}B
   session:
     timeout: 30m
     jdbc:
@@ -42,6 +46,13 @@ management:
     health:
       show-details: never
 app:
+  documents:
+    storage-root: ${DOCUMENT_STORAGE_ROOT:./runtime-data/documents}
+    max-file-bytes: ${DOCUMENT_MAX_FILE_BYTES:10485760}
+    max-total-bytes: ${DOCUMENT_MAX_TOTAL_BYTES:52428800}
+    max-attachments: ${DOCUMENT_MAX_ATTACHMENTS:20}
+    max-attachment-pages: ${DOCUMENT_MAX_ATTACHMENT_PAGES:100}
+    page-format: ${DOCUMENT_PAGE_FORMAT:A4}
   public-url: ${APP_PUBLIC_URL:http://localhost:5173}
   mail-from: ${MAIL_FROM:no-reply@utaped.invalid}
   planning:

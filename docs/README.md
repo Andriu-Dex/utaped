@@ -1,5 +1,7 @@
 # Índice documental
 
+- [Preparación documental T1 y anexos](api/t1-document-preparation.md), [decisión](architecture/adr/0002-t1-document-preparation.md) y [almacenamiento/respaldo](development/document-storage.md).
+
 - [Entorno local y pruebas](development/local-setup.md).
 - [ADR del stack y acceso local](architecture/adr/0001-production-foundation.md).
 - [Contrato de identidad e institución](api/foundation.md).

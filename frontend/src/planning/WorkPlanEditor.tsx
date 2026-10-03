@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import type { WorkPlan } from './types'
 import { MatrixEditor } from './MatrixEditor'
+import { AttachmentEditor } from './AttachmentEditor'
+import { DocumentPreparation } from './DocumentPreparation'
 
 type DraftFields = Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
 function fields(plan: WorkPlan): DraftFields {
@@ -11,7 +13,7 @@ function fields(plan: WorkPlan): DraftFields {
 export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: WorkPlan; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
-  const [section, setSection] = useState<'general' | 'content' | 'matrix'>('general')
+  const [section, setSection] = useState<'general' | 'content' | 'matrix' | 'attachments' | 'preparation'>('general')
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
   const [latest, setLatest] = useState<WorkPlan | null>(null)
@@ -45,16 +47,23 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
   function back() { if (!dirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) onBack() }
-  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={async () => {
+  async function returnToPlan() {
+    try {
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
     setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
-  }} />
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.'); setSection('general') }
+  }
+  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
+  if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
+  if (section === 'preparation') return <DocumentPreparation targetDocId={plan.id} onBack={returnToPlan} />
   return <section>
     <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
     <h1>{plan.title}</h1><p>Plan de Trabajo T1 · Borrador · Versión formal {plan.formalVersion}</p>
     <p role="status">{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}>Actividades y matriz</button>
-    {dirty && <p>Guarde los cambios del Plan antes de abrir la matriz.</p>}
+    {' '}<button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('attachments')}>Anexos y opciones</button>
+    {' '}<button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('preparation')}>Preparación y previsualización</button>
+    {dirty && <p>Guarde los cambios del Plan antes de abrir otra sección.</p>}
     <div className="card"><dl className="plan-metadata"><div><dt>Elaborador</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="notice">Solo lectura: la ventana de elaboración está cerrada.</p>}
       <nav aria-label="Secciones del borrador"><button type="button" aria-current={section === 'general' ? 'page' : undefined} onClick={() => setSection('general')}>Información general</button><button type="button" aria-current={section === 'content' ? 'page' : undefined} onClick={() => setSection('content')}>Contenido</button></nav>
@@ -66,7 +75,7 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
         </> : <>
           <label>Justificación<textarea rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} /></label>
           <label>Objetivo<textarea rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} /></label>
-          <p>El borrador admite contenido incompleto. La validación de finalización se incorporará con el flujo documental.</p>
+          <p>El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
         </>}
         <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
       </fieldset></form>

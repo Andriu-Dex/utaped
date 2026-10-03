@@ -1,6 +1,6 @@
 # UTAPED — Gestión Documental Académica
 
-Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Primera entrega: identidad local y administración básica de usuarios, grupos, pertenencias y períodos.
+Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Incluye identidad local, administración inicial, borradores T1, matriz, anexos privados y previsualización documental.
 
 ## Arranque
 
@@ -19,4 +19,4 @@ React/TypeScript/Vite; Java 21/Spring Boot; PostgreSQL/Flyway; sesiones JDBC y S
 
 El mockup permanece congelado fuera del repositorio en `C:\Documentos\Documentos\Universidad UTA\Ingenieria De Software\Semestre 7\Gestion de Proyectos\Proyecto\Prototipos`.
 
-T1/T2, ejecución, firma real y aprobación documental se entregarán en módulos posteriores. Esta base no certifica despliegue institucional: HTTPS, SMTP institucional, respaldos y políticas operativas requieren configuración y validación.
+T1 completo/T2, ejecución, firma real y aprobación se entregarán en módulos posteriores. La preparación T1 conserva PDFs sin firma y mantiene el Plan en borrador. [Almacenamiento y respaldo](docs/development/document-storage.md). Esta base no certifica despliegue institucional: HTTPS, SMTP, respaldos y políticas operativas requieren configuración y validación.
