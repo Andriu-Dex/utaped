@@ -1,5 +1,7 @@
 # Registro de decisiones de arquitectura
 
+[ADR-0001 aceptado: stack productivo y credenciales locales](0001-production-foundation.md). Este ADR actualiza la dirección inicial de las filas siguientes, que se conservan como antecedentes.
+
 Cada ADR: contexto, opciones, decisión, estado, consecuencias, evidencia y fecha. Estados: propuesto, aceptado, sustituido. Antecedentes del mockup no son ADR aceptados del producto.
 
 | Decisión | Estado | Evidencia siguiente |

@@ -1,5 +1,10 @@
 # Índice documental
 
+- [Entorno local y pruebas](development/local-setup.md).
+- [ADR del stack y acceso local](architecture/adr/0001-production-foundation.md).
+- [Contrato de identidad e institución](api/foundation.md).
+- [Flujo Git](development/git-workflow.md).
+
 - [Requisitos raíz](../requirements.md).
 - [Funcionalidad](requirements/functional.md), [calidad](requirements/non-functional.md) y [reglas](requirements/business-rules.md).
 - [Glosario](domain/glossary.md), [flujos](domain/workflows.md) y [datos](domain/data-model.md).

@@ -1,0 +1,37 @@
+name: utaped-tests
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: utaped_test
+      POSTGRES_USER: utaped_test
+      POSTGRES_PASSWORD: isolated-test-only
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U utaped_test -d utaped_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  mail:
+    image: axllent/mailpit:v1.31.1
+  tests:
+    image: maven:3.9-eclipse-temurin-21
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - maven-cache:/root/.m2
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/utaped_test
+      DB_USER: utaped_test
+      DB_PASSWORD: isolated-test-only
+      COOKIE_SECURE: "false"
+      SMTP_HOST: mail
+      TEST_MAIL_URL: http://mail:8025
+    command: [mvn, -B, -q, test]
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+volumes:
+  maven-cache:
+    name: utaped-maven-cache

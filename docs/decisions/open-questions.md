@@ -25,6 +25,8 @@ El propietario coordinará validación con institución/DTIC; no asignar autorid
 
 Q-001: diferencia confirmada mediante inspección estática; la UI enumera seis pasos y la línea base siete. La elección productiva sigue pendiente. [Detalle de reconciliación](../validation/reconciliation.md).
 
+Actualización 2026-10-02: Q-008 resuelta para mecanismo de acceso: credenciales locales por instrucción del propietario. Se implementan recuperación SMTP y sesiones; configuración de correo institucional y política formal de acceso siguen pendientes. Q-009 resuelta para stack según [ADR-0001](../architecture/adr/0001-production-foundation.md); infraestructura de publicación, respaldo y operación institucional siguen pendientes. Las restantes cuestiones permanecen abiertas.
+
 [Plan de validación](../validation/validation-plan.md) y [matriz de permisos para revisar](../validation/permission-matrix.md).
 
 Para cerrar: respuesta, persona/área validadora, fecha y evidencia verificable; actualizar requisitos, ADR y casos afectados.

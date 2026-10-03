@@ -1,5 +1,7 @@
 # Catálogo trazable de requisitos
 
+Actualización productiva: ver [estado de entrega](../../implementation-status.md).
+
 Extracción de la línea base; no es ratificación institucional ni catálogo atómico terminado. IDs FR-* preservados; UT-SEC-* identifican bloques antes sin ID. Declaraciones compuestas requieren desglosarse antes de implementar.
 
 [Datos estructurados](catalog.json) · [Fuente íntegra](../reference/baseline-requirements.md) · [Aceptación por módulo](functional.md) · [Plan de validación](../validation/validation-plan.md).
@@ -108,31 +110,31 @@ Puede gestionar:
 
 ## FR-AUTH-001
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El sistema debe permitir autenticación mediante credenciales.
 
 ## FR-AUTH-002
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: PARCIAL.
 
 Usuarios importados pueden recibir contraseña temporal.
 
 ## FR-AUTH-003
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 En el primer ingreso con contraseña temporal debe solicitar cambio obligatorio.
 
 ## FR-AUTH-004
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe existir recuperación de contraseña.
 
 ## FR-AUTH-005
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El usuario autenticado debe conservar identidad única durante la sesión.
 
@@ -140,7 +142,7 @@ Cambiar contexto o rol no cambia la persona autenticada.
 
 ## FR-GRP-001
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El sistema debe manejar una entidad configurable:
 
@@ -148,7 +150,7 @@ El sistema debe manejar una entidad configurable:
 
 ## FR-GRP-002
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Tipos posibles:
 
@@ -159,7 +161,7 @@ Tipos posibles:
 
 ## FR-GRP-003
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Un docente puede pertenecer a varios grupos.
 
@@ -179,7 +181,7 @@ No permitir duplicado de esa combinación cuando corresponda.
 
 ## FR-GRP-006
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: PARCIAL.
 
 Los roles de pertenencia pueden incluir:
 
@@ -191,7 +193,7 @@ No utilizar “Responsable” como rol permanente del grupo porque ese concepto 
 
 ## FR-PER-001
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El administrador define períodos académicos.
 
@@ -201,7 +203,7 @@ Ejemplo actual:
 
 ## FR-PER-002
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El período debe disponer de:
 
@@ -212,7 +214,7 @@ El período debe disponer de:
 
 ## FR-PER-003
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: PARCIAL.
 
 Estas fechas deben ser configurables.
 
@@ -1333,6 +1335,6 @@ La integración futura de asistencia de redacción usa una abstracción de prove
 
 ## FR-ARCH-DB-001
 
-Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 La base de datos productiva objetivo es PostgreSQL local o institucional on-premise, gratuita y relacional. El mockup no incorpora todavía backend ni sustituye `localStorage`.
