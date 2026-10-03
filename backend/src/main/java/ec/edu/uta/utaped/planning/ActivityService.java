@@ -112,7 +112,7 @@ public class ActivityService {
         UUID target=id;return definitions(input.groupId()).stream().filter(d->d.id().equals(target)).findFirst().orElseThrow();
     }
     @Transactional public void label(UUID groupId,Label input,String email) {
-        if(jdbc.update("UPDATE institutional_group SET collective_label=? WHERE id=?",input.label().trim(),groupId)==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Grupo no disponible.");
+        if(jdbc.update("UPDATE institutional_group SET collective_label=?,row_version=row_version+1 WHERE id=?",input.label().trim(),groupId)==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Grupo no disponible.");
         audit.record(accounts.current(email).id(),"GROUP_COLLECTIVE_LABEL_SAVED",groupId);
     }
     @Transactional public void holiday(Holiday input,String email) {

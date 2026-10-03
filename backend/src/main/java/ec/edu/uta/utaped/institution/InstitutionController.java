@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
@@ -40,6 +41,17 @@ public class InstitutionController {
         return jdbc.queryForList("SELECT u.id,u.display_name,m.membership_role FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name",id);
     }
     public record GroupInput(@NotBlank @Size(max=160) String name,@NotBlank @Pattern(regexp="COMMISSION|UNIT|CLUB|OTHER") String groupType) {}
+    @GetMapping("/admin/groups") public List<Map<String,Object>> adminGroups() { return jdbc.queryForList("SELECT id,name,group_type,active,collective_label,row_version FROM institutional_group ORDER BY name,id"); }
+    public record GroupUpdate(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=160) String name,
+        @NotBlank @Pattern(regexp="COMMISSION|UNIT|CLUB|OTHER") String groupType,@NotNull Boolean active) {}
+    @PutMapping("/admin/groups/{id}") @Transactional public void updateGroup(@PathVariable UUID id,@Valid @RequestBody GroupUpdate data,Principal principal) {
+        var actor=accounts.current(principal.getName());
+        var current=jdbc.queryForList("SELECT row_version FROM institutional_group WHERE id=? FOR UPDATE",id);
+        if(current.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Grupo no disponible.");
+        if(((Number)current.getFirst().get("row_version")).longValue()!=data.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El grupo cambió en otra sesión. Recargue antes de guardar.");
+        jdbc.update("UPDATE institutional_group SET name=?,group_type=?,active=?,row_version=row_version+1 WHERE id=?",data.name().trim(),data.groupType(),data.active(),id);
+        audit.record(actor.id(),"GROUP_PROFILE_UPDATED",id);
+    }
     @PostMapping("/admin/groups") @Transactional public Map<String,UUID> createGroup(@Valid @RequestBody GroupInput data,Principal principal) {
         var actor=accounts.current(principal.getName()); UUID id=UUID.randomUUID();
         jdbc.update("INSERT INTO institutional_group(id,name,group_type) VALUES (?,?,?)",id,data.name().trim(),data.groupType());
@@ -48,6 +60,8 @@ public class InstitutionController {
     public record MembershipInput(@NotNull UUID userId,@NotBlank @Pattern(regexp="MEMBER|COORDINATOR") String membershipRole) {}
     @PostMapping("/admin/groups/{id}/members") @Transactional public void addMember(@PathVariable UUID id,@Valid @RequestBody MembershipInput data,Principal principal) {
         var actor=accounts.current(principal.getName());
+        if(jdbc.queryForObject("SELECT count(*) FROM institutional_group WHERE id=? AND active",Integer.class,id)==0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un grupo activo.");
         if (jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active",Integer.class,data.userId())==0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un usuario activo.");
         jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT(user_id,group_id) DO UPDATE SET membership_role=excluded.membership_role",data.userId(),id,data.membershipRole());

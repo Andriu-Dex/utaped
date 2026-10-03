@@ -7,8 +7,8 @@ Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–4 fusionados; último me
 | Documentación inicial | Disponible; pendientes institucionales registrados | docs/requirements y docs/validation. |
 | Stack productivo | Seleccionado e implementado | ADR-0001, manifests y Dockerfiles. |
 | Credenciales locales | Implementado | Login/logout, bcrypt, CSRF, sesión JDBC, cambio obligatorio y recuperación SMTP. |
-| Usuarios y permisos | Primera entrega implementada | Bootstrap, alta, activación/desactivación, ADMIN/USER; revocación y protección último admin. |
-| Grupos y pertenencias | Primera entrega implementada | Alta/listado, MEMBER/COORDINATOR, asignación/retiro, aislamiento por objeto. |
+| Usuarios y permisos | Primera entrega implementada | Bootstrap, alta, directorio paginado, edición de nombre/permiso y activación con concurrencia; revocación y protección último admin. |
+| Grupos y pertenencias | Primera entrega implementada | Alta/listado, edición/activación con concurrencia, MEMBER/COORDINATOR, asignación/retiro y aislamiento por objeto. |
 | Períodos | Alta/consulta, rangos y ventana de elaboración de borradores | Fechas civiles inclusivas en zona configurable; cierre definitivo/reapertura pendientes. |
 | Auditoría | Eventos de identidad/administración persistidos | No existe todavía visor administrativo ni política de retención institucional. |
 | Pruebas | Backend PostgreSQL y E2E de identidad ejecutados | docs/reports/2026-10-03-01-project-foundation.md. |
@@ -59,3 +59,4 @@ Flyway V6 incorpora archivos privados, anexos y artefactos. PDF real validado, h
 Validación: 22 pruebas backend con PostgreSQL aislado; frontend build/lint; E2E ampliado con Vite y Nginx/Docker. Revisión visual de las 8 páginas del escenario con anexos y 9 del escenario de contenido largo. [Reporte de entrega](docs/reports/2026-10-03-07-t1-document-preparation.md).
 
 Siguen pendientes firma real, flujos por grupo, revisión/observaciones, T2, evidencias y agente interno código/Trello. [Publicación autorizada](docs/reports/2026-10-03-08-t1-publication.md); revisión y fusión a cargo del propietario. Próxima entrega sugerida: configurar flujos por grupo y bandeja de revisión, definiendo primero Q-003/Q-007 y sin simular firmas productivas.
+
