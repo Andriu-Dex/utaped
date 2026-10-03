@@ -1136,7 +1136,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Bandeja interna privada, lectura y navegación; avisos de pertenencias y previsualización. Revisión, evidencias, vencimientos y canales externos pendientes."
     },
     {
       "id": "UT-SEC-052",
@@ -1146,7 +1147,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Auditoría existente, visor e historial con permisos y exportación CSV; acciones de firma/revisión/evidencias y retención institucional pendientes."
     },
     {
       "id": "UT-SEC-053",
@@ -1156,7 +1158,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Seguimiento personal de borradores y exportación administrativa inicial; reportes institucionales completos pendientes."
     },
     {
       "id": "UT-SEC-054",

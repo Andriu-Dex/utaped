@@ -46,6 +46,8 @@ management:
     health:
       show-details: never
 app:
+  audit:
+    export-max-rows: ${AUDIT_EXPORT_MAX_ROWS:10000}
   documents:
     storage-root: ${DOCUMENT_STORAGE_ROOT:./runtime-data/documents}
     max-file-bytes: ${DOCUMENT_MAX_FILE_BYTES:10485760}

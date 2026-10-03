@@ -1162,7 +1162,9 @@ Importación:
 
 ## UT-SEC-051
 
-Fuente: §51 — NOTIFICACIONES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §51 — NOTIFICACIONES. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Bandeja interna privada, lectura y navegación; avisos de pertenencias y previsualización. Revisión, evidencias, vencimientos y canales externos pendientes.
 
 Notificaciones por usuario.
 
@@ -1178,7 +1180,9 @@ Cada notificación debe navegar al objeto correcto.
 
 ## UT-SEC-052
 
-Fuente: §52 — AUDITORÍA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §52 — AUDITORÍA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Auditoría existente, visor e historial con permisos y exportación CSV; acciones de firma/revisión/evidencias y retención institucional pendientes.
 
 Registrar eventos relevantes:
 
@@ -1196,7 +1200,9 @@ No mostrar IDs técnicos innecesarios al usuario.
 
 ## UT-SEC-053
 
-Fuente: §53 — REPORTES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §53 — REPORTES. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Seguimiento personal de borradores y exportación administrativa inicial; reportes institucionales completos pendientes.
 
 Los reportes tienen carácter:
 

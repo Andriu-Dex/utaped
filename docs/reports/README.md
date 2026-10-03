@@ -15,3 +15,4 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-03 — Anexos y preparación documental T1](2026-10-03-07-t1-document-preparation.md).
 - [2026-10-03 — Publicación de preparación T1 y flujo autorizado](2026-10-03-08-t1-publication.md).
 - [2026-10-03 — Flujos, administración y trazabilidad](2026-10-03-09-workflow-administration-audit.md).
+- [2026-10-03 — Seguimiento, notificaciones y exportación](2026-10-03-10-tracking-notifications-audit-export.md).
