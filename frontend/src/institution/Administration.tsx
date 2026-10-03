@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type User, type Member } from '../shared/api'
+import { PlanningAdministration } from '../planning/PlanningAdministration'
 
 export function Administration({ onChange }: { onChange: () => Promise<void> }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -47,5 +48,6 @@ export function Administration({ onChange }: { onChange: () => Promise<void> }) 
     <section className="card"><h3>Crear período</h3><form className="grid" onSubmit={e => submit(e, '/admin/periods')}><label>Nombre del período<input name="name" required maxLength={120} /></label>
       {([['startsOn','Inicio del período'],['endsOn','Fin del período'],['preparationStartsOn','Inicio de elaboración'],['preparationEndsOn','Fin de elaboración'],['reviewStartsOn','Inicio de revisión'],['reviewEndsOn','Fin de revisión']] as const).map(([name,label]) => <label key={name}>{label}<input required type="date" name={name} /></label>)}<button disabled={busy}>Crear período</button></form></section>
     <section className="card"><h3>Usuarios</h3><p>Lista inicial limitada a 200 usuarios.</p><div className="table-scroll"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Acceso</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{users.map(user => <tr key={user.id}><td>{user.display_name}</td><td>{user.email}</td><td>{user.system_role === 'ADMIN' ? 'Administrador' : 'Usuario'}</td><td>{user.active ? 'Activo' : 'Inactivo'}</td><td><button disabled={busy} className="secondary" onClick={() => toggle(user)}>{user.active ? 'Desactivar' : 'Activar'}</button></td></tr>)}</tbody></table></div></section>
+    <PlanningAdministration groups={groups} />
   </section>
 }

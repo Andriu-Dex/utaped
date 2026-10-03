@@ -307,7 +307,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-002",
@@ -317,7 +318,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-003",
@@ -327,7 +329,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-004",
@@ -337,7 +340,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-005",
@@ -347,7 +351,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-006",
@@ -357,7 +362,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "UT-SEC-011",
@@ -367,7 +373,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-001",
@@ -377,7 +384,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-002",
@@ -387,7 +395,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-003",
@@ -397,7 +406,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-004",
@@ -407,7 +417,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-001",
@@ -417,7 +428,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-002",
@@ -427,7 +439,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-003",
@@ -437,7 +450,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-004",
@@ -447,7 +461,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-005",
@@ -457,7 +472,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-001",
@@ -467,7 +483,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-002",
@@ -477,7 +494,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-003",
@@ -487,7 +505,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-004",
@@ -497,7 +516,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-005",
@@ -507,7 +527,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-001",
@@ -517,7 +538,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-002",
@@ -527,7 +549,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-003",
@@ -537,7 +560,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MAT-001",
@@ -547,7 +571,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MAT-002",
@@ -557,7 +582,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "UT-SEC-017",

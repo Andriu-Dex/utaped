@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import type { WorkPlan } from './types'
+import { MatrixEditor } from './MatrixEditor'
 
 type DraftFields = Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
 function fields(plan: WorkPlan): DraftFields {
@@ -10,7 +11,7 @@ function fields(plan: WorkPlan): DraftFields {
 export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: WorkPlan; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
-  const [section, setSection] = useState<'general' | 'content'>('general')
+  const [section, setSection] = useState<'general' | 'content' | 'matrix'>('general')
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
   const [latest, setLatest] = useState<WorkPlan | null>(null)
@@ -44,10 +45,16 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
   function back() { if (!dirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) onBack() }
+  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={async () => {
+    const current = await api<WorkPlan>('/work-plans/' + plan.id)
+    setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
+  }} />
   return <section>
     <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
     <h1>{plan.title}</h1><p>Plan de Trabajo T1 · Borrador · Versión formal {plan.formalVersion}</p>
     <p role="status">{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
+    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}>Actividades y matriz</button>
+    {dirty && <p>Guarde los cambios del Plan antes de abrir la matriz.</p>}
     <div className="card"><dl className="plan-metadata"><div><dt>Elaborador</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="notice">Solo lectura: la ventana de elaboración está cerrada.</p>}
       <nav aria-label="Secciones del borrador"><button type="button" aria-current={section === 'general' ? 'page' : undefined} onClick={() => setSection('general')}>Información general</button><button type="button" aria-current={section === 'content' ? 'page' : undefined} onClick={() => setSection('content')}>Contenido</button></nav>

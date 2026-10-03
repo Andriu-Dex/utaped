@@ -28,7 +28,7 @@ public class InstitutionController {
     @GetMapping("/groups") public List<Map<String,Object>> groups(Principal principal) {
         var actor=accounts.current(principal.getName());
         return jdbc.queryForList("""
-            SELECT g.id,g.name,g.group_type,g.active,m.membership_role
+            SELECT g.id,g.name,g.group_type,g.active,g.collective_label,m.membership_role
             FROM institutional_group g LEFT JOIN membership m ON m.group_id=g.id AND m.user_id=?
             WHERE g.active AND (? OR m.user_id IS NOT NULL) ORDER BY g.name
             """,actor.id(),actor.systemRole().equals("ADMIN"));

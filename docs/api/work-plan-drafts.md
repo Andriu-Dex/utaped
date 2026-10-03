@@ -2,6 +2,8 @@
 
 Primera entrega de planificación. Sesión local y CSRF para POST/PUT, con las mismas reglas de la base productiva. El servidor deriva la identidad del usuario autenticado; ningún cliente elige al elaborador. ADMIN no habilita lectura ni edición de documentos ajenos en este módulo.
 
+Extensión posterior: [actividades y matriz](work-plan-matrix.md), con el mismo contador técnico de concurrencia del documento.
+
 | Método | Ruta bajo `/api` | Contrato |
 |---|---|---|
 | GET | `/work-plans/options` | Grupos de pertenencia activos, períodos con indicador editable y políticas configuradas. |

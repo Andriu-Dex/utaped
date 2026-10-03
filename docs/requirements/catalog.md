@@ -334,13 +334,13 @@ El usuario decide:
 
 ## FR-ACT-001
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 El administrador puede configurar catálogo de actividades.
 
 ## FR-ACT-002
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las actividades pueden clasificarse como:
 
@@ -351,13 +351,13 @@ Las actividades pueden clasificarse como:
 
 ## FR-ACT-003
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede haber actividades obligatorias por grupo.
 
 ## FR-ACT-004
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las obligatorias:
 
@@ -366,13 +366,13 @@ Las obligatorias:
 
 ## FR-ACT-005
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede haber actividades opcionales.
 
 ## FR-ACT-006
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 El docente puede crear libremente una actividad `Otra`.
 
@@ -380,7 +380,7 @@ No debe obligarse a clasificar toda actividad como POA/Plan/Acción.
 
 ## UT-SEC-011
 
-Fuente: §11 — MATRIZ DE ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §11 — MATRIZ DE ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Cada actividad debe poder definir:
 
@@ -392,7 +392,7 @@ Cada actividad debe poder definir:
 
 ## FR-DATE-001
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Usar fecha completa:
 
@@ -400,37 +400,37 @@ Usar fecha completa:
 
 ## FR-DATE-002
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las fechas deben estar dentro del período cuando corresponda.
 
 ## FR-DATE-003
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Una actividad puede atravesar un feriado.
 
 ## FR-DATE-004
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Una actividad no debe iniciar o finalizar en un feriado cuando esa restricción esté configurada.
 
 ## FR-RESP-001
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe seleccionarse mínimo un responsable.
 
 ## FR-RESP-002
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede seleccionarse más de uno.
 
 ## FR-RESP-003
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir:
 
@@ -438,13 +438,13 @@ Debe existir:
 
 ## FR-RESP-004
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 La lista seleccionable debe corresponder a integrantes aplicables del grupo.
 
 ## FR-RESP-005
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Cuando todos los miembros aplicables sean seleccionados, el documento puede representar el conjunto mediante denominación colectiva.
 
@@ -458,7 +458,7 @@ Internamente deben conservarse las identidades individuales para trazabilidad.
 
 ## FR-REC-001
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Los recursos se seleccionan de catálogo.
 
@@ -473,31 +473,31 @@ Ejemplos:
 
 ## FR-REC-002
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir `Otro`.
 
 ## FR-REC-003
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Al seleccionar `Otro` debe requerirse descripción.
 
 ## FR-REC-004
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 No permitir guardar `Otro` vacío.
 
 ## FR-REC-005
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Los catálogos deben ser administrables.
 
 ## FR-MED-001
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Seleccionar desde catálogo.
 
@@ -514,19 +514,19 @@ Ejemplos:
 
 ## FR-MED-002
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir `Otro`.
 
 ## FR-MED-003
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Otro requiere descripción obligatoria.
 
 ## FR-MAT-001
 
-Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 La matriz debe permitir registrar:
 
@@ -543,7 +543,7 @@ Debe ser editable cuando corresponda.
 
 ## FR-MAT-002
 
-Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 `Elaborado por` debe derivarse automáticamente del grupo/comisión responsable.
 
