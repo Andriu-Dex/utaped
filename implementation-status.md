@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1, #2 y #3 fusionados; último merge b24b531. Entrega actual en feature/t1-document-preparation desde develop; publicación autorizada hacia develop para revisión del propietario.
+Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–4 fusionados; último merge 68119c4 y CI correcto. Entrega actual en feature/workflow-administration-audit desde develop, organizada por bloques y commits antes de un único push/PR.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -16,6 +16,7 @@ Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1, #2 y #3 fusionados; últi
 | Borradores T1 | Primera entrega parcial implementada | Creación, información general, justificación/objetivo, lista filtrada/paginada, persistencia, aislamiento y concurrencia. |
 | Actividades y matriz T1 | Primera entrega implementada | Catálogos por grupo, obligatorias/opcionales/Otra, fechas, responsables múltiples/colectivos, recursos/medios, fuente, resumen y persistencia atómica. |
 | Catálogos y feriados | Administración inicial implementada | Altas, edición/desactivación de actividades/recursos/medios; denominación colectiva; feriados y restricción configurable por período. |
+| Configuración de flujos | Primera entrega administrativa implementada | Etapas ordenadas T1/T2 por grupo; personas/roles/órganos, requerimiento de firma, borrador, revisiones inmutables y deshabilitación. No ejecuta revisión documental. |
 | Anexos T1 | Implementados en alcance inicial | PDFs privados, sí/no, metadata, orden, etiquetas automáticas, baja lógica y concurrencia. |
 | Preparación/previsualización T1 | Implementada en alcance inicial | Plantilla DOCX oficial, páginas T1 A4, matriz horizontal, índices reales, snapshot/PDF inmutables y visor paginado. |
 | T1 completo/T2, firma, revisión, evidencias | Pendientes en producto | Preparación T1 no equivale a firma, finalización o aprobación; T2 y evidencias aún no entregados. |
