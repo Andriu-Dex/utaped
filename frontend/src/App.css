@@ -7,3 +7,8 @@ dt { font-weight: 600; } dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 .preserve-text { white-space: pre-wrap; }
 .conflict { border-left: 4px solid #b57c13; background: #fff7e5; padding: 1rem; margin-top: 1rem; }
 .pagination { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+.choice-group { border: 1px solid #c7d3de; border-radius: .5rem; padding: 1rem; margin: 1rem 0; }
+.choice-group legend { font-weight: 600; }
+.check { display: flex; flex-direction: row; align-items: center; gap: .5rem; }
+.check input { width: auto; }
+h1, h2, li { overflow-wrap: anywhere; }
