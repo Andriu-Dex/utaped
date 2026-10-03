@@ -1,0 +1,1227 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "source": "../reference/baseline-requirements.md",
+  "items": [
+    {
+      "id": "UT-SEC-001",
+      "source_section": 1,
+      "area": "OBJETIVO GENERAL",
+      "statement": "Desarrollar una aplicación web para facilitar la creación, revisión, aprobación, firma, seguimiento, ejecución y consulta histórica de documentación académica de grupos institucionales de la FISEI.\n\nEl sistema debe reducir:\n\n- edición manual repetitiva;\n- circulación de documentos por correo;\n- errores de formato;\n- pérdida de trazabilidad;\n- duplicación de información;\n- inconsistencias entre planificación e informe.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-002",
+      "source_section": 2,
+      "area": "ACTORES",
+      "statement": "## 2.1 Docente\n\nPuede:\n\n- autenticarse;\n- cambiar contraseña temporal;\n- recuperar contraseña;\n- consultar grupos;\n- crear Planes de Trabajo;\n- elaborar contenido;\n- seleccionar actividades;\n- configurar matriz;\n- adjuntar anexos;\n- previsualizar;\n- firmar;\n- finalizar;\n- consultar estado;\n- corregir documentos devueltos;\n- ejecutar actividades;\n- subir evidencias;\n- crear Informes;\n- consultar historial.\n\n\n## 2.2 Revisor\n\nPuede:\n\n- consultar documentos asignados;\n- visualizar artefacto formal;\n- registrar observaciones;\n- resaltar partes observadas;\n- devolver;\n- aprobar;\n- firmar cuando corresponda;\n- revisar evidencias.\n\n\n## 2.3 Coordinador\n\nSegún el flujo institucional puede:\n\n- revisar;\n- coordinar;\n- validar etapas;\n- gestionar grupos;\n- gestionar miembros;\n- participar en flujos;\n- verificar documentación externa cuando corresponda.\n\n\n## 2.4 Autoridad / validador\n\nPuede intervenir en:\n\n- validación final;\n- aprobación;\n- firma;\n\nsegún el flujo configurado.\n\nNo asumir una autoridad universal.\n\n\n## 2.5 Administrador\n\nPuede gestionar:\n\n- usuarios;\n- importaciones;\n- grupos;\n- miembros;\n- períodos;\n- actividades;\n- recursos;\n- medios de verificación;\n- feriados;\n- plantillas documentales;\n- flujos;\n- configuraciones institucionales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-AUTH-001",
+      "source_section": 3,
+      "area": "AUTENTICACIÓN",
+      "statement": "El sistema debe permitir autenticación mediante credenciales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-AUTH-002",
+      "source_section": 3,
+      "area": "AUTENTICACIÓN",
+      "statement": "Usuarios importados pueden recibir contraseña temporal.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-AUTH-003",
+      "source_section": 3,
+      "area": "AUTENTICACIÓN",
+      "statement": "En el primer ingreso con contraseña temporal debe solicitar cambio obligatorio.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-AUTH-004",
+      "source_section": 3,
+      "area": "AUTENTICACIÓN",
+      "statement": "Debe existir recuperación de contraseña.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-AUTH-005",
+      "source_section": 3,
+      "area": "AUTENTICACIÓN",
+      "statement": "El usuario autenticado debe conservar identidad única durante la sesión.\n\nCambiar contexto o rol no cambia la persona autenticada.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-001",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "El sistema debe manejar una entidad configurable:\n\n`Grupo institucional`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-002",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "Tipos posibles:\n\n- Comisión.\n- Unidad.\n- Club.\n- Otro.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-003",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "Un docente puede pertenecer a varios grupos.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-004",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "Puede existir un Plan diferente para cada combinación:\n\n`docente + grupo + período`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-005",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "No permitir duplicado de esa combinación cuando corresponda.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-GRP-006",
+      "source_section": 4,
+      "area": "GRUPOS INSTITUCIONALES",
+      "statement": "Los roles de pertenencia pueden incluir:\n\n- Miembro.\n- Coordinador.\n- Otro.\n\nNo utilizar “Responsable” como rol permanente del grupo porque ese concepto pertenece a las actividades.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-PER-001",
+      "source_section": 5,
+      "area": "PERÍODOS",
+      "statement": "El administrador define períodos académicos.\n\nEjemplo actual:\n\n`Julio – Diciembre 2026`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-PER-002",
+      "source_section": 5,
+      "area": "PERÍODOS",
+      "statement": "El período debe disponer de:\n\n- fecha inicio;\n- fecha fin;\n- ventana de elaboración;\n- ventana de revisión.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-PER-003",
+      "source_section": 5,
+      "area": "PERÍODOS",
+      "statement": "Estas fechas deben ser configurables.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-006",
+      "source_section": 6,
+      "area": "PLAN DE TRABAJO T1",
+      "statement": "Formato:\n\n`UTA-SGC-A-2-1-P7-T1`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-007",
+      "source_section": 7,
+      "area": "SECUENCIA DEL WIZARD T1",
+      "statement": "El orden funcional será:\n\n1. Información general.\n2. Contenido.\n3. Actividades.\n4. Matriz de actividades.\n5. Anexos.\n6. Previsualización.\n7. Firma y Finalización.\n\nNo alterar este orden sin nueva validación institucional.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-001",
+      "source_section": 8,
+      "area": "INFORMACIÓN GENERAL DEL PLAN",
+      "statement": "Debe obtener automáticamente:\n\n- docente elaborador;\n- período;\n- grupo;\n- información institucional conocida.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-002",
+      "source_section": 8,
+      "area": "INFORMACIÓN GENERAL DEL PLAN",
+      "statement": "La unidad/facultad debe poder derivarse de información institucional.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-003",
+      "source_section": 8,
+      "area": "INFORMACIÓN GENERAL DEL PLAN",
+      "statement": "La carrera debe aparecer correctamente vinculada.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-004",
+      "source_section": 8,
+      "area": "INFORMACIÓN GENERAL DEL PLAN",
+      "statement": "La fecha de elaboración debe registrarse.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-005",
+      "source_section": 8,
+      "area": "INFORMACIÓN GENERAL DEL PLAN",
+      "statement": "Al finalizar el documento, la fecha de elaboración debe quedar congelada.\n\nNo debe cambiar posteriormente porque otro usuario revise o firme.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-CONT-001",
+      "source_section": 9,
+      "area": "CONTENIDO DEL PLAN",
+      "statement": "Debe existir exactamente una Justificación.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-CONT-002",
+      "source_section": 9,
+      "area": "CONTENIDO DEL PLAN",
+      "statement": "Debe existir exactamente un Objetivo.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-CONT-003",
+      "source_section": 9,
+      "area": "CONTENIDO DEL PLAN",
+      "statement": "Puede existir texto base precargado editable.\n\nEl docente puede:\n\n- editar;\n- reemplazar;\n- eliminar.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-CONT-004",
+      "source_section": 9,
+      "area": "CONTENIDO DEL PLAN",
+      "statement": "Puede existir asistente IA de redacción.\n\nLa IA puede sugerir:\n\n- mejora de redacción;\n- gramática;\n- claridad;\n- tono formal.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-T1-CONT-005",
+      "source_section": 9,
+      "area": "CONTENIDO DEL PLAN",
+      "statement": "La IA nunca reemplaza automáticamente el contenido.\n\nDebe mostrar:\n\n- original;\n- sugerencia.\n\nEl usuario decide:\n\n- aplicar;\n- descartar.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-001",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "El administrador puede configurar catálogo de actividades.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-002",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "Las actividades pueden clasificarse como:\n\n- POA.\n- Plan de Mejoras.\n- Acción de Mejora.\n- Otra.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-003",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "Puede haber actividades obligatorias por grupo.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-004",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "Las obligatorias:\n\n- aparecen seleccionadas;\n- no pueden eliminarse.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-005",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "Puede haber actividades opcionales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ACT-006",
+      "source_section": 10,
+      "area": "ACTIVIDADES",
+      "statement": "El docente puede crear libremente una actividad `Otra`.\n\nNo debe obligarse a clasificar toda actividad como POA/Plan/Acción.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-011",
+      "source_section": 11,
+      "area": "MATRIZ DE ACTIVIDADES",
+      "statement": "Cada actividad debe poder definir:\n\n- fecha Desde;\n- fecha Hasta;\n- responsables;\n- recursos;\n- medios de verificación.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-DATE-001",
+      "source_section": 12,
+      "area": "FECHAS",
+      "statement": "Usar fecha completa:\n\n`día / mes / año`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-DATE-002",
+      "source_section": 12,
+      "area": "FECHAS",
+      "statement": "Las fechas deben estar dentro del período cuando corresponda.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-DATE-003",
+      "source_section": 12,
+      "area": "FECHAS",
+      "statement": "Una actividad puede atravesar un feriado.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-DATE-004",
+      "source_section": 12,
+      "area": "FECHAS",
+      "statement": "Una actividad no debe iniciar o finalizar en un feriado cuando esa restricción esté configurada.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-RESP-001",
+      "source_section": 13,
+      "area": "RESPONSABLES",
+      "statement": "Debe seleccionarse mínimo un responsable.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-RESP-002",
+      "source_section": 13,
+      "area": "RESPONSABLES",
+      "statement": "Puede seleccionarse más de uno.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-RESP-003",
+      "source_section": 13,
+      "area": "RESPONSABLES",
+      "statement": "Debe existir:\n\n`Seleccionar todos`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-RESP-004",
+      "source_section": 13,
+      "area": "RESPONSABLES",
+      "statement": "La lista seleccionable debe corresponder a integrantes aplicables del grupo.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-RESP-005",
+      "source_section": 13,
+      "area": "RESPONSABLES",
+      "statement": "Cuando todos los miembros aplicables sean seleccionados, el documento puede representar el conjunto mediante denominación colectiva.\n\nEjemplo solicitado en reunión:\n\n`Responsable de la comisión`\n\nLa denominación debe ser configurable según el tipo de grupo.\n\nInternamente deben conservarse las identidades individuales para trazabilidad.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REC-001",
+      "source_section": 14,
+      "area": "RECURSOS",
+      "statement": "Los recursos se seleccionan de catálogo.\n\nEjemplos:\n\n- Matriz de seguimiento.\n- Almacenamiento institucional.\n- Reglamento.\n- Sistema institucional.\n- Sala de reuniones.\n- Equipos.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REC-002",
+      "source_section": 14,
+      "area": "RECURSOS",
+      "statement": "Debe existir `Otro`.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REC-003",
+      "source_section": 14,
+      "area": "RECURSOS",
+      "statement": "Al seleccionar `Otro` debe requerirse descripción.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REC-004",
+      "source_section": 14,
+      "area": "RECURSOS",
+      "statement": "No permitir guardar `Otro` vacío.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REC-005",
+      "source_section": 14,
+      "area": "RECURSOS",
+      "statement": "Los catálogos deben ser administrables.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-MED-001",
+      "source_section": 15,
+      "area": "MEDIOS DE VERIFICACIÓN",
+      "statement": "Seleccionar desde catálogo.\n\nEjemplos:\n\n- Informe.\n- Acta.\n- Oficio.\n- Registro.\n- Resolución.\n- Registro fotográfico.\n- Certificado.\n- Ficha.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-MED-002",
+      "source_section": 15,
+      "area": "MEDIOS DE VERIFICACIÓN",
+      "statement": "Debe existir `Otro`.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-MED-003",
+      "source_section": 15,
+      "area": "MEDIOS DE VERIFICACIÓN",
+      "statement": "Otro requiere descripción obligatoria.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-MAT-001",
+      "source_section": 16,
+      "area": "FUENTE Y ELABORACIÓN DE MATRIZ",
+      "statement": "La matriz debe permitir registrar:\n\n`Fuente`\n\nPuede ser:\n\n- documento;\n- grupo;\n- comisión;\n- otra fuente.\n\nDebe ser editable cuando corresponda.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-MAT-002",
+      "source_section": 16,
+      "area": "FUENTE Y ELABORACIÓN DE MATRIZ",
+      "statement": "`Elaborado por` debe derivarse automáticamente del grupo/comisión responsable.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-017",
+      "source_section": 17,
+      "area": "NOTA DE DATOS PERSONALES",
+      "statement": "La plantilla institucional contempla una nota de protección de datos personales.\n\nSolo debe incluirse cuando el documento recopile datos personales que hagan aplicable dicha nota.\n\nNo decidir esto únicamente por el nombre del grupo.\n\nLa condición debe ser explícita/configurable.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ANX-001",
+      "source_section": 18,
+      "area": "ANEXOS",
+      "statement": "El docente selecciona:\n\n- Sí.\n- No.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ANX-002",
+      "source_section": 18,
+      "area": "ANEXOS",
+      "statement": "Si selecciona Sí:\n\n- puede crear anexos;\n- editar;\n- eliminar;\n- ordenar.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ANX-003",
+      "source_section": 18,
+      "area": "ANEXOS",
+      "statement": "La numeración será automática:\n\n- Anexo A.\n- Anexo B.\n- Anexo C.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ANX-004",
+      "source_section": 18,
+      "area": "ANEXOS",
+      "statement": "Eliminar un anexo reordena la secuencia.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ANX-005",
+      "source_section": 18,
+      "area": "ANEXOS",
+      "statement": "Anexos del documento no son evidencias de actividades.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-019",
+      "source_section": 19,
+      "area": "PREVISUALIZACIÓN T1",
+      "statement": "El documento debe representar fielmente el formato oficial.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-020",
+      "source_section": 20,
+      "area": "ENCABEZADO T1",
+      "statement": "Debe contener:\n\n- logo / Sistema de Gestión de la Calidad;\n- Universidad Técnica de Ambato;\n- Plan de Trabajo;\n- información institucional;\n- fecha;\n- carrera cuando corresponda.\n\nLa estructura exacta debe seguir el formato institucional de referencia.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-021",
+      "source_section": 21,
+      "area": "PORTADA T1",
+      "statement": "La composición central debe respetar el formato institucional real.\n\nLos elementos:\n\n- Unidad Académica.\n- Facultad.\n- Carrera.\n- Plan de Trabajo de.\n- Período.\n\ndeben colocarse en la posición correspondiente al documento original.\n\nNo colocarlos excesivamente cerca del borde inferior.\n\nEl bloque principal debe quedar aproximadamente en la zona media vertical del A4 según el formato.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-022",
+      "source_section": 22,
+      "area": "PIE DE PÁGINA T1",
+      "statement": "Debe mostrarse en una única fila visual.\n\nDebe contener:\n\n- `Documento de uso interno controlado por la Universidad Técnica de Ambato`\n- `Formato Nº: UTA-SGC-A-2-1-P7-T1`\n- número de página.\n\nNo dividir innecesariamente el primer texto en dos líneas.\n\nNo agregar doble línea superior si el formato original utiliza una.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-023",
+      "source_section": 23,
+      "area": "ÍNDICES",
+      "statement": "El T1 debe generar automáticamente:\n\n- índice de contenido;\n- índice de tablas;\n\ncuando correspondan.\n\nLa numeración debe derivarse de las páginas reales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-024",
+      "source_section": 24,
+      "area": "FIRMAS T1",
+      "statement": "Sección:\n\n`FIRMAS DE RESPONSABILIDAD`\n\nColumnas:\n\n- ACCIONES.\n- NOMBRE.\n- CARGO.\n- FIRMA.\n\nPosibles acciones:\n\n- Elaborado por.\n- Revisado por.\n- Validado por.\n- Aprobado por.\n\nDebe derivarse del flujo real configurado.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-025",
+      "source_section": 25,
+      "area": "HISTORIAL",
+      "statement": "Título exacto:\n\n`CONTROL DE HISTORIAL DE CAMBIOS`\n\nColumnas:\n\n- Versión.\n- Descripción del Cambio.\n- Fecha de Actualización.\n\nRegistro inicial recomendado:\n\nVersión:\n\n`v1.0`\n\nDescripción:\n\n`Elaboración del Plan de Trabajo`\n\nFecha:\n\nfecha de elaboración.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-026",
+      "source_section": 26,
+      "area": "FIRMA Y FINALIZACIÓN",
+      "statement": "La última etapa del docente debe denominarse:\n\n`Firma y Finalización`\n\nNo:\n\n`Firma y Envío`\n\nAl finalizar:\n\n- se firma;\n- el documento deja de ser editable;\n- continúa automáticamente al siguiente nivel configurado.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-SIGN-001",
+      "source_section": 27,
+      "area": "FIRMA ELECTRÓNICA",
+      "statement": "Firmante usa archivo:\n\n- `.p12`\n- `.pfx`\n\ny contraseña.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-SIGN-002",
+      "source_section": 27,
+      "area": "FIRMA ELECTRÓNICA",
+      "statement": "Certificado y contraseña son temporales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-SIGN-003",
+      "source_section": 27,
+      "area": "FIRMA ELECTRÓNICA",
+      "statement": "No almacenarlos permanentemente.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-SIGN-004",
+      "source_section": 27,
+      "area": "FIRMA ELECTRÓNICA",
+      "statement": "La firma debe aplicarse al artefacto exacto.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-SIGN-005",
+      "source_section": 27,
+      "area": "FIRMA ELECTRÓNICA",
+      "statement": "La metadata de ubicación debe formar parte del artefacto.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REV-001",
+      "source_section": 28,
+      "area": "REVISIÓN DOCUMENTAL",
+      "statement": "Las etapas son secuenciales.\n\nUna etapa futura no debe acceder al documento antes de terminar la anterior, salvo que el flujo configurado defina revisores paralelos dentro de la misma etapa.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REV-002",
+      "source_section": 28,
+      "area": "REVISIÓN DOCUMENTAL",
+      "statement": "Si existen varios revisores obligatorios en la misma etapa, pueden trabajar en paralelo.\n\nLa siguiente etapa solo avanza cuando todos hayan aprobado.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-REV-003",
+      "source_section": 28,
+      "area": "REVISIÓN DOCUMENTAL",
+      "statement": "El revisor visualiza el artefacto firmado exacto.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-029",
+      "source_section": 29,
+      "area": "OBSERVACIONES",
+      "statement": "El revisor puede:\n\n- crear;\n- editar las propias activas;\n- eliminar las propias activas;\n- asociar observación a página/sección;\n- registrar observación general.\n\nDespués de decidir:\n\n- las observaciones se congelan como historial.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-030",
+      "source_section": 30,
+      "area": "RESALTADO",
+      "statement": "Debe existir función sencilla de resaltado sobre el documento.\n\nEl revisor podrá:\n\n1. seleccionar/resaltar una zona;\n2. registrar observación relacionada.\n\nNo se requiere editor PDF complejo.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-031",
+      "source_section": 31,
+      "area": "DEVOLUCIÓN",
+      "statement": "Cuando un documento se devuelve:\n\n- cambia a DEVUELTO / EN CORRECCIÓN;\n- docente puede corregir;\n- aprobaciones anteriores quedan como historial;\n- no son válidas para el artefacto corregido;\n- al reenviar comienza nueva ronda.\n\nNo crear automáticamente versión formal 2.0.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-032",
+      "source_section": 32,
+      "area": "VERSIÓN FORMAL",
+      "statement": "Formato:\n\n- 1.0\n- 2.0\n- 3.0\n\nUna nueva versión formal solo ocurre por decisión institucional.\n\nNo utilizar:\n\n- 1.1;\n- 1.2;\n\nhasta confirmación institucional.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-FLOW-001",
+      "source_section": 33,
+      "area": "FLUJOS INSTITUCIONALES",
+      "statement": "El flujo depende del grupo.\n\nNo existe un único flujo para todos.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-FLOW-002",
+      "source_section": 33,
+      "area": "FLUJOS INSTITUCIONALES",
+      "statement": "El administrador debe poder configurar etapas.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-FLOW-003",
+      "source_section": 33,
+      "area": "FLUJOS INSTITUCIONALES",
+      "statement": "Una etapa puede corresponder a:\n\n- persona;\n- rol;\n- coordinación;\n- órgano colegiado.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-FLOW-004",
+      "source_section": 33,
+      "area": "FLUJOS INSTITUCIONALES",
+      "statement": "Algunos órganos colegiados pueden no requerir:\n\n- nombre individual;\n- firma personal.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-FLOW-005",
+      "source_section": 33,
+      "area": "FLUJOS INSTITUCIONALES",
+      "statement": "No asumir que Consejo Directivo, Consejo Académico u otro órgano siguen el mismo proceso.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-034",
+      "source_section": 34,
+      "area": "PROCEDIMIENTO EXTERNO / QIPOC",
+      "statement": "PENDIENTE DE VALIDACIÓN INSTITUCIONAL.\n\nEn reunión se discutió la posibilidad de que parte del proceso continúe mediante procedimiento externo.\n\nNo implementar todavía como norma definitiva:\n\n- quién descarga;\n- cuándo descarga;\n- quién sube QIPOC;\n- cuándo se considera aprobado.\n\nMantener esta integración configurable/provisional.",
+      "status": "PENDIENTE DE VALIDACIÓN INSTITUCIONAL",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-035",
+      "source_section": 35,
+      "area": "INFORME T2",
+      "statement": "Formato:\n\n`UTA-SGC-A-2-1-P7-T2`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-036",
+      "source_section": 36,
+      "area": "CREACIÓN DEL INFORME",
+      "statement": "El docente puede crear un Informe:\n\n- derivado de un Plan;\n- independiente, únicamente si el requisito sigue vigente según configuración institucional.\n\nPara el flujo principal validado durante reunión, el Informe relacionado con planificación debe derivar automáticamente del Plan.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-037",
+      "source_section": 37,
+      "area": "INFORME DERIVADO",
+      "statement": "Debe importar:\n\n- actividades;\n- medios de verificación;\n- datos institucionales;\n- Plan relacionado.\n\nLa correspondencia Plan → Informe debe mantenerse.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-038",
+      "source_section": 38,
+      "area": "SECCIONES T2",
+      "statement": "El Informe incluye:\n\n1. Antecedentes.\n2. Desarrollo de actividades.\n3. Conclusiones.\n4. Oportunidades de mejora.\n5. Registro de contactos y gestiones, cuando aplique.\n6. Anexos.\n7. Firmas.\n8. Historial.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-039",
+      "source_section": 39,
+      "area": "DESARROLLO DE ACTIVIDADES DEL INFORME",
+      "statement": "Las actividades del Plan se cargan automáticamente.\n\nEl docente registra:\n\n- porcentaje de ejecución;\n- observaciones.\n\nNo debe tener que reescribir manualmente las actividades.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-040",
+      "source_section": 40,
+      "area": "NOTAS INSTRUCTIVAS T2",
+      "statement": "Para el documento formal generado no deben mostrarse notas de plantilla que sean únicamente instrucciones de edición.\n\nEspecialmente las notas que expliquen cuándo usar la tabla deben omitirse cuando el sistema ya conoce el origen del Informe.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-041",
+      "source_section": 41,
+      "area": "PAGECOUNT",
+      "statement": "T1 y T2 deben tener cantidad de páginas dinámica.\n\nNunca fijar 5, 3 u otro número.\n\nLa cantidad depende de:\n\n```ts\nartifact.pages.length\n````",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-042",
+      "source_section": 42,
+      "area": "EJECUCIÓN DE ACTIVIDADES",
+      "statement": "Una vez validado un Plan, sus actividades pasan a ejecución.\n\nVista:\n\n`Mis Actividades`\n\nDebe permitir:\n\n* filtrar;\n* consultar;\n* abrir detalle;\n* revisar fechas;\n* revisar responsables;\n* revisar recursos;\n* revisar medios.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-043",
+      "source_section": 43,
+      "area": "AUTORIZACIÓN DE ACTIVIDADES",
+      "statement": "Solo responsables de la actividad pueden:\n\n* cargar;\n* reemplazar;\n* modificar evidencia.\n\nUsuarios no responsables:\n\n* solo lectura.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-044-INTRO",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "Por cada medio seleccionado:\n\n`exactamente 1 PDF`",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-EVI-001",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "PDF únicamente.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-EVI-002",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "Tamaño configurable.\n\nDemo actual:\n\n10 MB.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-EVI-003",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "Antes del límite:\n\npuede reemplazarse.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-EVI-004",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "El reemplazo crea nueva versión de evidencia.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-EVI-005",
+      "source_section": 44,
+      "area": "EVIDENCIAS",
+      "statement": "No modifica versión formal del Plan.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-045",
+      "source_section": 45,
+      "area": "FECHA LÍMITE DE EVIDENCIA",
+      "statement": "Por defecto relacionada con la fecha Hasta de actividad.\n\nPuede reemplazarse hasta:\n\n`23:59`\n\ndel día límite.\n\nNo implementar extensión extraordinaria automática.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-046",
+      "source_section": 46,
+      "area": "ESTADOS DE EVIDENCIA",
+      "statement": "* PENDIENTE DE VALIDACIÓN.\n* VALIDADA.\n* OBSERVADA.\n\nDiferenciar:\n\n`evidencia completa`\n\nde:\n\n`evidencia validada`",
+      "status": "PENDIENTE DE VALIDACIÓN INSTITUCIONAL",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-047",
+      "source_section": 47,
+      "area": "VALIDACIÓN DE EVIDENCIA",
+      "statement": "Un revisor autorizado puede:\n\n* visualizar PDF;\n* observar;\n* validar.\n\nNo requiere firma electrónica salvo decisión institucional futura.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-048",
+      "source_section": 48,
+      "area": "REEMPLAZO DE EVIDENCIA",
+      "statement": "Si una evidencia observada o validada se reemplaza dentro del plazo:\n\n* crea nueva versión;\n* requiere nueva validación.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-049",
+      "source_section": 49,
+      "area": "ADMINISTRACIÓN",
+      "statement": "Panel administrativo debe incluir:\n\n* usuarios;\n* importación;\n* grupos;\n* períodos;\n* catálogo de actividades;\n* recursos;\n* medios;\n* flujos;\n* feriados;\n* plantillas.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-050",
+      "source_section": 50,
+      "area": "USUARIOS",
+      "statement": "No asumir cédula como campo obligatorio si no fue validado.\n\nBúsqueda principal:\n\n* nombre;\n* correo.\n\nImportación:\n\n* CSV/Excel u otro formato configurable.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-051",
+      "source_section": 51,
+      "area": "NOTIFICACIONES",
+      "statement": "Notificaciones por usuario.\n\nEjemplos:\n\n* documento asignado;\n* documento observado;\n* documento devuelto;\n* evidencia observada;\n* vencimiento próximo.\n\nCada notificación debe navegar al objeto correcto.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-052",
+      "source_section": 52,
+      "area": "AUDITORÍA",
+      "statement": "Registrar eventos relevantes:\n\n* creación;\n* firma;\n* envío;\n* observación;\n* devolución;\n* corrección;\n* aprobación;\n* evidencia;\n* cambio administrativo.\n\nNo mostrar IDs técnicos innecesarios al usuario.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-053",
+      "source_section": 53,
+      "area": "REPORTES",
+      "statement": "Los reportes tienen carácter:\n\n* documental;\n* administrativo;\n* de estado.\n\nNo implementar:\n\n* ranking de docentes;\n* scoring;\n* sanciones;\n* predicciones;\n* productividad personal.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-054",
+      "source_section": 54,
+      "area": "HISTÓRICO",
+      "statement": "Períodos cerrados:\n\n* solo lectura.\n\nDebe conservar:\n\n* Planes;\n* versiones;\n* actividades;\n* evidencias;\n* firmas;\n* trazabilidad.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-055",
+      "source_section": 55,
+      "area": "CIERRE DE PERÍODO",
+      "statement": "La lógica institucional definitiva aún no está confirmada.\n\nPara DEMO puede existir simulación.\n\nNo afirmar procedimiento normativo no confirmado.",
+      "status": "PENDIENTE DE VALIDACIÓN INSTITUCIONAL",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-056",
+      "source_section": 56,
+      "area": "ESTADOS VACÍOS Y ERRORES",
+      "statement": "Toda pantalla debe considerar:\n\n* cargando;\n* vacío;\n* error;\n* permiso insuficiente;\n* acción exitosa.\n\nEvitar pantallas rotas o tablas vacías sin explicación.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-057",
+      "source_section": 57,
+      "area": "ACCIONES EN TABLAS",
+      "statement": "Priorizar iconos.\n\nCada icono debe incluir:\n\n* `title`;\n* `aria-label`.\n\nEvitar columnas llenas de botones textuales.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-058",
+      "source_section": 58,
+      "area": "IDENTIDAD VISUAL",
+      "statement": "Principal:\n\n* azul institucional.\n\nSemánticos:\n\n* verde éxito;\n* amarillo advertencia;\n* rojo error.\n\nEvitar morado como color dominante.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-059",
+      "source_section": 59,
+      "area": "RESPONSIVIDAD",
+      "statement": "Prioridad:\n\ndesktop institucional.\n\nDebe adaptarse razonablemente a resoluciones medianas.\n\nNo sacrificar legibilidad del documento A4.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "UT-SEC-060",
+      "source_section": 60,
+      "area": "REGLA FINAL",
+      "statement": "Toda implementación debe preservar:\n\n* trazabilidad;\n* aislamiento entre documentos;\n* fidelidad del formato;\n* separación de conceptos;\n* configurabilidad institucional;\n* integridad del artefacto firmado.\n\n````",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-DOC-A4-001",
+      "source_section": 61,
+      "area": "DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL",
+      "statement": "Todos los documentos institucionales T1 y T2 se generan en tamaño A4. Las páginas verticales usan 210 × 297 mm y las horizontales 297 × 210 mm.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-TPL-001",
+      "source_section": 61,
+      "area": "DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL",
+      "statement": "El administrador puede reordenar todas las secciones de contenido de T1 y T2. Una sección requerida no puede desactivarse, pero sí moverse. Encabezado y pie son el marco fijo de página.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-TPL-002",
+      "source_section": 61,
+      "area": "DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL",
+      "statement": "Cada documento nuevo conserva un snapshot con plantilla, versión, orden y visibilidad. El renderer, el índice y la numeración siguen ese orden. Los cambios posteriores de Administración no modifican documentos existentes ni artefactos firmados.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ARCH-AI-001",
+      "source_section": 61,
+      "area": "DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL",
+      "statement": "La integración futura de asistencia de redacción usa una abstracción de proveedor en backend: GroqCloud para desarrollo y OpenAI API para producción. El mockup mantiene un proveedor simulado y no expone claves en React.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    },
+    {
+      "id": "FR-ARCH-DB-001",
+      "source_section": 61,
+      "area": "DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL",
+      "statement": "La base de datos productiva objetivo es PostgreSQL local o institucional on-premise, gratuita y relacional. El mockup no incorpora todavía backend ni sustituye `localStorage`.",
+      "status": "HEREDADO",
+      "priority": "POR PRIORIZAR",
+      "acceptance_status": "POR DESGLOSAR Y VALIDAR",
+      "production_status": "NO IMPLEMENTADO"
+    }
+  ]
+}
