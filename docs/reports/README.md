@@ -12,3 +12,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-03 — Commit de borradores y alcance del agente](2026-10-03-04-work-plan-commit-and-agent-scope.md).
 - [2026-10-03 — Actividades y matriz T1](2026-10-03-05-work-plan-activities.md).
 - [2026-10-03 — Preparación del commit y PR de actividades](2026-10-03-06-activities-commit-and-pr.md).
+- [2026-10-03 — Anexos y preparación documental T1](2026-10-03-07-t1-document-preparation.md).
+- [2026-10-03 — Publicación de preparación T1 y flujo autorizado](2026-10-03-08-t1-publication.md).

@@ -593,7 +593,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: CONDICIÓN EXPLÍCITA EN BORRADOR",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-001",
@@ -603,7 +604,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-002",
@@ -613,7 +615,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-003",
@@ -623,7 +626,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-004",
@@ -633,7 +637,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-005",
@@ -643,7 +648,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-019",
@@ -653,7 +659,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: PREVISUALIZACIÓN T1; ACEPTACIÓN INSTITUCIONAL PENDIENTE",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-020",
@@ -663,7 +670,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-021",
@@ -673,7 +681,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: PORTADA T1; CAMPOS INSTITUCIONALES MANUALES",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-022",
@@ -683,7 +692,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-023",
@@ -693,7 +703,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-024",
@@ -703,7 +714,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: ELABORADOR; FLUJO Y FIRMA PENDIENTES",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-025",
@@ -713,7 +725,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-026",

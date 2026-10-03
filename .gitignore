@@ -21,6 +21,7 @@ Thumbs.db
 *.log
 # Runtime data
 /runtime-data/
+runtime-data/
 /uploads/
 /backups/
 # Frozen prototype stays outside this repository

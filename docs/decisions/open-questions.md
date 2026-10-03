@@ -1,5 +1,7 @@
 # Decisiones pendientes y contradicciones
 
+2026-10-03: Q-010 parcialmente resuelta por el propietario: almacenamiento local privado persistente, 10 MB/anexo y 20 anexos como configuración técnica ajustable. Retención, restauración operacional y límites institucionales definitivos siguen pendientes. Q-013 parcialmente resuelta: páginas T1 en A4 conservando estructura y estilos, incluida matriz horizontal; anexos conservan su formato original. Aceptación institucional final y T2 pendientes. [ADR-0002](../architecture/adr/0002-t1-document-preparation.md).
+
 El propietario coordinará validación con institución/DTIC; no asignar autoridades ni respuestas definitivas por suposición.
 
 Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contiene información general y contenido, sin definir el asistente completo. La unicidad docente/grupo/período está preparada como política configurable, deshabilitada provisionalmente; no constituye decisión institucional. Unidad/carrera permanecen manuales hasta disponer de catálogos y vinculación institucional. Las ventanas existentes se aplican inclusivamente en zona configurable America/Guayaquil; Q-006/Q-011 siguen pendientes para excepciones y validación institucional.
@@ -15,7 +17,7 @@ Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contien
 | Q-007 | Firma real. | Servicio DTIC, formato, validación, múltiples firmas y fallos. |
 | Q-008 | Identidad, local/SSO, sesiones, recuperación y CAPTCHA. | Política de acceso y correo disponible. |
 | Q-009 | Stack e infraestructura. | Ratificar versiones, Spring Boot/React/PostgreSQL, red y migraciones. |
-| Q-010 | PDFs/evidencias. | Almacenamiento, retención, límites y restauración; 10 MB es DEMO. |
+| Q-010 | PDFs/evidencias. | Almacenamiento local y límites técnicos iniciales confirmados; retención, restauración y política institucional pendientes. |
 | Q-011 | Fechas/feriados. | Zona institucional y significado exacto de límite 23:59, reloj servidor. |
 | Q-012 | Datos personales y nota institucional. | Campos, finalidades, condición de nota y acceso. |
 | Q-013 | Formatos oficiales T1/T2. | Versión vigente y reordenamiento permitido frente a fidelidad. |

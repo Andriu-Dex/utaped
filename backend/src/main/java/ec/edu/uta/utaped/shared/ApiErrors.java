@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 
 @RestControllerAdvice
 public class ApiErrors {
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ResponseEntity<Map<String,String>> uploadTooLarge(Exception error) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("message","El archivo supera el límite permitido."));
+    }
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<Map<String, String>> business(ResponseStatusException error) {
         return ResponseEntity.status(error.getStatusCode()).body(Map.of("message", error.getReason() == null ? "No se pudo completar la solicitud." : error.getReason()));

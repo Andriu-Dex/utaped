@@ -12,3 +12,5 @@ dt { font-weight: 600; } dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 .check { display: flex; flex-direction: row; align-items: center; gap: .5rem; }
 .check input { width: auto; }
 h1, h2, li { overflow-wrap: anywhere; }
+.document-page { display: block; max-width: 100%; height: auto; margin: 1.5rem auto; border: 1px solid #c7d3de; }
+.danger { background: #a72d34; color: white; }

@@ -22,6 +22,8 @@ Preserve the general conventions below. Spanish stakeholder documentation and UI
 
 Update implementation-status.md for delivered functionality. Create new reports in docs/reports and update the index; never restore deleted reports. Report only checks actually performed. Do not commit, push, deploy or publish unless authorized by the task.
 
+Standing owner authorization (2026-10-03): after completing each implementation and its checks, commit the appropriate files, push the feature branch and open a pull request to develop automatically unless the owner explicitly says otherwise. The owner reviews and merges; never merge automatically. This authorization does not include deployment or publication to main.
+
 Stack decision: docs/architecture/adr/0001-production-foundation.md. Frontend: React/TypeScript/Vite; backend: Java 21/Spring Boot; DB: PostgreSQL/Flyway. Local credentials, server-side JDBC sessions and CSRF are mandatory. No tokens or passwords in browser storage. Run frontend lint/build and isolated PostgreSQL integration tests for affected logic; Playwright for affected flows. Preserve independent feature branches and PRs to develop; main is reserved for completed releases. Inherited AI model names are not verified availability.
 
 ---

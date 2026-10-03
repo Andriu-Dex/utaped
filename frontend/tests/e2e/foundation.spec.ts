@@ -8,8 +8,21 @@ const environment = Object.fromEntries(readFileSync('../.env.e2e', 'utf8').split
 const adminPassword = 'E2e-only-admin-password-2026'
 const userPassword = 'E2e-only-user-password-2026'
 
+function annexPdf() {
+  const stream = 'BT /F1 12 Tf 60 760 Td (E2E original annex) Tj ET'
+  const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`]
+  let text = '%PDF-1.4\n'; const offsets = [0]
+  objects.forEach((object, i) => { offsets.push(Buffer.byteLength(text)); text += `${i + 1} 0 obj\n${object}\nendobj\n` })
+  // Exceed Nginx's default 1 MB to exercise the configured upload boundary.
+  text += '%' + 'x'.repeat(1100000) + '\n'
+  const start = Buffer.byteLength(text)
+  text += 'xref\n0 6\n0000000000 65535 f \n' + offsets.slice(1).map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('')
+  text += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${start}\n%%EOF\n`
+  return Buffer.from(text)
+}
+
 test('local identity, administration, context isolation, recovery and logout', async ({ page, request }) => {
-  test.setTimeout(60000)
+  test.setTimeout(180000)
   await expect.poll(async () => {
     try { return (await request.get('http://127.0.0.1:18080/actuator/health')).status() } catch { return 0 }
   }, { timeout: 30000 }).toBe(200)
@@ -212,5 +225,51 @@ test('local identity, administration, context isolation, recovery and logout', a
 
   await page.screenshot({ path: 'test-results/work-plan-mobile.png', fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Preparación y previsualización', exact: true }).click()
+  await expect(page.getByText('Complete el objetivo.', { exact: false })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Generar previsualización', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Contenido', exact: true }).click()
+  await page.getByLabel('Objetivo', { exact: true }).fill('Cumplir la planificación y documentar los resultados.')
+  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Borrador guardado' })).toBeVisible()
+  await page.getByRole('button', { name: 'Anexos y opciones', exact: true }).click()
+  await page.getByLabel('¿El Plan tiene anexos?').selectOption('true')
+  await expect(page.getByLabel('Título del anexo', { exact: true })).toBeVisible()
+  await page.getByLabel('Título del anexo', { exact: true }).fill('Acta original E2E')
+  await page.getByLabel('Archivo PDF del anexo').setInputFiles({ name: 'acta.pdf', mimeType: 'application/pdf', buffer: annexPdf() })
+  await page.getByRole('button', { name: 'Agregar PDF', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Anexo A. Acta original E2E', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Editar Anexo A', exact: true }).click()
+  await page.getByLabel('Descripción del anexo').fill('Descripción persistida del anexo.')
+  await page.getByRole('button', { name: 'Guardar anexo', exact: true }).click()
+  await expect(page.getByText('Descripción persistida del anexo.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Preparación y previsualización', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Listo para generar' })).toBeVisible()
+  await page.getByRole('button', { name: 'Generar previsualización', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'Descargar PDF T1' })).toBeVisible({ timeout: 90000 })
+  await expect.poll(() => page.getByAltText('Página 1 del Plan T1').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy()
+  const pdfLink = await page.getByRole('link', { name: 'Descargar PDF T1' }).getAttribute('href')
+  const original = await (await page.request.get(pdfLink!)).body()
+  expect(original.subarray(0,5).toString()).toBe('%PDF-')
+  await page.getByRole('button', { name: 'Página siguiente', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Página 2 de' })).toBeVisible()
+  await expect.poll(() => page.getByAltText('Página 2 del Plan T1').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy()
+  await page.screenshot({ path: 'test-results/t1-preview-mobile.png', fullPage: true })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.screenshot({ path: 'test-results/t1-preview-desktop.png', fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Anexos y opciones', exact: true }).click()
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: 'Quitar Anexo A', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Anexo A. Acta original E2E', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await page.getByRole('button', { name: 'Preparación y previsualización', exact: true }).click()
+  await expect(page.getByText('Previsualización anterior:', { exact: false })).toBeVisible()
+  expect(await (await page.request.get(pdfLink!)).body()).toEqual(original)
   await other.close()
 })
