@@ -1,0 +1,2 @@
+ALTER TABLE app_user ADD COLUMN row_version BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE institutional_group ADD COLUMN row_version BIGINT NOT NULL DEFAULT 0;
