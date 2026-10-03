@@ -24,3 +24,9 @@ small.audit-id { display: block; }
   .history-table td { display: grid; grid-template-columns: 6rem minmax(0,1fr); gap: .5rem; padding: .4rem 0; border: 0; }
   .history-table td::before { content: attr(data-label); font-weight: 600; }
 }
+.tracking-totals { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1rem; }
+.tracking-totals div { padding: 1rem; background: #edf4f9; border-radius: .5rem; }
+.tracking-totals dd { font-size: 1.7rem; color: #155b91; font-weight: 700; }
+.tracking-list { list-style: none; padding: 0; }
+.tracking-list li { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; border-bottom: 1px solid #dbe4ed; padding: 1rem 0; }
+.tracking-list small { display: block; }

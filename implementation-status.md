@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–4 fusionados; último merge 68119c4 y CI correcto. Entrega actual en feature/workflow-administration-audit desde develop, organizada por bloques y commits antes de un único push/PR.
+Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–5 fusionados; último merge 83edd16. Entrega actual en feature/tracking-notifications-audit-export desde develop, organizada por bloques y commits antes de un único push/PR.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -13,6 +13,7 @@ Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–4 fusionados; último me
 | Auditoría | Visor e historial documental inicial implementados | Filtros, paginación, nombres capturados para eventos nuevos y autorización por Plan; retención/exportación institucional pendientes. |
 | Pruebas | Backend PostgreSQL y E2E de identidad ejecutados | docs/reports/2026-10-03-01-project-foundation.md. |
 | CI | Workflow frontend/backend/E2E disponible | Base publicada y fusionada; cambios actuales verificados localmente, ejecución remota pendiente de publicación. |
+| Seguimiento personal | Panel inicial implementado | Contadores, filtros, distribución y documentos recientes bajo propiedad/pertenencia; sin métricas ficticias de aprobación. |
 | Borradores T1 | Primera entrega parcial implementada | Creación, información general, justificación/objetivo, lista filtrada/paginada, persistencia, aislamiento y concurrencia. |
 | Actividades y matriz T1 | Primera entrega implementada | Catálogos por grupo, obligatorias/opcionales/Otra, fechas, responsables múltiples/colectivos, recursos/medios, fuente, resumen y persistencia atómica. |
 | Catálogos y feriados | Administración inicial implementada | Altas, edición/desactivación de actividades/recursos/medios; denominación colectiva; feriados y restricción configurable por período. |

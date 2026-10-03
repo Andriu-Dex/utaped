@@ -3,7 +3,7 @@ import { api } from '../shared/api'
 import { WorkPlanEditor } from './WorkPlanEditor'
 import type { WorkPlan, PlanOptions, PlanPage } from './types'
 
-export function WorkPlans({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dirty: boolean) => void; initialDocId?: string | null }) {
   const [options, setOptions] = useState<PlanOptions | null>(null)
   const [result, setResult] = useState<PlanPage | null>(null)
   const [selected, setSelected] = useState<WorkPlan | null>(null)
@@ -12,6 +12,7 @@ export function WorkPlans({ onDirtyChange }: { onDirtyChange: (dirty: boolean) =
   const [search, setSearch] = useState('')
   const [newPlan, setNewPlan] = useState({ title: '', groupId: '', periodId: '', requestKey: crypto.randomUUID() })
   const [reload, setReload] = useState(0)
+  useEffect(() => { let active = true; if (initialDocId) api<WorkPlan>('/work-plans/' + initialDocId).then(plan => { if (active) setSelected(plan) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [initialDocId])
   useEffect(() => {
     let cancelled = false
     const query = new URLSearchParams({ page: String(filters.page), query: filters.query })
