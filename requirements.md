@@ -14,6 +14,8 @@ La aplicación requiere autenticación, autorización, persistencia, almacenamie
 
 ## Especificación organizada
 
+Nuevo alcance confirmado el 2026-10-03: [agente para inspeccionar el proyecto, Trello y proponer mejoras](docs/requirements/project-advisor-agent.md). Es independiente de la asistencia de redacción T1; su alcance técnico y criterios de aceptación están pendientes de definición. Estos tres requisitos nuevos complementan los 122 registros de la fuente heredada.
+
 - [Requisitos funcionales y aceptación](docs/requirements/functional.md).
 - [Requisitos no funcionales](docs/requirements/non-functional.md).
 - [Reglas de negocio](docs/requirements/business-rules.md).

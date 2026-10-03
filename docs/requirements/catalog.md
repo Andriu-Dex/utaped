@@ -244,7 +244,7 @@ No alterar este orden sin nueva validación institucional.
 
 ## FR-T1-001
 
-Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: PARCIAL: identidad, grupo y periodo; datos institucionales manuales.
 
 Debe obtener automáticamente:
 
@@ -267,7 +267,7 @@ La carrera debe aparecer correctamente vinculada.
 
 ## FR-T1-004
 
-Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: fecha civil al crear borrador.
 
 La fecha de elaboración debe registrarse.
 
@@ -281,13 +281,13 @@ No debe cambiar posteriormente porque otro usuario revise o firme.
 
 ## FR-T1-CONT-001
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador.
 
 Debe existir exactamente una Justificación.
 
 ## FR-T1-CONT-002
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador.
 
 Debe existir exactamente un Objetivo.
 

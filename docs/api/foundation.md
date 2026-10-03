@@ -1,5 +1,7 @@
 # Contrato API inicial
 
+El módulo documental inicial tiene su contrato en [Borradores de Plan de Trabajo](work-plan-drafts.md).
+
 Origen común frontend/backend; JSON UTF-8 salvo login form-urlencoded. UUID como identificadores. Errores de aplicación: objeto message en español, sin secretos. 401 sesión inválida; 403 permisos/CSRF/contraseña temporal; 400 validación; 409 duplicado/conflicto; 429 límite de intentos.
 
 | Método / ruta | Acceso | Entrada / salida |

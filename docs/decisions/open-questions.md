@@ -2,6 +2,8 @@
 
 El propietario coordinará validación con institución/DTIC; no asignar autoridades ni respuestas definitivas por suposición.
 
+Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contiene información general y contenido, sin definir el asistente completo. La unicidad docente/grupo/período está preparada como política configurable, deshabilitada provisionalmente; no constituye decisión institucional. Unidad/carrera permanecen manuales hasta disponer de catálogos y vinculación institucional. Las ventanas existentes se aplican inclusivamente en zona configurable America/Guayaquil; Q-006/Q-011 siguen pendientes para excepciones y validación institucional.
+
 | ID | Pregunta | Evidencia necesaria / impacto |
 |---|---|---|
 | Q-001 | Pasos T1: fuente enumera siete, UI puede agrupar matriz/actividades. | Ratificar UX contra pantallas vigentes, conservando estructura documental. |
@@ -22,6 +24,7 @@ El propietario coordinará validación con institución/DTIC; no asignar autorid
 | Q-016 | Operación/accesibilidad. | Volumen, concurrencia, SLA, RPO/RTO, navegadores y objetivos. |
 | Q-017 | Bajas/cambio de miembros y catálogos. | Permisos, asignaciones vigentes y preservación de historia. |
 | Q-018 | Regla AL MENOS UNO frente a todos los revisores obligatorios. | workflow.ts permite alternativa; validar etapas aplicables y representar participantes que no actuaron sin aprobación ficticia. |
+| Q-019 | Agente de inspección del código y planificación del desarrollo de UTAPED (alcance confirmado); tableros Trello y destinatarios pendientes. | Delimitar rutas/revisiones, permisos, criterios de mejora, frecuencia, proveedor/presupuesto y retención antes de implementar. [Requisitos nuevos](../requirements/project-advisor-agent.md). |
 
 Q-001: diferencia confirmada mediante inspección estática; la UI enumera seis pasos y la línea base siete. La elección productiva sigue pendiente. [Detalle de reconciliación](../validation/reconciliation.md).
 
