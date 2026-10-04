@@ -38,8 +38,6 @@ Se reutiliza PDFBox existente para actualización incremental y se agrega única
 - [Distribución oficial Bouncy Castle Java, versión 1.86 y Java 1.8+](https://www.bouncycastle.org/download/bouncy-castle-java/).
 - [Licencia Bouncy Castle](https://github.com/bcgit/bc-java/blob/main/LICENSE.html), mantenida por las dependencias originales; no se copió código de terceros.
 
-## Siguiente implementación
-
 ## Publicación
 
 Commits por bloque: 0575af4 (snapshot/consulta y pruebas), c5bcd87 (núcleo criptográfico y pruebas), 3215789 (UI, trazabilidad y contrato). Rama publicada y [PR #7 abierto hacia develop](https://github.com/Andriu-Dex/utaped/pull/7). Este reporte y la continuación de la inspección inicial se incluyen en un commit documental final de la misma rama. CI remoto disparado por push/PR; los resultados locales descritos están verificados y la revisión/fusión no se ejecutan automáticamente. Contenedores aislados retirados sin borrar volúmenes.
