@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–5 fusionados; último merge 83edd16. Entrega actual en feature/tracking-notifications-audit-export desde develop, organizada por bloques y commits antes de un único push/PR.
+Inicio: 2026-10-02. Actualización: 2026-10-04. PR #1–6 fusionados; último merge a7ec62b. Entrega actual en feature/signature-review-preparation desde develop, organizada por bloques y commits antes de un único push/PR.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -21,6 +21,8 @@ Inicio: 2026-10-02. Actualización: 2026-10-03. PR #1–5 fusionados; último me
 | Configuración de flujos | Primera entrega administrativa implementada | Etapas ordenadas T1/T2 por grupo; personas/roles/órganos, requerimiento de firma, borrador, revisiones inmutables y deshabilitación. No ejecuta revisión documental. |
 | Anexos T1 | Implementados en alcance inicial | PDFs privados, sí/no, metadata, orden, etiquetas automáticas, baja lógica y concurrencia. |
 | Preparación/previsualización T1 | Implementada en alcance inicial | Plantilla DOCX oficial, páginas T1 A4, matriz horizontal, índices reales, snapshot/PDF inmutables y visor paginado. |
+| Preparación de firma | Implementada con bloqueo institucional | Snapshot de flujo/participantes, integridad y bloqueos por artefacto. Sin carga de secretos ni transiciones. |
+| Núcleo criptográfico .p12/.pfx | Implementado y aislado de las rutas de aplicación | CMS separado real RSA/EC, preservación incremental, huella vinculada explícita, cadena PKIX offline y verificación. Integración institucional, revocación, TSA y perfil pendientes. |
 | T1 completo/T2, firma, revisión, evidencias | Pendientes en producto | Preparación T1 no equivale a firma, finalización o aprobación; T2 y evidencias aún no entregados. |
 | SMTP institucional/HTTPS/operación | Pendiente | Mailpit captura correo local; Compose local no es publicación institucional. |
 
@@ -79,3 +81,11 @@ UT-SEC-051 parcial: bandeja interna privada, contador, lectura y navegación con
 Exportación ADMIN de auditoría con filtros aplicados, todas las filas hasta un límite técnico ajustable, snapshot consistente, control de acceso, representación segura de valores de texto y registro de descarga. No exporta PDF ni cambia retención; no constituye un reporte institucional definitivo.
 
 [Reporte de entrega](docs/reports/2026-10-03-10-tracking-notifications-audit-export.md). Siguiente paso recomendado: acordar contrato de firma real y reglas de asignación/transición por grupo para implementar finalización T1 y revisión sobre artefactos exactos. Q-003/Q-007/Q-018 bloquean ese comportamiento; T2/evidencias se construyen después sobre decisiones y artefactos preservados.
+
+## Preparación de firma y snapshots de flujo
+
+Mecanismo .p12/.pfx confirmado por el propietario el 2026-10-04; flujos aún no ratificados. Nuevos artefactos fijan revisión vigente T1, etapas y participantes/nombres/actividad resueltos, conservando órganos sin representantes personales cuando así están configurados. Cambios de configuración o participantes afectan vigencia de preparación y nunca reescriben PDFs anteriores. Consulta/UI por documento y artefacto explícitos, con integridad verificada y acceso del elaborador vigente, sin bypass ADMIN ni acceso de futuros revisores.
+
+El núcleo interno genera y verifica una firma CMS real sin recomponer el PDF, exige huella pública y raíces confiables explícitas y borra los arrays de contenedor/contraseña en éxito/fallo. No se conserva ninguna referencia en servicio persistente. La destrucción completa de copias internas JCA/JVM no puede garantizarse. No está conectado a HTTP, almacenamiento, asignaciones, finalización ni notificaciones.
+
+FR-SIGN-* permanece parcial/no habilitado en producto: vinculación real de cuenta/certificado, revocación, TSA/perfil, representación visible y múltiples firmas no están entregados. Q-003/Q-018 no se cierran; no se agrega ningún estado distinto de DRAFT. [Contrato](docs/decisions/signature-review-contract.md), [ficha de validación](docs/validation/workflow-signature-confirmation.md) y [reporte de entrega](docs/reports/2026-10-04-01-signature-core-workflow-snapshots.md).

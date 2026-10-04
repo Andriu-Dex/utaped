@@ -1,5 +1,7 @@
 # Decisiones pendientes y contradicciones
 
+2026-10-04: Q-007 parcialmente resuelta por el propietario: firma mediante archivos .p12/.pfx. Falta definir vinculación de titular/cuenta, autoridades confiables, revocación, perfil y tiempo. Q-003/Q-018 siguen pendientes: el propietario confirma que los flujos no están ratificados y acepta avanzar con preparación técnica manteniendo finalización/envío/aprobación bloqueados. [Contrato](signature-review-contract.md) y [ficha por grupo](../validation/workflow-signature-confirmation.md).
+
 2026-10-03: Q-010 parcialmente resuelta por el propietario: almacenamiento local privado persistente, 10 MB/anexo y 20 anexos como configuración técnica ajustable. Retención, restauración operacional y límites institucionales definitivos siguen pendientes. Q-013 parcialmente resuelta: páginas T1 en A4 conservando estructura y estilos, incluida matriz horizontal; anexos conservan su formato original. Aceptación institucional final y T2 pendientes. [ADR-0002](../architecture/adr/0002-t1-document-preparation.md).
 
 El propietario coordinará validación con institución/DTIC; no asignar autoridades ni respuestas definitivas por suposición.
@@ -14,7 +16,7 @@ Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contien
 | Q-004 | QIPOC y validación externa. | Quién descarga/carga/valida y cuándo se aprueba. |
 | Q-005 | Informe independiente y derivación. | Elegibilidad, multiplicidad y tipos habilitados. |
 | Q-006 | Cierre, reapertura, corrección posterior y prórrogas. | Regla institucional; no crear excepciones automáticas. |
-| Q-007 | Firma real. | Servicio DTIC, formato, validación, múltiples firmas y fallos. |
+| Q-007 | Firma real mediante .p12/.pfx (mecanismo confirmado). | Vinculación de identidad, confianza/cadena, revocación, perfil, tiempo, múltiples firmas y fallos pendientes. |
 | Q-008 | Identidad, local/SSO, sesiones, recuperación y CAPTCHA. | Política de acceso y correo disponible. |
 | Q-009 | Stack e infraestructura. | Ratificar versiones, Spring Boot/React/PostgreSQL, red y migraciones. |
 | Q-010 | PDFs/evidencias. | Almacenamiento local y límites técnicos iniciales confirmados; retención, restauración y política institucional pendientes. |

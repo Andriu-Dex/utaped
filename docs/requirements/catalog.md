@@ -743,7 +743,9 @@ Al finalizar:
 
 ## FR-SIGN-001
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
 
 Firmante usa archivo:
 
@@ -754,19 +756,25 @@ y contraseña.
 
 ## FR-SIGN-002
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
 
 Certificado y contraseña son temporales.
 
 ## FR-SIGN-003
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
 
 No almacenarlos permanentemente.
 
 ## FR-SIGN-004
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
 
 La firma debe aplicarse al artefacto exacto.
 

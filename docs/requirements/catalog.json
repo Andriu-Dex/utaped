@@ -746,7 +746,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
     },
     {
       "id": "FR-SIGN-002",
@@ -756,7 +758,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
     },
     {
       "id": "FR-SIGN-003",
@@ -766,7 +770,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
     },
     {
       "id": "FR-SIGN-004",
@@ -776,7 +782,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
     },
     {
       "id": "FR-SIGN-005",
