@@ -116,6 +116,50 @@ class DocumentIntegrationTests {
         }
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-long.pdf"),bytes);
     }
+    @Test void workflowSnapshotStalenessAndHistoricalPreparationDoNotAssignOrApprove() throws Exception {
+        complete("Planificar con flujo conservado.",1);
+        var initial=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        var preparation=artifacts.signaturePreparation(id,initial.id(),email);
+        assertNull(preparation.workflow());assertFalse(preparation.signingEnabled());assertTrue(preparation.artifactCurrent());
+        byte[] original=artifacts.content(id,initial.id(),email);
+        UUID configuration=UUID.randomUUID(),revision=UUID.randomUUID(),stage=UUID.randomUUID(),collegiate=UUID.randomUUID();
+        var definition=new ec.edu.uta.utaped.workflow.WorkflowModels.Definition("Flujo de prueba",List.of(
+            new ec.edu.uta.utaped.workflow.WorkflowModels.Stage(stage,"Revisión técnica","REVIEW","GROUP_ROLE",List.of(),"MEMBER","",true),
+            new ec.edu.uta.utaped.workflow.WorkflowModels.Stage(collegiate,"Órgano de prueba","APPROVE","COLLEGIATE",List.of(),null,"Órgano configurado",false)));
+        var json=tools.jackson.databind.json.JsonMapper.builder().build();
+        jdbc.update("INSERT INTO workflow_configuration(id,group_id,document_type,draft) VALUES (?,?,'T1',?::jsonb)",configuration,group,json.writeValueAsString(definition));
+        jdbc.update("INSERT INTO workflow_revision(id,configuration_id,revision_number,definition,actor_id) VALUES (?,?,1,?::jsonb,?)",revision,configuration,json.writeValueAsString(definition),user);
+        jdbc.update("UPDATE workflow_configuration SET current_revision_id=? WHERE id=?",revision,configuration);
+        assertFalse(artifacts.signaturePreparation(id,initial.id(),email).artifactCurrent());
+        var configured=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        var captured=artifacts.signaturePreparation(id,configured.id(),email);
+        assertEquals(revision,captured.workflow().revisionId());assertEquals(user,captured.workflow().stages().getFirst().participants().getFirst().id());
+        assertTrue(captured.workflow().stages().get(1).participants().isEmpty());assertFalse(captured.signingEnabled());assertEquals(64,captured.pdfHash().length());
+        long events=jdbc.queryForObject("SELECT count(*) FROM audit_event",Long.class);
+        jdbc.update("UPDATE app_user SET display_name='Nombre cambiado' WHERE id=?",user);
+        var historic=artifacts.signaturePreparation(id,configured.id(),email);
+        assertEquals("Docente de prueba",historic.workflow().stages().getFirst().participants().getFirst().name());assertFalse(historic.artifactCurrent());
+        assertArrayEquals(original,artifacts.content(id,initial.id(),email));assertEquals("DRAFT",plans.get(id,email).documentState());
+        assertEquals(events,jdbc.queryForObject("SELECT count(*) FROM audit_event",Long.class));
+        jdbc.update("UPDATE workflow_configuration SET current_revision_id=NULL WHERE id=?",configuration);
+        assertEquals(revision,artifacts.signaturePreparation(id,configured.id(),email).workflow().revisionId());
+        // Historical snapshots before this delivery deserialize without the optional workflow field.
+        jdbc.update("UPDATE document_artifact SET snapshot=snapshot-'workflow' WHERE id=?",initial.id());
+        assertNull(artifacts.signaturePreparation(id,initial.id(),email).workflow());
+    }
+    @Test void signaturePreparationRejectsOtherDocumentsAdminAndRevokedMembershipAndChecksIntegrity() throws Exception {
+        complete("Preparación privada.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Otro Plan")).id();
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->artifacts.signaturePreparation(other,artifact.id(),email)).getStatusCode().value());
+        UUID admin=UUID.randomUUID();jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'other-admin@example.invalid','Admin',?,'ADMIN',false)",admin,encoder.encode("Test-only-password-2026"));
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->artifacts.signaturePreparation(id,artifact.id(),"other-admin@example.invalid")).getStatusCode().value());
+        jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->artifacts.signaturePreparation(id,artifact.id(),email)).getStatusCode().value());
+        jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,'MEMBER')",user,group);
+        var key=jdbc.queryForObject("SELECT f.storage_key FROM stored_file f JOIN document_artifact a ON a.file_id=f.id WHERE a.id=?",UUID.class,artifact.id());
+        Files.write(Path.of(root).resolve(key.toString()),new byte[]{0});
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->artifacts.signaturePreparation(id,artifact.id(),email)).getStatusCode().value());
+    }
     @Test void storageRollbackAndIntegrityAndLimitChecks() throws Exception {
         var tx=new TransactionTemplate(transactions);var counts=Files.list(Path.of(root));long before;try(counts) { before=counts.count(); }
         assertThrows(IllegalStateException.class,()->tx.execute(status->{ files.put(new byte[]{1,2,3},"test.pdf",1);throw new IllegalStateException("rollback"); }));

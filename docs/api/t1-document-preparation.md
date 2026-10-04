@@ -27,9 +27,16 @@ Errores: 400 campos/PDF inválidos; 403 solo lectura/CSRF; 404 objeto fuera del 
 | POST /artifacts | `{rowVersion}`. Valida preparación y conserva PDF inmutable; reutiliza si snapshot/motor coinciden. |
 | GET /artifacts/{artifactId}/content | PDF histórico con integridad verificada; descarga privada no-store. |
 | GET /artifacts/{artifactId}/pages/{pageIndex} | PNG de página conservada; índice base cero, límites y dimensiones de raster controlados. |
+| GET /artifacts/{artifactId}/signature-preparation | Consulta privada no-store: targetDocId, artifactId, rowVersion, pdfHash, artifactCurrent, workflow congelado, mechanism=PKCS12, signingEnabled=false y blockers. Verifica bytes/hash del archivo; no recibe secretos ni muta estados/asignaciones. |
 
 Exige unidad, justificación, objetivo y al menos una actividad completa guardada. Comprueba obligaciones actuales, fechas/rangos/feriados configurados y responsables/colectivos vigentes. Si anexos=Sí, exige un PDF. Fuente/carrera opcionales mientras no exista regla distinta confirmada. Nota de protección de datos seleccionada explícitamente.
 
 pageCount deriva de pages.length. Cada página registra dimensiones, T1/ANNEX e ID del anexo; el espacio de elaboración identifica actor real y página efectiva. No indica firma aplicada.
 
 Solo DRAFT admite nueva generación. Un borrador fuera de ventana permite previsualizar sin cambiar contenido. Generar no cambia rowVersion, formalVersion ni documentState. Firma, revisión y T2 quedan pendientes. No existen rutas públicas/estáticas al volumen.
+
+Los nuevos snapshots incluyen workflow opcional con revisionId/revisionNumber/name y etapas ordenadas con destinatario, requerimiento de firma y participantes (ID/nombre/actividad al generar). Roles se resuelven por miembros activos en ese instante; un órgano sin firma conserva su denominación sin inventar representantes. No son asignaciones de revisión ni conceden acceso a esas personas.
+
+Captura y consulta usan transacción REPEATABLE_READ para obtener un snapshot consistente de configuración/nombres. Cambiar revisión, deshabilitar flujo, cambiar nombre/actividad de personas explícitas o miembros del rol altera sourceHash y obliga a regenerar para preparación vigente. Los bytes/snapshots anteriores permanecen recuperables. Cambios de borrador de flujo sin configurar una revisión no alteran su revisión vigente. Artefactos antiguos sin workflow se leen como workflow=null; no se reescriben y se consideran anteriores al nuevo esquema de snapshot.
+
+La consulta agrega bloqueos de contenido, período, flujo sin configurar/participantes no disponibles y, siempre, validación institucional y política de firma. No habilita la carga de .p12/.pfx ni expone endpoints POST de firma. 404 protege documento/artefacto ajeno incluso ante ADMIN; 409 ante integridad fallida. [Alcance criptográfico interno](../decisions/signature-review-contract.md).
