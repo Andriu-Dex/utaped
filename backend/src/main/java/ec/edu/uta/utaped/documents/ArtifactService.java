@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -25,12 +26,14 @@ public class ArtifactService {
     private final JdbcTemplate jdbc;private final WorkPlanService plans;private final ActivityService activities;
     private final AttachmentService attachments;private final StoredFiles files;private final T1Template template;
     private final T1PdfEngine engine;private final AuditService audit;private final Accounts accounts;
+    private final DocumentWorkflowSnapshot workflows;
     private final JsonMapper json=JsonMapper.builder().build();
     private final Semaphore generation=new Semaphore(1),rendering=new Semaphore(2);
     public ArtifactService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
-        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts) {
+        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows) {
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.files=files;
         this.template=template;this.engine=engine;this.audit=audit;this.accounts=accounts;
+        this.workflows=workflows;
     }
     public Readiness readiness(UUID id,String email) {
         var plan=plans.get(id,email);var matrix=activities.get(id,email);var annexes=attachments.get(id,email);
@@ -64,9 +67,10 @@ public class ArtifactService {
         var rows=matrix.activities().stream().map(a->new Activity(a.title(),a.category(),a.startsOn()==null?null:a.startsOn().toString(),a.endsOn()==null?null:a.endsOn().toString(),
             a.collective()?matrix.collectiveLabel():String.join("\n",a.responsibleIds().stream().map(m->names.getOrDefault(m,"Responsable no disponible")).toList()),
             a.responsibleIds(),a.resources().stream().map(c->c.label()).toList(),a.means().stream().map(c->c.label()).toList())).toList();
-        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,annexes.items());
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,annexes.items(),workflows.capture(plan.groupId()));
     }
     private String hash(Snapshot snapshot) { return StoredFiles.hash(json.writeValueAsString(snapshot).getBytes(StandardCharsets.UTF_8)); }
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
     public List<Artifact> list(UUID id,String email) {
         String current=hash(snapshot(id,email));
         return jdbc.query("SELECT * FROM document_artifact WHERE work_plan_id=? ORDER BY created_at DESC,id",(rs,n)->{
@@ -76,7 +80,7 @@ public class ArtifactService {
                 current.equals(rs.getString("source_hash")) && template.version().equals(rs.getString("template_version")));
         },id);
     }
-    @Transactional public Artifact generate(UUID id,String email,Generate input) {
+    @Transactional(isolation=Isolation.REPEATABLE_READ) public Artifact generate(UUID id,String email,Generate input) {
         var state=attachments.lock(id,email);
         if(!plans.get(id,email).documentState().equals("DRAFT")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo los borradores permiten generar una nueva previsualización.");
         if(state.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió. Recargue antes de generar la previsualización.");
@@ -104,6 +108,29 @@ public class ArtifactService {
             .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Previsualización no disponible."));
     }
     public byte[] content(UUID id,UUID artifactId,String email) { return files.read(fileId(id,artifactId,email)); }
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public SignaturePreparation signaturePreparation(UUID id,UUID artifactId,String email) {
+        var plan=plans.get(id,email);
+        var artifact=list(id,email).stream().filter(a->a.id().equals(artifactId)).findFirst()
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Previsualización no disponible."));
+        var stored=jdbc.queryForMap("SELECT snapshot::text FROM document_artifact WHERE id=? AND work_plan_id=?",artifactId,id);
+        var frozen=json.readValue((String)stored.get("snapshot"),Snapshot.class);
+        var blockers=new ArrayList<Blocker>();
+        if(!artifact.current()) blockers.add(new Blocker("Artefacto","El contenido, la plantilla o la configuración del flujo cambió. Genere una nueva previsualización."));
+        if(!plan.editable()) blockers.add(new Blocker("Período","El Plan no está habilitado para elaboración en este momento."));
+        blockers.addAll(readiness(id,email).blockers());
+        if(frozen.workflow()==null) blockers.add(new Blocker("Flujo","Esta previsualización no contiene una revisión de flujo configurada."));
+        else for(var stage:frozen.workflow().stages()) {
+            if((!stage.recipientKind().equals("COLLEGIATE") || stage.requiresSignature()) && stage.participants().isEmpty())
+                blockers.add(new Blocker("Flujo",stage.label()+": no hay participantes resueltos."));
+            if(stage.participants().stream().anyMatch(p->!p.active())) blockers.add(new Blocker("Flujo",stage.label()+": contiene participantes inactivos."));
+        }
+        blockers.add(new Blocker("Validación institucional","Pendiente confirmar etapas, participantes y condición de avance por grupo. La configuración no habilita aprobación."));
+        blockers.add(new Blocker("Política de firma","Pendiente definir vinculación certificado–usuario, confianza, revocación y perfil de firma antes de habilitar la carga de .p12/.pfx."));
+        // Reading checks the stored hash. No secret upload or state transition is exposed.
+        String pdfHash=StoredFiles.hash(content(id,artifactId,email));
+        return new SignaturePreparation(id,artifactId,plan.rowVersion(),pdfHash,artifact.current(),frozen.workflow(),"PKCS12",false,List.copyOf(blockers));
+    }
     public byte[] page(UUID id,UUID artifactId,int pageIndex,String email) {
         byte[] bytes=content(id,artifactId,email);
         if(!rendering.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización ocupada. Intente nuevamente.");
