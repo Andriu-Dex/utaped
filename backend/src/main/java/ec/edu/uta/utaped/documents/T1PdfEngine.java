@@ -76,14 +76,32 @@ public class T1PdfEngine {
                         if(stripper.getText(composed).replaceAll("\\s+","").contains(snapshot.plan().teacherName().replaceAll("\\s+",""))) { namePage=p;break; }
                     }
                     if(namePage<0) throw new IOException("No se encontró la fila del elaborador.");
+                    var location=signatureBounds(composed,namePage);
                     stampPageNumbers(composed);
                     var out=new ByteArrayOutputStream();composed.save(out);
-                    return new Generated(out.toByteArray(),List.copyOf(pages),List.of(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",snapshot.plan().teacherId(),namePage,namePage+1)));
+                    return new Generated(out.toByteArray(),List.copyOf(pages),List.of(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",snapshot.plan().teacherId(),namePage,namePage+1,location)));
                 } finally { for(var source:sources) source.close(); }
             }
         } catch(Exception e) { throw new IllegalStateException("No se pudo generar el documento T1.",e); }
     }
     private static Page metadata(PDPage page,int index,String kind,UUID attachmentId) { return new Page(index,index+1,page.getMediaBox().getWidth(),page.getMediaBox().getHeight(),kind,attachmentId); }
+    private static class SignatureMarkers extends PDFTextStripper {
+        TextPosition top,bottom,last;
+        SignatureMarkers() throws IOException {}
+        @Override protected void writeString(String text,List<TextPosition> positions) {
+            int first=text.indexOf("@@SIGTOP@@"),end=text.indexOf("@@SIGBOTTOM@@");
+            if(first>=0) top=positions.get(first);
+            if(end>=0) { bottom=positions.get(end);last=positions.get(Math.min(end+12,positions.size()-1)); }
+        }
+    }
+    private static Bounds signatureBounds(PDDocument pdf,int index) throws IOException {
+        var marker=new SignatureMarkers();marker.setStartPage(index+1);marker.setEndPage(index+1);marker.getText(pdf);
+        if(marker.top==null || marker.bottom==null) throw new IOException("Signature bounds not found.");
+        float x=marker.top.getXDirAdj(),y=pdf.getPage(index).getMediaBox().getHeight()-marker.bottom.getYDirAdj();
+        float width=marker.last.getXDirAdj()+marker.last.getWidthDirAdj()-x,height=marker.bottom.getYDirAdj()-marker.top.getYDirAdj();
+        if(width<60 || height<30) throw new IOException("Signature bounds too small.");
+        return new Bounds(x+1,y+1,width-2,height-2);
+    }
     private static class NumberMarker extends PDFTextStripper {
         final List<TextPosition> positions=new ArrayList<>();
         NumberMarker() throws IOException {}
@@ -94,14 +112,15 @@ public class T1PdfEngine {
     private static void stampPageNumbers(PDDocument pdf) throws IOException {
         for(int i=0;i<pdf.getNumberOfPages();i++) {
             var marker=new NumberMarker();marker.setStartPage(i+1);marker.setEndPage(i+1);marker.getText(pdf);
-            if(marker.positions.isEmpty()) continue;
-            var first=marker.positions.getFirst();var last=marker.positions.getLast();var page=pdf.getPage(i);float x=first.getXDirAdj(),y=page.getMediaBox().getHeight()-first.getYDirAdj();
-            var parser=new PDFStreamParser(page);var tokens=parser.parse();parser.close();
+            // Remove composition markers on every page, including pages without a page-number marker.
+            var page=pdf.getPage(i);var parser=new PDFStreamParser(page);var tokens=parser.parse();parser.close();
             for(var token:tokens) {
                 if(token instanceof COSString value) clearMarker(value);
                 if(token instanceof COSArray values) for(var value:values) if(value instanceof COSString string) clearMarker(string);
             }
             var rewritten=new PDStream(pdf);try(var output=rewritten.createOutputStream(COSName.FLATE_DECODE)) { new ContentStreamWriter(output).writeTokens(tokens); }page.setContents(rewritten);
+            if(marker.positions.isEmpty()) continue;
+            var first=marker.positions.getFirst();var last=marker.positions.getLast();float x=first.getXDirAdj(),y=page.getMediaBox().getHeight()-first.getYDirAdj();
             try(var stream=new PDPageContentStream(pdf,page,PDPageContentStream.AppendMode.APPEND,true,true)) {
                 stream.setNonStrokingColor(Color.WHITE);stream.addRect(x-1,y-3,last.getXDirAdj()+last.getWidthDirAdj()-x+3,first.getFontSizeInPt()+5);stream.fill();
                 stream.setNonStrokingColor(Color.BLACK);stream.beginText();stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA),first.getFontSizeInPt());stream.newLineAtOffset(x,y);stream.showText(String.valueOf(i+1));stream.endText();
@@ -110,6 +129,6 @@ public class T1PdfEngine {
     }
     private static void clearMarker(COSString value) {
         byte[] bytes=value.getBytes();String text=new String(bytes,java.nio.charset.StandardCharsets.ISO_8859_1);
-        if(text.contains("@@PN@@")) value.setValue(text.replace("@@PN@@","").getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
+        if(text.contains("@@")) value.setValue(text.replace("@@PN@@","").replace("@@SIGTOP@@","").replace("@@SIGBOTTOM@@","").getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
     }
 }

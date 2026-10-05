@@ -46,6 +46,8 @@ management:
     health:
       show-details: never
 app:
+  signing:
+    allow-http: ${SIGNING_ALLOW_HTTP:false}
   audit:
     export-max-rows: ${AUDIT_EXPORT_MAX_ROWS:10000}
   documents:

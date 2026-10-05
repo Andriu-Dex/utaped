@@ -133,6 +133,9 @@ public class ArtifactService {
     }
     public byte[] page(UUID id,UUID artifactId,int pageIndex,String email) {
         byte[] bytes=content(id,artifactId,email);
+        return renderPage(bytes,pageIndex);
+    }
+    public byte[] renderPage(byte[] bytes,int pageIndex) {
         if(!rendering.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización ocupada. Intente nuevamente.");
         try(var pdf=Loader.loadPDF(bytes)) {
             if(pageIndex<0 || pageIndex>=pdf.getNumberOfPages()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
