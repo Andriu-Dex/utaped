@@ -11,7 +11,7 @@ if not environment.exists():
         f'BOOTSTRAP_ADMIN_PASSWORD={secrets.token_urlsafe(24)}\n'
         'APP_PUBLIC_URL=http://127.0.0.1:15173\n'
         'COOKIE_SECURE=false\nBACKEND_PORT=18080\nDB_PORT=15433\n'
-        'MAIL_UI_PORT=18025\nMAIL_SMTP_PORT=11025\n',
+        'MAIL_UI_PORT=18025\nMAIL_SMTP_PORT=11025\nSIGNING_ALLOW_HTTP=true\n',
         encoding='utf-8',
     )
 print('Isolated E2E configuration is ready.')

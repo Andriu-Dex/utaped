@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { X509Certificate } from 'node:crypto'
+import { tmpdir } from 'node:os'
+import { join, resolve, dirname, basename } from 'node:path'
+
+function personalCertificate() {
+  const root = resolve(tmpdir()); const directory = mkdtempSync(join(root, 'utaped-signing-'))
+  if (dirname(resolve(directory)) !== root || !basename(directory).startsWith('utaped-signing-')) throw new Error('Invalid test fixture directory')
+  const key = join(directory, 'key.pem'); const certificate = join(directory, 'public.pem'); const container = join(directory, 'certificate.p12')
+  const password = 'E2e-only-signing-password'
+  try {
+    const config = join(directory, 'openssl.cnf')
+    writeFileSync(config, '[req]\ndistinguished_name=dn\n[dn]\n')
+    execFileSync('openssl', ['req', '-config', config, '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', certificate, '-days', '1', '-subj', '/CN=E2E Personal signer', '-addext', 'basicConstraints=critical,CA:FALSE', '-addext', 'keyUsage=critical,digitalSignature'], { stdio: 'ignore' })
+    execFileSync('openssl', ['pkcs12', '-export', '-inkey', key, '-in', certificate, '-out', container, '-passout', 'pass:' + password], { stdio: 'ignore' })
+    return { buffer: readFileSync(container), fingerprint: new X509Certificate(readFileSync(certificate)).fingerprint256.replaceAll(':', '').toLowerCase(), password }
+  } finally { rmSync(directory, { recursive: true, force: true }) }
+}
 
 // This file is generated locally for the isolated validation stack, never committed.
 const environment = Object.fromEntries(readFileSync('../.env.e2e', 'utf8').split(/\r?\n/).filter(line => line.includes('=')).map(line => {
@@ -30,6 +48,7 @@ test('local identity, administration, context isolation, recovery and logout', a
   const email = `e2e-${suffix}@example.invalid`
   const displayName = `Usuario E2E ${suffix}`
   const group = `Grupo de prueba ${suffix}`
+  const certificate = personalCertificate()
   await page.goto('/')
   await page.getByLabel('Correo institucional').fill(environment.BOOTSTRAP_ADMIN_EMAIL)
   await page.getByLabel('Contraseña', { exact: true }).fill(environment.BOOTSTRAP_ADMIN_PASSWORD)
@@ -83,6 +102,15 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.getByLabel('Denominación colectiva del grupo').fill('Integrantes del grupo E2E')
   await page.getByRole('button', { name: 'Guardar denominación colectiva', exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Configuración de planificación guardada.' })).toBeVisible()
+  const certificateAdmin = page.getByRole('region', { name: 'Vinculación de certificados', exact: true })
+  await certificateAdmin.getByLabel('Buscar firmante', { exact: true }).fill(email)
+  await expect(certificateAdmin.getByLabel('Cuenta del firmante')).toContainText(email)
+  await certificateAdmin.getByLabel('Cuenta del firmante').selectOption({ label: displayName + ' · ' + email })
+  await certificateAdmin.getByLabel('Huella SHA-256 pública').fill(certificate.fingerprint)
+  await certificateAdmin.getByLabel('Referencia de comprobación de identidad').fill('Comprobación de certificado público generado para E2E.')
+  await certificateAdmin.getByLabel('He comprobado que el certificado público corresponde a esta cuenta.').check()
+  await certificateAdmin.getByRole('button', { name: 'Vincular huella pública', exact: true }).click()
+  await expect(certificateAdmin.getByRole('status')).toHaveText('Huella pública vinculada.')
 
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await page.getByLabel('Correo institucional').fill(email)
@@ -262,6 +290,24 @@ test('local identity, administration, context isolation, recovery and logout', a
   await signature.getByRole('button', { name: 'Actualizar preparación de firma', exact: true }).click()
   await expect(signature.getByText('Integridad del PDF almacenado comprobada.', { exact: false })).toBeVisible()
   await signature.screenshot({ path: 'test-results/signature-preparation-mobile.png' })
+  const authorSigning = page.getByRole('region', { name: 'Firma del elaborador', exact: true })
+  await expect(authorSigning.getByRole('button', { name: 'Firmar', exact: true })).toBeEnabled()
+  await authorSigning.getByLabel('Certificado personal (.p12/.pfx)').setInputFiles({ name: 'personal.p12', mimeType: 'application/x-pkcs12', buffer: certificate.buffer })
+  await authorSigning.getByLabel('Contraseña del certificado', { exact: true }).fill('Wrong-test-password')
+  await authorSigning.getByRole('button', { name: 'Firmar', exact: true }).click()
+  await expect(authorSigning.getByRole('alert')).toBeVisible()
+  await expect(authorSigning.getByLabel('Contraseña del certificado', { exact: true })).toHaveValue('')
+  await expect(authorSigning.getByLabel('Certificado personal (.p12/.pfx)')).toHaveValue('')
+  await authorSigning.getByLabel('Certificado personal (.p12/.pfx)').setInputFiles({ name: 'personal.pfx', mimeType: 'application/x-pkcs12', buffer: certificate.buffer })
+  await authorSigning.getByLabel('Contraseña del certificado', { exact: true }).fill(certificate.password)
+  await authorSigning.getByRole('button', { name: 'Firmar', exact: true }).click()
+  await expect(authorSigning.getByRole('link', { name: 'Descargar PDF firmado' })).toBeVisible({ timeout: 30000 })
+  await expect(authorSigning.locator('input[type="file"], input[type="password"]')).toHaveCount(0)
+  await expect(authorSigning.getByText('La cadena de la entidad emisora y la revocación no fueron comprobadas.', { exact: false })).toBeVisible()
+  await expect.poll(() => authorSigning.getByRole('img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy()
+  const signedLink = await authorSigning.getByRole('link', { name: 'Descargar PDF firmado' }).getAttribute('href')
+  const signedBytes = await (await page.request.get(signedLink!)).body()
+  await authorSigning.screenshot({ path: 'test-results/author-signature-mobile.png' })
   await expect.poll(() => page.getByAltText('Página 1 del Plan T1').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy()
   const pdfLink = await page.getByRole('link', { name: 'Descargar PDF T1' }).getAttribute('href')
   const original = await (await page.request.get(pdfLink!)).body()
@@ -285,6 +331,7 @@ test('local identity, administration, context isolation, recovery and logout', a
   await expect(signature.getByText('Artefacto anterior: vuelva a generar la previsualización.', { exact: false })).toBeVisible()
   expect((await (await page.request.get(signatureArtifactUrl)).json()).artifactCurrent).toBe(false)
   expect(await (await page.request.get(pdfLink!)).body()).toEqual(original)
+  expect(await (await page.request.get(signedLink!)).body()).toEqual(signedBytes)
   await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
   await page.getByRole('button', { name: 'Historial del Plan', exact: true }).click()
   const history = page.getByRole('region', { name: 'Historial del Plan', exact: true })
@@ -305,6 +352,7 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.getByRole('button', { name: /^Notificaciones/ }).click()
   const notifications = page.getByRole('region', { name: 'Bandeja de notificaciones', exact: true })
   await expect(notifications.getByRole('heading', { name: 'Previsualización T1 guardada', exact: true })).toBeVisible()
+  certificate.buffer.fill(0)
   await notifications.screenshot({ path: 'test-results/notifications-mobile.png' })
   const previewNotice = notifications.getByRole('listitem', { name: 'Previsualización T1 guardada', exact: true })
   await previewNotice.getByRole('button', { name: 'Abrir objeto', exact: true }).click()

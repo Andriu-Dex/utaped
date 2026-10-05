@@ -4,6 +4,7 @@ import { api, download } from '../shared/api'
 interface AuditEvent { id: string; actorId: string | null; actorName: string | null; historicalActorName: boolean; action: string; targetId: string | null; subjectUserId: string | null; occurredAt: string }
 interface AuditPage { items: AuditEvent[]; total: number; page: number; size: number }
 const labels: Record<string, string> = {
+  T1_ARTIFACT_SIGNED: 'Artefacto T1 firmado', SIGNING_CERTIFICATE_BOUND: 'Certificado público vinculado', SIGNING_CERTIFICATE_UNBOUND: 'Certificado público desvinculado',
   AUDIT_EXPORTED: 'Auditoría exportada',
   WORK_PLAN_CREATED: 'Plan creado', WORK_PLAN_DRAFT_SAVED: 'Borrador guardado', WORK_PLAN_MATRIX_SAVED: 'Matriz guardada', T1_PREVIEW_GENERATED: 'Previsualización T1 generada',
   DOCUMENT_ATTACHMENT_SETTINGS_SAVED: 'Opciones de anexos guardadas', DOCUMENT_ATTACHMENT_ADDED: 'Anexo agregado', DOCUMENT_ATTACHMENT_UPDATED: 'Anexo actualizado', DOCUMENT_ATTACHMENT_REMOVED: 'Anexo retirado', DOCUMENT_ATTACHMENTS_REORDERED: 'Anexos reordenados',

@@ -23,7 +23,7 @@ export function SignaturePreparation({ targetDocId, artifactId }: { targetDocId:
     return () => { active = false }
   }, [targetDocId, artifactId, refresh])
   return <section aria-label="Preparación de firma"><h2>Firma y flujo del artefacto</h2>
-    <p>Mecanismo previsto: archivo .p12/.pfx con contraseña. La firma, el envío y la aprobación permanecen deshabilitados hasta completar la validación institucional y la política de certificados.</p>
+    <p>El envío y la aprobación permanecen deshabilitados hasta confirmar los flujos institucionales. La firma del elaborador dispone de una comprobación independiente en «Firmar PDF».</p>
     {error ? <p role="alert" className="error">{error}</p> : !preparation ? <p role="status">Consultando preparación de firma…</p> : <>
       <p>Integridad del PDF almacenado comprobada. {preparation.artifactCurrent ? 'El artefacto coincide con la preparación actual.' : 'Artefacto anterior: vuelva a generar la previsualización.'}</p>
       {preparation.workflow ? <><h3>{preparation.workflow.name} · revisión técnica {preparation.workflow.revisionNumber}</h3>
