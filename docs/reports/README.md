@@ -18,3 +18,4 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-03 — Seguimiento, notificaciones y exportación](2026-10-03-10-tracking-notifications-audit-export.md).
 - [2026-10-03 — Inspección inicial de firma y revisión](2026-10-03-11-signature-review-preparation.md).
 - [2026-10-04 — Núcleo de firma y snapshots de flujo](2026-10-04-01-signature-core-workflow-snapshots.md).
+- [2026-10-05 — Firma visible del elaborador T1](2026-10-05-01-visible-author-signing.md).

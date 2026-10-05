@@ -745,7 +745,7 @@ Al finalizar:
 
 Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
 
-Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 Firmante usa archivo:
 
@@ -758,7 +758,7 @@ y contraseña.
 
 Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
 
-Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 Certificado y contraseña son temporales.
 
@@ -766,7 +766,7 @@ Certificado y contraseña son temporales.
 
 Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
 
-Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 No almacenarlos permanentemente.
 
@@ -774,13 +774,15 @@ No almacenarlos permanentemente.
 
 Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
 
-Alcance: Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 La firma debe aplicarse al artefacto exacto.
 
 ## FR-SIGN-005
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 La metadata de ubicación debe formar parte del artefacto.
 

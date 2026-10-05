@@ -747,8 +747,8 @@
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
       "production_status": "PARCIAL",
-      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
-      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-002",
@@ -759,8 +759,8 @@
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
       "production_status": "PARCIAL",
-      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
-      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-003",
@@ -771,8 +771,8 @@
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
       "production_status": "PARCIAL",
-      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
-      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-004",
@@ -783,8 +783,8 @@
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
       "production_status": "PARCIAL",
-      "production_scope": "Núcleo criptográfico interno .p12/.pfx con secretos temporales, preservación incremental y verificación. Sin ruta de firma, vinculación institucional de cuentas, revocación ni transiciones habilitadas.",
-      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/Pkcs12PdfSignerTests.java"
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-005",
@@ -794,7 +794,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-REV-001",
