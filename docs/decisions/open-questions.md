@@ -6,6 +6,8 @@
 
 El propietario coordinará validación con institución/DTIC; no asignar autoridades ni respuestas definitivas por suposición.
 
+Para la reunión del cliente: [guía completa con preguntas específicas, fichas y registro de respuestas](../validation/client-decision-guide.md). Cubre Q-001–Q-019, distingue decisiones del proyecto ya adoptadas y pendientes institucionales; no cierra ninguna cuestión por sí sola.
+
 Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contiene información general y contenido, sin definir el asistente completo. La unicidad docente/grupo/período está preparada como política configurable, deshabilitada provisionalmente; no constituye decisión institucional. Unidad/carrera permanecen manuales hasta disponer de catálogos y vinculación institucional. Las ventanas existentes se aplican inclusivamente en zona configurable America/Guayaquil; Q-006/Q-011 siguen pendientes para excepciones y validación institucional.
 
 | ID | Pregunta | Evidencia necesaria / impacto |

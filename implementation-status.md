@@ -1,10 +1,11 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–7 fusionados; último merge bde162d. Entrega actual en feature/visible-author-signing desde develop, organizada por bloques y commits antes de un único push/PR.
+Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–8 fusionados; último merge 248eeba. Entrega documental actual en docs/client-decision-guide desde develop: guía de preguntas para la reunión del cliente, sin cambios al aplicativo.
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | Documentación inicial | Disponible; pendientes institucionales registrados | docs/requirements y docs/validation. |
+| Guía de confirmación con el cliente | Preparada; sin respuestas institucionales todavía | docs/validation/client-decision-guide.md cubre Q-001–Q-019, fichas de flujo/permisos/transiciones y evidencia. |
 | Stack productivo | Seleccionado e implementado | ADR-0001, manifests y Dockerfiles. |
 | Credenciales locales | Implementado | Login/logout, bcrypt, CSRF, sesión JDBC, cambio obligatorio y recuperación SMTP. |
 | Usuarios y permisos | Primera entrega implementada | Bootstrap, alta, directorio paginado, edición de nombre/permiso y activación con concurrencia; revocación y protección último admin. |

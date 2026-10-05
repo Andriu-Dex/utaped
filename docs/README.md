@@ -30,3 +30,4 @@ Documentación en español para revisión institucional; identificadores técnic
 - [Seguimiento personal](api/tracking.md).
 - [Notificaciones internas](api/notifications.md).
 - [Firma visible del elaborador T1](api/author-signing.md).
+- [Guía de reunión con el cliente: decisiones y preguntas](validation/client-decision-guide.md).
