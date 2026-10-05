@@ -38,3 +38,7 @@ Después de revisión/fusión del PR, confirmar Q-003/Q-018 mediante la ficha de
 ## Referencias técnicas
 
 [PDFBox 3.0.8: firma visible](https://github.com/apache/pdfbox/blob/3.0.8/examples/src/main/java/org/apache/pdfbox/examples/signature/CreateVisibleSignature2.java). [Spring MVC: lectura de cuerpos](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/requestbody.html). Son referencias de implementación, no acreditan aceptación institucional.
+
+## Publicación
+
+Commits por bloque: 9e1e0eb (backend/documento), 92c3fe6 (interfaz/E2E), 805c90d (contrato y documentación). Rama publicada; [PR #8 hacia develop](https://github.com/Andriu-Dex/utaped/pull/8) abierto para revisión y fusión exclusivas del propietario. CI remoto se consulta en los checks del PR; la validación local indicada arriba está completada. No se fusionó ni modificó main ni se desplegó. Entornos de prueba detenidos mediante compose down sin eliminar volúmenes.
