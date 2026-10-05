@@ -29,3 +29,4 @@ Documentación en español para revisión institucional; identificadores técnic
 
 - [Seguimiento personal](api/tracking.md).
 - [Notificaciones internas](api/notifications.md).
+- [Firma visible del elaborador T1](api/author-signing.md).

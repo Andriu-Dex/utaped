@@ -36,3 +36,7 @@ En backend: `./mvnw spring-boot:run` o `./mvnw.cmd spring-boot:run` en Windows. 
 No hay envío hacia buzones reales en pruebas: Mailpit captura SMTP. SMTP institucional todavía debe configurarse para publicación.
 
 AUDIT_EXPORT_MAX_ROWS limita filas de CSV administrativo (10000 por defecto, ajuste válido 1–100000). Superar el límite exige refinar filtros; no hay truncamiento silencioso. Notificaciones internas se consultan por sesión y no usan SMTP. No se habilita correo/push de avisos ni firma/revisión institucional por esta configuración.
+
+## Firma local
+
+La firma del elaborador requiere HTTPS por defecto y vinculación administrativa previa de su huella pública. Para desarrollo HTTP aislado puede habilitarse SIGNING_ALLOW_HTTP=true en el entorno local, nunca en un despliegue institucional. E2E lo configura en su entorno privado. No use certificados personales reales en pruebas. [Vinculación, límites y transporte](../api/author-signing.md).

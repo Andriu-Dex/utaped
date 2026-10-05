@@ -4,6 +4,7 @@ import { PlanningAdministration } from '../planning/PlanningAdministration'
 import { WorkflowAdministration } from '../workflow/WorkflowAdministration'
 import { DirectoryAdministration } from './DirectoryAdministration'
 import { AuditViewer } from '../audit/AuditViewer'
+import { CertificateAdministration } from './CertificateAdministration'
 
 export function Administration({ onChange, onDirtyChange }: { onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -55,5 +56,6 @@ export function Administration({ onChange, onDirtyChange }: { onChange: () => Pr
     <PlanningAdministration groups={groups} />
     <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />
     <AuditViewer />
+    <CertificateAdministration />
   </section>
 }

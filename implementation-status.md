@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-04. PR #1–6 fusionados; último merge a7ec62b. Entrega actual en feature/signature-review-preparation desde develop, organizada por bloques y commits antes de un único push/PR.
+Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–7 fusionados; último merge bde162d. Entrega actual en feature/visible-author-signing desde develop, organizada por bloques y commits antes de un único push/PR.
 
 | Área | Estado | Evidencia |
 |---|---|---|
@@ -22,8 +22,9 @@ Inicio: 2026-10-02. Actualización: 2026-10-04. PR #1–6 fusionados; último me
 | Anexos T1 | Implementados en alcance inicial | PDFs privados, sí/no, metadata, orden, etiquetas automáticas, baja lógica y concurrencia. |
 | Preparación/previsualización T1 | Implementada en alcance inicial | Plantilla DOCX oficial, páginas T1 A4, matriz horizontal, índices reales, snapshot/PDF inmutables y visor paginado. |
 | Preparación de firma | Implementada con bloqueo institucional | Snapshot de flujo/participantes, integridad y bloqueos por artefacto. Sin carga de secretos ni transiciones. |
-| Núcleo criptográfico .p12/.pfx | Implementado y aislado de las rutas de aplicación | CMS separado real RSA/EC, preservación incremental, huella vinculada explícita, cadena PKIX offline y verificación. Integración institucional, revocación, TSA y perfil pendientes. |
-| T1 completo/T2, firma, revisión, evidencias | Pendientes en producto | Preparación T1 no equivale a firma, finalización o aprobación; T2 y evidencias aún no entregados. |
+| Núcleo criptográfico .p12/.pfx | Implementado; firma visible del elaborador conectada | CMS separado real RSA/EC, preservación incremental, comprobación de huella pública vinculada, vigencia e integridad. Modo PKIX interno disponible; la ruta de firma usa confianza directa por huella y declara cadena/revocación no comprobadas. |
+| Firma visible del elaborador T1 | Primera entrega implementada | Administración vincula huella pública con evidencia de identidad; usuario selecciona archivo/contraseña. PDF independiente e inmutable, visor/descarga privados, ubicación real, reintentos idempotentes y auditoría. Sin almacenamiento de secretos. |
+| T1 completo/T2, revisión, evidencias | Pendientes en producto | La firma del artefacto no finaliza ni envía el Plan; DRAFT permanece editable separado del firmado. Firmas de revisores, T2 y evidencias aún no entregados. |
 | SMTP institucional/HTTPS/operación | Pendiente | Mailpit captura correo local; Compose local no es publicación institucional. |
 
 ## Trazabilidad
@@ -82,10 +83,14 @@ Exportación ADMIN de auditoría con filtros aplicados, todas las filas hasta un
 
 [Reporte de entrega](docs/reports/2026-10-03-10-tracking-notifications-audit-export.md). Siguiente paso recomendado: acordar contrato de firma real y reglas de asignación/transición por grupo para implementar finalización T1 y revisión sobre artefactos exactos. Q-003/Q-007/Q-018 bloquean ese comportamiento; T2/evidencias se construyen después sobre decisiones y artefactos preservados.
 
-## Preparación de firma y snapshots de flujo
+## Preparación de firma y snapshots de flujo — entrega 2026-10-04
 
 Mecanismo .p12/.pfx confirmado por el propietario el 2026-10-04; flujos aún no ratificados. Nuevos artefactos fijan revisión vigente T1, etapas y participantes/nombres/actividad resueltos, conservando órganos sin representantes personales cuando así están configurados. Cambios de configuración o participantes afectan vigencia de preparación y nunca reescriben PDFs anteriores. Consulta/UI por documento y artefacto explícitos, con integridad verificada y acceso del elaborador vigente, sin bypass ADMIN ni acceso de futuros revisores.
 
 El núcleo interno genera y verifica una firma CMS real sin recomponer el PDF, exige huella pública y raíces confiables explícitas y borra los arrays de contenedor/contraseña en éxito/fallo. No se conserva ninguna referencia en servicio persistente. La destrucción completa de copias internas JCA/JVM no puede garantizarse. No está conectado a HTTP, almacenamiento, asignaciones, finalización ni notificaciones.
 
 FR-SIGN-* permanece parcial/no habilitado en producto: vinculación real de cuenta/certificado, revocación, TSA/perfil, representación visible y múltiples firmas no están entregados. Q-003/Q-018 no se cierran; no se agrega ningún estado distinto de DRAFT. [Contrato](docs/decisions/signature-review-contract.md), [ficha de validación](docs/validation/workflow-signature-confirmation.md) y [reporte de entrega](docs/reports/2026-10-04-01-signature-core-workflow-snapshots.md).
+
+## Firma visible del elaborador — entrega 2026-10-05
+
+La entrega actual conecta el núcleo a firma/consulta/descarga privadas, con huella pública administrativa, comprobación básica y ubicación visible derivada. El PDF firmado queda separado del borrador editable y conserva bytes/hashes históricos. FR-SIGN-001–005 son PARCIAL: se entrega elaborador, no múltiples firmantes o aceptación institucional. Cadena/revocación se declaran no comprobadas. HTTPS por defecto, sin persistir secretos; entorno HTTP solo explícito local. Continúan DRAFT y los bloqueos de finalización/envío/aprobación. [API](docs/api/author-signing.md) y [reporte](docs/reports/2026-10-05-01-visible-author-signing.md).

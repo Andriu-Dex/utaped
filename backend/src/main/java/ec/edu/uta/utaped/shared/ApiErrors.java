@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 
 @RestControllerAdvice
 public class ApiErrors {
+    @ExceptionHandler(org.springframework.dao.ConcurrencyFailureException.class)
+    ResponseEntity<Map<String,String>> concurrent(Exception error) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message","Los datos cambiaron durante la operación. Recargue y vuelva a intentarlo."));
+    }
     @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
     ResponseEntity<Map<String,String>> uploadTooLarge(Exception error) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("message","El archivo supera el límite permitido."));

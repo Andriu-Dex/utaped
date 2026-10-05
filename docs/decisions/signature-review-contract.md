@@ -1,4 +1,18 @@
-# Contrato propuesto de firma y revisión T1
+# Contrato de firma del elaborador y revisión T1
+
+## Entrega actual — 2026-10-05
+
+El propietario acepta el flujo sencillo de archivo .p12/.pfx + contraseña + Firmar y las comprobaciones básicas. La firma visible del elaborador se habilita para un artefacto vigente y autorizado, independiente de la finalización institucional. Administración vincula la huella SHA-256 del certificado público a la cuenta tras verificar identidad y registrar una referencia de comprobación. Es confianza directa en ese certificado; no se confía automáticamente en las raíces contenidas en el .p12 ni en su CN. La comprobación manual y la custodia administrativa siguen siendo responsabilidades operativas.
+
+La ruta comprueba identidad por huella del servidor, certificado no CA, vigencia, uso de firma, clave RSA ≥2048/EC ≥256 y firma matemática del PDF completo. Conserva el PDF original como prefijo incremental del resultado y verifica integridad antes de guardar. La apariencia se sitúa en bounds derivados de la tabla real del PDF; no se hardcodea página. Cadena de entidad emisora y revocación se exponen como NOT_CHECKED. Sin TSA, validación jurídica ni declaración PAdES. El modo PKIX interno anterior conserva sus exigencias de anclas explícitas.
+
+No se reciben secretos por JSON, URL o multipart: cuerpo binario acotado en memoria. HTTPS es obligatorio por defecto; SIGNING_ALLOW_HTTP=true se reserva para desarrollo aislado. No persistir ni registrar el cuerpo. Arrays controlados se limpian al terminar; el navegador/JVM/librerías pueden crear copias temporales que no admiten borrado garantizado. La aplicación no almacena .p12/.pfx, contraseña o clave privada. El PDF conserva necesariamente la firma CMS y el certificado público.
+
+El PDF firmado es una entidad independiente del borrador. El Plan permanece DRAFT: editarlo no altera ni reemplaza el resultado firmado. Un nuevo contenido exige nuevo artefacto y nueva firma; ningún cambio hereda la firma anterior. La consulta mantiene autorización actual por propietario/pertenencia. Desvincular una huella impide nuevas firmas, conserva historial y no equivale a consultar revocación del emisor.
+
+El endpoint histórico signature-preparation sigue informando los bloqueos de finalización institucional. El nuevo endpoint signing devuelve sus propias condiciones para la firma exclusiva del elaborador. Finalización, envío, asignación, revisión y aprobación permanecen bloqueados por Q-003/Q-018; sus reglas y espacios de firma siguen pendientes. [Contrato API y operación](../api/author-signing.md).
+
+## Preparación histórica y pendientes
 
 Estado: mecanismo CONFIRMADO-PROYECTO; política y flujos PENDIENTES DE VALIDACIÓN INSTITUCIONAL. Preparado el 2026-10-03, actualizado el 2026-10-04. El propietario eligió archivos .p12/.pfx y confirmó que los flujos aún no están ratificados. Autoriza avanzar manteniendo finalización/aprobación bloqueadas. Q-003/Q-018 siguen abiertas; Q-007 queda parcialmente resuelta solo para el mecanismo.
 

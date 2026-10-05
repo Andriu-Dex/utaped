@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine1"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine2"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -112,7 +112,18 @@ public class T1Template {
         }
         property(source.get(54),"pageBreakBefore");keepWithNext(source.get(54));result.add(source.get(54));result.add(source.get(55));
         var signatures=source.get(56);var signatureRows=children(signatures,"tr");for(int i=2;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
-        var signatureCells=children(signatureRows.get(1),"tc");cell(signatureCells.get(0),"Elaborado por:");cell(signatureCells.get(1),s.plan().teacherName());cell(signatureCells.get(2),"");cell(signatureCells.get(3),"");result.add(signatures);
+        var signatureCells=children(signatureRows.get(1),"tc");cell(signatureCells.get(0),"Elaborado por:");cell(signatureCells.get(1),s.plan().teacherName());cell(signatureCells.get(2),"");
+        cell(signatureCells.get(3),"@@SIGTOP@@\n@@SIGBOTTOM@@");
+        var markers=children(signatureCells.get(3),"p");
+        for(int i=0;i<markers.size();i++) {
+            var p=markers.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");
+            var spacing=property(p,"spacing");spacing.setAttributeNS(W,"w:before","0");spacing.setAttributeNS(W,"w:after",i==0?"1000":"0");spacing.setAttributeNS(W,"w:line","40");spacing.setAttributeNS(W,"w:lineRule","exact");
+            for(var r:children(p,"r")) {
+                var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(doc,"rPr");r.insertBefore(e,r.getFirstChild());return e;});
+                var size=element(doc,"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size);
+            }
+        }
+        result.add(signatures);
         result.add(source.get(57));result.add(source.get(58));keepWithNext(source.get(59));result.add(source.get(59));
         var history=source.get(60);var historyRows=children(history,"tr");
         // The reference merges the first two cells in its instructional example row.

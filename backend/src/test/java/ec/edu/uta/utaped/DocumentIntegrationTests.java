@@ -29,6 +29,8 @@ class DocumentIntegrationTests {
     @Autowired JdbcTemplate jdbc;@Autowired PasswordEncoder encoder;@Autowired WorkPlanService plans;
     @Autowired AttachmentService attachments;@Autowired ArtifactService artifacts;@Autowired ActivityService activities;
     @Autowired StoredFiles files;@Autowired PdfValidation validation;@Autowired PlatformTransactionManager transactions;
+    @Autowired ec.edu.uta.utaped.signing.CertificateBindings bindings;
+    @Autowired ec.edu.uta.utaped.signing.AuthorSignatureService signatures;
     @Value("${app.documents.storage-root}") String root;
     UUID user,group,period,id;String email="document@example.invalid";
     @BeforeEach void setup() {
@@ -169,5 +171,79 @@ class DocumentIntegrationTests {
         var fileId=state.items().getFirst().fileId();var key=jdbc.queryForObject("SELECT storage_key FROM stored_file WHERE id=?",UUID.class,fileId);
         Files.write(Path.of(root).resolve(key.toString()),new byte[]{0});assertEquals(409,assertThrows(ResponseStatusException.class,()->files.read(fileId)).getStatusCode().value());
         byte[] oversized=new byte[10485761];assertEquals(413,assertThrows(ResponseStatusException.class,()->upload("Grande",UUID.randomUUID(),oversized,version())).getStatusCode().value());
+    }
+    record SigningFixture(java.security.KeyPair key,java.security.cert.X509Certificate certificate) {}
+    SigningFixture signingFixture() throws Exception {
+        var key=java.security.KeyPairGenerator.getInstance("RSA");key.initialize(2048);var pair=key.generateKeyPair();
+        var name=new org.bouncycastle.asn1.x500.X500Name("CN=Test-only signer");var now=java.time.Instant.now();
+        var builder=new org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder(name,new java.math.BigInteger(120,new java.security.SecureRandom()),Date.from(now.minusSeconds(60)),Date.from(now.plusSeconds(86400)),name,pair.getPublic());
+        builder.addExtension(org.bouncycastle.asn1.x509.Extension.basicConstraints,true,new org.bouncycastle.asn1.x509.BasicConstraints(false));
+        builder.addExtension(org.bouncycastle.asn1.x509.Extension.keyUsage,true,new org.bouncycastle.asn1.x509.KeyUsage(org.bouncycastle.asn1.x509.KeyUsage.digitalSignature));
+        var provider=new org.bouncycastle.jce.provider.BouncyCastleProvider();
+        var certificate=new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().setProvider(provider).getCertificate(builder.build(new org.bouncycastle.operator.jcajce.JcaContentSignerBuilder("SHA256withRSA").setProvider(provider).build(pair.getPrivate())));
+        return new SigningFixture(pair,certificate);
+    }
+    byte[] signingBody(SigningFixture fixture,String suppliedPassword) throws Exception {
+        char[] password="Test-only-signing-password".toCharArray();var store=java.security.KeyStore.getInstance("PKCS12");store.load(null,password);
+        store.setKeyEntry("signer",fixture.key().getPrivate(),password,new java.security.cert.Certificate[]{fixture.certificate()});var out=new ByteArrayOutputStream();store.store(out,password);Arrays.fill(password,'\0');
+        var encoded=suppliedPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8);var container=out.toByteArray();
+        var result=java.nio.ByteBuffer.allocate(4+encoded.length+container.length).putInt(encoded.length).put(encoded).put(container).array();Arrays.fill(encoded,(byte)0);Arrays.fill(container,(byte)0);return result;
+    }
+    String fingerprint(SigningFixture fixture) throws Exception { return StoredFiles.hash(fixture.certificate().getEncoded()); }
+    void signingAdmin() { jdbc.update("UPDATE app_user SET system_role='ADMIN' WHERE id=?",user); }
+    @Test void certificateBindingsRequireVerifiedIdentityAndPreserveRevokedHistory() throws Exception {
+        var fixture=signingFixture();
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->bindings.list(user,email)).getStatusCode().value());signingAdmin();
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),false,"Test identity evidence",null))).getStatusCode().value());
+        var bound=bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test identity evidence",null));
+        assertEquals(bound.id(),bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test identity evidence",bound.id())).id());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test identity evidence",null))).getStatusCode().value());
+        UUID other=UUID.randomUUID();jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'binding-other@example.invalid','Other',?,'USER',false)",other,encoder.encode("Test-only-password-2026"));
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->bindings.register(other,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Other identity evidence",null))).getStatusCode().value());
+        bindings.revoke(user,bound.id(),email);assertNull(bindings.current(user));assertFalse(bindings.list(user,email).getFirst().active());
+        long events=jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='SIGNING_CERTIFICATE_UNBOUND'",Long.class);bindings.revoke(user,bound.id(),email);
+        assertEquals(events,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='SIGNING_CERTIFICATE_UNBOUND'",Long.class));
+    }
+    @Test void visibleAuthorSignatureIsRealPrivateImmutableAndIdempotent() throws Exception {
+        complete("Firma personal del artefacto exacto.",2);attachments.settings(id,email,new AttachmentModels.Settings(version(),true,false));upload("Anexo para ubicación dinámica",UUID.randomUUID(),pdf(2,false,false),version());
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();signingAdmin();
+        var binding=bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test public certificate identity",null));
+        var state=signatures.state(id,artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
+        byte[] original=artifacts.content(id,artifact.id(),email),body=signingBody(fixture,"Test-only-signing-password");UUID key=UUID.randomUUID();long version=version();
+        var signed=signatures.sign(id,artifact.id(),email,version,state.preparation().pdfHash(),key,body,true);assertArrayEquals(new byte[body.length],body);
+        byte[] bytes=signatures.content(id,signed.id(),email);assertArrayEquals(original,Arrays.copyOf(bytes,original.length));assertArrayEquals(original,artifacts.content(id,artifact.id(),email));
+        assertEquals("NOT_CHECKED",signed.revocationCheck());assertEquals("DRAFT",plans.get(id,email).documentState());
+        assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
+        try(var pdf=Loader.loadPDF(bytes)) {
+            assertEquals(artifact.pageCount(),pdf.getNumberOfPages());assertEquals(1,pdf.getSignatureDictionaries().size());
+            var field=(org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField)pdf.getDocumentCatalog().getAcroForm().getField("UTAPED_AUTHOR");assertNotNull(field);assertNotNull(field.getSignature());
+            var widget=field.getWidgets().getFirst();assertNotNull(widget.getAppearance().getNormalAppearance());
+            var slot=artifact.signatureSlots().getFirst();assertEquals(slot.bounds().x(),widget.getRectangle().getLowerLeftX(),0.1);assertEquals(slot.bounds().width(),widget.getRectangle().getWidth(),0.1);
+            assertTrue(pdf.getPage(slot.pageIndex()).getAnnotations().stream().anyMatch(a->a.getCOSObject().equals(widget.getCOSObject())));
+            assertFalse(new PDFTextStripper().getText(pdf).contains("@@SIG"));
+        }
+        var retry=signingBody(fixture,"Test-only-signing-password");assertEquals(signed.id(),signatures.sign(id,artifact.id(),email,version,state.preparation().pdfHash(),key,retry,true).id());assertArrayEquals(new byte[retry.length],retry);
+        var reused=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version,"0".repeat(64),key,reused,true)).getStatusCode().value());assertArrayEquals(new byte[reused.length],reused);
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact",Integer.class));
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
+        UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
+        plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"));
+        assertArrayEquals(bytes,signatures.content(id,signed.id(),email));assertFalse(artifacts.list(id,email).getFirst().current());
+        bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
+        jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(id,signed.id(),email)).getStatusCode().value());
+    }
+    @Test void signatureFailuresNeverPersistSecretsArtifactsOrAdvanceState() throws Exception {
+        complete("Controles de firma.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();signingAdmin();
+        assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
+        var bound=bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test public identity",null));
+        var state=signatures.state(id,artifact.id(),email,true);long filesBefore=jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class);
+        var invalid=signingBody(fixture,"Wrong password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),invalid,true)).getStatusCode().value());assertArrayEquals(new byte[invalid.length],invalid);
+        var other=signingBody(signingFixture(),"Test-only-signing-password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),other,true)).getStatusCode().value());assertArrayEquals(new byte[other.length],other);
+        var insecure=signingBody(fixture,"Test-only-signing-password");assertEquals(403,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),insecure,false)).getStatusCode().value());assertArrayEquals(new byte[insecure.length],insecure);
+        var stale=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version()+1,state.preparation().pdfHash(),UUID.randomUUID(),stale,true)).getStatusCode().value());assertArrayEquals(new byte[stale.length],stale);
+        bindings.revoke(user,bound.id(),email);var revoked=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),revoked,true)).getStatusCode().value());assertArrayEquals(new byte[revoked.length],revoked);
+        assertEquals(filesBefore,jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class));assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact",Integer.class));assertEquals("DRAFT",plans.get(id,email).documentState());
     }
 }

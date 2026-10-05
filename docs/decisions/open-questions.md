@@ -16,7 +16,7 @@ Entrega 2026-10-03: Q-001/Q-002 continúan pendientes. El editor inicial contien
 | Q-004 | QIPOC y validación externa. | Quién descarga/carga/valida y cuándo se aprueba. |
 | Q-005 | Informe independiente y derivación. | Elegibilidad, multiplicidad y tipos habilitados. |
 | Q-006 | Cierre, reapertura, corrección posterior y prórrogas. | Regla institucional; no crear excepciones automáticas. |
-| Q-007 | Firma real mediante .p12/.pfx (mecanismo confirmado). | Vinculación de identidad, confianza/cadena, revocación, perfil, tiempo, múltiples firmas y fallos pendientes. |
+| Q-007 | Firma real mediante .p12/.pfx; flujo simple y controles básicos confirmados por el propietario. | Huella pública administrativa implementada para el elaborador; aceptación institucional, cadena/revocación, perfil, tiempo y múltiples firmas pendientes. |
 | Q-008 | Identidad, local/SSO, sesiones, recuperación y CAPTCHA. | Política de acceso y correo disponible. |
 | Q-009 | Stack e infraestructura. | Ratificar versiones, Spring Boot/React/PostgreSQL, red y migraciones. |
 | Q-010 | PDFs/evidencias. | Almacenamiento local y límites técnicos iniciales confirmados; retención, restauración y política institucional pendientes. |
@@ -37,3 +37,5 @@ Actualización 2026-10-02: Q-008 resuelta para mecanismo de acceso: credenciales
 [Plan de validación](../validation/validation-plan.md) y [matriz de permisos para revisar](../validation/permission-matrix.md).
 
 Para cerrar: respuesta, persona/área validadora, fecha y evidencia verificable; actualizar requisitos, ADR y casos afectados.
+
+2026-10-05: firma visible del elaborador entregada con confianza directa por huella pública administrativa y comprobación de vigencia/integridad. El usuario mantiene archivo + contraseña + Firmar. No se valida cadena/revocación y se informa expresamente. Q-003/Q-018 permanecen pendientes; no se habilitan finalización, envío o aprobación. [API y operación](../api/author-signing.md).
