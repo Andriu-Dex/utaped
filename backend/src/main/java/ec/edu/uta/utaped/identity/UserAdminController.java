@@ -61,7 +61,7 @@ public class UserAdminController {
         if(!current.get("system_role").equals(data.systemRole()) || (data.username()!=null && !java.util.Objects.equals(current.get("username"),Accounts.normalize(data.username())))) sessions.findByPrincipalName((String)current.get("email")).keySet().forEach(sessions::deleteById);
         audit.record(actor.id(),"USER_PROFILE_UPDATED",id);
     }
-    public record UserInput(@NotBlank @Email @Size(max=254) String email,@NotBlank @Size(max=160) String displayName,
+    public record UserInput(@NotBlank @Email @Size(max=254) String email,@Size(max=160) String displayName,
         @NotBlank @Pattern(regexp="ADMIN|USER") String systemRole,@NotBlank @Size(max=72) String temporaryPassword,
         @Pattern(regexp="[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}") String username,@Size(max=80) String firstNames,@Size(max=80) String lastNames) {}
     @PostMapping @Transactional public Map<String,UUID> create(@Valid @RequestBody UserInput data,Principal principal) {
@@ -72,7 +72,10 @@ public class UserAdminController {
     }
     private static String trim(String value) { return value==null?null:value.trim(); }
     private static String displayName(String fallback,String first,String last) {
-        if(first==null && last==null) return fallback.trim();
+        if(first==null && last==null) {
+            if(fallback==null || fallback.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete los nombres y apellidos.");
+            return fallback.trim();
+        }
         if(first==null || last==null || first.isBlank() || last.isBlank() || first.trim().length()+last.trim().length()+1>160)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete nombres y apellidos (máximo 160 caracteres en total).");
         return first.trim()+" "+last.trim();

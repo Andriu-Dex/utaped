@@ -206,7 +206,7 @@ class FoundationIntegrationTests {
     @Test void structuredProfileAndUsernameUniquenessAreEnforced() throws Exception {
         Browser a=new Browser();a.login("admin@example.invalid",PASSWORD);
         String input="{\"email\":\"new@example.invalid\",\"username\":\"New.User\",\"firstNames\":\"Ana María\",\"lastNames\":\"Pérez\",\"displayName\":\"Ignored fallback\",\"systemRole\":\"USER\",\"temporaryPassword\":\""+PASSWORD+"\"}";
-        var created=a.request("POST","/api/admin/users",input,true);assertEquals(200,created.statusCode());
+        var created=a.request("POST","/api/admin/users",input.replace("\"displayName\":\"Ignored fallback\",",""),true);assertEquals(200,created.statusCode());
         String id=JsonPath.read(created.body(),"$.id");String profile=a.request("GET","/api/admin/users/"+id,null,false).body();
         assertEquals("new.user",JsonPath.read(profile,"$.username"));assertEquals("Ana María Pérez",JsonPath.read(profile,"$.display_name"));
         assertEquals(409,a.request("POST","/api/admin/users",input.replace("new@example.invalid","second@example.invalid"),true).statusCode());
