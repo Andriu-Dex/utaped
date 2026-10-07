@@ -16,7 +16,14 @@ public class AuthController {
     private final Accounts accounts;
     private final PasswordService passwords;
     private final AuthThrottle throttle;
-    public AuthController(Accounts accounts,PasswordService passwords,AuthThrottle throttle) { this.accounts=accounts;this.passwords=passwords;this.throttle=throttle; }
+    private final CaptchaService captcha;
+    public AuthController(Accounts accounts,PasswordService passwords,AuthThrottle throttle,CaptchaService captcha) { this.accounts=accounts;this.passwords=passwords;this.throttle=throttle;this.captcha=captcha; }
+    @GetMapping(value="/captcha",produces="image/png") public org.springframework.http.ResponseEntity<byte[]> captcha(HttpServletRequest request) throws java.io.IOException {
+        throttle.check("captcha-ip:"+request.getRemoteAddr(),100);
+        var challenge=captcha.issue(request);
+        return org.springframework.http.ResponseEntity.ok().header("Cache-Control","no-store, private").header("Vary","Cookie")
+            .header("X-Captcha-Id",challenge.id().toString()).body(challenge.image());
+    }
     @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) { return Map.of("headerName",token.getHeaderName(),"token",token.getToken()); }
     @GetMapping("/me") public Accounts.Account me(Principal principal) { return accounts.current(principal.getName()); }
     public record Change(@NotBlank @Size(max=128) String currentPassword, @NotBlank @Size(max=72) String newPassword) {}
