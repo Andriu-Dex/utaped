@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type Period } from '../shared/api'
 import { categoryLabels, type Catalog, type Category, type Definition } from './matrixTypes'
@@ -29,7 +30,7 @@ export function PlanningAdministration({ groups }: { groups: Group[] }) {
   async function saveCatalog(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/catalogs' + (catalog.id ? '/' + catalog.id : ''), catalog.id ? 'PUT' : 'POST', catalog)) setCatalog({ id: '', kind: 'RESOURCE', label: '', active: true }) }
   async function saveActivity(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/activities' + (activity.id ? '/' + activity.id : ''), activity.id ? 'PUT' : 'POST', { ...activity, groupId })) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }
   return <section className="card"><h2>Configuración de planificación</h2><p>Los catálogos comienzan vacíos. Registre las denominaciones y fechas institucionales aplicables.</p>
-    {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <fieldset disabled={busy}><div className="grid"><section><h3>Recursos y medios</h3><form onSubmit={saveCatalog}>
       <label>Tipo de catálogo<select value={catalog.kind} disabled={!!catalog.id} onChange={e => setCatalog({ ...catalog, kind: e.target.value as Catalog['kind'] })}><option value="RESOURCE">Recurso</option><option value="MEANS">Medio de verificación</option></select></label>
       <label>Denominación del catálogo<input required maxLength={200} value={catalog.label} onChange={e => setCatalog({ ...catalog, label: e.target.value })} /></label>

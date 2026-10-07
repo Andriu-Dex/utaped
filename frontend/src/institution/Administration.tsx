@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type User, type Member } from '../shared/api'
 import { PlanningAdministration } from '../planning/PlanningAdministration'
@@ -30,14 +31,19 @@ export function Administration({ onChange, onDirtyChange }: { onChange: () => Pr
   async function submit(event: FormEvent<HTMLFormElement>, path: string) {
     event.preventDefault(); const form = event.currentTarget; setError(''); setNotice(''); setBusy(true)
     const data = Object.fromEntries(new FormData(form))
+    if (path === '/admin/users') { data.displayName = data.firstNames + ' ' + data.lastNames; if (!data.username) delete data.username }
     try {
       const target = path === 'membership' ? '/admin/groups/' + data.groupId + '/members' : path
       await api(target, 'POST', data); if (path === '/admin/users') { setDirectoryQuery(String(data.email)); setMemberSearch(String(data.email)) } form.reset(); setNotice('Cambios guardados.'); await load(); await onChange()
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
-  return <section><h2>Administración institucional</h2>{error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
+  return <section><span className="section-kicker">CONFIGURACIÓN Y CONTROL</span><h1>Administración institucional</h1><p className="muted">Gestiona cuentas, organización y configuración documental desde un mismo espacio.</p>
+    <nav className="admin-navigation" aria-label="Secciones de administración">{[['people','Personas y grupos'],['periods','Períodos'],['directory','Directorio'],['planning','Planificación'],['workflows','Flujos'],['audit','Auditoría'],['certificates','Certificados']].map(([id,label]) => <a key={id} href={'#admin-' + id}>{label}</a>)}</nav>
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+    <div id="admin-people" className="admin-block"><h2 className="admin-block-label">Personas y grupos</h2>
     <div className="grid"><section className="card"><h3>Crear usuario</h3><form onSubmit={e => submit(e, '/admin/users')}>
-      <label>Nombre<input name="displayName" required maxLength={160} /></label><label>Correo<input type="email" name="email" required maxLength={254} /></label>
+      <div className="grid"><label>Nombres<input name="firstNames" required maxLength={80} /></label><label>Apellidos<input name="lastNames" required maxLength={80} /></label></div><label>Correo<input type="email" name="email" required maxLength={254} /></label>
+      <label>Identificador de acceso<input name="username" aria-label="Identificador de acceso" maxLength={100} pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{0,99}" autoCapitalize="none" autoComplete="off" /><small className="field-help">Opcional. Si se deja vacío se deriva del correo; debe ser único.</small></label>
       <label>Permiso del sistema<select name="systemRole"><option value="USER">Usuario</option><option value="ADMIN">Administrador</option></select></label>
       <label>Contraseña temporal<input type="password" name="temporaryPassword" required minLength={12} maxLength={72} autoComplete="new-password" /></label>
       <button disabled={busy}>Crear usuario</button></form></section>
@@ -50,12 +56,12 @@ export function Administration({ onChange, onDirtyChange }: { onChange: () => Pr
         <label>Rol de pertenencia<select name="membershipRole"><option value="MEMBER">Miembro</option><option value="COORDINATOR">Coordinador</option></select></label><button disabled={busy}>Asignar integrante</button></form>
     </section></div>
     <section className="card"><h3>Gestionar integrantes</h3><label>Grupo a gestionar<select aria-label="Grupo a gestionar" value={memberGroup} onChange={e => { setMemberGroup(e.target.value); setMembers([]) }}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>{memberGroup && <ul>{members.map(m => <li key={m.id}>{m.display_name} <button className="secondary" disabled={busy} onClick={() => remove(m)} aria-label={'Retirar a ' + m.display_name}>Retirar pertenencia</button></li>)}</ul>}</section>
-    <section className="card"><h3>Crear período</h3><form className="grid" onSubmit={e => submit(e, '/admin/periods')}><label>Nombre del período<input name="name" required maxLength={120} /></label>
+    </div><section id="admin-periods" className="card admin-block"><h3>Crear período</h3><form className="grid" onSubmit={e => submit(e, '/admin/periods')}><label>Nombre del período<input name="name" required maxLength={120} /></label>
       {([['startsOn','Inicio del período'],['endsOn','Fin del período'],['preparationStartsOn','Inicio de elaboración'],['preparationEndsOn','Fin de elaboración'],['reviewStartsOn','Inicio de revisión'],['reviewEndsOn','Fin de revisión']] as const).map(([name,label]) => <label key={name}>{label}<input required type="date" name={name} /></label>)}<button disabled={busy}>Crear período</button></form></section>
-    <DirectoryAdministration groups={groups} reload={reload} suggestedQuery={directoryQuery} onChange={async () => { await load(); await onChange() }} onDirtyChange={setProfileDirty} />
-    <PlanningAdministration groups={groups} />
-    <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />
-    <AuditViewer />
-    <CertificateAdministration />
+    <div id="admin-directory" className="admin-block"><DirectoryAdministration groups={groups} reload={reload} suggestedQuery={directoryQuery} onChange={async () => { await load(); await onChange() }} onDirtyChange={setProfileDirty} /></div>
+    <div id="admin-planning" className="admin-block"><PlanningAdministration groups={groups} /></div>
+    <div id="admin-workflows" className="admin-block"><WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} /></div>
+    <div id="admin-audit" className="admin-block"><AuditViewer /></div>
+    <div id="admin-certificates" className="admin-block"><CertificateAdministration /></div>
   </section>
 }

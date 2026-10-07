@@ -1,5 +1,30 @@
 # Decisiones pendientes y contradicciones
 
+## Reconciliación vigente — 2026-10-06
+
+El [Plan Maestro](PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md) sustituye las preguntas históricas que ya resuelve. La tabla original siguiente se conserva como historial, no como bloqueo vigente universal.
+
+| Cuestión histórica | Decisión vigente / trabajo restante |
+|---|---|
+| Q-001 | T1 de seis pasos; actividades y matriz comparten fuente. Falta completar el asistente productivo. |
+| Q-002 | Plan de comisión/grupo, carrera y período; responsable principal único. Falta migrar titularidad, ámbitos, unicidad y familias de versiones. |
+| Q-003/Q-018 | Revisión secuencial, todos obligatorios; no AL MENOS UNO ni paralelismo. Falta tabla de cargos/personas por ámbito y motor de tareas/rondas. |
+| Q-005 | Informe final derivado, uno por Plan; nunca independiente. Queda precisar relación con versiones formales y continuidad de evidencias. |
+| Q-007 | .p12/.pfx temporal en memoria; firmas acumulativas. Continúan pendientes aceptación operativa del certificado/perfil y política institucional; no se exige inventar una CA o TSA. |
+| Q-008 | Local: username, correo separado, Argon2id, CAPTCHA servidor y dos vías de recuperación. Se entrega ADMIN; coordinadores esperan ámbitos autorizados. |
+| Q-009 | Monolito modular Java/Spring, React/TS y PostgreSQL. Transición incremental JDBC→JPA, API v1/OpenAPI y Testcontainers aún pendientes. |
+| Q-010/Q-013 | Almacenamiento privado; T1/T2 institucionales adaptados a A4. Anexos de varios formatos: falta decidir conversión/representación y alcance de firma. |
+| Q-006/Q-011 | Zona America/Guayaquil, cierre ACTIVE→CLOSED sin purga, prórrogas individuales. Precisar los ~3 días, cómputo y cruce del cierre. |
+| Q-012/Q-017 | No pedir cédula/teléfono por defecto. Pertenencias por carrera/período/cargo; conservar historial. Falta completar catálogo y autorizaciones. |
+| Q-014/Q-019 | Asistencia de redacción con proveedor backend; agente código/Trello sigue como alcance separado. Proveedor, permisos, presupuesto y tablero pendientes. |
+| Q-004 | El Plan Maestro no ratifica expresamente la integración QIPOC heredada; no activarla por suposición. |
+
+El PDF de unidades/comisiones julio–diciembre 2026 aporta nombres, carreras y algunos cargos; no contiene correos, usuarios, todos los responsables principales ni la secuencia completa de aprobación. No convierte automáticamente a cada coordinador listado en administrador o firmante. Quedan por precisar también múltiples elaboradores, descarga de preliminares/anexos, elegibilidad del T2 con evidencias faltantes y fórmulas de indicadores. Estos puntos no bloquean el acceso ni el rediseño entregados.
+
+Accesibilidad del CAPTCHA: falta acordar una alternativa equivalente para personas que no pueden resolver un reto visual; el texto alternativo describe el reto sin revelar su respuesta. No se declara conformidad WCAG integral.
+
+## Registro histórico anterior al Plan Maestro
+
 2026-10-04: Q-007 parcialmente resuelta por el propietario: firma mediante archivos .p12/.pfx. Falta definir vinculación de titular/cuenta, autoridades confiables, revocación, perfil y tiempo. Q-003/Q-018 siguen pendientes: el propietario confirma que los flujos no están ratificados y acepta avanzar con preparación técnica manteniendo finalización/envío/aprobación bloqueados. [Contrato](signature-review-contract.md) y [ficha por grupo](../validation/workflow-signature-confirmation.md).
 
 2026-10-03: Q-010 parcialmente resuelta por el propietario: almacenamiento local privado persistente, 10 MB/anexo y 20 anexos como configuración técnica ajustable. Retención, restauración operacional y límites institucionales definitivos siguen pendientes. Q-013 parcialmente resuelta: páginas T1 en A4 conservando estructura y estilos, incluida matriz horizontal; anexos conservan su formato original. Aceptación institucional final y T2 pendientes. [ADR-0002](../architecture/adr/0002-t1-document-preparation.md).

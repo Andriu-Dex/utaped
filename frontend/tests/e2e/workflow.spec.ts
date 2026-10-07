@@ -1,30 +1,32 @@
+import { solveCaptcha } from './login'
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 
 const environment = Object.fromEntries(readFileSync('../.env.e2e', 'utf8').split(/\r?\n/).filter(s => s.includes('=')).map(s => { const i = s.indexOf('='); return [s.slice(0, i), s.slice(i + 1)] }))
 test('versioned workflows preserve history and require explicit recipients', async ({ page, request }) => {
   test.setTimeout(120000)
-  await expect.poll(async () => { try { return (await request.get('http://127.0.0.1:18080/actuator/health')).status() } catch { return 0 } }, { timeout: 30000 }).toBe(200)
+  await expect.poll(async () => { try { return (await request.get((process.env.E2E_API_URL || 'http://127.0.0.1:18080') + '/actuator/health')).status() } catch { return 0 } }, { timeout: 30000 }).toBe(200)
   await page.goto('/')
-  await page.getByLabel('Correo institucional').fill(environment.BOOTSTRAP_ADMIN_EMAIL)
+  await page.getByRole('textbox', { name: 'Usuario', exact: true }).fill(environment.BOOTSTRAP_ADMIN_EMAIL)
   await page.getByLabel('Contraseña', { exact: true }).fill(environment.BOOTSTRAP_ADMIN_PASSWORD)
-  await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
+  await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   await expect.poll(async () => await page.getByRole('alert').isVisible() || await page.getByRole('button', { name: 'Cerrar sesión' }).isVisible()).toBeTruthy()
-  if (await page.getByRole('alert').isVisible()) { await page.getByLabel('Contraseña', { exact: true }).fill('E2e-only-admin-password-2026'); await page.getByRole('button', { name: 'Ingresar', exact: true }).click() }
+  if (await page.getByRole('alert').isVisible()) { await page.getByLabel('Contraseña', { exact: true }).fill('E2e-only-admin-password-2026'); await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click() }
   await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
-  if (await page.getByRole('heading', { name: 'Cambie su contraseña temporal' }).isVisible()) {
+  if (await page.getByRole('heading', { name: 'Acceso temporal' }).isVisible()) {
     await page.getByLabel('Contraseña actual').fill(environment.BOOTSTRAP_ADMIN_PASSWORD)
     await page.getByLabel('Nueva contraseña', { exact: true }).fill('E2e-only-admin-password-2026')
     await page.getByLabel('Confirmar contraseña').fill('E2e-only-admin-password-2026')
     await page.getByRole('button', { name: 'Guardar contraseña' }).click()
     await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
-    await page.getByLabel('Correo institucional').fill(environment.BOOTSTRAP_ADMIN_EMAIL)
+    await page.getByRole('textbox', { name: 'Usuario', exact: true }).fill(environment.BOOTSTRAP_ADMIN_EMAIL)
     await page.getByLabel('Contraseña', { exact: true }).fill('E2e-only-admin-password-2026')
-    await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
+    await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   }
   await page.getByRole('button', { name: 'Administración', exact: true }).click()
   const suffix = Date.now(); const group = 'Grupo de flujo ' + suffix; const person = 'Revisor de flujo ' + suffix
-  await page.getByLabel('Nombre', { exact: true }).fill(person)
+  await page.getByLabel('Nombres', { exact: true }).fill('Revisor de flujo')
+  await page.getByLabel('Apellidos', { exact: true }).fill(String(suffix))
   await page.getByLabel('Correo', { exact: true }).fill('flow-' + suffix + '@example.invalid')
   await page.getByLabel('Contraseña temporal', { exact: true }).fill('E2e-only-temporary-password')
   await page.getByRole('button', { name: 'Crear usuario', exact: true }).click()
@@ -71,10 +73,10 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await page.getByLabel('Tipo documental del flujo').selectOption('T2')
   await expect(page.getByLabel('Nombre del flujo')).toHaveValue('')
   await page.getByRole('button', { name: 'Editar perfil de ' + person, exact: true }).click()
-  await page.getByLabel('Nombre actualizado del usuario').fill(person + ' actualizado')
+  await page.getByLabel('Apellidos del usuario').fill(String(suffix) + ' actualizado')
   page.once('dialog', dialog => dialog.dismiss())
   await page.getByRole('button', { name: 'Inicio', exact: true }).click()
-  await expect(page.getByLabel('Nombre actualizado del usuario')).toHaveValue(person + ' actualizado')
+  await expect(page.getByLabel('Apellidos del usuario')).toHaveValue(String(suffix) + ' actualizado')
   await page.getByRole('button', { name: 'Guardar perfil', exact: true }).click()
   await expect(page.getByRole('cell', { name: person + ' actualizado', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Desactivar ' + person + ' actualizado', exact: true }).click()

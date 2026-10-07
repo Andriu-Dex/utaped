@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 import { WorkPlanEditor } from './WorkPlanEditor'
@@ -34,7 +35,7 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir el Plan.') } finally { setBusy(false) }
   }
   if (selected) return <WorkPlanEditor key={selected.id} initial={selected} onDirtyChange={onDirtyChange} onBack={() => { setSelected(null); setLoading(true); setReload(n => n+1) }} />
-  return <section><h1>Gestión Documental Académica</h1><p>Planes de Trabajo T1 guardados en su cuenta.</p>{error && <p role="alert" className="error">{error}</p>}
+  return <section><h1>Gestión Documental Académica</h1><p>Planes de Trabajo T1 guardados en su cuenta.</p>{error && <Toast message={error} />}
     {loading ? <p role="status">Cargando documentos…</p> : <>
       <section className="card"><h2>Nuevo Plan de Trabajo</h2>
         {!options?.groups.length ? <p>Necesita pertenecer a un grupo activo para crear un Plan. Solicite la asignación al administrador.</p> : <form onSubmit={create}><fieldset disabled={busy} className="grid">

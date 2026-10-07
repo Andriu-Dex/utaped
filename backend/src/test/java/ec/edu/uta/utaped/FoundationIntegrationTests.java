@@ -38,7 +38,7 @@ class FoundationIntegrationTests {
         }
         void csrf() throws Exception { token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token"); }
         HttpResponse<String> login(String email,String password) throws Exception {
-            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password,true);csrf();return response;
+            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password+"&captcha="+LoginChallenges.answer(client,port,jdbc),true);csrf();return response;
         }
     }
     @BeforeEach void seed() {
@@ -103,6 +103,13 @@ class FoundationIntegrationTests {
         Browser b=new Browser();b.login("admin@example.invalid",PASSWORD);
         assertEquals(409,b.request("PATCH","/api/admin/users/"+admin+"/active","{\"active\":false}",true).statusCode());
     }
+    @Test void revokedAccountSessionCanReturnToLoginWithAnotherIdentity() throws Exception {
+        Browser b=new Browser();assertEquals(204,b.login("user@example.invalid",PASSWORD).statusCode());
+        jdbc.update("UPDATE app_user SET active=false WHERE id=?",user);
+        assertEquals(401,b.request("GET","/api/auth/me",null,false).statusCode());
+        assertEquals(204,b.login("admin@example.invalid",PASSWORD).statusCode());
+        assertEquals(admin.toString(),JsonPath.read(b.request("GET","/api/auth/me",null,false).body(),"$.id"));
+    }
     @Test void usersGroupsAndPeriodsPersistWithAudit() throws Exception {
         Browser b=new Browser();b.login("admin@example.invalid",PASSWORD);
         String input="{\"email\":\"new@example.invalid\",\"displayName\":\"New user\",\"systemRole\":\"USER\",\"temporaryPassword\":\""+PASSWORD+"\"}";
@@ -145,5 +152,84 @@ class FoundationIntegrationTests {
     @Test void loginAttemptsAreThrottled() throws Exception {
         Browser b=new Browser();for(int n=0;n<10;n++) assertEquals(401,b.login("missing@example.invalid","wrong-password").statusCode());
         assertEquals(429,b.login("missing@example.invalid","wrong-password").statusCode());
+    }
+    @Test void captchaIsSessionBoundExpiringAndSingleUse() throws Exception {
+        Browser b=new Browser(),other=new Browser();b.csrf();other.csrf();
+        assertEquals(400,b.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD,true).statusCode());
+        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        String body="username=user@example.invalid&password="+PASSWORD+"&captcha=abc234";
+        assertEquals(400,other.request("POST","/api/auth/login",body,true).statusCode());
+        assertEquals(204,b.request("POST","/api/auth/login",body,true).statusCode());b.csrf();
+        assertEquals(400,b.request("POST","/api/auth/login",body,true).statusCode());
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha WHERE id=?",Integer.class,challenge.id()));
+        challenge=LoginChallenges.issue(other.client,port,jdbc,"ABC234");
+        jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",challenge.id());
+        assertEquals(400,other.request("POST","/api/auth/login",body,true).statusCode());
+    }
+    @Test void refreshingAndIncorrectCaptchaInvalidatePreviousAnswer() throws Exception {
+        Browser b=new Browser();b.csrf();
+        var old=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        var next=LoginChallenges.issue(b.client,port,jdbc,"XYZ789");
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha WHERE id=?",Integer.class,old.id()));
+        String body="username=user@example.invalid&password="+PASSWORD+"&captcha=";
+        assertEquals(400,b.request("POST","/api/auth/login",body+old.answer(),true).statusCode());
+        assertEquals(400,b.request("POST","/api/auth/login",body+next.answer(),true).statusCode());
+        assertEquals(204,b.login("user@example.invalid",PASSWORD).statusCode());
+    }
+    @Test void concurrentCaptchaAttemptsCannotBothAuthenticate() throws Exception {
+        Browser b=new Browser();b.csrf();LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        var request=HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/api/auth/login"))
+            .header("Content-Type","application/x-www-form-urlencoded").header("X-CSRF-TOKEN",b.token)
+            .POST(HttpRequest.BodyPublishers.ofString("username=user@example.invalid&password="+PASSWORD+"&captcha=ABC234")).build();
+        var first=b.client.sendAsync(request,HttpResponse.BodyHandlers.ofString());var second=b.client.sendAsync(request,HttpResponse.BodyHandlers.ofString());
+        var statuses=java.util.List.of(first.get().statusCode(),second.get().statusCode());
+        assertEquals(1,statuses.stream().filter(status->status==204).count());
+        assertTrue(statuses.stream().allMatch(status->status==204 || status==400 || status==403));
+    }
+    @Test void usernameLoginMigratesBcryptOnlyAfterCorrectCredentials() throws Exception {
+        String legacy="{bcrypt}"+new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(PASSWORD);
+        jdbc.update("UPDATE app_user SET username='local.user',password_hash=? WHERE id=?",legacy,user);
+        Browser b=new Browser();assertEquals(401,b.login("LOCAL.USER","wrong-password").statusCode());
+        assertEquals(legacy,jdbc.queryForObject("SELECT password_hash FROM app_user WHERE id=?",String.class,user));
+        assertEquals(204,b.login("LOCAL.USER",PASSWORD).statusCode());
+        String hash=jdbc.queryForObject("SELECT password_hash FROM app_user WHERE id=?",String.class,user);
+        assertTrue(hash.startsWith("{argon2id}$argon2id$"));assertTrue(encoder.matches(PASSWORD,hash));
+        assertEquals("local.user",JsonPath.read(b.request("GET","/api/auth/me",null,false).body(),"$.username"));
+        assertEquals(204,new Browser().login("user@example.invalid",PASSWORD).statusCode());
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='PASSWORD_HASH_UPGRADED'",Integer.class));
+    }
+    @Test void emailAndUsernameShareAccountThrottle() throws Exception {
+        jdbc.update("UPDATE app_user SET username='local.user' WHERE id=?",user);
+        Browser b=new Browser();for(int n=0;n<10;n++) assertEquals(401,b.login(n%2==0?"local.user":"user@example.invalid","wrong-password").statusCode());
+        assertEquals(429,b.login("LOCAL.USER",PASSWORD).statusCode());
+    }
+    @Test void structuredProfileAndUsernameUniquenessAreEnforced() throws Exception {
+        Browser a=new Browser();a.login("admin@example.invalid",PASSWORD);
+        String input="{\"email\":\"new@example.invalid\",\"username\":\"New.User\",\"firstNames\":\"Ana María\",\"lastNames\":\"Pérez\",\"displayName\":\"Ignored fallback\",\"systemRole\":\"USER\",\"temporaryPassword\":\""+PASSWORD+"\"}";
+        var created=a.request("POST","/api/admin/users",input.replace("\"displayName\":\"Ignored fallback\",",""),true);assertEquals(200,created.statusCode());
+        String id=JsonPath.read(created.body(),"$.id");String profile=a.request("GET","/api/admin/users/"+id,null,false).body();
+        assertEquals("new.user",JsonPath.read(profile,"$.username"));assertEquals("Ana María Pérez",JsonPath.read(profile,"$.display_name"));
+        assertEquals(409,a.request("POST","/api/admin/users",input.replace("new@example.invalid","second@example.invalid"),true).statusCode());
+        assertEquals(400,a.request("POST","/api/admin/users",input.replace("New.User","invalid@alias"),true).statusCode());
+        assertEquals(1,JsonPath.<Integer>read(a.request("GET","/api/admin/users/directory?query=new.user",null,false).body(),"$.total"));
+    }
+    @Test void administrativeResetRevokesSessionsAndRecoveryLinksAndRequiresChange() throws Exception {
+        Browser a=new Browser(),b=new Browser();a.login("admin@example.invalid",PASSWORD);b.login("user@example.invalid",PASSWORD);
+        String token="r".repeat(43);jdbc.update("INSERT INTO password_reset(token_hash,user_id,expires_at) VALUES (?,?,now()+interval '1 minute')",AuthThrottle.digest(token),user);
+        String path="/api/admin/users/"+user+"/temporary-password";
+        String body="{\"rowVersion\":0,\"temporaryPassword\":\"Temporary-reset-password-2026\"}";
+        assertEquals(403,b.request("POST",path,body,true).statusCode());
+        assertEquals(403,a.request("POST",path,body,false).statusCode());
+        assertEquals(200,a.request("POST",path,body,true).statusCode());
+        assertEquals(401,b.request("GET","/api/auth/me",null,false).statusCode());
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM password_reset WHERE user_id=?",Integer.class,user));
+        assertEquals(409,a.request("POST",path,body,true).statusCode());
+        assertEquals(400,a.request("POST","/api/admin/users/"+admin+"/temporary-password",body,true).statusCode());
+        Browser fresh=new Browser();assertEquals(204,fresh.login("user@example.invalid","Temporary-reset-password-2026").statusCode());
+        assertTrue(JsonPath.<Boolean>read(fresh.request("GET","/api/auth/me",null,false).body(),"$.mustChangePassword"));
+        assertEquals(403,fresh.request("GET","/api/groups",null,false).statusCode());
+        assertEquals(200,fresh.request("POST","/api/auth/change-password","{\"currentPassword\":\"Temporary-reset-password-2026\",\"newPassword\":\"After-reset-password-2026\"}",true).statusCode());
+        assertEquals(204,new Browser().login("user@example.invalid","After-reset-password-2026").statusCode());
+        assertEquals(admin,jdbc.queryForObject("SELECT actor_id FROM audit_event WHERE action='ADMIN_PASSWORD_RESET'",UUID.class));
     }
 }

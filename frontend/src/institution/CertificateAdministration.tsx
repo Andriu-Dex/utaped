@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type User } from '../shared/api'
 interface Binding { id: string; fingerprint: string; verificationNote: string; active: boolean; createdAt: string }
@@ -21,7 +22,7 @@ export function CertificateAdministration() {
   }
   return <section className="card" aria-label="Vinculación de certificados"><h2>Certificados públicos de firmantes</h2>
     <p>Vincule la huella SHA-256 obtenida del certificado público después de comprobar la identidad del titular por un canal confiable. No introduzca archivos privados ni contraseñas. Esto no acredita validación de la entidad emisora o revocación.</p>
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
     <label>Cuenta del firmante<select value={user} disabled={busy} onChange={e => { setUser(e.target.value); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
     {user && <><form key={user} onSubmit={event => void register(event)}><fieldset disabled={busy}>

@@ -2,6 +2,14 @@
 
 Estado: línea base inicial para revisión; no constituye aprobación institucional nueva.
 
+## Fuente vigente desde el 2026-10-06
+
+El [Plan Maestro del propietario](docs/decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md) prevalece sobre las contradicciones de la documentación anterior. Los apartados fechados anteriores describen decisiones históricas y entregas parciales; no mantienen abiertas decisiones ya resueltas por ese plan. Su incorporación no significa que sus 92 apartados estén implementados.
+
+El propietario confirmó además un rediseño completo de la interfaz productiva: azul predominante con colores complementarios, jerarquía moderna y navegación accesible. Prototipos conserva valor funcional; su estética no se replica. Los formatos institucionales T1/T2 se conservan independientemente de este rediseño.
+
+Requisitos entregados en esta etapa: UT-AUTH-020 usuario separado del correo; UT-AUTH-021 nombres/apellidos separados para altas nuevas; UT-AUTH-022 Argon2id con migración de bcrypt al autenticar correctamente; UT-AUTH-023 CAPTCHA alfanumérico de servidor, vinculado a sesión, 3 minutos, renovación y un solo intento; UT-AUTH-024 restablecimiento ADMIN con contraseña temporal, auditoría y revocación; UT-UI-020 sistema visual, navegación, adaptación a escritorio/tableta/móvil y estados reales. Son confirmados por el propietario, prioridad P0/P1, derivados de §§6–7 y del cambio visual del 2026-10-06. Aceptación y pruebas: [contrato de acceso](docs/api/local-access.md) y [ADR-0003](docs/architecture/adr/0003-modern-workspace-access.md). La variante de restablecimiento por coordinador depende del modelo de ámbitos de carrera/período todavía pendiente; no se concede ese permiso global.
+
 ## Decisiones productivas confirmadas por el propietario
 
 2026-10-02: credenciales locales; selección tecnológica delegada e implementación de la base técnica autorizada. [ADR-0001](docs/architecture/adr/0001-production-foundation.md) establece stack, sesiones y migraciones. Confirmación del proyecto, no normativa institucional nueva. [Estado de entrega](implementation-status.md) distingue funcionalidades parciales de módulos todavía pendientes.

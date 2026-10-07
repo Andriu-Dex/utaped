@@ -25,7 +25,7 @@ public class BootstrapAdmin implements ApplicationRunner {
         if(jdbc.queryForObject("SELECT count(*) FROM app_user",Integer.class)>0) return;
         if(email.isBlank() || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$") || email.length()>254) throw new IllegalArgumentException("Configure bootstrap administrator email");
         PasswordService.validate(password); UUID id=UUID.randomUUID();
-        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role) VALUES (?,?,?,?,?)",id,Accounts.normalize(email),"Administrador inicial",encoder.encode(password),"ADMIN");
+        jdbc.update("INSERT INTO app_user(id,email,username,display_name,password_hash,system_role) VALUES (?,?,?,?,?,?)",id,Accounts.normalize(email),Accounts.defaultUsername(email),"Administrador inicial",encoder.encode(password),"ADMIN");
         audit.record(id,"ADMIN_BOOTSTRAPPED",id);
     }
 }

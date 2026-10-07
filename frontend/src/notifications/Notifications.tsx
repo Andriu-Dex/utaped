@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 interface Notification { id: string; kind: string; targetType: 'GROUP' | 'WORK_PLAN'; targetId: string; title: string; message: string; createdAt: string; readAt: string | null; targetAvailable: boolean }
@@ -22,7 +23,7 @@ export function Notifications({ onOpen }: { onOpen: (target: NotificationTarget)
   return <section aria-label="Bandeja de notificaciones"><h1>Notificaciones</h1><p>Avisos personales sobre pertenencias y previsualizaciones guardadas. La disponibilidad del objeto depende de sus permisos actuales.</p>
     <label>Estado de lectura<select aria-label="Estado de lectura" value={filter.read} onChange={e => { setError(''); setResult(null); setFilter({ read: e.target.value, page: 0 }) }}><option value="">Todas</option><option value="false">Sin leer</option><option value="true">Leídas</option></select></label>
     <button className="secondary" disabled={busy} onClick={() => { setError(''); setResult(null); setReload(n => n + 1); changed() }}>Actualizar notificaciones</button>{' '}<button disabled={busy || !result?.unread} onClick={() => void mutate('/notifications/read-all')}>Marcar todas como leídas</button>
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status" className="notice">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!result && !error && <p role="status">Cargando notificaciones…</p>}
     {result && <><p>{result.total} notificaciones · {result.unread} sin leer · Página {result.page + 1}</p>{result.items.length === 0 && <p>No hay notificaciones para este filtro.</p>}
       <ul className="notification-list">{result.items.map(notification => <li className={'card ' + (!notification.readAt ? 'notification-unread' : '')} key={notification.id} aria-label={notification.title}><h2>{notification.title}</h2><p>{notification.message}</p><p><time dateTime={notification.createdAt}>{new Date(notification.createdAt).toLocaleString('es-EC')}</time> · {notification.readAt ? 'Leída' : 'Sin leer'}</p>

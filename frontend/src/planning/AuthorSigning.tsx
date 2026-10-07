@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, signPdf } from '../shared/api'
 
@@ -30,7 +31,7 @@ export function AuthorSigning({ targetDocId, artifactId }: { targetDocId: string
   const index = page ?? signed?.signaturePageIndex ?? 0
   return <section className="card" aria-label="Firma del elaborador"><h2>Firmar PDF</h2>
     <p>La firma se aplica a este artefacto conservado. El Plan sigue en borrador; esta acción no envía a revisión ni aprueba el documento.</p>
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
       {state.signingBlockers.length > 0 && !signed && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
       {!signed && <form onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
@@ -42,7 +43,7 @@ export function AuthorSigning({ targetDocId, artifactId }: { targetDocId: string
         <p>Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
         <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>
         <nav aria-label="Páginas del PDF firmado"><button className="secondary" disabled={index === 0} onClick={() => { setPage(index - 1); setImageError(false) }}>Anterior del firmado</button><span> Página {index + 1} de {signed.pageCount} </span><button className="secondary" disabled={index + 1 >= signed.pageCount} onClick={() => { setPage(index + 1); setImageError(false) }}>Siguiente del firmado</button></nav>
-        {imageError && <p role="alert" className="error">No se pudo cargar la página firmada. Puede descargar el PDF.</p>}
+        {imageError && <Toast message="No se pudo cargar la página firmada. Puede descargar el PDF." />}
         <img className="document-page" src={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/pages/' + index} alt={'Página ' + (index + 1) + ' del PDF firmado'} onError={() => setImageError(true)} />
       </>}
     </>}

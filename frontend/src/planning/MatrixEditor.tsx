@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import { categoryLabels, type Activity, type Matrix } from './matrixTypes'
@@ -58,7 +59,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     if (!latest || !window.confirm('¿Descartar cambios locales y cargar la matriz actual del servidor?')) return
     setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
-  if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <p role="alert" className="error">{error}</p> : <p role="status">Cargando matriz…</p>}</section>
+  if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
     if (!saved) return null
     const available = saved.catalogs.filter(c => c.kind === (key === 'resources' ? 'RESOURCE' : 'MEANS') && (c.active || row[key].some(v => v.catalogId === c.id)))
@@ -70,7 +71,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     </fieldset>
   }
   return <section><button className="secondary" disabled={busy} onClick={back}>Volver al Plan</button><h1>Actividades y matriz T1</h1><p role="status">{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
-    {!saved.editable && <p className="notice">Solo lectura: ventana de elaboración cerrada.</p>}
+    {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
     <p>Elaborado por: {saved.elaboratedBy}</p>
     <form ref={formRef} onSubmit={save}><fieldset disabled={busy || !saved.editable}><label>Fuente de la matriz<input maxLength={500} value={draft.source} onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }} /></label>
       <div className="card"><h2>Seleccionar actividades</h2><label>Actividad del catálogo<select value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Otra actividad</option>{saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => <option key={d.id} value={d.id}>{categoryLabels[d.category]} · {d.title}</option>)}</select></label>
@@ -90,7 +91,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
       </section>)}
       <button disabled={conflict}>{busy ? 'Guardando…' : 'Guardar matriz'}</button></fieldset></form>
     {!!draft.activities.length && <section className="card"><h2>Resumen de la matriz</h2><div className="table-scroll"><table><thead><tr><th>Actividad</th><th>Desde</th><th>Hasta</th><th>Responsables</th><th>Recursos</th><th>Medios de verificación</th></tr></thead><tbody>{draft.activities.map(a => <tr key={a.id}><td>{a.title}</td><td>{a.startsOn?.split('-').reverse().join('/') || 'Pendiente'}</td><td>{a.endsOn?.split('-').reverse().join('/') || 'Pendiente'}</td><td>{a.collective ? saved.collectiveLabel : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</td><td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ')}</td><td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ')}</td></tr>)}</tbody></table></div></section>}
-    {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
+    {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>
 }

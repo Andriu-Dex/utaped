@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import type { WorkPlan } from './types'
@@ -68,7 +69,7 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
     {' '}<button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button>
     {dirty && <p>Guarde los cambios del Plan antes de abrir otra sección.</p>}
     <div className="card"><dl className="plan-metadata"><div><dt>Elaborador</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
-      {!plan.editable && <p className="notice">Solo lectura: la ventana de elaboración está cerrada.</p>}
+      {!plan.editable && <Toast tone="warning" message="Solo lectura: la ventana de elaboración está cerrada." />}
       <nav aria-label="Secciones del borrador"><button type="button" aria-current={section === 'general' ? 'page' : undefined} onClick={() => setSection('general')}>Información general</button><button type="button" aria-current={section === 'content' ? 'page' : undefined} onClick={() => setSection('content')}>Contenido</button></nav>
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy}>
         {section === 'general' ? <>
@@ -82,7 +83,7 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
         </>}
         <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
       </fieldset></form>
-      {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status" className="notice">{notice}</p>}
+      {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}
       </div>}

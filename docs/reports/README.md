@@ -19,3 +19,6 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-03 — Inspección inicial de firma y revisión](2026-10-03-11-signature-review-preparation.md).
 - [2026-10-04 — Núcleo de firma y snapshots de flujo](2026-10-04-01-signature-core-workflow-snapshots.md).
 - [2026-10-05 — Firma visible del elaborador T1](2026-10-05-01-visible-author-signing.md).
+- [2026-10-06 — Espacio de trabajo moderno y acceso local](2026-10-06-01-modern-workspace-access.md).
+
+- [2026-10-07 — Diseño de contraseña y avisos toast](2026-10-07-01-password-layout-and-toasts.md).

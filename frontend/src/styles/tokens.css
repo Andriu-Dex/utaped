@@ -1,0 +1,24 @@
+:root {
+  font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+  color: #22374a;
+  background: #f4f7fa;
+  font-synthesis: none;
+  line-height: 1.55;
+  --blue-950: #0c2944;
+  --blue-900: #103858;
+  --blue-800: #144b76;
+  --blue-700: #175f94;
+  --blue-100: #e9f2fa;
+  --teal-700: #177369;
+  --teal-100: #e6f4ef;
+  --amber-700: #805515;
+  --amber-100: #fff4dc;
+  --danger: #a82f3d;
+  --text: #22374a;
+  --muted: #5f7284;
+  --border: #dce5ed;
+  --surface: #fff;
+  --canvas: #f4f7fa;
+  --radius: 16px;
+  --shadow: 0 4px 20px #19395806;
+}

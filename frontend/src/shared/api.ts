@@ -8,6 +8,7 @@ export async function download(path: string, filename: string) {
   const url = URL.createObjectURL(await response.blob()); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 let csrf: { headerName: string; token: string } | undefined
+let csrfRequest: Promise<void> | undefined
 export async function signPdf<T>(path: string, file: File, password: string): Promise<T> {
   const encoded = new TextEncoder().encode(password)
   let container: Uint8Array<ArrayBuffer> | undefined; let payload: Uint8Array<ArrayBuffer> | undefined
@@ -21,10 +22,15 @@ export async function signPdf<T>(path: string, file: File, password: string): Pr
     return await response.json()
   } finally { encoded.fill(0); container?.fill(0); payload?.fill(0) }
 }
-export async function refreshCsrf() {
-  const response = await fetch('/api/auth/csrf', { credentials: 'same-origin' })
-  if (!response.ok) throw new ApiError('No se pudo conectar con el servidor.', response.status)
-  csrf = await response.json()
+export function refreshCsrf(): Promise<void> {
+  if (csrfRequest) return csrfRequest
+  csrf = undefined
+  csrfRequest = (async () => {
+    const response = await fetch('/api/auth/csrf', { credentials: 'same-origin' })
+    if (!response.ok) throw new ApiError('No se pudo conectar con el servidor.', response.status)
+    csrf = await response.json()
+  })().finally(() => { csrfRequest = undefined })
+  return csrfRequest
 }
 export async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
@@ -46,8 +52,8 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
   const text = await response.text()
   return text ? JSON.parse(text) : undefined as T
 }
-export interface Account { id: string; email: string; displayName: string; systemRole: 'ADMIN' | 'USER'; mustChangePassword: boolean }
+export interface Account { id: string; email: string; username: string | null; firstNames: string | null; lastNames: string | null; displayName: string; systemRole: 'ADMIN' | 'USER'; mustChangePassword: boolean }
 export interface Group { id: string; name: string; group_type: string; membership_role: string | null; collective_label: string; active: boolean; row_version: number }
 export interface Member { id: string; display_name: string; membership_role: string }
 export interface Period { id: string; name: string; starts_on: string; ends_on: string; restrict_holiday_endpoints: boolean }
-export interface User { id: string; email: string; display_name: string; system_role: string; active: boolean; row_version: number }
+export interface User { id: string; email: string; username: string | null; first_names: string | null; last_names: string | null; display_name: string; system_role: string; active: boolean; row_version: number }
