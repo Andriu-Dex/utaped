@@ -26,6 +26,7 @@ runtime-data/
 /backups/
 # Frozen prototype stays outside this repository
 /Prototipos/
+instruction.md
 test-results/
 playwright-report/
 *.tsbuildinfo

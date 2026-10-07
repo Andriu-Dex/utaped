@@ -57,7 +57,7 @@ app:
     max-attachments: ${DOCUMENT_MAX_ATTACHMENTS:20}
     max-attachment-pages: ${DOCUMENT_MAX_ATTACHMENT_PAGES:100}
     page-format: ${DOCUMENT_PAGE_FORMAT:A4}
-  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  public-url: ${APP_PUBLIC_URL:http://localhost:64430}
   mail-from: ${MAIL_FROM:no-reply@utaped.invalid}
   planning:
     single-plan-per-scope: ${PLANNING_SINGLE_PLAN_PER_SCOPE:false}
