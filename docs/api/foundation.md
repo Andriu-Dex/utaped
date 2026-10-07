@@ -1,5 +1,7 @@
 # Contrato API inicial
 
+Actualización 2026-10-06: [acceso local, CAPTCHA y perfiles](local-access.md) amplía este contrato. La versión de rutas `/api/v1` del Plan Maestro todavía requiere migración.
+
 El módulo documental inicial tiene su contrato en [Borradores de Plan de Trabajo](work-plan-drafts.md).
 
 Origen común frontend/backend; JSON UTF-8 salvo login form-urlencoded. UUID como identificadores. Errores de aplicación: objeto message en español, sin secretos. 401 sesión inválida; 403 permisos/CSRF/contraseña temporal; 400 validación; 409 duplicado/conflicto; 429 límite de intentos.
@@ -7,8 +9,9 @@ Origen común frontend/backend; JSON UTF-8 salvo login form-urlencoded. UUID com
 | Método / ruta | Acceso | Entrada / salida |
 |---|---|---|
 | GET /api/auth/csrf | Público | headerName y token; conservar cookie y enviar cabecera en mutaciones. |
-| POST /api/auth/login | Público + CSRF | username=email y password form-urlencoded; 204 y cookie. |
-| GET /api/auth/me | Sesión activa | id, email, displayName, systemRole, active, mustChangePassword. |
+| GET /api/auth/captcha | Público | Imagen PNG de reto vinculado a sesión, tres minutos y un solo intento. |
+| POST /api/auth/login | Público + CSRF | username (identificador o correo), password y captcha form-urlencoded; 204 y cookie. |
+| GET /api/auth/me | Sesión activa | id, email, username, firstNames, lastNames, displayName, systemRole, active, mustChangePassword. |
 | POST /api/auth/logout | CSRF | 204; invalida sesión y cookie. |
 | POST /api/auth/change-password | Sesión + CSRF | currentPassword, newPassword; 200; revoca todas las sesiones. |
 | POST /api/auth/forgot-password | Público + CSRF | email; respuesta genérica sin indicar existencia; procesamiento SMTP asíncrono. |
@@ -17,7 +20,8 @@ Origen común frontend/backend; JSON UTF-8 salvo login form-urlencoded. UUID com
 | GET /api/groups/{id}/members | Miembro de grupo o ADMIN | id,display_name,membership_role; 404 para grupo ajeno. |
 | GET /api/periods | Sesión sin contraseña temporal | id,name y seis fechas ISO civiles con nombres snake_case. |
 | GET /api/admin/users | ADMIN | Hasta 200 usuarios; id,email,display_name,system_role,active,must_change_password. No hash. |
-| POST /api/admin/users | ADMIN + CSRF | email,displayName,systemRole=ADMIN/USER,temporaryPassword; devuelve id. |
+| POST /api/admin/users | ADMIN + CSRF | email,firstNames,lastNames,username opcional,systemRole=ADMIN/USER,temporaryPassword; acepta displayName histórico si no hay desglose; devuelve id. |
+| POST /api/admin/users/{id}/temporary-password | ADMIN + CSRF | rowVersion,temporaryPassword; revoca sesiones/enlaces y obliga cambio; no autorrestablecimiento. |
 | PATCH /api/admin/users/{id}/active | ADMIN + CSRF | active; desactivar revoca sesiones; conservar al menos un admin activo. |
 | POST /api/admin/groups | ADMIN + CSRF | name,groupType=COMMISSION/UNIT/CLUB/OTHER; devuelve id. |
 | POST /api/admin/groups/{id}/members | ADMIN + CSRF | userId,membershipRole=MEMBER/COORDINATOR; asigna/actualiza pertenencia. |

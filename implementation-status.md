@@ -1,12 +1,15 @@
 # Estado de implementación productiva
 
-Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–7 fusionados; último merge bde162d. Entrega actual en feature/visible-author-signing desde develop, organizada por bloques y commits antes de un único push/PR.
+Inicio: 2026-10-02. Actualización: 2026-10-06. PR #1–8 fusionados; base develop 248eeba. Entrega actual en feature/modern-workspace-access, con commits por bloque y un PR hacia develop.
+
+El Plan Maestro del 2026-10-06 y la decisión posterior de rediseñar la interfaz prevalecen sobre las decisiones históricas. Las secciones anteriores fechadas se conservan como historial de entregas, no como preguntas institucionales aún abiertas cuando el Plan Maestro ya las resolvió. No se declara finalizado el proyecto.
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | Documentación inicial | Disponible; pendientes institucionales registrados | docs/requirements y docs/validation. |
 | Stack productivo | Seleccionado e implementado | ADR-0001, manifests y Dockerfiles. |
-| Credenciales locales | Implementado | Login/logout, bcrypt, CSRF, sesión JDBC, cambio obligatorio y recuperación SMTP. |
+| Credenciales locales | Implementado en alcance actual | Usuario/correo, CAPTCHA real, Argon2id y migración de bcrypt al login correcto, CSRF, sesión JDBC, cambio obligatorio, recuperación SMTP y reset ADMIN. Coordinador espera ámbitos. |
+| Interfaz productiva | Base moderna implementada | Diseño propio, tokens/iconos, acceso, menú lateral, panel con datos reales, formularios/tablas, accesos administrativos y adaptación escritorio/tableta/móvil. Validación estética final del cliente pendiente. |
 | Usuarios y permisos | Primera entrega implementada | Bootstrap, alta, directorio paginado, edición de nombre/permiso y activación con concurrencia; revocación y protección último admin. |
 | Grupos y pertenencias | Primera entrega implementada | Alta/listado, edición/activación con concurrencia, MEMBER/COORDINATOR, asignación/retiro y aislamiento por objeto. |
 | Períodos | Alta/consulta, rangos y ventana de elaboración de borradores | Fechas civiles inclusivas en zona configurable; cierre definitivo/reapertura pendientes. |
@@ -15,7 +18,7 @@ Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–7 fusionados; último me
 | CI | Workflow frontend/backend/E2E disponible | Base publicada y fusionada; cambios actuales verificados localmente, ejecución remota pendiente de publicación. |
 | Notificaciones | Canal interno inicial implementado | Bandeja privada, contador, lectura y navegación con autorización; avisos de pertenencia y previsualización, sin correo/push. |
 | Seguimiento personal | Panel inicial implementado | Contadores, filtros, distribución y documentos recientes bajo propiedad/pertenencia; sin métricas ficticias de aprobación. |
-| Borradores T1 | Primera entrega parcial implementada | Creación, información general, justificación/objetivo, lista filtrada/paginada, persistencia, aislamiento y concurrencia. |
+| Borradores T1 | Parcial; modelo pendiente de reconciliación | Persistencia/aislamiento/concurrencia implementados. Titularidad individual y carrera libre contradicen el nuevo modelo de comisión/carrera/período; migración pendiente, no habilitar como modelo institucional definitivo. |
 | Actividades y matriz T1 | Primera entrega implementada | Catálogos por grupo, obligatorias/opcionales/Otra, fechas, responsables múltiples/colectivos, recursos/medios, fuente, resumen y persistencia atómica. |
 | Catálogos y feriados | Administración inicial implementada | Altas, edición/desactivación de actividades/recursos/medios; denominación colectiva; feriados y restricción configurable por período. |
 | Configuración de flujos | Primera entrega administrativa implementada | Etapas ordenadas T1/T2 por grupo; personas/roles/órganos, requerimiento de firma, borrador, revisiones inmutables y deshabilitación. No ejecuta revisión documental. |
@@ -26,6 +29,22 @@ Inicio: 2026-10-02. Actualización: 2026-10-05. PR #1–7 fusionados; último me
 | Firma visible del elaborador T1 | Primera entrega implementada | Administración vincula huella pública con evidencia de identidad; usuario selecciona archivo/contraseña. PDF independiente e inmutable, visor/descarga privados, ubicación real, reintentos idempotentes y auditoría. Sin almacenamiento de secretos. |
 | T1 completo/T2, revisión, evidencias | Pendientes en producto | La firma del artefacto no finaliza ni envía el Plan; DRAFT permanece editable separado del firmado. Firmas de revisores, T2 y evidencias aún no entregados. |
 | SMTP institucional/HTTPS/operación | Pendiente | Mailpit captura correo local; Compose local no es publicación institucional. |
+| JPA/API v1/OpenAPI/Testcontainers | Pendiente de transición | Los módulos existentes siguen con JDBC y pruebas PostgreSQL aisladas por Compose. No se atribuye cumplimiento a tecnologías aún no incorporadas. |
+
+## Espacio de trabajo y acceso — entrega 2026-10-06
+
+UT-AUTH-020–024 y UT-UI-020 implementados en el alcance de [ADR-0003](docs/architecture/adr/0003-modern-workspace-access.md). Fuentes: Plan Maestro §§6–7 y decisión visual del propietario. Se incorporan sus plantillas/documentos como referencias, sin importar personas o permisos incompletos ni modificar Prototipos.
+
+- Alta con nombres/apellidos y username normalizado, directorio con búsqueda por identificador y perfiles compatibles con registros históricos. V12 deriva usernames existentes y conserva nombres sin inferir su desglose.
+- Hashes nuevos Argon2id; bcrypt previo sigue validándose y se actualiza después de credenciales correctas, con protección frente a cambio concurrente.
+- CAPTCHA PNG real: seis caracteres, tres minutos, sesión, consumo atómico e invalidación al regenerar; sin bypass ni respuestas en claro. URL única para evitar reutilización de imágenes. Mantiene rate limiting y CSRF.
+- Reset ADMIN con concurrencia, confirmación UI, contraseña temporal, revocación de sesiones/enlaces y auditoría sin secretos. El permiso de coordinador sigue pendiente del nuevo ámbito autorizado.
+- Nueva base visual común para módulos existentes, menú/contexto/identidad, panel real y estados vacíos. Los períodos se expanden sin perder historial. Se conserva advertencia al abandonar cambios y se ignoran respuestas de identidad anteriores al logout.
+- Login tras logout/expiración espera el nuevo CSRF antes de montar el reto, evitando sesiones anónimas paralelas. Una cuenta revocada no deja bloqueado el navegador para acceder con otra identidad.
+
+Verificaciones: frontend lint/build, 59 pruebas backend con PostgreSQL aislado y tres escenarios E2E completos sobre Docker/Nginx. Se corrigieron fixtures de fecha que mezclaban UTC y America/Guayaquil sin debilitar controles. Capturas revisadas en escritorio/tableta/móvil y regresión de planificación, documentos, firma, administración y notificaciones. [Reporte nuevo](docs/reports/2026-10-06-01-modern-workspace-access.md).
+
+Próxima implementación: carreras y pertenencias por período/cargo, responsable principal, titularidad y unicidad por comisión/carrera/período, archivo de borradores y conservación histórica. Después: workflow secuencial, tareas/observaciones/rondas, múltiples firmas y firma→envío atómico; luego ejecución/evidencias y T2. El rediseño no concede permisos ni resuelve esas transiciones por apariencia visual.
 
 ## Trazabilidad
 

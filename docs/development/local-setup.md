@@ -9,10 +9,12 @@ Requisitos: Docker Desktop con contenedores Linux y Compose. No es necesario ins
 1. En la raíz, copiar .env.example a .env y sustituir DB_PASSWORD y BOOTSTRAP_ADMIN_PASSWORD por valores únicos. Elegir correo del administrador; no publicar .env.
 2. Para usar interfaz Docker establecer APP_PUBLIC_URL=http://localhost:8081.
 3. Ejecutar `docker compose --profile web up --build -d`.
-4. Abrir http://localhost:8081, ingresar con los valores configurados y cambiar la contraseña temporal.
+4. Abrir http://localhost:8081, ingresar con el correo/usuario configurado, contraseña y CAPTCHA; cambiar la contraseña temporal. Username inicial se deriva del prefijo del correo, que también sirve como alias.
 5. Retirar los valores BOOTSTRAP_ADMIN_* del entorno después de provisionar. No son contraseña permanente: solo se usan con DB vacía.
 
 El backend aplica Flyway al arrancar. El volumen conserva DB y sesiones. `docker compose down` detiene servicios conservando datos; no borrar volúmenes para solucionar errores ordinarios.
+
+V12 agrega username/perfil y CAPTCHA sin borrar cuentas. No hay variables nuevas obligatorias; revisar identificadores migrados en el directorio. Las pruebas CAPTCHA fijan una respuesta únicamente mediante la BD aislada, sin bypass de aplicación. [Contrato](../api/local-access.md).
 
 Puertos locales: web 8081, API 8080, DB 5433, bandeja Mailpit 8025. Todos vinculados a localhost. Compose es entorno local HTTP; no receta de publicación institucional. Producción exige HTTPS, COOKIE_SECURE=true, secretos externos, SMTP institucional, restricciones de red y plan de respaldo.
 

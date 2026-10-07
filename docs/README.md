@@ -1,5 +1,8 @@
 # Índice documental
 
+- [Plan Maestro vigente](decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md).
+- [Acceso local, CAPTCHA y perfiles](api/local-access.md), [ADR-0003](architecture/adr/0003-modern-workspace-access.md) y [base de interfaz moderna](design/interface-foundations.md).
+
 - [Preparación documental T1 y anexos](api/t1-document-preparation.md), [decisión](architecture/adr/0002-t1-document-preparation.md) y [almacenamiento/respaldo](development/document-storage.md).
 
 - [Entorno local y pruebas](development/local-setup.md).
