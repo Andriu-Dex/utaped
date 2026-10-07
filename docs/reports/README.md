@@ -22,3 +22,4 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-06 — Espacio de trabajo moderno y acceso local](2026-10-06-01-modern-workspace-access.md).
 
 - [2026-10-07 — Diseño de contraseña y avisos toast](2026-10-07-01-password-layout-and-toasts.md).
+- [2026-10-07 — Modo claro y oscuro para PC y tablet](2026-10-07-02-color-themes.md).

@@ -38,3 +38,7 @@ Playwright cubre las pantallas actuales y capturas en `frontend/test-results/` (
 ## Avisos toast (2026-10-07)
 
 Los errores, advertencias y confirmaciones operativas usan Toast en una capa común adaptable, sin desplazar el formulario. Error/advertencia persisten hasta cierre o cambio de estado; éxito dura ocho segundos y pausa con puntero/foco. Botón de cierre accesible, roles alert/status y movimiento reducido. Se conservan la validación junto a campos, los estados de carga y las confirmaciones que protegen cambios o acciones sensibles.
+
+## Temas y dispositivos (2026-10-07)
+
+Destinos actuales: PC y tablet. No se añaden estilos específicos para celular. Selector flotante inferior derecho de 48 px, icono luna/sol y tooltip «Modo oscuro»/«Modo claro» al pasar puntero o enfocar. La elección manual se conserva en `utaped-theme`; sin elección se sigue el sistema. Inicialización previa al montaje, sincronización entre pestañas y funcionamiento sin almacenamiento disponible. Las superficies oscuras conservan azul institucional, estados semánticos y texto claro; el CAPTCHA y las páginas T1/T2 mantienen colores originales. No se aplican filtros a documentos. Selector/toast se ocultan al imprimir; se reserva espacio inferior para los controles.

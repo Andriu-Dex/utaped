@@ -119,6 +119,15 @@ test('modern access preserves credentials, supports username and administrative 
   await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Bienvenido, Cuenta ' + suffix })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Administración', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
+  for (const [name,width,height] of [['desktop',1440,1000],['tablet',820,1180]] as const) {
+    await page.setViewportSize({ width,height })
+    await expect(page.locator('html')).toHaveAttribute('data-theme','dark')
+    await expect(page.getByRole('heading', { name: 'Bienvenido, Cuenta ' + suffix })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+    await page.screenshot({ path: 'test-results/theme-workspace-dark-' + name + '.png', fullPage: true, animations: 'disabled' })
+  }
+  await page.getByRole('button', { name: 'Modo claro', exact: true }).click()
   for (const [name,width,height] of [['desktop',1440,1000],['tablet',820,1180],['mobile',390,844]] as const) {
     await page.setViewportSize({ width,height })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()

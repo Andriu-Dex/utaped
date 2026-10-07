@@ -26,6 +26,8 @@ Update implementation-status.md for delivered functionality. Create new reports 
 
 Standing owner authorization (2026-10-03): after completing each implementation and its checks, commit the appropriate files, push the feature branch and open a pull request to develop automatically unless the owner explicitly says otherwise. The owner reviews and merges; never merge automatically. This authorization does not include deployment or publication to main.
 
+Owner override (2026-10-07): only local commits on the current branch until explicitly instructed to push/update the pull request. UI targets PCs and tablets; do not add phone-specific responsive styles. Existing historical phone styles/tests are not a requirement for new delivery.
+
 Stack decision: docs/architecture/adr/0001-production-foundation.md. Frontend: React/TypeScript/Vite; backend: Java 21/Spring Boot; DB: PostgreSQL/Flyway. Local credentials, server-side JDBC sessions and CSRF are mandatory. No tokens or passwords in browser storage. Run frontend lint/build and isolated PostgreSQL integration tests for affected logic; Playwright for affected flows. Preserve independent feature branches and PRs to develop; main is reserved for completed releases. Inherited AI model names are not verified availability.
 
 ---

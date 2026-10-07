@@ -117,3 +117,7 @@ La entrega actual conecta el núcleo a firma/consulta/descarga privadas, con hue
 ## Actualización 2026-10-07: contraseña y toast
 
 Diseño de cambio de contraseña del propietario revisado y registrado por separado. Avisos operativos/error/advertencia convertidos a toast común en los módulos actuales; conserva validaciones de campos y confirmaciones de acciones sensibles. Tres escenarios E2E, lint/build y capturas de escritorio/móvil verificados. [Reporte](docs/reports/2026-10-07-01-password-layout-and-toasts.md). Sigue en el PR #10 abierto hacia develop.
+
+## Actualización 2026-10-07: temas y destinos de interfaz
+
+Modo claro/oscuro con selector iconográfico flotante, tooltip, preferencia del sistema, persistencia local y sincronización entre pestañas. Documentos institucionales/CAPTCHA sin inversión de colores. Destinos vigentes: PC y tablet, sin nuevos estilos específicos de celular. Lint/build y cinco escenarios E2E verificados. [Reporte](docs/reports/2026-10-07-02-color-themes.md). Por instrucción actual del propietario solo se realiza commit local; no se actualiza el PR ni se hace push hasta nueva indicación.

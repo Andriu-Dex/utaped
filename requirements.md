@@ -12,6 +12,8 @@ Requisitos entregados en esta etapa: UT-AUTH-020 usuario separado del correo; UT
 
 ## Decisiones productivas confirmadas por el propietario
 
+2026-10-07: la interfaz se destina a PC y tablet; no se añaden estilos específicos para celular. Modo claro/oscuro con botón iconográfico flotante inferior derecho, luna/sol y tooltip de la acción al pasar el puntero o enfocar con teclado. Preferencia local persistente, sistema como valor inicial y documentos institucionales con sus colores originales. Esta decisión actualiza el alcance visual anterior que incluía móvil.
+
 2026-10-02: credenciales locales; selección tecnológica delegada e implementación de la base técnica autorizada. [ADR-0001](docs/architecture/adr/0001-production-foundation.md) establece stack, sesiones y migraciones. Confirmación del proyecto, no normativa institucional nueva. [Estado de entrega](implementation-status.md) distingue funcionalidades parciales de módulos todavía pendientes.
 
 ## Fuentes y alcance
