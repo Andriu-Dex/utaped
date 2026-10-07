@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 
@@ -27,10 +28,10 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
   async function saveEdit(e: FormEvent) { e.preventDefault(); if (!state || !editing) return; if (await mutate(() => api<State>(path + '/' + editing.id, 'PUT', { rowVersion: state.rowVersion, title: editing.title, description: editing.description }), 'Anexo actualizado.')) setEditing(null) }
   function move(index: number, delta: number) { if (!state) return; const ids = state.items.map(a => a.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; void mutate(() => api<State>(path + '/order', 'PUT', { rowVersion: state.rowVersion, attachmentIds: ids }), 'Orden actualizado.') }
   return <section><button className="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm('¿Descartar los cambios sin guardar?')) onBack() }}>Volver al Plan</button><h1>Anexos del Plan T1</h1>
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status" className="notice">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p>Cargando anexos…</p> : <div className="card">
       <p>Archivos PDF privados. Máximo {state.maxAttachments} anexos, {Math.floor(state.maxFileBytes / 1048576)} MB por archivo y {Math.floor(state.maxTotalBytes / 1048576)} MB en total. Límites técnicos configurables.</p>
-      {!state.editable && <p className="notice">Documento de solo lectura.</p>}
+      {!state.editable && <Toast tone="warning" message="Documento de solo lectura." />}
       <fieldset disabled={busy || !state.editable || dirty}><legend>Opciones del documento</legend>
         <label>¿El Plan tiene anexos?<select value={String(state.enabled)} onChange={e => void mutate(() => api<State>(path + '/settings', 'PUT', { rowVersion: state.rowVersion, enabled: e.target.value === 'true', privacyNoticeEnabled: state.privacyNoticeEnabled }), 'Opciones guardadas.')}><option value="false">No</option><option value="true">Sí</option></select></label>
         <label className="check"><input type="checkbox" checked={state.privacyNoticeEnabled} onChange={e => void mutate(() => api<State>(path + '/settings', 'PUT', { rowVersion: state.rowVersion, enabled: state.enabled, privacyNoticeEnabled: e.target.checked }), 'Opciones guardadas.')} />Incluir nota de protección de datos personales de la plantilla</label>

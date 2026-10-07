@@ -113,3 +113,7 @@ FR-SIGN-* permanece parcial/no habilitado en producto: vinculación real de cuen
 ## Firma visible del elaborador — entrega 2026-10-05
 
 La entrega actual conecta el núcleo a firma/consulta/descarga privadas, con huella pública administrativa, comprobación básica y ubicación visible derivada. El PDF firmado queda separado del borrador editable y conserva bytes/hashes históricos. FR-SIGN-001–005 son PARCIAL: se entrega elaborador, no múltiples firmantes o aceptación institucional. Cadena/revocación se declaran no comprobadas. HTTPS por defecto, sin persistir secretos; entorno HTTP solo explícito local. Continúan DRAFT y los bloqueos de finalización/envío/aprobación. [API](docs/api/author-signing.md) y [reporte](docs/reports/2026-10-05-01-visible-author-signing.md).
+
+## Actualización 2026-10-07: contraseña y toast
+
+Diseño de cambio de contraseña del propietario revisado y registrado por separado. Avisos operativos/error/advertencia convertidos a toast común en los módulos actuales; conserva validaciones de campos y confirmaciones de acciones sensibles. Tres escenarios E2E, lint/build y capturas de escritorio/móvil verificados. [Reporte](docs/reports/2026-10-07-01-password-layout-and-toasts.md). Sigue en el PR #10 abierto hacia develop.

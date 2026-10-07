@@ -34,3 +34,7 @@ No se afirma conformidad WCAG completa: el CAPTCHA visual necesita una alternati
 ## Validación visual
 
 Playwright cubre las pantallas actuales y capturas en `frontend/test-results/` (ignoradas por Git): acceso, inicio, escritorio/tableta/móvil, matrices, preparación, firma, historial y auditoría. Las capturas con cuentas y catálogos de prueba no se presentan como información institucional real. La validación de estética por el cliente sigue siendo una revisión visual, separada de las pruebas funcionales.
+
+## Avisos toast (2026-10-07)
+
+Los errores, advertencias y confirmaciones operativas usan Toast en una capa común adaptable, sin desplazar el formulario. Error/advertencia persisten hasta cierre o cambio de estado; éxito dura ocho segundos y pausa con puntero/foco. Botón de cierre accesible, roles alert/status y movimiento reducido. Se conservan la validación junto a campos, los estados de carga y las confirmaciones que protegen cambios o acciones sensibles.

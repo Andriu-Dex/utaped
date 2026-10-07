@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 
@@ -24,7 +25,7 @@ export function SignaturePreparation({ targetDocId, artifactId }: { targetDocId:
   }, [targetDocId, artifactId, refresh])
   return <section aria-label="Preparación de firma"><h2>Firma y flujo del artefacto</h2>
     <p>El envío y la aprobación permanecen deshabilitados hasta confirmar los flujos institucionales. La firma del elaborador dispone de una comprobación independiente en «Firmar PDF».</p>
-    {error ? <p role="alert" className="error">{error}</p> : !preparation ? <p role="status">Consultando preparación de firma…</p> : <>
+    {error ? <Toast message={error} /> : !preparation ? <p role="status">Consultando preparación de firma…</p> : <>
       <p>Integridad del PDF almacenado comprobada. {preparation.artifactCurrent ? 'El artefacto coincide con la preparación actual.' : 'Artefacto anterior: vuelva a generar la previsualización.'}</p>
       {preparation.workflow ? <><h3>{preparation.workflow.name} · revisión técnica {preparation.workflow.revisionNumber}</h3>
         <p>Configuración conservada al generar este artefacto; no representa asignaciones ni decisiones ejecutadas.</p>

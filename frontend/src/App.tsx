@@ -1,3 +1,4 @@
+import { Toast } from './shared/Toast'
 import { useEffect, useRef, useState } from 'react'
 import { Access, ChangePassword } from './identity/Access'
 import { Administration } from './institution/Administration'
@@ -60,7 +61,7 @@ export default function App() {
   }, [selected])
   async function logout() { if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?')) return; try { await api('/auth/logout','POST'); setLoading(true); clearAccount(); setError(''); await refreshCsrf() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo cerrar sesión.') } finally { setLoading(false) } }
   if (loading) return <main className="connecting"><Brand /><p role="status">Conectando con UTAPED…</p></main>
-  if (!account) return <>{error && <p className="error session-alert" role="alert">{error}</p>}<Access onLogin={a => {setError('');setAccount(a)}} /></>
+  if (!account) return <>{error && <Toast message={error} />}<Access onLogin={a => {setError('');setAccount(a)}} /></>
   function navButton(target: View, label: string, icon: IconName) { return <button aria-current={view === target ? 'page' : undefined} onClick={() => navigate(target)}><Icon name={icon} /><span>{label}</span>{view === target && <span className="nav-active-dot" />}</button> }
   return <div className="shell"><a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className="sidebar"><Brand /><p className="sidebar-section-label">ESPACIO INSTITUCIONAL</p>
@@ -74,7 +75,7 @@ export default function App() {
       <button className="logout-button" onClick={logout}><Icon name="logout" />Cerrar sesión</button>
     </aside>
     <div className="workspace"><header className="topbar"><div><span className="breadcrumb">UTAPED <span>/</span> {account.mustChangePassword ? 'Primer acceso' : titles[view]}</span><span className="workspace-caption">Gestión Documental Académica</span></div><div className="topbar-actions"><span className="institution-pill">FISEI · UTA</span>{!account.mustChangePassword && <NotificationIndicator onOpen={() => navigate('notifications')} />}</div></header>
-      <main id="main-content" ref={content} tabIndex={-1}>{error && <p className="error" role="alert">{error}</p>}
+      <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={clearAccount} /> : <>
         {view === 'notifications' ? <Notifications onOpen={openNotification} /> : view === 'documents' ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : view === 'admin' ? <Administration onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : <>
           <section className="welcome-banner"><div><span className="eyebrow">TU ESPACIO DE TRABAJO</span><h1>Bienvenido, {account.displayName}</h1><p>Organiza tu planificación y retoma tus documentos desde un solo lugar.</p><button className="hero-button" onClick={() => navigate('documents')}>Ver mis documentos<Icon name="arrow" size={18} /></button></div><div className="welcome-art" aria-hidden="true"><Icon name="document" size={88} /><span><Icon name="check" size={24} /></span></div></section>

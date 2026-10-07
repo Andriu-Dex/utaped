@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 import { Icon } from '../shared/Icon'
@@ -12,7 +13,7 @@ export function TrackingDashboard({ onOpen }: { onOpen: (id: string) => void }) 
   function filter(key: 'groupId' | 'periodId', value: string) { setData(null); setFilters(f => ({ ...f, [key]: value })) }
   return <section className="card" aria-label="Seguimiento de mis documentos"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PANORAMA DOCUMENTAL</span><h2>Seguimiento de mis documentos</h2></div></div><p className="muted">Consulta tus Planes T1 disponibles y retoma la planificación.</p>
     <div className="grid"><label>Grupo del seguimiento<select aria-label="Grupo del seguimiento" value={filters.groupId} onChange={e => filter('groupId', e.target.value)}><option value="">Todos mis grupos</option>{options?.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><label>Período del seguimiento<select aria-label="Período del seguimiento" value={filters.periodId} onChange={e => filter('periodId', e.target.value)}><option value="">Todos los períodos</option>{options?.periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div>
-    <button className="secondary" onClick={() => { setData(null); setReload(n => n + 1) }}>Actualizar seguimiento</button>{error && <p className="error" role="alert">{error}</p>}
+    <button className="secondary" onClick={() => { setData(null); setReload(n => n + 1) }}>Actualizar seguimiento</button>{error && <Toast message={error} />}
     {!data && !error && <p role="status">Cargando seguimiento…</p>}
     {data && <><dl className="tracking-totals"><div><dt>Documentos disponibles</dt><dd>{data.documents}</dd></div><div><dt>Borradores editables</dt><dd>{data.editableDrafts}</dd></div><div><dt>Documentos de solo lectura</dt><dd>{data.readOnlyDocuments}</dd></div><div><dt>Con previsualización guardada</dt><dd>{data.withPreview}</dd></div></dl>
       <p className="field-help">Solo lectura considera el estado y la ventana de elaboración. Una previsualización puede corresponder a contenido anterior y no acredita firma ni aprobación.</p>

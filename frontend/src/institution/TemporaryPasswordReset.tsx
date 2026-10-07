@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useRef, useState, type FormEvent } from 'react'
 import { api, type User } from '../shared/api'
 
@@ -19,7 +20,7 @@ export function TemporaryPasswordReset({ user, onComplete, onClose, onDirtyChang
       <label>Nueva contraseña temporal<input name="temporaryPassword" type="password" required minLength={12} maxLength={72} autoComplete="new-password" autoFocus /></label>
       <label>Confirmar contraseña temporal<input name="confirmation" type="password" required minLength={12} maxLength={72} autoComplete="new-password" /></label>
       <label className="check"><input type="checkbox" required />Confirmo el restablecimiento de esta cuenta.</label>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <Toast message={error} />}
       <button disabled={busy}>{busy ? 'Restableciendo…' : 'Restablecer contraseña'}</button>{' '}<button type="button" className="secondary" onClick={onClose}>Cancelar restablecimiento</button>
     </fieldset></form>
   </section>

@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type User, type Member } from '../shared/api'
 import { PlanningAdministration } from '../planning/PlanningAdministration'
@@ -38,7 +39,7 @@ export function Administration({ onChange, onDirtyChange }: { onChange: () => Pr
   }
   return <section><span className="section-kicker">CONFIGURACIÓN Y CONTROL</span><h1>Administración institucional</h1><p className="muted">Gestiona cuentas, organización y configuración documental desde un mismo espacio.</p>
     <nav className="admin-navigation" aria-label="Secciones de administración">{[['people','Personas y grupos'],['periods','Períodos'],['directory','Directorio'],['planning','Planificación'],['workflows','Flujos'],['audit','Auditoría'],['certificates','Certificados']].map(([id,label]) => <a key={id} href={'#admin-' + id}>{label}</a>)}</nav>
-    {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <div id="admin-people" className="admin-block"><h2 className="admin-block-label">Personas y grupos</h2>
     <div className="grid"><section className="card"><h3>Crear usuario</h3><form onSubmit={e => submit(e, '/admin/users')}>
       <div className="grid"><label>Nombres<input name="firstNames" required maxLength={80} /></label><label>Apellidos<input name="lastNames" required maxLength={80} /></label></div><label>Correo<input type="email" name="email" required maxLength={254} /></label>

@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, refreshCsrf, type Account } from '../shared/api'
 import { Brand, Icon } from '../shared/Icon'
@@ -9,6 +10,7 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
   const [challenge, setChallenge] = useState(() => crypto.randomUUID()); const [captchaReady, setCaptchaReady] = useState(false); const [captchaError, setCaptchaError] = useState(false)
   const [visible, setVisible] = useState(false)
   const answer = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (!busy && error && mode === 'login') answer.current?.focus() }, [busy, error, mode])
   function renew() { setCaptchaReady(false); setCaptchaError(false); setChallenge(crypto.randomUUID()); if (answer.current) answer.current.value = '' }
   function switchMode(next: typeof mode) { setMode(next); setError(''); setNotice(''); setVisible(false); if (next === 'login') renew() }
   useEffect(() => {
@@ -30,7 +32,7 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         await api('/auth/reset-password', 'POST', { token: resetToken, newPassword: data.get('password') })
         window.history.replaceState(null, '', window.location.pathname); setResetToken(null); switchMode('login'); setNotice('Contraseña actualizada. Inicie sesión.'); await refreshCsrf()
       }
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo conectar.'); if (mode === 'login') { renew(); answer.current?.focus() } }
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo conectar.'); if (mode === 'login') renew() }
     finally { setBusy(false) }
   }
   return <main className="access">
@@ -52,11 +54,11 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         {mode === 'reset' && <><label>Confirmar contraseña<input required name="confirmation" type="password" minLength={12} maxLength={72} autoComplete="new-password" /></label><p className="field-help">Usa al menos 12 caracteres; máximo 72 bytes UTF-8.</p></>}
         {mode === 'login' && <div className="captcha-field"><div className="captcha-heading"><label htmlFor="captcha-answer">Código de verificación</label><button type="button" className="icon-button" title="Cambiar código de verificación" aria-label="Cambiar código de verificación" onClick={renew}><Icon name="refresh" /></button></div>
           {!captchaError && <img key={challenge} className="captcha-image" src={'/api/auth/captcha?v=' + challenge} alt="Código de verificación de seis caracteres" onLoad={() => { setCaptchaReady(true); setCaptchaError(false) }} onError={() => { setCaptchaReady(false); setCaptchaError(true) }} />}
-          {captchaError && <p className="error" role="alert">No se pudo cargar el código. Pulsa Cambiar código de verificación para reintentar.</p>}
+          {captchaError && <Toast message="No se pudo cargar el código. Pulsa Cambiar código de verificación para reintentar." />}
           {!captchaReady && !captchaError && <p className="field-help">Cargando código…</p>}
           <input ref={answer} id="captcha-answer" name="captcha" required minLength={6} maxLength={6} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="Escribe el código" aria-describedby="captcha-help" /><small id="captcha-help" className="field-help">No distingue mayúsculas y minúsculas. Válido por 3 minutos.</small>
         </div>}
-        {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status" className="notice">{notice}</p>}
+        {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
         <button className="access-submit" disabled={busy || (mode === 'login' && !captchaReady)}>{busy ? 'Procesando…' : mode === 'login' ? 'Ingresar' : mode === 'forgot' ? 'Enviar enlace' : 'Guardar contraseña'}<Icon name="arrow" size={18} /></button>
         </fieldset>
       </form>
@@ -82,7 +84,7 @@ export function ChangePassword({ temporary, onComplete }: { temporary: boolean; 
       <label>Contraseña actual<input required name="currentPassword" type="password" autoComplete="current-password" maxLength={128} /></label>
       <label>Nueva contraseña<input required name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
       <label>Confirmar contraseña<input required name="confirmation" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <Toast message={error} />}
       <button style={{ width: '100%', marginTop: 12 }} disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}<Icon name="check" size={18} /></button>
     </fieldset></form>
   </section></div>
