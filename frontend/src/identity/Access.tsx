@@ -58,7 +58,7 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
           {!captchaReady && !captchaError && <p className="field-help">Cargando código…</p>}
           <input ref={answer} id="captcha-answer" name="captcha" required minLength={6} maxLength={6} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="Escribe el código" aria-describedby="captcha-help" /><small id="captcha-help" className="field-help">No distingue mayúsculas y minúsculas. Válido por 3 minutos.</small>
         </div>}
-        {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+        {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
         <button className="access-submit" disabled={busy || (mode === 'login' && !captchaReady)}>{busy ? 'Procesando…' : mode === 'login' ? 'Ingresar' : mode === 'forgot' ? 'Enviar enlace' : 'Guardar contraseña'}<Icon name="arrow" size={18} /></button>
         </fieldset>
       </form>
@@ -84,7 +84,7 @@ export function ChangePassword({ temporary, onComplete }: { temporary: boolean; 
       <label>Contraseña actual<input required name="currentPassword" type="password" autoComplete="current-password" maxLength={128} /></label>
       <label>Nueva contraseña<input required name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
       <label>Confirmar contraseña<input required name="confirmation" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
-      {error && <Toast message={error} />}
+      {error && <Toast message={error} onDismiss={() => setError('')} />}
       <button style={{ width: '100%', marginTop: 12 }} disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}<Icon name="check" size={18} /></button>
     </fieldset></form>
   </section></div>

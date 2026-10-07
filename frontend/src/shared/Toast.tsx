@@ -4,11 +4,11 @@ import './Toast.css'
 
 type Tone = 'error' | 'warning' | 'success'
 
-export function Toast({ message, tone = 'error' }: { message: string; tone?: Tone }) {
-  return <ToastItem key={message} message={message} tone={tone} />
+export function Toast({ message, tone = 'error', onDismiss }: { message: string; tone?: Tone; onDismiss?: () => void }) {
+  return <ToastItem key={message} message={message} tone={tone} onDismiss={onDismiss} />
 }
 
-function ToastItem({ message, tone }: { message: string; tone: Tone }) {
+function ToastItem({ message, tone, onDismiss }: { message: string; tone: Tone; onDismiss?: () => void }) {
   const [dismissed, setDismissed] = useState(false)
   const [paused, setPaused] = useState(false)
   useEffect(() => {
@@ -24,6 +24,6 @@ function ToastItem({ message, tone }: { message: string; tone: Tone }) {
     onFocusCapture={() => setPaused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }}>
     <span className="toast-symbol" aria-hidden="true">{tone === 'success' ? '✓' : '!'}</span>
     <p role={tone === 'success' ? 'status' : 'alert'} aria-atomic="true">{message}</p>
-    <button type="button" className="toast-close" aria-label="Cerrar aviso" title="Cerrar aviso" onClick={() => setDismissed(true)}>×</button>
+    <button type="button" className="toast-close" aria-label="Cerrar aviso" title="Cerrar aviso" onClick={() => { setDismissed(true); onDismiss?.() }}>×</button>
   </div>, host)
 }

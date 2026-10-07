@@ -9,7 +9,7 @@ Se revisó el diseño aportado por el propietario: tarjeta centrada, ancho adapt
 Se agregó un componente toast reutilizable, sin dependencias nuevas, para los avisos de acceso, seguridad, administración, directorio, certificados, planificación, documentos, matriz, anexos, previsualización, firma, auditoría, seguimiento, flujos y notificaciones.
 
 - Capa común fuera de formularios/fieldset: el cierre sigue disponible mientras un formulario está bloqueado y los avisos no alteran su distribución.
-- Error y advertencia permanecen hasta cerrarse o hasta que cambie/desaparezca su estado de origen. Un nuevo intento puede mostrar otra vez el mismo error.
+- Error y advertencia permanecen hasta cerrarse o hasta que cambie/desaparezca su estado de origen. Al cerrar un aviso de validación local en acceso/contraseña/matriz se limpia su mensaje de origen; un nuevo intento puede mostrar otra vez el mismo error, incluso en validaciones locales sin petición al servidor.
 - Confirmaciones de operación se ocultan a los ocho segundos; pasar el puntero o enfocar el aviso pausa el cierre y reinicia el plazo al salir.
 - Cierre con botón accesible y teclado; `alert`/`status` según severidad, texto con salto de línea, adaptación móvil y movimiento reducido. La aparición no mueve el foco.
 - Tras fallo de login, se enfoca el CAPTCHA después de habilitar el formulario; antes se intentaba enfocar dentro del fieldset todavía deshabilitado.
