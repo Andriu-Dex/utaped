@@ -153,7 +153,8 @@ nav:not(.primary-nav) button[aria-current] { background: var(--blue-800); color:
 .period-list li { padding: 14px 0; border-bottom: 1px solid var(--border); }
 .period-list strong { display: block; font-size: .85rem; }
 .period-list span { color: var(--muted); font-size: .78rem; }
-.security-card { max-width: 650px; margin-top: 0; }
+.security-pane { display: flex; justify-content: center; padding: 5vh 0; width: 100%; }
+.security-card { width: 100%; max-width: 440px; margin-top: 0; }
 .plan-metadata { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,170px),1fr)); gap: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: .83rem; }
 dt { font-weight: 600; } dd { margin: 4px 0 16px; overflow-wrap: anywhere; }
 .preserve-text { white-space: pre-wrap; }

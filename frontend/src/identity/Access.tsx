@@ -75,10 +75,15 @@ export function ChangePassword({ temporary, onComplete }: { temporary: boolean; 
     try { await api('/auth/change-password', 'POST', { currentPassword: data.get('currentPassword'), newPassword: data.get('newPassword') }); await refreshCsrf(); onComplete() }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
-  return <section className="card security-card"><span className="section-kicker">SEGURIDAD DE LA CUENTA</span><h2>{temporary ? 'Cambie su contraseña temporal' : 'Cambiar contraseña'}</h2><p className="muted">Use al menos 12 caracteres. Al guardar se cerrarán sus sesiones.</p>
-    <form onSubmit={submit}><fieldset disabled={busy}><label>Contraseña actual<input required name="currentPassword" type="password" autoComplete="current-password" maxLength={128} /></label>
+  return <div className="security-pane"><section className="card security-card">
+    <div className="section-heading"><span className="section-icon"><Icon name="lock" /></span><div><span className="section-kicker">SEGURIDAD DE LA CUENTA</span><h2>{temporary ? 'Acceso temporal' : 'Contraseña'}</h2></div></div>
+    <p className="muted" style={{ marginTop: 12 }}>{temporary ? 'Cambie su contraseña temporal para continuar. Use al menos 12 caracteres.' : 'Actualice su contraseña. Al guardar se cerrarán sus sesiones activas.'}</p>
+    <form onSubmit={submit} style={{ marginTop: 24 }}><fieldset disabled={busy}>
+      <label>Contraseña actual<input required name="currentPassword" type="password" autoComplete="current-password" maxLength={128} /></label>
       <label>Nueva contraseña<input required name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
       <label>Confirmar contraseña<input required name="confirmation" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
-      {error && <p className="error" role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}</button></fieldset></form>
-  </section>
+      {error && <p className="error" role="alert">{error}</p>}
+      <button style={{ width: '100%', marginTop: 12 }} disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}<Icon name="check" size={18} /></button>
+    </fieldset></form>
+  </section></div>
 }
