@@ -28,7 +28,7 @@ export default function App() {
     if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) return
     setDraftDirty(false)
     if (target.type === 'WORK_PLAN') { setDocumentTarget(target.id); setView('documents') }
-    else { await load(); setMembers([]); setMembersLoading(true); setSelected(target.id); setDocumentTarget(null); setView('home') }
+    else { await load(); if (target.id !== selected) { setMembers([]); setMembersLoading(true); setSelected(target.id) } setDocumentTarget(null); setView('home') }
   }
   function clearAccount() { identityEpoch.current += 1; setAccount(null); setSelected(''); setGroups([]); setPeriods([]); setMembers([]); setDraftDirty(false); setDocumentTarget(null); setView('home'); setAllPeriods(false) }
   useEffect(() => { content.current?.focus({ preventScroll: true }); window.scrollTo({ top: 0 }) }, [view])
