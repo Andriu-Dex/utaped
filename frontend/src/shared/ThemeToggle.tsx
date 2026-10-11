@@ -34,8 +34,8 @@ export function ThemeToggle() {
     try { localStorage.setItem(storageKey, next) } catch { /* The current tab still supports switching. */ }
   }
   const label = theme === 'dark' ? 'Modo claro' : 'Modo oscuro'
-  return <div className="theme-switch"><span className="theme-tooltip" role="tooltip">{label}</span>
-    <button type="button" className="theme-toggle" aria-label={label} onClick={toggle}>
+  return <div className="theme-switch">
+    <button type="button" className="theme-toggle" aria-label={label} title={label} onClick={toggle}>
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={22} />
     </button>
   </div>

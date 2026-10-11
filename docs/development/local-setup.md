@@ -20,7 +20,17 @@ Puertos locales: web 8081, API 8080, DB 5433, bandeja Mailpit 8025. Todos vincul
 
 ## Desarrollo frontend
 
-Node 24. En frontend: `npm ci`, `npm run dev`. Vite en http://localhost:5173 comunica /api con localhost:8080. Para recuperar acceso en ese modo establecer APP_PUBLIC_URL=http://localhost:5173 en backend y recrearlo.
+Node 24. En `frontend`: `npm ci` (primera instalación) y `npm run dev`. Vite abre http://127.0.0.1:5173 y reenvía `/api` al backend. Solo iniciar Vite no arranca Java, PostgreSQL ni SMTP.
+
+El destino se configura automáticamente y conserva los puertos de Docker:
+
+1. `API_TARGET` de la terminal o de `frontend/.env.local`, si se establece explícitamente.
+2. `http://127.0.0.1:<BACKEND_PORT>` usando `BACKEND_PORT` del `.env` de la raíz (o del entorno del proceso).
+3. `http://127.0.0.1:8080` si no hay configuración, igual que el puerto predeterminado de Compose.
+
+Con `BACKEND_PORT=18080` en el `.env` principal basta ejecutar `npm run dev`, sin exportar variables cada vez. Para un backend Java iniciado directamente en otro puerto, copiar `frontend/.env.example` a `frontend/.env.local` y establecer, por ejemplo, `API_TARGET=http://127.0.0.1:8080`. Este archivo local permanece ignorado; no usar el prefijo `VITE_` ni colocar secretos en él. Reiniciar Vite después de cambiar estos valores.
+
+Si aparece `ECONNREFUSED`, verificar primero que el backend esté iniciado y que su puerto coincida. Desde la raíz: `docker compose up -d db mail backend`. Para recuperación de acceso desde Vite, configurar `APP_PUBLIC_URL=http://127.0.0.1:5173` en backend y recrearlo; el puerto de la interfaz Docker/institucional es independiente del proxy de desarrollo.
 
 ## Desarrollo backend sin Docker
 

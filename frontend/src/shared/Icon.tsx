@@ -15,6 +15,7 @@ const paths = {
   eye: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12 M15 12a3 3 0 1 0-6 0 3 3 0 0 0 6 0',
   users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M17 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-4',
   calendar: 'M4 5h16v16H4z M8 2v6 M16 2v6 M4 11h16 M8 15h2 M14 15h2',
+  x: 'M18 6 6 18 M6 6l12 12',
 } as const
 export type IconName = keyof typeof paths
 export function Icon({ name, size = 20, style }: { name: IconName; size?: number; style?: CSSProperties }) {

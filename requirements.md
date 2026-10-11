@@ -53,3 +53,9 @@ Registrar para cada requisito nuevo: ID, descripción, fuente, estado, prioridad
 Prioridades propuestas: P0 integridad y permisos; P1 flujo documental y ejecución; P2 facilidades complementarias. Ante contradicción, registrar pregunta y no implementar una norma supuesta. Cada entrega actualiza requisitos afectados, decisiones, estado y pruebas.
 
 La línea base conserva la cobertura conocida; la exhaustividad final requiere revisar formatos oficiales, políticas operativas y preguntas pendientes con la institución.
+
+## Separación de espacios por responsabilidad — 2026-10-07
+
+Decisión del propietario: el administrador inicia en un panel administrativo, con navegación independiente para usuarios, grupos/pertenencias, períodos, actividades, recursos/medios, feriados, flujos, auditoría y certificados. Sus métricas proceden de registros reales. El inicio personal y los documentos no forman parte de ese espacio.
+
+Una cuenta ADMIN con pertenencia activa puede elegir explícitamente su espacio documental, manteniendo la misma identidad y las restricciones de propiedad/pertenencia del servidor. ADMIN no concede aprobación, revisión ni acceso general a documentos. Las notificaciones y la seguridad de la cuenta se conservan. Navegar o cambiar de espacio debe advertir sobre cambios sin guardar. No se presentan módulos todavía inexistentes como funcionalidades entregadas.

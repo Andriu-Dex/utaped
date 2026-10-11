@@ -23,3 +23,9 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 
 - [2026-10-07 — Diseño de contraseña y avisos toast](2026-10-07-01-password-layout-and-toasts.md).
 - [2026-10-07 — Modo claro y oscuro para PC y tablet](2026-10-07-02-color-themes.md).
+
+- [2026-10-07 — Separación del espacio administrativo](2026-10-07-03-admin-workspace-separation.md).
+
+- [2026-10-07 — Proxy persistente de desarrollo](2026-10-07-04-persistent-development-proxy.md).
+
+- [2026-10-11 — Commit de cambios actuales](2026-10-11-01-current-changes-commit.md).

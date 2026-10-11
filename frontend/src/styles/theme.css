@@ -17,7 +17,7 @@
   background: var(--canvas);
 }
 :root[data-theme='dark'] body { color: var(--text); background: var(--canvas); }
-:root[data-theme='dark'] :is(h1,h2,h3,.tracking-totals dd) { color: #e7f0f9; }
+:root[data-theme='dark'] :is(h1,h2,h3,.tracking-totals dd,.workspace-caption) { color: #e7f0f9; }
 :root[data-theme='dark'] :is(input,select,textarea) { background: #102234; color: var(--text); border-color: #536b80; }
 :root[data-theme='dark'] :is(input,textarea)::placeholder { color: #9baec1; }
 :root[data-theme='dark'] :is(input,select,textarea):disabled { background: #233749; }
@@ -29,7 +29,7 @@
 :root[data-theme='dark'] tbody tr:hover { background: #20384c; }
 :root[data-theme='dark'] :is(.topbar,.admin-navigation) { background: #14283bec; }
 :root[data-theme='dark'] .access-form-pane { background: var(--canvas); }
-:root[data-theme='dark'] .sidebar { background: #0a1d30; }
+:root[data-theme='dark'] .sidebar { background: #071523; border-right: 1px solid #14283b; }
 :root[data-theme='dark'] .error { background: #3b222e; color: #ffb9c4; border-color: #855060; }
 :root[data-theme='dark'] :is(.notice,.status-badge.active) { color: #a3e7d4; border-color: #386858; }
 :root[data-theme='dark'] .conflict { color: #f1d49d; border-color: #826a37; }
@@ -47,10 +47,8 @@
 .captcha-image { color-scheme: light; background: #ecf5f8; }
 :root[data-theme='dark'] .paper-tag { color: #177369; }
 .theme-switch { position: fixed; right: 24px; bottom: 24px; z-index: 900; }
-.theme-toggle { width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 4px 18px #00000024; }
+.theme-toggle { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 4px 18px #00000024; transition: background 0.15s, box-shadow 0.15s; cursor: pointer; }
 .theme-toggle:hover { background: var(--blue-100); }
-.theme-tooltip { position: absolute; right: 0; bottom: 60px; padding: 8px 12px; border-radius: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow); font-size: .8rem; white-space: nowrap; visibility: hidden; pointer-events: none; }
-.theme-switch:hover .theme-tooltip, .theme-switch:focus-within .theme-tooltip { visibility: visible; }
 .access-form-pane { padding-bottom: 88px; }
 .workspace main { padding-bottom: 88px; }
 .workspace-footer { padding-right: 96px; }

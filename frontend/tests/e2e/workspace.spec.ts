@@ -52,7 +52,22 @@ test('modern access preserves credentials, supports username and administrative 
     await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   }
   await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
-  await page.getByRole('button', { name: 'Administración', exact: true }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
+  await expect(page.getByRole('heading', { name: 'Panel general', exact: true })).toBeVisible()
+  await expect(navigation.getByRole('button', { name: 'Documentos', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: /Bienvenido,/ })).toHaveCount(0)
+  await expect(page.getByText('Usuarios registrados', { exact: true })).toBeVisible()
+  const counts = await (await page.request.get('/api/admin/users/directory?size=1')).json()
+  await expect(page.locator('.admin-metric').filter({ hasText: 'Usuarios registrados' }).locator('strong')).toHaveText(String(counts.total))
+  for (const [theme, width, height] of [['light',1440,1000],['dark',1440,1000],['dark',820,1180]] as const) {
+    await page.setViewportSize({ width, height })
+    if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: theme === 'dark' ? 'Modo oscuro' : 'Modo claro', exact: true }).click()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+    await page.screenshot({ path: `test-results/admin-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
+  }
+  await page.getByRole('button', { name: 'Modo claro', exact: true }).click()
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Usuarios', exact: true }).click()
   const suffix = Date.now().toString(); const username = 'reset-' + suffix
   await page.getByLabel('Nombres', { exact: true }).fill('Cuenta')
   await page.getByLabel('Apellidos', { exact: true }).fill(suffix)
@@ -66,7 +81,7 @@ test('modern access preserves credentials, supports username and administrative 
   await success.hover()
   await page.clock.fastForward(9000)
   await expect(success).toBeVisible()
-  await page.getByRole('heading', { name: 'Administración institucional', exact: true }).hover()
+  await page.getByRole('heading', { name: 'Gestión de usuarios', exact: true }).hover()
   await page.clock.fastForward(9000)
   await expect(success).toHaveCount(0)
   await page.clock.resume()
@@ -76,7 +91,7 @@ test('modern access preserves credentials, supports username and administrative 
   await reset.getByLabel('Nueva contraseña temporal').fill('E2e-only-admin-reset-password')
   await reset.getByLabel('Confirmar contraseña temporal').fill('E2e-only-admin-reset-password')
   page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Inicio', exact: true }).click()
+  await page.getByRole('button', { name: 'Panel general', exact: true }).click()
   await expect(reset.getByLabel('Nueva contraseña temporal')).toHaveValue('E2e-only-admin-reset-password')
   await reset.getByLabel('Confirmo el restablecimiento de esta cuenta.').check()
   let releaseRefresh = () => {}; let capturedRefresh = () => {}; let completedRefresh = () => {}
@@ -118,7 +133,7 @@ test('modern access preserves credentials, supports username and administrative 
   await page.getByLabel('Contraseña', { exact: true }).fill('E2e-only-final-password-2026')
   await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Bienvenido, Cuenta ' + suffix })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Administración', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Usuarios', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
   for (const [name,width,height] of [['desktop',1440,1000],['tablet',820,1180]] as const) {
     await page.setViewportSize({ width,height })

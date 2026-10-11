@@ -121,3 +121,16 @@ Diseño de cambio de contraseña del propietario revisado y registrado por separ
 ## Actualización 2026-10-07: temas y destinos de interfaz
 
 Modo claro/oscuro con selector iconográfico flotante, tooltip, preferencia del sistema, persistencia local y sincronización entre pestañas. Documentos institucionales/CAPTCHA sin inversión de colores. Destinos vigentes: PC y tablet, sin nuevos estilos específicos de celular. Lint/build y cinco escenarios E2E verificados. [Reporte](docs/reports/2026-10-07-02-color-themes.md). Por instrucción actual del propietario solo se realiza commit local; no se actualiza el PR ni se hace push hasta nueva indicación.
+
+## 2026-10-07 — Espacio administrativo independiente
+
+- ADMIN inicia en Panel general: usuarios registrados/activos, grupos activos, períodos registrados y eventos administrativos recientes, consultados en APIs existentes.
+- Navegación y renderizado independiente de usuarios, grupos/pertenencias, períodos, actividades, recursos/medios, feriados, flujos, auditoría y certificados. Directorio de usuarios y perfiles de grupos separados.
+- Inicio personal y documentos separados del espacio administrativo. Una cuenta ADMIN con pertenencia activa puede cambiar de espacio sin cambiar de identidad ni ampliar los permisos del servidor.
+- Protección de formularios sin guardar al navegar, cerrar sesión, recargar y cambiar de espacio; guardado de un formulario conserva la advertencia de otros formularios pendientes.
+- Sin cambios de backend, migraciones, variables de entorno ni estilos nuevos para teléfonos. Carreras/cargos, plantillas administrables, reportes globales y ejecución de revisión/aprobación continúan pendientes conforme al alcance anterior.
+- Cambios locales sin commit, push ni actualización del PR, por instrucción expresa. Validación detallada en el reporte de esta entrega.
+
+## 2026-10-07 — Proxy persistente de desarrollo
+
+Vite obtiene automáticamente el puerto del backend desde `BACKEND_PORT` del `.env` principal; `API_TARGET` de la terminal o `frontend/.env.local` permite un destino explícito. Sin configuración conserva 8080, el predeterminado de Compose. Se agrega ejemplo seguro y documentación de reinicio/arranque de servicios. No se modifican puertos Docker ni variables privadas del propietario. Sin commit.
