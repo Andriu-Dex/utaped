@@ -1,5 +1,7 @@
 # Acceso local y perfiles — contrato vigente
 
+Actualización 2026-10-12: el cambio de contraseña temporal revoca las sesiones previas y enlaces de recuperación, crea una sesión autenticada nueva y permite continuar sin volver al login. El cambio voluntario de contraseña y la recuperación pública siguen cerrando las sesiones.
+
 Fecha: 2026-10-06. Sesiones JDBC, cookie HttpOnly/SameSite y CSRF existentes. Las rutas conservan `/api` hasta la migración versionada; no se afirma `/api/v1` implementado.
 
 | Operación | Contrato / autorización |

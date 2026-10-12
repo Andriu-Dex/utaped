@@ -1,5 +1,14 @@
 # Decisiones pendientes y contradicciones
 
+## Actualización del 2026-10-12
+
+Ámbitos, titularidad, tareas secuenciales, firmas sucesivas, evidencias PDF, T2 derivado y archivo/versiones cuentan ya con implementación inicial. Las filas históricas que indican ausencia de esas tablas o motores quedan superadas por [el estado vigente](../../implementation-status.md).
+
+Continúan pendientes las asignaciones oficiales, múltiples elaboradores, políticas de baja de revisores, configuración temporal por ámbito/período, cierre de períodos/ZIP y aceptación operativa. Prórroga técnica: máximo configurable de tres días calendario, individual y limitada al fin del período; no se presenta como cómputo institucional ratificado. Ventana T2 inicial: período académico completo. Evidencia incompleta exige explicación y no produce avance físico automático.
+
+No se incorporan correos o permisos reales desde el PDF de unidades/comisiones sin alta y designación explícitas. Los usuarios de desarrollo son ficticios. Asistencia de redacción y agente de código/Trello requieren su propia configuración y siguen sin implementar.
+
+
 ## Reconciliación vigente — 2026-10-06
 
 El [Plan Maestro](PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md) sustituye las preguntas históricas que ya resuelve. La tabla original siguiente se conserva como historial, no como bloqueo vigente universal.

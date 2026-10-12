@@ -16,6 +16,23 @@ Requisitos entregados en esta etapa: UT-AUTH-020 usuario separado del correo; UT
 
 2026-10-02: credenciales locales; selección tecnológica delegada e implementación de la base técnica autorizada. [ADR-0001](docs/architecture/adr/0001-production-foundation.md) establece stack, sesiones y migraciones. Confirmación del proyecto, no normativa institucional nueva. [Estado de entrega](implementation-status.md) distingue funcionalidades parciales de módulos todavía pendientes.
 
+## Entrega del circuito documental del 2026-10-12
+
+La autorización de la tanda amplia implementa las reglas del Plan Maestro con datos de desarrollo aislados; no confirma nuevas políticas institucionales. Se conserva la precedencia del Plan Maestro sobre la especificación candidata del 2026-10-11.
+
+| ID | Requisito y fuente | Estado / prioridad | Aceptación y evidencia |
+|---|---|---|---|
+| UT-ORG-030 | Ámbitos de grupo, carrera y período; principal único; Plan por ámbito. Plan Maestro §§3 y organización. | CONFIRMADO-PROYECTO, P0 | Duplicado rechazado; miembro solo lectura; transferencia explícita; pruebas OrganizationIntegrationTests. |
+| UT-REV-030 | Revisión secuencial de todos los ejecutores, PDF firmado conservado, devolución y nueva ronda. Plan Maestro §3.4 y revisión. | CONFIRMADO-PROYECTO, P0 | No actúa una etapa futura; devolución conserva bytes y versión formal; firmas acumulativas; ReviewExecutionIntegrationTests y circuito navegador. |
+| UT-EXE-030 | PDF por medio y versiones independientes, permisos de responsables. Plan Maestro §3.7 y ejecución. | CONFIRMADO-PROYECTO, P1 | Carga/reemplazo autorizado y conflicto de versión; cobertura completa sin inferir avance físico. |
+| UT-T2-030 | Informe final derivado y único como familia del Plan aprobado; identidad y firmas separadas. Plan Maestro §3.6 e Informe. | CONFIRMADO-PROYECTO, P0/P1 | Recorrido T1→T2 aprobado sin cambiar bytes/estado del Plan; versiones formales dentro de una familia. |
+| UT-VER-030 | Archivo sin purga y nueva versión formal distinta de ronda/evidencia. Plan Maestro sobre versionado y archivo. | CONFIRMADO-PROYECTO, P0 | Nuevos IDs, DRAFT/ronda 1, aprobación y PDF anterior conservados; autorización y concurrencia. |
+| UT-UI-030 | Extender el nivel visual de los cambios staged del propietario a las nuevas vistas. Decisión del 2026-10-11. | CONFIRMADO-PROYECTO, P1 | Navegación, editor por pasos y capturas PC/tableta con modo oscuro; sin estilos nuevos para teléfonos. |
+
+Las prórrogas son individuales y auditadas. Se implementa como configuración técnica inicial un máximo de tres días calendario dentro del período; cómputo institucional definitivo pendiente. T2 usa inicialmente la ventana del período académico completo y exige explicar la falta de evidencia. La descarga final depende de aprobación. Los agregados se limitan a estados/cobertura; no se inventa una fórmula institucional de avance físico.
+
+La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con ejecutores individuales explícitos. Una etapa colegiada sin representante sigue bloqueada. Los PDFs históricos no se regeneran ni se convierten automáticamente al nuevo flujo. Cierre de períodos, ZIP, agentes, redacción asistida, evidencias externas y capacidades restantes siguen registrados en [estado actual](implementation-status.md).
+
 ## Fuentes y alcance
 
 2026-10-05: el propietario confirma el flujo sencillo de seleccionar .p12/.pfx, introducir contraseña y firmar, con comprobaciones básicas de identidad, vigencia e integridad y sin persistir material privado. Se implementa firma visible del artefacto del elaborador mediante huella pública vinculada administrativamente. La cadena emisora y revocación se declaran NO COMPROBADAS; no se atribuye aprobación institucional, PAdES o sellado de tiempo. El borrador editable permanece separado del PDF firmado inmutable. Finalización, envío y aprobación siguen bloqueados. [Contrato y límites](docs/decisions/signature-review-contract.md).

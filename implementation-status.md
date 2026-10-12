@@ -1,5 +1,42 @@
 # Estado de implementación productiva
 
+## Estado vigente al 2026-10-12
+
+La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
+
+| Capacidad | Alcance entregado |
+|---|---|
+| Organización | Catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
+| T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firma real del elaborador y envío a revisión atómico en documentos por ámbito. |
+| Revisión | Bandeja propia, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
+| Firmas sucesivas | Certificados personales temporales, vinculación pública por usuario, append incremental y comprobación de CMS/bytes previos. Sin material privado persistente ni afirmación de cadena/revocación/TSA. |
+| Ejecución | PDF versionado por medio de verificación, permisos del responsable asignado, fechas personales, cobertura e historial de evidencias. |
+| Prórrogas | Coordinador del ámbito, destinatario individual, fecha original conservada, concurrencia e historial. Máximo técnico ajustable de tres días calendario dentro del período, pendiente de ratificación institucional. |
+| T2 | Informe independiente derivado de T1 aprobado, narrativas, porcentaje manual, observaciones, delegaciones opcionales, anexos/evidencias y plantilla oficial A4; firma y revisión compartidas. |
+| Versiones y archivo | Archivo lógico con motivo y familia formal T1/T2. Una actualización de aprobado crea nuevo ID/DRAFT/ronda 1 y conserva el anterior firmado. Una familia de Informe por Plan, una versión activa. |
+| Seguimiento | Filtros y CSV de totales/estados/cobertura con permisos. ADMIN ve agregados sin acceso automático a contenido privado. |
+| Desarrollo | Entorno y semillas aislados en utaped_dev, siete usuarios ficticios, configuración y pruebas sin modificar la DB principal. |
+| Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
+| Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
+
+Persistencia: Flyway V13–V18 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia de validación: [reporte de entrega](docs/reports/2026-10-12-01-large-document-circuit.md).
+
+### Trabajo que aún falta para completar el producto
+
+- Cierre de período ACTIVE/CLOSED, operación histórica y paquete ZIP verificable; el archivo por documento ya existe, pero no sustituye ese cierre.
+- Flujos por ámbito/período, bloqueo de configuración cuando corresponda y política frente a bajas/cambios de asignaciones; actualmente la configuración es por grupo y tipo y se congela por artefacto.
+- Administración completa de carreras/ámbitos, historial visible de cargos/prórrogas, pertenencias globales por carrera, permisos administrativos delegados y recuperación por coordinador.
+- Evidencias mediante referencias/repositorios externos y representación de anexos no PDF. Actualmente solo se admite PDF en la ruta de evidencias/archivos integrados.
+- Recordatorios automáticos de vencimiento, programación de avisos, importación de usuarios y otras facilidades complementarias del Plan Maestro.
+- Asistencia de redacción y agente de inspección de código/Trello, con configuración de proveedor/credenciales y permisos. No implementados en esta tanda.
+- Paginación completa de la bandeja de revisión (límite actual 200), alternativa accesible al CAPTCHA visual, pruebas de carga y ampliación de casos documentales largos.
+- Ratificación de ventanas T2, días de prórroga, múltiples elaboradores y secuencias/personas oficiales; los ejemplos no reemplazan esas decisiones.
+- HTTPS, SMTP institucional, respaldos con restauración comprobada, retención y despliegue operativo. Puerto web principal 64430, enlazado localmente hasta configurar la red institucional.
+
+La siguiente tanda debe comenzar por cierre de períodos, parametrización temporal de flujos y pendientes administrativos, antes de declarar el producto listo para aceptación integral.
+
+## Registro histórico de entregas
+
 Inicio: 2026-10-02. Actualización: 2026-10-06. PR #1–8 fusionados; base develop 248eeba. Entrega actual en feature/modern-workspace-access, con commits por bloque y un PR hacia develop.
 
 El Plan Maestro del 2026-10-06 y la decisión posterior de rediseñar la interfaz prevalecen sobre las decisiones históricas. Las secciones anteriores fechadas se conservan como historial de entregas, no como preguntas institucionales aún abiertas cuando el Plan Maestro ya las resolvió. No se declara finalizado el proyecto.

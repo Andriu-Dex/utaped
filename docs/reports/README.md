@@ -31,3 +31,7 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-11 — Commit de cambios actuales](2026-10-11-01-current-changes-commit.md).
 
 - [2026-10-11 — Revisión de la nueva especificación maestra](2026-10-11-02-master-specification-review.md).
+
+- [2026-10-11 — Preparación de entrega amplia y revisión de interfaz](2026-10-11-03-large-delivery-and-interface-review.md).
+
+- [2026-10-12 — Circuito documental integrado T1 y T2](2026-10-12-01-large-document-circuit.md).
