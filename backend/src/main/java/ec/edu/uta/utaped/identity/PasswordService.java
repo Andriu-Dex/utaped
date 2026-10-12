@@ -46,8 +46,9 @@ public class PasswordService {
         var rows=jdbc.queryForList("SELECT period_id FROM organizational_scope WHERE id=?",UUID.class,scope);
         if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Ámbito no disponible.");
         new PeriodGuard(jdbc).writable(rows.getFirst());
-        jdbc.queryForList("SELECT id FROM organizational_scope WHERE id=? FOR UPDATE",scope);
+        // Document creation locks its actor before the scope; keep that same order.
         jdbc.queryForList("SELECT id FROM app_user WHERE id IN (?,?) ORDER BY (system_role='ADMIN') DESC,id FOR UPDATE",actor.id(),id);
+        jdbc.queryForList("SELECT id FROM organizational_scope WHERE id=? FOR UPDATE",scope);
         actor=accounts.current(email);
         boolean allowed=jdbc.queryForObject("""
             SELECT EXISTS(SELECT 1 FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id AND g.active

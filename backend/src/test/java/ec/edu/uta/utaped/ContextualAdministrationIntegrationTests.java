@@ -20,6 +20,7 @@ class ContextualAdministrationIntegrationTests extends WorkPlanIntegrationTests 
     @Autowired WorkPlanService plans;
     @Autowired DeadlineNoticeService notices;
     @Autowired NotificationService notifications;
+    @Autowired org.springframework.transaction.support.TransactionTemplate transactions;
     UUID scope() {
         openPeriod();var id=organization.createScope("admin@example.invalid",new OrganizationService.ScopeInput(group,period,null));
         organization.member(id,"admin@example.invalid",new OrganizationService.MemberInput(user,"COORDINATOR","Coordinación",true,0L,true));
@@ -110,5 +111,22 @@ class ContextualAdministrationIntegrationTests extends WorkPlanIntegrationTests 
             assertEquals(2,a.get(20,TimeUnit.SECONDS)+b.get(20,TimeUnit.SECONDS));
         }
         assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM personal_notification WHERE kind='ACTIVITY_DEADLINE_NEAR'",Integer.class));
+    }
+    @Test void recoveryDoesNotDeadlockWithDocumentCreationAccountThenScopeLocks() throws Exception {
+        UUID scope=scope();var accountLocked=new CountDownLatch(1);var continueCreation=new CountDownLatch(1);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var creation=pool.submit(()->transactions.executeWithoutResult(status->{
+                jdbc.queryForList("SELECT id FROM app_user WHERE id=? FOR UPDATE",outsider);accountLocked.countDown();
+                try { assertTrue(continueCreation.await(10,TimeUnit.SECONDS)); } catch(InterruptedException e) { Thread.currentThread().interrupt();throw new IllegalStateException(e); }
+                jdbc.queryForList("SELECT id FROM organizational_scope WHERE id=? FOR UPDATE",scope);
+            }));
+            assertTrue(accountLocked.await(10,TimeUnit.SECONDS));
+            var reset=pool.submit(()->passwords.contextualReset("user@example.invalid",scope,outsider,0,"Concurrent-only-password-2026"));
+            try {
+                org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(10)).until(()->jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id FROM app_user WHERE id IN%'",Integer.class)>0);
+            } finally { continueCreation.countDown(); }
+            creation.get(15,TimeUnit.SECONDS);reset.get(15,TimeUnit.SECONDS);
+        }
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='COORDINATOR_PASSWORD_RESET'",Integer.class));
     }
 }
