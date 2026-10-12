@@ -14,17 +14,19 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Prórrogas | Coordinador del ámbito, destinatario individual, fecha original conservada, concurrencia e historial. Máximo técnico ajustable de tres días calendario dentro del período, pendiente de ratificación institucional. |
 | T2 | Informe independiente derivado de T1 aprobado, narrativas, porcentaje manual, observaciones, delegaciones opcionales, anexos/evidencias y plantilla oficial A4; firma y revisión compartidas. |
 | Versiones y archivo | Archivo lógico con motivo y familia formal T1/T2. Una actualización de aprobado crea nuevo ID/DRAFT/ronda 1 y conserva el anterior firmado. Una familia de Informe por Plan, una versión activa. |
+| Flujos temporales | Plantillas generales, revisión asignada a cada ámbito y T1/T2, guardado atómico y activación explícita del período. Participantes congelados, sin sustitución silenciosa por cambios de plantilla. Nuevas firmas requieren activación. |
+| Cierre e historial | ACTIVE→CLOSED con motivo, concurrencia, ZIP privado verificado y archivo sin purga. Revisión pendiente conserva estados/bytes en solo lectura. Descarga histórica filtrada por permisos y por aprobación de PDFs. |
 | Seguimiento | Filtros y CSV de totales/estados/cobertura con permisos. ADMIN ve agregados sin acceso automático a contenido privado. |
 | Desarrollo | Entorno y semillas aislados en utaped_dev, siete usuarios ficticios, configuración y pruebas sin modificar la DB principal. |
 | Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
 | Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
 
-Persistencia: Flyway V13–V18 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia de validación: [reporte de entrega](docs/reports/2026-10-12-01-large-document-circuit.md).
+Persistencia: Flyway V13–V19 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md).
 
 ### Trabajo que aún falta para completar el producto
 
-- Cierre de período ACTIVE/CLOSED, operación histórica y paquete ZIP verificable; el archivo por documento ya existe, pero no sustituye ese cierre.
-- Flujos por ámbito/período, bloqueo de configuración cuando corresponda y política frente a bajas/cambios de asignaciones; actualmente la configuración es por grupo y tipo y se congela por artefacto.
+- Política institucional de retención/reapertura y permisos contextuales de Decano/Subdecano; exportación histórica en streaming para volúmenes mayores al límite técnico inicial de 128 MiB. El ZIP no sustituye un respaldo restaurable.
+- Política frente a bajas/cambio de ejecutores de flujos ya activados, sin invalidar asignaciones y firmas históricas.
 - Administración completa de carreras/ámbitos, historial visible de cargos/prórrogas, pertenencias globales por carrera, permisos administrativos delegados y recuperación por coordinador.
 - Evidencias mediante referencias/repositorios externos y representación de anexos no PDF. Actualmente solo se admite PDF en la ruta de evidencias/archivos integrados.
 - Recordatorios automáticos de vencimiento, programación de avisos, importación de usuarios y otras facilidades complementarias del Plan Maestro.
@@ -33,7 +35,7 @@ Persistencia: Flyway V13–V18 y almacenamiento privado real. Los borradores ind
 - Ratificación de ventanas T2, días de prórroga, múltiples elaboradores y secuencias/personas oficiales; los ejemplos no reemplazan esas decisiones.
 - HTTPS, SMTP institucional, respaldos con restauración comprobada, retención y despliegue operativo. Puerto web principal 64430, enlazado localmente hasta configurar la red institucional.
 
-La siguiente tanda debe comenzar por cierre de períodos, parametrización temporal de flujos y pendientes administrativos, antes de declarar el producto listo para aceptación integral.
+La siguiente tanda debe completar la administración pendiente de carreras/cargos, permisos delegados y recuperación por coordinador, junto con avisos de vencimiento. Después, integraciones de asistencia/agente y aceptación integral. No se declara terminado el producto.
 
 ## Registro histórico de entregas
 

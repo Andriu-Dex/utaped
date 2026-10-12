@@ -36,3 +36,4 @@ Documentación en español para revisión institucional; identificadores técnic
 
 - [Circuito T1, revisión, ejecución y T2](api/document-circuit.md).
 - [Datos de ejemplo y entorno aislado](development/sample-environment.md).
+- [Períodos, flujos por ámbito y archivo histórico](api/period-control.md).

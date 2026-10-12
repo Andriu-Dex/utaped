@@ -35,6 +35,16 @@ La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con 
 
 ## Fuentes y alcance
 
+### Cierre histórico y flujos temporales — 2026-10-12
+
+| ID | Requisito / fuente | Estado / aceptación |
+|---|---|---|
+| UT-PER-040 | ACTIVE→CLOSED, archivo sin purga, PDFs/historial conservados. Plan Maestro §53. | CONFIRMADO-PROYECTO, P0. Cierre con motivo/concurrencia; rollback ante integridad fallida; bloqueo de documentos, revisiones y organización. |
+| UT-WFL-040 | Revisión T1/T2 por ámbito y período, fija al activar. Plan Maestro §§3.9, 9 y 29. | CONFIRMADO-PROYECTO, P0. Activación explícita, ejecutores congelados; cambios de plantilla no alteran asignaciones. |
+| UT-HIS-040 | Consulta histórica de documentos autorizados sin nuevos permisos por cambio de comisión. Plan Maestro §52. | CONFIRMADO-PROYECTO, P0. ZIP filtrado por permisos actuales y aprobación; ADMIN sin pertenencia no puede descargar contenido privado. |
+
+La indicación de período actual usa fechas y estado; no automatiza un cierre ni una designación institucional. Se exige activación de flujos antes de nuevas firmas. Límite técnico inicial del ZIP: 128 MiB sin comprimir, ajustable; generación en memoria. Retención, reapertura, permisos de Decano/Subdecano y sustitución de ejecutores permanecen pendientes. [Contrato y operación](docs/api/period-control.md).
+
 2026-10-05: el propietario confirma el flujo sencillo de seleccionar .p12/.pfx, introducir contraseña y firmar, con comprobaciones básicas de identidad, vigencia e integridad y sin persistir material privado. Se implementa firma visible del artefacto del elaborador mediante huella pública vinculada administrativamente. La cadena emisora y revocación se declaran NO COMPROBADAS; no se atribuye aprobación institucional, PAdES o sellado de tiempo. El borrador editable permanece separado del PDF firmado inmutable. Finalización, envío y aprobación siguen bloqueados. [Contrato y límites](docs/decisions/signature-review-contract.md).
 
 2026-10-04: el propietario confirma firma mediante archivos .p12/.pfx. Los flujos institucionales aún no están confirmados; se autoriza preparación técnica conservando finalización/envío/aprobación deshabilitados. Identidad del certificado, confianza, revocación y perfil siguen pendientes en [contrato de firma](docs/decisions/signature-review-contract.md).

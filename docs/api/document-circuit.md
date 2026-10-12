@@ -57,3 +57,7 @@ El principal puede archivar sin purgar. No se archiva durante revisión ni un Pl
 ## Compatibilidad
 
 Flyway V13–V18 conserva documentos previos y agrega ámbitos, revisión, evidencias, T2, prórrogas individuales y familias formales. La creación individual antigua se habilita solo en fixtures de pruebas, no en el perfil normal. Las rutas existentes conservan IDs y permisos de sus documentos históricos. JDBC y contratos actuales siguen vigentes; no se declara una migración a JPA/OpenAPI que todavía no ocurrió.
+
+## Períodos y flujos temporales (V19)
+
+Las nuevas firmas por ámbito requieren asignaciones T1/T2 y activación explícita de los flujos del período. CLOSED bloquea las operaciones de escritura y conserva documentos y revisiones. El archivo histórico no sustituye los controles de descarga de preliminares. [Contrato de control y archivo](period-control.md).

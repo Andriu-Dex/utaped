@@ -2,6 +2,10 @@
 
 ## Actualización del 2026-10-12
 
+Cierre ACTIVE→CLOSED sin purga, archivo histórico verificable y asignaciones T1/T2 por ámbito/período están entregados en alcance inicial. La activación es explícita y obligatoria antes de nuevas firmas; congela participantes y revisiones. ADMIN puede operar el cierre, pero su rol no concede lectura del ZIP completo. El ZIP descargable respeta también el bloqueo de preliminares por ámbito. [Contrato](../api/period-control.md).
+
+Siguen pendientes retención/reapertura, permisos institucionales de Decano/Subdecano, sustitución de ejecutores tras bajas y exportación operativa de grandes volúmenes. Las menciones a cierre y configuración temporal pendientes en los párrafos siguientes describen el estado previo de la tanda amplia.
+
 Ámbitos, titularidad, tareas secuenciales, firmas sucesivas, evidencias PDF, T2 derivado y archivo/versiones cuentan ya con implementación inicial. Las filas históricas que indican ausencia de esas tablas o motores quedan superadas por [el estado vigente](../../implementation-status.md).
 
 Continúan pendientes las asignaciones oficiales, múltiples elaboradores, políticas de baja de revisores, configuración temporal por ámbito/período, cierre de períodos/ZIP y aceptación operativa. Prórroga técnica: máximo configurable de tres días calendario, individual y limitada al fin del período; no se presenta como cómputo institucional ratificado. Ventana T2 inicial: período académico completo. Evidencia incompleta exige explicación y no produce avance físico automático.

@@ -13,7 +13,7 @@ Estado HEREDADO; no acredita ratificación institucional nueva.
 - BR-009: catálogos administrables; Otro requiere texto; anexos se ordenan/renumeran automáticamente.
 - BR-010: un PDF vigente por medio; reemplazo conserva historia y requiere nueva validación; solo responsables modifican.
 - BR-011: fecha de elaboración congelada al finalizar; observaciones congeladas al decidir.
-- BR-012: histórico cerrado solo lectura; cierre/reapertura pendientes.
+- BR-012: histórico cerrado solo lectura; cierre ACTIVE→CLOSED sin purga y ZIP privado implementados según Plan Maestro. Reapertura y retención institucional pendientes. [Contrato](../api/period-control.md).
 - BR-013: no inventar autoridades, resoluciones, QR, prórrogas o flujos externos.
 
 Resolver condiciones de duplicados, plazos, etapas, cierre y formatos antes de implementar sus casos límite.

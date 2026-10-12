@@ -1,6 +1,6 @@
 # UTAPED — Gestión Documental Académica
 
-Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Incluye identidad local, administración por ámbitos, Planes T1, revisión secuencial con firmas, evidencias e Informes T2 derivados, versiones formales y reportes de gestión. La interfaz conserva una base visual común para PC y tabletas, con modo claro y oscuro.
+Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Incluye identidad local, administración por ámbitos, Planes T1, revisión secuencial con firmas, evidencias e Informes T2 derivados, versiones formales, flujos por período, cierre histórico y reportes de gestión. La interfaz conserva una base visual común para PC y tabletas, con modo claro y oscuro.
 
 ## Arranque
 
@@ -24,4 +24,6 @@ El mockup permanece congelado fuera del repositorio en `C:\Documentos\Documentos
 
 Para probar con usuarios y catálogos ficticios sin cambiar la base principal: `./scripts/start-development-sample.ps1`. [Guía de ejemplo](docs/development/sample-environment.md) y [contrato del circuito documental](docs/api/document-circuit.md).
 
-La entrega permite recorrer el circuito documental de desarrollo; no acredita todavía todo el Plan Maestro ni la preparación institucional para producción. Siguen pendientes cierre de períodos/ZIP, políticas temporales de flujos, capacidades administrativas adicionales, evidencias por referencias externas y servicios de asistencia/agente. [Estado y límites](implementation-status.md). HTTPS, SMTP, respaldo/restauración y validación de firma siguen siendo condiciones de operación. [Almacenamiento](docs/development/document-storage.md).
+Administración asigna T1/T2 a cada ámbito y activa sus flujos antes de nuevas firmas. El cierre conserva datos y genera un archivo histórico; la descarga respeta los permisos documentales. [Configuración y operación](docs/api/period-control.md).
+
+La entrega permite recorrer el circuito documental de desarrollo; no acredita todavía todo el Plan Maestro ni la preparación institucional para producción. Siguen pendientes retención/reapertura, sustitución de ejecutores, capacidades administrativas adicionales, evidencias por referencias externas y servicios de asistencia/agente. [Estado y límites](implementation-status.md). HTTPS, SMTP, respaldo/restauración y validación de firma siguen siendo condiciones de operación. [Almacenamiento](docs/development/document-storage.md).
