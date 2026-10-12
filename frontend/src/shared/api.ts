@@ -19,7 +19,8 @@ export async function signPdf<T>(path: string, file: File, password: string): Pr
     if (!csrf) await refreshCsrf()
     const response = await fetch('/api' + path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', [csrf!.headerName]: csrf!.token }, body: payload.buffer })
     if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const error = await response.json().catch(() => ({ message: 'No se pudo firmar el PDF.' })); throw new ApiError(error.message, response.status) }
-    return await response.json()
+    const result = await response.text()
+    return result ? JSON.parse(result) as T : undefined as T
   } finally { encoded.fill(0); container?.fill(0); payload?.fill(0) }
 }
 export function refreshCsrf(): Promise<void> {

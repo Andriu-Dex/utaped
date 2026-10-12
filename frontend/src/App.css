@@ -240,5 +240,5 @@ tbody tr.row-selected { background: var(--blue-100) !important; }
   .history-table thead { display: none; } .history-table tbody, .history-table tr { display: block; } .history-table tr { padding: 12px 0; border-bottom: 1px solid var(--border); } .history-table td { display: grid; grid-template-columns: 6rem minmax(0,1fr); gap: 8px; padding: 6px 0; border: 0; } .history-table td::before { content: attr(data-label); font-weight: 600; }
   .admin-navigation { position: relative; gap: 2px !important; padding: 7px; } .admin-navigation a { padding: 8px; font-size: .7rem; } .admin-block { scroll-margin-top: 18px; }
 }
-@media (prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+@media (prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @media print { .sidebar, .topbar, .workspace-footer, .skip-link { display: none; } .workspace main { padding: 0; } }

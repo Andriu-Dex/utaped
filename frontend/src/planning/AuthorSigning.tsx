@@ -4,10 +4,11 @@ import { api, signPdf } from '../shared/api'
 
 interface Signed { id: string; signerName: string; signedAt: string; pageCount: number; signaturePageIndex: number }
 interface SigningState {
+  automaticSubmission: boolean; documentState: string
   signingEnabled: boolean; signingBlockers: { section: string; message: string }[]; signed: Signed[]
   preparation: { rowVersion: number; pdfHash: string }
 }
-export function AuthorSigning({ targetDocId, artifactId }: { targetDocId: string; artifactId: string }) {
+export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDocId: string; artifactId: string; onSigned?: () => void }) {
   const path = '/work-plans/' + targetDocId + '/artifacts/' + artifactId + '/signing'
   const [state, setState] = useState<SigningState | null>(null); const [error, setError] = useState('')
   const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const [refresh, setRefresh] = useState(0)
@@ -24,13 +25,14 @@ export function AuthorSigning({ targetDocId, artifactId }: { targetDocId: string
     try {
       await signPdf(path + '?' + new URLSearchParams({ rowVersion: String(state.preparation.rowVersion), inputHash: state.preparation.pdfHash, requestKey }), file, password)
       setNotice('Firma aplicada. Identidad vinculada, vigencia e integridad comprobadas.'); setImageError(false); setPage(null)
+      onSigned?.()
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo firmar el documento.') }
     finally { form.reset(); setBusy(false); setRefresh(value => value + 1) }
   }
   const signed = state?.signed[0]
   const index = page ?? signed?.signaturePageIndex ?? 0
   return <section className="card" aria-label="Firma del elaborador"><h2>Firmar PDF</h2>
-    <p>La firma se aplica a este artefacto conservado. El Plan sigue en borrador; esta acción no envía a revisión ni aprueba el documento.</p>
+    <p>{state?.automaticSubmission ? 'Al firmar se conserva el artefacto y se activa automáticamente la primera etapa del flujo configurado.' : 'La firma se aplica al artefacto conservado. Este documento anterior necesita reconciliación con un ámbito para iniciar el flujo.'}</p>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
       {state.signingBlockers.length > 0 && !signed && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
@@ -41,7 +43,8 @@ export function AuthorSigning({ targetDocId, artifactId }: { targetDocId: string
       </fieldset></form>}
       {signed && <><p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
         <p>Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
-        <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>
+        {!state.automaticSubmission && <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>}
+        {state.automaticSubmission && <p>Estado documental: {state.documentState === 'IN_REVIEW' ? 'En revisión' : state.documentState === 'APPROVED' ? 'Aprobado' : 'Borrador'}. Consulte las etapas y observaciones desde el documento.</p>}
         <nav aria-label="Páginas del PDF firmado"><button className="secondary" disabled={index === 0} onClick={() => { setPage(index - 1); setImageError(false) }}>Anterior del firmado</button><span> Página {index + 1} de {signed.pageCount} </span><button className="secondary" disabled={index + 1 >= signed.pageCount} onClick={() => { setPage(index + 1); setImageError(false) }}>Siguiente del firmado</button></nav>
         {imageError && <Toast message="No se pudo cargar la página firmada. Puede descargar el PDF." />}
         <img className="document-page" src={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/pages/' + index} alt={'Página ' + (index + 1) + ' del PDF firmado'} onError={() => setImageError(true)} />

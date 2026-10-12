@@ -8,11 +8,12 @@ import { AuditViewer } from '../audit/AuditViewer'
 import { CertificateAdministration } from './CertificateAdministration'
 import { adminPages, type AdminPage } from './adminNavigation'
 import { Icon } from '../shared/Icon'
+import { OrganizationAdministration } from './OrganizationAdministration'
 
 export function Administration({ page, periods, initialGroupId, onChange, onDirtyChange }: { page: AdminPage; periods: import('../shared/api').Period[]; initialGroupId?: string; onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
-  const [memberGroup, setMemberGroup] = useState(initialGroupId ?? ''); const [members, setMembers] = useState<Member[]>([])
+  const [memberGroup, setMemberGroup] = useState(initialGroupId ?? ''); const [members, setMembers] = useState<Member[]>([]); const [loadedMemberGroup, setLoadedMemberGroup] = useState('')
   const [dirtyCreates, setDirtyCreates] = useState<string[]>([])
   const [visible, setVisible] = useState(false); const [showCreateUser, setShowCreateUser] = useState(false)
   const createDirty = dirtyCreates.length > 0
@@ -24,7 +25,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
   useEffect(() => { onDirtyChange(createDirty || flowDirty || profileDirty); return () => onDirtyChange(false) }, [createDirty, flowDirty, profileDirty, onDirtyChange])
   useEffect(() => {
     let cancelled = false
-    if (memberGroup) api<Member[]>('/groups/' + memberGroup + '/members').then(data => { if (!cancelled) setMembers(data) }).catch(e => { if (!cancelled) setError(e.message) })
+    if (memberGroup) api<Member[]>('/groups/' + memberGroup + '/members').then(data => { if (!cancelled) { setMembers(data); setLoadedMemberGroup(memberGroup) } }).catch(e => { if (!cancelled) setError(e.message) })
     return () => { cancelled = true }
   }, [memberGroup, reload])
   async function remove(member: Member) {
@@ -40,7 +41,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     if (path === '/admin/users') { data.displayName = data.firstNames + ' ' + data.lastNames; if (!data.username) delete data.username }
     try {
       const target = path === 'membership' ? '/admin/groups/' + data.groupId + '/members' : path
-      await api(target, 'POST', data); if (path === '/admin/users') { setDirectoryQuery(String(data.email)); setMemberSearch(String(data.email)) } form.reset(); setDirtyCreates(current => current.filter(key => key !== path)); setNotice('Cambios guardados.'); await load(); await onChange()
+      await api(target, 'POST', data); if (path === '/admin/users') { setDirectoryQuery(String(data.email)); setMemberSearch(String(data.email)) } form.reset(); if (path === '/admin/users') { setShowCreateUser(false); setVisible(false) } setDirtyCreates(current => current.filter(key => key !== path)); setNotice('Cambios guardados.'); await load(); await onChange()
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
   useEffect(() => {
@@ -50,9 +51,10 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
   return <section aria-label={'Módulo: ' + adminPages.find(item => item.id === page)!.title}>
     <span className="section-kicker">ADMINISTRACIÓN INSTITUCIONAL</span><h1>{adminPages.find(item => item.id === page)!.title}</h1>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+    {page === 'organization' && <OrganizationAdministration groups={groups} periods={periods} onDirtyChange={setProfileDirty} onChange={onChange} />}
     {page === 'users' && <>
     {!showCreateUser ? <div style={{ margin: '20px 0' }}><button onClick={() => setShowCreateUser(true)}>+ Agregar Usuario</button></div> :
-    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" onClick={() => setShowCreateUser(false)}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => { submit(e, '/admin/users'); setShowCreateUser(false); }}>
+    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" disabled={busy} onClick={() => { if (!dirtyCreates.includes('/admin/users') || window.confirm('Hay cambios sin guardar. ¿Cancelar la creación?')) { setShowCreateUser(false); setVisible(false); setDirtyCreates(keys => keys.filter(key => key !== '/admin/users')) } }}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => void submit(e, '/admin/users')}>
       <div className="grid"><label>Nombres<input name="firstNames" required maxLength={80} /></label><label>Apellidos<input name="lastNames" required maxLength={80} /></label></div><label>Correo<input type="email" name="email" required maxLength={254} /></label>
       <label>Identificador de acceso<input name="username" aria-label="Identificador de acceso" maxLength={100} pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{0,99}" autoCapitalize="none" autoComplete="off" /><small className="field-help">Opcional. Si se deja vacío se deriva del correo; debe ser único.</small></label>
       <label>Permiso del sistema<select name="systemRole"><option value="USER">Usuario</option><option value="ADMIN">Administrador</option></select></label>
@@ -88,9 +90,9 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     <section className="card">
       <div className="section-heading"><span className="section-icon"><Icon name="settings" /></span><div><span className="section-kicker">GESTIÓN DE MIEMBROS</span><h2>Gestionar integrantes</h2></div></div>
       <div style={{ marginTop: 16 }}>
-        <label>Grupo a gestionar<select aria-label="Grupo a gestionar" value={memberGroup} onChange={e => { setMemberGroup(e.target.value); setMembers([]) }}><option value="">Seleccione un grupo</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+        <label>Grupo a gestionar<select aria-label="Grupo a gestionar" value={memberGroup} onChange={e => { setMemberGroup(e.target.value); setLoadedMemberGroup(''); setMembers([]) }}><option value="">Seleccione un grupo</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
         {memberGroup && <>
-          {members.length === 0 ? <p className="muted" style={{ marginTop: 12 }}>Este grupo no tiene integrantes asignados actualmente.</p> : <ul className="member-list" style={{ marginTop: 16 }}>{members.map(m => <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}><span><strong>{m.display_name}</strong></span><button className="secondary" disabled={busy} onClick={() => remove(m)} aria-label={'Retirar a ' + m.display_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon name="x" size={14} />Retirar pertenencia</button></li>)}</ul>}
+          {loadedMemberGroup !== memberGroup ? <p role="status">Cargando integrantes…</p> : members.length === 0 ? <p className="muted" style={{ marginTop: 12 }}>Este grupo no tiene integrantes asignados actualmente.</p> : <ul className="member-list" style={{ marginTop: 16 }}>{members.map(m => <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}><span><strong>{m.display_name}</strong></span><button className="secondary" disabled={busy} onClick={() => remove(m)} aria-label={'Retirar a ' + m.display_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon name="x" size={14} />Retirar pertenencia</button></li>)}</ul>}
         </>}
       </div>
     </section>
