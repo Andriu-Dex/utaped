@@ -1,3 +1,4 @@
+import { DeadlineNotices } from './DeadlineNotices'
 import { PeriodControl } from './PeriodControl'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -101,7 +102,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     </>}
 
     {page === 'periods' && <>
-    <PeriodControl periods={periods} onChange={onChange} onDirtyChange={setProfileDirty} />
+    <DeadlineNotices /><PeriodControl periods={periods} onChange={onChange} onDirtyChange={setProfileDirty} />
     <section id="admin-periods" className="card admin-block animate-reveal">
       <div className="section-heading"><span className="section-icon"><Icon name="calendar" /></span><div><span className="section-kicker">ORGANIZACIÓN ACADÉMICA</span><h2>Crear período</h2></div></div>
       <form onChange={() => markCreate('/admin/periods')} onSubmit={e => submit(e, '/admin/periods')} style={{ marginTop: 16 }}>

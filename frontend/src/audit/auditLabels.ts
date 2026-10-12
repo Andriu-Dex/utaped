@@ -1,4 +1,5 @@
 export const auditActionLabels: Record<string, string> = {
+  CAREER_UPDATED: 'Carrera actualizada', COORDINATOR_PASSWORD_RESET: 'Acceso restablecido por coordinador autorizado', ACTIVITY_DEADLINE_NEAR: 'Aviso de actividad próxima a vencer', EVIDENCE_MISSING: 'Aviso de evidencia pendiente',
   PERIOD_WORKFLOW_ASSIGNED: 'Flujo asignado al ámbito', PERIOD_WORKFLOWS_ACTIVATED: 'Flujos del período activados', PERIOD_CLOSED: 'Período cerrado sin purga', PERIOD_ARCHIVE_DOWNLOADED: 'Archivo histórico autorizado descargado',
   T1_ARTIFACT_SIGNED: 'Artefacto T1 firmado', SIGNING_CERTIFICATE_BOUND: 'Certificado público vinculado', SIGNING_CERTIFICATE_UNBOUND: 'Certificado público desvinculado',
   T2_ARTIFACT_SIGNED: 'Informe T2 firmado', T2_PREVIEW_GENERATED: 'Previsualización T2 generada', REPORT_CREATED: 'Informe creado', REPORT_DRAFT_SAVED: 'Informe guardado',

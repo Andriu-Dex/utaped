@@ -11,10 +11,11 @@ import { api, ApiError, refreshCsrf, type Account, type Group, type Member, type
 import { Brand, Icon, type IconName } from './shared/Icon'
 import './App.css'
 import { ReportingDashboard } from './planning/ReportingDashboard'
+import { ContextualOrganization } from './institution/ContextualOrganization'
 import { ReviewWorkspace } from './workflow/ReviewWorkspace'
 
-type View = 'home' | 'password' | 'documents' | 'reviews' | 'notifications' | AdminPage
-const titles: Record<string, string> = { home: 'Mi espacio de trabajo', documents: 'Gestión documental', reviews: 'Revisión documental', ...Object.fromEntries(adminPages.map(page => [page.id, page.title])), password: 'Seguridad de la cuenta', notifications: 'Centro de notificaciones' }
+type View = 'home' | 'password' | 'documents' | 'reviews' | 'notifications' | 'my-organization' | AdminPage
+const titles: Record<string, string> = { 'my-organization': 'Mi organización', home: 'Mi espacio de trabajo', documents: 'Gestión documental', reviews: 'Revisión documental', ...Object.fromEntries(adminPages.map(page => [page.id, page.title])), password: 'Seguridad de la cuenta', notifications: 'Centro de notificaciones' }
 function displayDate(value: string) { return value.slice(0,10).split('-').reverse().join('/') }
 
 export default function App() {
@@ -44,7 +45,8 @@ export default function App() {
     const epoch = identityEpoch.current
     if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) return
     setDraftDirty(false)
-    if (target.type === 'WORK_PLAN') { if (!canUseDocuments) { setError('No tiene una pertenencia activa para acceder al espacio documental.'); return } setWorkspace('documents'); setDocumentTarget(target.id); setView('documents') }
+    if (target.type === 'ACCOUNT') { setDocumentTarget(null); setView('password') }
+    else if (target.type === 'WORK_PLAN') { if (!canUseDocuments) { setError('No tiene una pertenencia activa para acceder al espacio documental.'); return } setWorkspace('documents'); setDocumentTarget(target.id); setView('documents') }
     else { await load(); if (epoch !== identityEpoch.current) return; if (target.id !== selected) { setMembers([]); setMembersLoading(true); setSelected(target.id) } setDocumentTarget(null); if (account?.systemRole === 'ADMIN') { setWorkspace('administration'); setView('groups') } else setView('home') }
   }
   function clearAccount() { identityEpoch.current += 1; setAccount(null); setSelected(''); setGroups([]); setPeriods([]); setMembers([]); setDraftDirty(false); setDocumentTarget(null); setView('home'); setAllPeriods(false); setWorkspace('administration') }
@@ -82,7 +84,7 @@ export default function App() {
   return <div className="shell"><a className="skip-link" href="#main-content">Ir al contenido</a>
     <aside className="sidebar"><Brand /><p className="sidebar-section-label">ESPACIO INSTITUCIONAL</p>
       {!account.mustChangePassword && <nav className="primary-nav" aria-label="Navegación principal">
-        {administrative ? <>{navButton('home','Panel general','home')}{adminPages.map(page => navButton(page.id,page.label,page.icon))}</> : <>{navButton('home','Inicio','home')}{navButton('documents','Documentos','document')}{navButton('reviews','Revisión documental','eye')}{navButton('reporting','Reportes de gestión','document')}</>}
+        {administrative ? <>{navButton('home','Panel general','home')}{adminPages.map(page => navButton(page.id,page.label,page.icon))}</> : <>{navButton('home','Inicio','home')}{navButton('documents','Documentos','document')}{navButton('reviews','Revisión documental','eye')}{navButton('my-organization','Mi organización','users')}{navButton('reporting','Reportes de gestión','document')}</>}
         {navButton('password','Mi contraseña','lock')}
       </nav>}
       {!account.mustChangePassword && account.systemRole === 'ADMIN' && canUseDocuments && <label className="workspace-context">Espacio de trabajo<select aria-label="Espacio de trabajo" value={administrative ? 'administration' : 'documents'} onChange={event => switchWorkspace(event.target.value as 'administration' | 'documents')}><option value="administration">Administración</option><option value="documents">Espacio documental</option></select></label>}
@@ -93,7 +95,7 @@ export default function App() {
     <div className="workspace"><header className="topbar"><div><span className="breadcrumb">UTAPED <span>/</span> {account.mustChangePassword ? 'Primer acceso' : view === 'home' && administrative ? 'Panel general administrativo' : titles[view]}</span><span className="workspace-caption">Gestión Documental Académica</span></div><div className="topbar-actions"><span className="institution-pill">FISEI · UTA</span>{!account.mustChangePassword && <NotificationIndicator onOpenTarget={openNotification} />}</div></header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
-        {view === 'reporting' ? <ReportingDashboard administrative={administrative} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={page => navigate(page)} /> : <>
+        {view === 'my-organization' && !administrative ? <ContextualOrganization onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard administrative={administrative} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={page => navigate(page)} /> : <>
           <section className="welcome-banner"><div><span className="eyebrow">TU ESPACIO DE TRABAJO</span><h1>Bienvenido, {account.displayName}</h1><p>Organiza tu planificación y retoma tus documentos desde un solo lugar.</p><button className="hero-button" onClick={() => navigate('documents')}>Ver mis documentos<Icon name="arrow" size={18} /></button></div><div className="welcome-art" aria-hidden="true"><Icon name="document" size={88} /><span><Icon name="check" size={24} /></span></div></section>
           <TrackingDashboard onOpen={id => navigate('documents', id)} />
           <div className="context-grid"><section className="card context-card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">COLABORACIÓN</span><h2>Grupos institucionales</h2></div></div><p className="muted">Consulta tus integrantes. Tu identidad se conserva al cambiar de contexto.</p>

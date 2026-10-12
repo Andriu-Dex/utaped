@@ -2,9 +2,9 @@ import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 import { Icon } from '../shared/Icon'
-interface Notification { id: string; kind: string; targetType: 'GROUP' | 'WORK_PLAN'; targetId: string; title: string; message: string; createdAt: string; readAt: string | null; targetAvailable: boolean }
+interface Notification { id: string; kind: string; targetType: 'GROUP' | 'WORK_PLAN' | 'ACCOUNT'; targetId: string; title: string; message: string; createdAt: string; readAt: string | null; targetAvailable: boolean }
 interface NotificationPage { items: Notification[]; total: number; unread: number; page: number; size: number }
-export interface NotificationTarget { type: 'GROUP' | 'WORK_PLAN'; id: string }
+export interface NotificationTarget { type: 'GROUP' | 'WORK_PLAN' | 'ACCOUNT'; id: string }
 function changed() { window.dispatchEvent(new Event('notifications-changed')) }
 export function NotificationIndicator({ onOpenTarget }: { onOpenTarget: (target: NotificationTarget) => Promise<void> }) {
   const [count, setCount] = useState<number | null>(null)
