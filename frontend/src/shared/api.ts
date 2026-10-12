@@ -56,5 +56,5 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
 export interface Account { id: string; email: string; username: string | null; firstNames: string | null; lastNames: string | null; displayName: string; systemRole: 'ADMIN' | 'USER'; mustChangePassword: boolean }
 export interface Group { id: string; name: string; group_type: string; membership_role: string | null; collective_label: string; active: boolean; row_version: number }
 export interface Member { id: string; display_name: string; membership_role: string }
-export interface Period { id: string; name: string; starts_on: string; ends_on: string; restrict_holiday_endpoints: boolean }
+export interface Period { id: string; name: string; starts_on: string; ends_on: string; restrict_holiday_endpoints: boolean; status: 'ACTIVE' | 'CLOSED'; row_version: number; workflow_locked_at: string | null; closed_at: string | null; is_current: boolean }
 export interface User { id: string; email: string; username: string | null; first_names: string | null; last_names: string | null; display_name: string; system_role: string; active: boolean; row_version: number }

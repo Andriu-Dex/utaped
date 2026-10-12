@@ -87,7 +87,7 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await page.getByLabel('Historial de configuración').selectOption({ label: '1 · Flujo original ' + suffix })
   await expect(page.getByRole('heading', { name: 'Revisión 1: Flujo original ' + suffix, exact: true })).toBeVisible()
   await page.setViewportSize({ width: 820, height: 1180 })
-  await page.getByRole('heading', { name: 'Flujos por grupo', exact: true }).scrollIntoViewIfNeeded()
+  await page.getByRole('heading', { name: 'Plantillas de flujo por grupo', exact: true }).scrollIntoViewIfNeeded()
   await page.screenshot({ path: 'test-results/workflow-tablet.png', fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   page.once('dialog', dialog => dialog.accept())

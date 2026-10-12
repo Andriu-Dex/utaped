@@ -1,3 +1,4 @@
+import { PeriodControl } from './PeriodControl'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type User, type Member } from '../shared/api'
@@ -100,6 +101,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     </>}
 
     {page === 'periods' && <>
+    <PeriodControl periods={periods} onChange={onChange} onDirtyChange={setProfileDirty} />
     <section id="admin-periods" className="card admin-block animate-reveal">
       <div className="section-heading"><span className="section-icon"><Icon name="calendar" /></span><div><span className="section-kicker">ORGANIZACIÓN ACADÉMICA</span><h2>Crear período</h2></div></div>
       <form onChange={() => markCreate('/admin/periods')} onSubmit={e => submit(e, '/admin/periods')} style={{ marginTop: 16 }}>
@@ -117,10 +119,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
       </form>
     </section>
 
-    <section className="card">
-      <div className="section-heading"><span className="section-icon amber"><Icon name="calendar" /></span><div><span className="section-kicker">HISTORIAL</span><h2>Períodos registrados</h2></div></div>
-      {periods.length ? <ul className="period-list" style={{ marginTop: 16 }}>{periods.map(period => <li key={period.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}><div><strong style={{ fontSize: '0.95rem' }}>{period.name}</strong><span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{period.starts_on.split('-').reverse().join('/')} — {period.ends_on.split('-').reverse().join('/')}</span></div><span className="status-badge active">Registrado</span></li>)}</ul> : <div className="empty-state"><Icon name="calendar" size={32} /><p>No hay períodos registrados.</p></div>}
-    </section></>}
+    </>}
     {(page === 'resources' || page === 'activities' || page === 'holidays') && <PlanningAdministration groups={groups} section={page} onDirtyChange={setProfileDirty} />}
     {page === 'workflows' && <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />}
     {page === 'audit' && <AuditViewer />}

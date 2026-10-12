@@ -8,7 +8,7 @@ export interface WorkPlan {
 }
 export interface PlanOptions {
   groups: { id: string; name: string }[]
-  periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean }[]
+  periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean; status: 'ACTIVE' | 'CLOSED' }[]
   singlePlanPerScope: boolean; enforcePreparationWindow: boolean
   scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean }[]
 }
