@@ -51,7 +51,7 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         {mode === 'login' && <label>Usuario<input required name="username" maxLength={254} aria-label="Usuario" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="tu.usuario" /></label>}
         {mode === 'forgot' && <label>Correo institucional<input required type="email" name="email" maxLength={254} autoComplete="email" placeholder="usuario@uta.edu.ec" /></label>}
         {mode !== 'forgot' && <div className="auth-password-field"><label htmlFor="access-password">{mode === 'reset' ? 'Nueva contraseña' : 'Contraseña'}</label><span className="password-control"><input id="access-password" required type={visible ? 'text' : 'password'} name="password" minLength={mode === 'reset' ? 12 : undefined} maxLength={72} autoComplete={mode === 'reset' ? 'new-password' : 'current-password'} /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span></div>}
-        {mode === 'reset' && <><label>Confirmar contraseña<input required name="confirmation" type="password" minLength={12} maxLength={72} autoComplete="new-password" /></label><p className="field-help">Usa al menos 12 caracteres; máximo 72 bytes UTF-8.</p></>}
+        {mode === 'reset' && <div className="auth-password-field"><label htmlFor="access-confirm-password">Confirmar contraseña</label><span className="password-control"><input id="access-confirm-password" required name="confirmation" type={visible ? 'text' : 'password'} minLength={12} maxLength={72} autoComplete="new-password" /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span><small className="field-help">Usa al menos 12 caracteres; máximo 72 bytes UTF-8.</small></div>}
         {mode === 'login' && <div className="captcha-field"><div className="captcha-heading"><label htmlFor="captcha-answer">Código de verificación</label><button type="button" className="icon-button" title="Cambiar código de verificación" aria-label="Cambiar código de verificación" onClick={renew}><Icon name="refresh" /></button></div>
           {!captchaError && <img key={challenge} className="captcha-image" src={'/api/auth/captcha?v=' + challenge} alt="Código de verificación de seis caracteres" onLoad={() => { setCaptchaReady(true); setCaptchaError(false) }} onError={() => { setCaptchaReady(false); setCaptchaError(true) }} />}
           {captchaError && <Toast message="No se pudo cargar el código. Pulsa Cambiar código de verificación para reintentar." />}
@@ -70,6 +70,9 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
 
 export function ChangePassword({ temporary, onComplete }: { temporary: boolean; onComplete: () => void }) {
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false)
+  const [visibleCurrent, setVisibleCurrent] = useState(false)
+  const [visibleNew, setVisibleNew] = useState(false)
+  const [visibleConfirm, setVisibleConfirm] = useState(false)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setBusy(true)
     const data = new FormData(event.currentTarget)
@@ -77,15 +80,34 @@ export function ChangePassword({ temporary, onComplete }: { temporary: boolean; 
     try { await api('/auth/change-password', 'POST', { currentPassword: data.get('currentPassword'), newPassword: data.get('newPassword') }); await refreshCsrf(); onComplete() }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
-  return <div className="security-pane"><section className="card security-card">
+  return <div className="security-pane"><section className="card animate-reveal security-card">
     <div className="section-heading"><span className="section-icon"><Icon name="lock" /></span><div><span className="section-kicker">SEGURIDAD DE LA CUENTA</span><h2>{temporary ? 'Acceso temporal' : 'Contraseña'}</h2></div></div>
     <p className="muted" style={{ marginTop: 12 }}>{temporary ? 'Cambie su contraseña temporal para continuar. Use al menos 12 caracteres.' : 'Actualice su contraseña. Al guardar se cerrarán sus sesiones activas.'}</p>
     <form onSubmit={submit} style={{ marginTop: 24 }}><fieldset disabled={busy}>
-      <label>Contraseña actual<input required name="currentPassword" type="password" autoComplete="current-password" maxLength={128} /></label>
-      <label>Nueva contraseña<input required name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
-      <label>Confirmar contraseña<input required name="confirmation" type="password" autoComplete="new-password" minLength={12} maxLength={72} /></label>
+      <div className="auth-password-field">
+        <label htmlFor="current-password">Contraseña actual</label>
+        <span className="password-control">
+          <input id="current-password" required name="currentPassword" type={visibleCurrent ? 'text' : 'password'} autoComplete="current-password" maxLength={128} />
+          <button type="button" className="icon-button" title={visibleCurrent ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visibleCurrent ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visibleCurrent} onClick={() => setVisibleCurrent(v => !v)}><Icon name="eye" /></button>
+        </span>
+      </div>
+      <div className="auth-password-field">
+        <label htmlFor="new-password">Nueva contraseña</label>
+        <span className="password-control">
+          <input id="new-password" required name="newPassword" type={visibleNew ? 'text' : 'password'} autoComplete="new-password" minLength={12} maxLength={72} />
+          <button type="button" className="icon-button" title={visibleNew ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visibleNew ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visibleNew} onClick={() => setVisibleNew(v => !v)}><Icon name="eye" /></button>
+        </span>
+        <small className="field-help">Mínimo 12 caracteres (máx. 72).</small>
+      </div>
+      <div className="auth-password-field">
+        <label htmlFor="confirm-password">Confirmar contraseña</label>
+        <span className="password-control">
+          <input id="confirm-password" required name="confirmation" type={visibleConfirm ? 'text' : 'password'} autoComplete="new-password" minLength={12} maxLength={72} />
+          <button type="button" className="icon-button" title={visibleConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visibleConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visibleConfirm} onClick={() => setVisibleConfirm(v => !v)}><Icon name="eye" /></button>
+        </span>
+      </div>
       {error && <Toast message={error} onDismiss={() => setError('')} />}
-      <button style={{ width: '100%', marginTop: 12 }} disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}<Icon name="check" size={18} /></button>
+      <button style={{ width: '100%', marginTop: 18 }} disabled={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}<Icon name="check" size={18} /></button>
     </fieldset></form>
   </section></div>
 }

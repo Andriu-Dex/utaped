@@ -29,3 +29,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-07 — Proxy persistente de desarrollo](2026-10-07-04-persistent-development-proxy.md).
 
 - [2026-10-11 — Commit de cambios actuales](2026-10-11-01-current-changes-commit.md).
+
+- [2026-10-11 — Revisión de la nueva especificación maestra](2026-10-11-02-master-specification-review.md).
