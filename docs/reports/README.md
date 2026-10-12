@@ -36,3 +36,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 
 - [2026-10-12 — Circuito documental integrado T1 y T2](2026-10-12-01-large-document-circuit.md).
 - [2026-10-12 — Cierre histórico y flujos por ámbito/período](2026-10-12-02-period-closure-and-workflows.md).
+
+- [2026-10-12 — Administración contextual, historial y avisos](2026-10-12-03-contextual-administration-and-notices.md).

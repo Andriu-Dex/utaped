@@ -52,3 +52,9 @@ npm run test:e2e:sample
 La prueba crea registros adicionales solo en el entorno de ejemplo y utiliza certificados temporales de pruebas en memoria. Recorre asignación/activación de flujos, elaboración, devolución, corrección, firmas sucesivas, aprobación, evidencia, T2, actualización formal y cierre histórico con ZIP autorizado, además de aislamiento y vista oscura en tableta. No utilizar certificados personales reales para las pruebas automatizadas.
 
 Desde V19, las semillas asignan las revisiones de ejemplo sin activar automáticamente el período. Para probar firmas manualmente: Administración → Períodos académicos → elegir período → revisar T1/T2 de cada ámbito → Activar flujos del período. No cierre el período de ejemplo hasta terminar el escenario: quedará de solo lectura y no existe reapertura automática. [Contrato y pasos](../api/period-control.md).
+
+## Administración contextual y alertas
+
+Tras reconstruir el entorno, Flyway incorpora V20 sin reiniciar los datos. En Carreras y ámbitos, ADMIN puede editar carreras y conceder recuperación de cuentas al COORDINATOR seleccionado. En Mi organización, ese coordinador ve el historial y las cuentas recuperables del ámbito. Las semillas no conceden automáticamente esta autorización. En Períodos académicos aparece la configuración técnica de avisos y la comprobación manual. Variables opcionales y defaults: [contrato](../api/contextual-administration.md).
+
+La suite sample añade un escenario de edición de carrera, historial, autorización/revocación, reset y cambio obligatorio de una cuenta ficticia nueva; conserva las credenciales semilla. El circuito T1/T2 comprueba avisos y el historial visible de una prórroga individual.

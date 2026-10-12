@@ -6,7 +6,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 
 | Capacidad | Alcance entregado |
 |---|---|
-| Organización | Catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
+| Organización | Edición/desactivación de carreras con concurrencia, historial visible de cargos/principales, recuperación delegada explícitamente a coordinadores; catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
 | T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firma real del elaborador y envío a revisión atómico en documentos por ámbito. |
 | Revisión | Bandeja propia, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
 | Firmas sucesivas | Certificados personales temporales, vinculación pública por usuario, append incremental y comprobación de CMS/bytes previos. Sin material privado persistente ni afirmación de cadena/revocación/TSA. |
@@ -16,26 +16,27 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Versiones y archivo | Archivo lógico con motivo y familia formal T1/T2. Una actualización de aprobado crea nuevo ID/DRAFT/ronda 1 y conserva el anterior firmado. Una familia de Informe por Plan, una versión activa. |
 | Flujos temporales | Plantillas generales, revisión asignada a cada ámbito y T1/T2, guardado atómico y activación explícita del período. Participantes congelados, sin sustitución silenciosa por cambios de plantilla. Nuevas firmas requieren activación. |
 | Cierre e historial | ACTIVE→CLOSED con motivo, concurrencia, ZIP privado verificado y archivo sin purga. Revisión pendiente conserva estados/bytes en solo lectura. Descarga histórica filtrada por permisos y por aprobación de PDFs. |
+| Avisos | Programador de vencimiento/evidencia pendiente con fechas personales, períodos vigentes y deduplicación persistente; avisos privados de restablecimiento de acceso. |
 | Seguimiento | Filtros y CSV de totales/estados/cobertura con permisos. ADMIN ve agregados sin acceso automático a contenido privado. |
 | Desarrollo | Entorno y semillas aislados en utaped_dev, siete usuarios ficticios, configuración y pruebas sin modificar la DB principal. |
 | Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
 | Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
 
-Persistencia: Flyway V13–V19 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md).
+Persistencia: Flyway V13–V20 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
 
 ### Trabajo que aún falta para completar el producto
 
 - Política institucional de retención/reapertura y permisos contextuales de Decano/Subdecano; exportación histórica en streaming para volúmenes mayores al límite técnico inicial de 128 MiB. El ZIP no sustituye un respaldo restaurable.
 - Política frente a bajas/cambio de ejecutores de flujos ya activados, sin invalidar asignaciones y firmas históricas.
-- Administración completa de carreras/ámbitos, historial visible de cargos/prórrogas, pertenencias globales por carrera, permisos administrativos delegados y recuperación por coordinador.
+- Administración avanzada de ámbitos, catálogo completo de cargos/fechas de vigencia, pertenencias globales por carrera y alta/importación delegada. Edición de carreras, historial visible de cargos/prórrogas y recuperación contextual ya están entregados.
 - Evidencias mediante referencias/repositorios externos y representación de anexos no PDF. Actualmente solo se admite PDF en la ruta de evidencias/archivos integrados.
-- Recordatorios automáticos de vencimiento, programación de avisos, importación de usuarios y otras facilidades complementarias del Plan Maestro.
+- Importación de usuarios y facilidades complementarias. Recordatorios internos de vencimiento y pendientes ya programados; canales/frecuencia institucional y envío de esos avisos por correo pendientes.
 - Asistencia de redacción y agente de inspección de código/Trello, con configuración de proveedor/credenciales y permisos. No implementados en esta tanda.
 - Paginación completa de la bandeja de revisión (límite actual 200), alternativa accesible al CAPTCHA visual, pruebas de carga y ampliación de casos documentales largos.
 - Ratificación de ventanas T2, días de prórroga, múltiples elaboradores y secuencias/personas oficiales; los ejemplos no reemplazan esas decisiones.
 - HTTPS, SMTP institucional, respaldos con restauración comprobada, retención y despliegue operativo. Puerto web principal 64430, enlazado localmente hasta configurar la red institucional.
 
-La siguiente tanda debe completar la administración pendiente de carreras/cargos, permisos delegados y recuperación por coordinador, junto con avisos de vencimiento. Después, integraciones de asistencia/agente y aceptación integral. No se declara terminado el producto.
+Próxima tanda propuesta: importación de usuarios con prevalidación y referencias externas de evidencia, seguida de asistencia de redacción/agente de código y Trello según configuración de proveedores. No se declara terminado el producto.
 
 ## Registro histórico de entregas
 

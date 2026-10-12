@@ -86,3 +86,14 @@ La línea base conserva la cobertura conocida; la exhaustividad final requiere r
 Decisión del propietario: el administrador inicia en un panel administrativo, con navegación independiente para usuarios, grupos/pertenencias, períodos, actividades, recursos/medios, feriados, flujos, auditoría y certificados. Sus métricas proceden de registros reales. El inicio personal y los documentos no forman parte de ese espacio.
 
 Una cuenta ADMIN con pertenencia activa puede elegir explícitamente su espacio documental, manteniendo la misma identidad y las restricciones de propiedad/pertenencia del servidor. ADMIN no concede aprobación, revisión ni acceso general a documentos. Las notificaciones y la seguridad de la cuenta se conservan. Navegar o cambiar de espacio debe advertir sobre cambios sin guardar. No se presentan módulos todavía inexistentes como funcionalidades entregadas.
+
+## Administración contextual y avisos — 2026-10-12
+
+| ID | Requisito y fuente | Estado / aceptación |
+|---|---|---|
+| UT-ORG-050 | Edición y desactivación de carreras, historial de cargos/principales. Plan Maestro §8. | CONFIRMADO-PROYECTO, P1. Concurrencia, baja sin purga, registro inicial explícito y cambios conservados; ámbitos cerrados de solo lectura. |
+| UT-AUTH-050 | Recuperación por coordinador autorizado, limitada al ámbito. Plan Maestro §6.6. | CONFIRMADO-PROYECTO, P0. ADMIN delega expresamente; no propia cuenta/ADMIN/otro ámbito; revoca sesiones/enlaces, fuerza cambio, auditoría y aviso privado. |
+| UT-NOT-050 | Avisos internos de actividad próxima a vencer y evidencia pendiente. Plan Maestro §§40 y 56. | CONFIRMADO-PROYECTO, P1. Plazo personal, aprobación, pertenencia/acceso actuales, cierre/archivo respetados, deduplicación concurrente persistente. |
+| UT-EXE-050 | Historial visible de prórrogas individuales. Plan Maestro §39. | CONFIRMADO-PROYECTO, P1. Plazos anterior/nuevo, motivo, autorizador y fecha por actividad/documento; datos originales conservados. |
+
+Frecuencia técnica inicial ajustable: comprobación horaria, aviso previo de tres días, reiteración diaria de pendientes vencidos. No equivale a frecuencia institucional confirmada. [Contrato y límites](docs/api/contextual-administration.md), [reporte y pruebas](docs/reports/2026-10-12-03-contextual-administration-and-notices.md). Las menciones anteriores a recuperación por coordinador pendiente quedan superadas en este alcance; alta/importación delegada y otros permisos institucionales siguen pendientes.

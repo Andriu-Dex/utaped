@@ -15,5 +15,8 @@ Estado HEREDADO; no acredita ratificación institucional nueva.
 - BR-011: fecha de elaboración congelada al finalizar; observaciones congeladas al decidir.
 - BR-012: histórico cerrado solo lectura; cierre ACTIVE→CLOSED sin purga y ZIP privado implementados según Plan Maestro. Reapertura y retención institucional pendientes. [Contrato](../api/period-control.md).
 - BR-013: no inventar autoridades, resoluciones, QR, prórrogas o flujos externos.
+- BR-014 (Plan Maestro, 2026-10-12): recuperación por coordinador exige delegación expresa de ADMIN y pertenencia activa al mismo ámbito/período abierto; excluye ADMIN y propia cuenta. Revoca sesiones/enlaces y obliga cambio, sin persistir contraseña temporal en auditoría o navegador.
+- BR-015 (Plan Maestro, 2026-10-12): aviso interno de vencimiento usa el plazo personal, requiere Plan aprobado y acceso actual, y conserva una clave persistente por destinatario/actividad/plazo/intervalo. Cierre, archivo y evidencia completa impiden nuevos avisos.
+- BR-016 (Plan Maestro, 2026-10-12): cargos y principales conservan registros sucesivos. La línea base migrada no inventa fechas de vigencia históricas. Desactivar una carrera no elimina ámbitos ni altera artefactos firmados.
 
 Resolver condiciones de duplicados, plazos, etapas, cierre y formatos antes de implementar sus casos límite.

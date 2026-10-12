@@ -24,3 +24,7 @@ CAPTCHA no distingue mayúsculas, vence a los 3 minutos y acepta un solo intento
 Las cuentas temporales solo acceden a consulta de cuenta, CSRF, cambio de contraseña y logout. Reset administrativo revoca todos los enlaces/sesiones previos y genera `ADMIN_PASSWORD_RESET` sin registrar la contraseña. La entrega de la contraseña temporal al titular se hace por canal privado autorizado; no se envía automáticamente ni aparece en auditoría.
 
 No se añaden variables de entorno. Flyway ejecuta V12 al arrancar la nueva versión. Antes de actualizar un entorno con datos, realizar el respaldo habitual de BD/archivos y revisar los usernames migrados en el directorio. SMTP real, HTTPS y dominios siguen siendo configuración operativa necesaria para publicación, no para la validación local con Mailpit.
+
+## Recuperación contextual — 2026-10-12
+
+Se incorpora recuperación por coordinador con delegación expresa, sin permiso global. [Contrato](contextual-administration.md). Los cambios de contraseña también incrementan row_version; los resets se rechazan si se prepararon antes de ese cambio. ADMIN y coordinador generan un aviso interno privado al titular. La renovación del CAPTCHA queda deshabilitada mientras la imagen está cargando para evitar peticiones simultáneas sobre la misma sesión.

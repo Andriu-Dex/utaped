@@ -22,6 +22,8 @@ Estado HEREDADO salvo indicación contraria. Las referencias § remiten a [basel
 
 ## Escenarios mínimos
 
+Actualización 2026-10-12: UT-ORG-050, UT-AUTH-050, UT-NOT-050 y UT-EXE-050 incorporan edición de carreras, historial de cargos/principales/prórrogas, reset por coordinador explícitamente autorizado y avisos internos configurables. Las menciones heredadas a acceso/notificaciones pendientes se interpretan según [requisitos vigentes](../../requirements.md) y [contrato](../api/contextual-administration.md); no se atribuye alta/importación delegada todavía.
+
 1. T1: crear, finalizar, revisar, devolver, corregir y aprobar con personas distintas.
 2. T2: derivar y firmar sin modificar Plan o artefactos anteriores.
 3. Evidencia: cargar, observar, reemplazar y validar; rechazar usuario ajeno y acción fuera de plazo.
