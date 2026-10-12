@@ -15,7 +15,10 @@ public class OrganizationService {
     public record CareerInput(@NotBlank @Pattern(regexp="[A-Z0-9_-]{1,30}") String code,@NotBlank @Size(max=160) String name) {}
     public record ScopeInput(@NotNull UUID groupId,@NotNull UUID periodId,UUID careerId) {}
     public record MemberInput(@NotNull UUID userId,@NotBlank @Pattern(regexp="MEMBER|COORDINATOR") String membershipRole,
-        @NotNull @Size(max=160) String positionLabel,@NotNull Boolean active,@NotNull @PositiveOrZero Long rowVersion) {}
+        @NotNull @Size(max=160) String positionLabel,@NotNull Boolean active,@NotNull @PositiveOrZero Long rowVersion,Boolean passwordResetAuthorized) {
+        public MemberInput(UUID userId,String role,String position,Boolean active,Long version) { this(userId,role,position,active,version,null); }
+    }
+    public record CareerUpdate(@NotBlank @Pattern(regexp="[A-Z0-9_-]{1,30}") String code,@NotBlank @Size(max=160) String name,@NotNull Boolean active,@NotNull @PositiveOrZero Long rowVersion) {}
     public record PrincipalInput(@NotNull UUID userId,@NotNull @PositiveOrZero Long rowVersion) {}
     private final JdbcTemplate jdbc; private final Accounts accounts; private final AuditService audit;
     public OrganizationService(JdbcTemplate jdbc,Accounts accounts,AuditService audit) { this.jdbc=jdbc;this.accounts=accounts;this.audit=audit; }
@@ -25,7 +28,7 @@ public class OrganizationService {
     public List<Map<String,Object>> scopes(String email) {
         var actor=accounts.current(email);
         return jdbc.queryForList("""
-            SELECT s.*,g.name AS group_name,p.name AS period_name,c.name AS career_name,u.display_name AS principal_name,
+            SELECT s.*,g.name AS group_name,p.name AS period_name,p.status AS period_status,c.name AS career_name,u.display_name AS principal_name,
               (SELECT count(*) FROM scope_member m JOIN app_user a ON a.id=m.user_id WHERE m.scope_id=s.id AND m.active AND a.active) AS member_count
             FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id JOIN academic_period p ON p.id=s.period_id
             LEFT JOIN academic_career c ON c.id=s.career_id LEFT JOIN app_user u ON u.id=s.principal_user_id
@@ -41,6 +44,20 @@ public class OrganizationService {
         admin(email);UUID id=UUID.randomUUID();
         if(jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE code=? OR name=?",Integer.class,input.code(),input.name().trim())>0) throw invalid("La carrera ya está registrada.");
         jdbc.update("INSERT INTO academic_career(id,code,name) VALUES (?,?,?)",id,input.code(),input.name().trim());audit.record(accounts.current(email).id(),"CAREER_CREATED",id);return id;
+    }
+    @Transactional public void updateCareer(UUID id,String email,CareerUpdate input) {
+        admin(email);
+        var row=jdbc.queryForList("SELECT row_version FROM academic_career WHERE id=? FOR UPDATE",id);
+        if(row.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Carrera no disponible.");
+        if(((Number)row.getFirst().get("row_version")).longValue()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"La carrera cambió. Recargue antes de guardar.");
+        if(jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE id<>? AND (code=? OR name=?)",Integer.class,id,input.code(),input.name().trim())>0) throw invalid("La carrera ya está registrada.");
+        jdbc.update("UPDATE academic_career SET code=?,name=?,active=?,row_version=row_version+1 WHERE id=?",input.code(),input.name().trim(),input.active(),id);
+        audit.record(accounts.current(email).id(),"CAREER_UPDATED",id);
+    }
+    public Map<String,Object> history(UUID scope,String email) {
+        members(scope,email);
+        return Map.of("memberships",jdbc.queryForList("SELECT h.*,u.display_name,a.display_name AS changed_by_name FROM scope_membership_history h JOIN app_user u ON u.id=h.user_id LEFT JOIN app_user a ON a.id=h.changed_by WHERE scope_id=? ORDER BY h.created_at DESC,h.id",scope),
+            "principals",jdbc.queryForList("SELECT h.*,u.display_name,a.display_name AS changed_by_name FROM scope_principal_history h JOIN app_user u ON u.id=h.user_id LEFT JOIN app_user a ON a.id=h.changed_by WHERE scope_id=? ORDER BY h.created_at DESC,h.id",scope));
     }
     @Transactional public UUID createScope(String email,ScopeInput input) {
         admin(email);
@@ -64,10 +81,14 @@ public class OrganizationService {
         var previous=jdbc.queryForList("SELECT row_version FROM scope_member WHERE scope_id=? AND user_id=?",scope,input.userId());
         long version=previous.isEmpty()?0:((Number)previous.getFirst().get("row_version")).longValue();
         if(version!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"La pertenencia cambió. Recargue antes de guardar.");
+        boolean reset=input.passwordResetAuthorized()!=null?input.passwordResetAuthorized():jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM scope_member WHERE scope_id=? AND user_id=? AND password_reset_authorized)",Boolean.class,scope,input.userId());
+        reset=reset&&input.active()&&input.membershipRole().equals("COORDINATOR");
         jdbc.update("""
             INSERT INTO scope_member(scope_id,user_id,membership_role,position_label,active,row_version) VALUES (?,?,?,?,?,1)
             ON CONFLICT(scope_id,user_id) DO UPDATE SET membership_role=excluded.membership_role,position_label=excluded.position_label,active=excluded.active,row_version=scope_member.row_version+1
             """,scope,input.userId(),input.membershipRole(),input.positionLabel().trim(),input.active());
+        jdbc.update("UPDATE scope_member SET password_reset_authorized=? WHERE scope_id=? AND user_id=?",reset,scope,input.userId());
+        jdbc.update("INSERT INTO scope_membership_history(id,scope_id,user_id,membership_role,position_label,active,password_reset_authorized,row_version,changed_by,origin) SELECT ?,scope_id,user_id,membership_role,position_label,active,password_reset_authorized,row_version,?,'CHANGE' FROM scope_member WHERE scope_id=? AND user_id=?",UUID.randomUUID(),accounts.current(email).id(),scope,input.userId());
         // General membership remains a navigation projection, not authority over scoped documents.
         if(input.active()) jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT(user_id,group_id) DO NOTHING",input.userId(),current.get("group_id"),input.membershipRole());
         audit.record(accounts.current(email).id(),"SCOPE_MEMBERSHIP_UPDATED",scope,input.userId());
@@ -77,6 +98,7 @@ public class OrganizationService {
         if(((Number)current.get("row_version")).longValue()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El ámbito cambió. Recargue antes de guardar.");
         if(jdbc.queryForObject("SELECT count(*) FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.user_id=? AND m.active AND u.active",Integer.class,scope,input.userId())==0) throw invalid("El responsable principal debe ser un integrante activo del ámbito.");
         jdbc.update("UPDATE organizational_scope SET principal_user_id=?,row_version=row_version+1 WHERE id=?",input.userId(),scope);
+        jdbc.update("INSERT INTO scope_principal_history(id,scope_id,previous_user_id,user_id,changed_by,origin) VALUES (?,?,?,?,?,'CHANGE')",UUID.randomUUID(),scope,current.get("principal_user_id"),input.userId(),accounts.current(email).id());
         // Explicit principal designation transfers responsibility for this exact scope, with audit.
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT id,?,? FROM work_plan WHERE scope_id=? ON CONFLICT DO NOTHING",input.userId(),accounts.current(email).id(),scope);
         audit.record(accounts.current(email).id(),"SCOPE_PRINCIPAL_DESIGNATED",scope,input.userId());

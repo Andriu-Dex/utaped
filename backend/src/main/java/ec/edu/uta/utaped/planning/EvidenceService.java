@@ -85,6 +85,10 @@ public class EvidenceService {
     public byte[] content(UUID doc,UUID evidence,String email) {
         plans.get(doc,email);var file=jdbc.queryForList("SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND id=?",UUID.class,doc,evidence).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Evidencia no disponible."));return files.read(file);
     }
+    public List<Map<String,Object>> extensionHistory(UUID doc,String email) {
+        plans.get(doc,email);
+        return jdbc.queryForList("SELECT h.*,u.display_name AS responsible_name,a.display_name AS authorized_by_name FROM deadline_extension_history h JOIN app_user u ON u.id=h.user_id JOIN app_user a ON a.id=h.authorized_by WHERE h.work_plan_id=? ORDER BY h.created_at DESC,h.id",doc);
+    }
     public List<AttachmentModels.Attachment> annexes(UUID doc,String email) {
         var state=get(doc,email);var list=new ArrayList<AttachmentModels.Attachment>();
         for(var row:state.activities()) for(var medium:row.media()) if(!medium.versions().isEmpty()) {

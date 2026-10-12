@@ -23,6 +23,7 @@ public class NotificationService {
           LEFT JOIN organizational_scope s ON s.id=w.scope_id WHERE w.id=n.target_id AND
         """+WorkPlanService.ACCESS+"""
           )
+        WHEN n.target_type='ACCOUNT' THEN n.target_id=n.recipient_id
         ELSE EXISTS (SELECT 1 FROM institutional_group g WHERE g.id=n.target_id AND g.active AND (? OR EXISTS (SELECT 1 FROM membership m WHERE m.group_id=g.id AND m.user_id=n.recipient_id))) END AS target_available
         FROM personal_notification n WHERE n.recipient_id=?
         """;

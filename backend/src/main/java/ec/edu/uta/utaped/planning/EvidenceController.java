@@ -19,5 +19,6 @@ public class EvidenceController {
     @PostMapping(value="/activities/{activity}/media/{medium}",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     public EvidenceService.Evidence upload(@PathVariable UUID doc,@PathVariable UUID activity,@PathVariable @PositiveOrZero int medium,@RequestParam @PositiveOrZero int expectedVersion,@RequestPart MultipartFile file,Principal p) { return service.upload(doc,activity,medium,expectedVersion,p.getName(),file); }
     @PutMapping("/activities/{activity}/extension") public void extend(@PathVariable UUID doc,@PathVariable UUID activity,@Valid @RequestBody EvidenceService.Extension data,Principal p) { service.extend(doc,activity,p.getName(),data); }
+    @GetMapping("/extensions/history") public java.util.List<java.util.Map<String,Object>> history(@PathVariable UUID doc,Principal p) { return service.extensionHistory(doc,p.getName()); }
     @GetMapping("/evidence/{id}/content") public ResponseEntity<byte[]> content(@PathVariable UUID doc,@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).body(service.content(doc,id,p.getName())); }
 }

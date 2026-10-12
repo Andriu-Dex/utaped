@@ -73,6 +73,8 @@ public class PeriodArchiveService {
         data.put("observations",rows("SELECT o.* FROM review_observation o JOIN document_review r ON r.id=o.review_id WHERE r.work_plan_id=? ORDER BY o.created_at,o.id",document));
         data.put("audit",rows("SELECT * FROM audit_event WHERE target_id=? ORDER BY occurred_at,id",document));
         data.put("scope",rows("SELECT s.* FROM organizational_scope s JOIN work_plan w ON w.scope_id=s.id WHERE w.id=?",document));
+        data.put("scopeMembershipHistory",rows("SELECT h.* FROM scope_membership_history h JOIN work_plan w ON w.scope_id=h.scope_id WHERE w.id=? ORDER BY h.created_at,h.id",document));
+        data.put("scopePrincipalHistory",rows("SELECT h.* FROM scope_principal_history h JOIN work_plan w ON w.scope_id=h.scope_id WHERE w.id=? ORDER BY h.created_at,h.id",document));
         data.put("workflowAssignments",rows("SELECT a.* FROM period_workflow_assignment a JOIN work_plan w ON w.scope_id=a.scope_id WHERE w.id=? ORDER BY a.document_type",document));
         data.put("periodAudit",rows("SELECT e.* FROM audit_event e JOIN work_plan w ON w.period_id=e.target_id WHERE w.id=? ORDER BY e.occurred_at,e.id",document));
         data.put("files",fileIds(document).stream().map(files::metadata).toList());

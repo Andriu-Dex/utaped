@@ -46,6 +46,11 @@ management:
     health:
       show-details: never
 app:
+  notifications:
+    deadline-enabled: ${DEADLINE_NOTICES_ENABLED:true}
+    deadline-near-days: ${DEADLINE_NOTICE_NEAR_DAYS:3}
+    missing-repeat-days: ${DEADLINE_NOTICE_REPEAT_DAYS:1}
+    deadline-scan-ms: ${DEADLINE_NOTICE_SCAN_MS:3600000}
   periods:
     archive-max-bytes: ${PERIOD_ARCHIVE_MAX_BYTES:134217728}
   signing:
