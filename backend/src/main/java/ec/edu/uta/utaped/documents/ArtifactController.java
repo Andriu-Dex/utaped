@@ -20,7 +20,7 @@ public class ArtifactController {
     }
     @GetMapping("/{artifactId}/content") public ResponseEntity<byte[]> content(@PathVariable UUID targetDocId,@PathVariable UUID artifactId,Principal p) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).cacheControl(CacheControl.noStore())
-            .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"plan-trabajo-t1.pdf\"").body(service.content(targetDocId,artifactId,p.getName()));
+            .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"plan-trabajo-t1.pdf\"").body(service.export(targetDocId,artifactId,p.getName()));
     }
     @GetMapping("/{artifactId}/pages/{pageIndex}") public ResponseEntity<byte[]> page(@PathVariable UUID targetDocId,@PathVariable UUID artifactId,@PathVariable int pageIndex,Principal p) {
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).cacheControl(CacheControl.noStore()).body(service.page(targetDocId,artifactId,pageIndex,p.getName()));

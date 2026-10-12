@@ -39,7 +39,7 @@ public class AttachmentService {
         return new State(plan.rowVersion(),plan.editable(),(boolean)settings.get("attachments_enabled"),(boolean)settings.get("privacy_notice_enabled"),maxFileBytes,maxTotalBytes,maxAttachments,items);
     }
     public State lock(UUID targetDocId,String email) {
-        plans.get(targetDocId,email);jdbc.queryForList("SELECT id FROM work_plan WHERE id=? FOR UPDATE",targetDocId);return get(targetDocId,email);
+        plans.lock(targetDocId,email);return get(targetDocId,email);
     }
     private void requireEditable(State state,long version) {
         if(!state.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");

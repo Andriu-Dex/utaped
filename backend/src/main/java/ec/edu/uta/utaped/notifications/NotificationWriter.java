@@ -14,6 +14,12 @@ public class NotificationWriter {
             case "MEMBERSHIP_ASSIGNED" -> { recipient=subject;type="GROUP";title="Pertenencia actualizada";message="Su acceso o rol de pertenencia al grupo fue actualizado."; }
             case "MEMBERSHIP_REMOVED" -> { recipient=subject;type="GROUP";title="Pertenencia retirada";message="Su pertenencia fue retirada. El acceso al grupo y sus documentos se comprueba con sus permisos actuales."; }
             case "T1_PREVIEW_GENERATED" -> { recipient=actor;type="WORK_PLAN";title="Previsualización T1 guardada";message="Se guardó una previsualización del Plan. No constituye firma ni aprobación."; }
+            case "T2_PREVIEW_GENERATED" -> { recipient=actor;type="WORK_PLAN";title="Previsualización T2 guardada";message="Se guardó una previsualización del Informe con sus evidencias conservadas."; }
+            case "ACTIVITY_EXTENSION_GRANTED" -> { recipient=subject;type="WORK_PLAN";title="Prórroga individual concedida";message="Consulte el nuevo plazo personal de su actividad en ejecución."; }
+            case "DOCUMENT_ARCHIVED" -> { recipient=subject;type="WORK_PLAN";title="Documento archivado";message="El documento permanece disponible como historial de solo lectura."; }
+            case "REVIEW_TASK_ASSIGNED" -> { recipient=subject;type="WORK_PLAN";title="Documento pendiente de revisión";message="Tiene una etapa activa. Revise el documento firmado en su bandeja de revisión."; }
+            case "DOCUMENT_RETURNED" -> { recipient=subject;type="WORK_PLAN";title="Documento devuelto";message="Consulte las observaciones, corrija y firme un nuevo artefacto para la siguiente ronda."; }
+            case "DOCUMENT_APPROVED" -> { recipient=subject;type="WORK_PLAN";title="Documento aprobado";message="Todas las etapas configuradas han concluido. El artefacto y su historial se conservan."; }
             default -> { return; }
         }
         if(recipient==null || target==null) return;

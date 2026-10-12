@@ -17,18 +17,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.server.ResponseStatusException;
+import ec.edu.uta.utaped.workflow.ReviewService;
 
 @Service
 public class AuthorSignatureService {
     public record Signed(UUID id,UUID artifactId,String signerName,String inputHash,String outputHash,OffsetDateTime signedAt,
         int pageCount,int signaturePageIndex,String identityCheck,String issuerChainCheck,String revocationCheck) {}
-    public record State(SignaturePreparation preparation,boolean signingEnabled,List<Blocker> signingBlockers,List<Signed> signed) {}
+    public record State(SignaturePreparation preparation,boolean signingEnabled,List<Blocker> signingBlockers,List<Signed> signed,boolean automaticSubmission,String documentState) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final CertificateBindings bindings;
     private final ArtifactService artifacts;private final WorkPlanService plans;private final StoredFiles files;private final AuditService audit;
     private final boolean allowHttp;private final Semaphore operations=new Semaphore(1);
+    private final ReviewService reviews;
     public AuthorSignatureService(JdbcTemplate jdbc,Accounts accounts,CertificateBindings bindings,ArtifactService artifacts,WorkPlanService plans,
-        StoredFiles files,AuditService audit,@Value("${app.signing.allow-http:false}") boolean allowHttp) {
+        StoredFiles files,AuditService audit,@Value("${app.signing.allow-http:false}") boolean allowHttp,ReviewService reviews) {
         this.jdbc=jdbc;this.accounts=accounts;this.bindings=bindings;this.artifacts=artifacts;this.plans=plans;this.files=files;this.audit=audit;this.allowHttp=allowHttp;
+        this.reviews=reviews;
     }
     private void transport(boolean secure) { if(!secure && !allowHttp) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La firma requiere una conexión HTTPS."); }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
@@ -41,8 +44,9 @@ public class AuthorSignatureService {
         if(source.signatureSlots().stream().noneMatch(s->plan.teacherId().equals(s.actorId()) && s.action().equals("ELABORADO_POR") && s.bounds()!=null))
             blockers.add(new Blocker("Ubicación","Genere una nueva previsualización con ubicación visible de firma."));
         var signed=list(doc,artifact,email);
+        blockers.addAll(reviews.submissionBlockers(doc,artifact,email));
         if(!signed.isEmpty()) blockers.add(new Blocker("Firma","Este artefacto ya tiene una firma del elaborador. Consulte el PDF firmado conservado."));
-        return new State(preparation,blockers.isEmpty(),List.copyOf(blockers),signed);
+        return new State(preparation,blockers.isEmpty(),List.copyOf(blockers),signed,plan.scopeId()!=null,plan.documentState());
     }
     public List<Signed> list(UUID doc,UUID artifact,String email) {
         plans.get(doc,email);
@@ -58,8 +62,7 @@ public class AuthorSignatureService {
         try {
             transport(secure);var actor=accounts.current(email);
             jdbc.queryForList("SELECT id FROM app_user WHERE id=? FOR UPDATE",actor.id());
-            var plan=plans.get(doc,email);
-            jdbc.queryForList("SELECT id FROM work_plan WHERE id=? FOR UPDATE",doc);
+            var plan=plans.lock(doc,email);
             jdbc.queryForList("SELECT m.user_id FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND m.group_id=? AND g.active FOR SHARE OF m,g",actor.id(),plan.groupId());
             plan=plans.get(doc,email);
             var previous=jdbc.queryForList("SELECT work_plan_id,artifact_id,input_hash,source_row_version FROM signed_document_artifact WHERE actor_id=? AND request_key=?",actor.id(),requestKey);
@@ -90,7 +93,7 @@ public class AuthorSignatureService {
             var stored=files.put(signed,"plan-t1-firmado.pdf",source.pageCount());UUID id=UUID.randomUUID();
             jdbc.update("INSERT INTO signed_document_artifact(id,work_plan_id,artifact_id,actor_id,binding_id,file_id,request_key,source_row_version,input_hash,output_hash,signer_name,signed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                 id,doc,artifact,actor.id(),binding.id(),stored.id(),requestKey,rowVersion,inputHash,stored.sha256(),actor.displayName(),OffsetDateTime.ofInstant(now,ZoneOffset.UTC));
-            audit.record(actor.id(),"T1_ARTIFACT_SIGNED",doc);return list(doc,artifact,email).getFirst();
+            audit.record(actor.id(),plan.documentType().equals("T2")?"T2_ARTIFACT_SIGNED":"T1_ARTIFACT_SIGNED",doc);reviews.start(doc,artifact,id,email);return list(doc,artifact,email).getFirst();
         } catch(java.nio.charset.CharacterCodingException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Contraseña con codificación no válida."); }
         finally { if(body!=null) Arrays.fill(body,(byte)0);if(password!=null) Arrays.fill(password,'\0');if(container!=null) Arrays.fill(container,(byte)0); }
     }
@@ -100,5 +103,9 @@ public class AuthorSignatureService {
             .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Documento firmado no disponible."));
     }
     public byte[] content(UUID doc,UUID signedId,String email) { return files.read(signedFile(doc,signedId,email)); }
+    public byte[] export(UUID doc,UUID signedId,String email) {
+        if(plans.get(doc,email).scopeId()!=null) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El PDF final se descarga desde la revisión aprobada.");
+        return content(doc,signedId,email);
+    }
     public byte[] page(UUID doc,UUID signedId,int index,String email) { return artifacts.renderPage(content(doc,signedId,email),index); }
 }

@@ -229,6 +229,8 @@ class FoundationIntegrationTests {
         assertTrue(JsonPath.<Boolean>read(fresh.request("GET","/api/auth/me",null,false).body(),"$.mustChangePassword"));
         assertEquals(403,fresh.request("GET","/api/groups",null,false).statusCode());
         assertEquals(200,fresh.request("POST","/api/auth/change-password","{\"currentPassword\":\"Temporary-reset-password-2026\",\"newPassword\":\"After-reset-password-2026\"}",true).statusCode());
+        assertEquals(200,fresh.request("GET","/api/groups",null,false).statusCode());
+        assertFalse(JsonPath.<Boolean>read(fresh.request("GET","/api/auth/me",null,false).body(),"$.mustChangePassword"));
         assertEquals(204,new Browser().login("user@example.invalid","After-reset-password-2026").statusCode());
         assertEquals(admin,jdbc.queryForObject("SELECT actor_id FROM audit_event WHERE action='ADMIN_PASSWORD_RESET'",UUID.class));
     }

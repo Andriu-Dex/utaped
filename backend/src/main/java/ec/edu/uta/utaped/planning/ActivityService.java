@@ -36,9 +36,11 @@ public class ActivityService {
         if(!stored.isEmpty()) rows.addAll(Arrays.asList(json.readValue((String)stored.getFirst().get("activities"),Activity[].class)));
         var definitions=definitions(plan.groupId());
         // Required entries are materialized for editing; saved snapshots are never rebuilt from the catalog.
-        for(var d:definitions) if(plan.editable() && d.active() && d.mandatory() && rows.stream().noneMatch(a->d.id().equals(a.catalogId())))
+        for(var d:definitions) if(plan.documentType().equals("T1") && plan.editable() && d.active() && d.mandatory() && rows.stream().noneMatch(a->d.id().equals(a.catalogId())))
             rows.add(new Activity(d.id(),d.id(),d.title(),d.category(),true,null,null,List.of(),false,List.of(),List.of()));
-        var members=jdbc.query("SELECT u.id,u.display_name FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.groupId());
+        var members=plan.scopeId()==null
+            ?jdbc.query("SELECT u.id,u.display_name FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.groupId())
+            :jdbc.query("SELECT u.id,u.display_name FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.active AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.scopeId());
         var period=jdbc.queryForMap("SELECT starts_on,ends_on,restrict_holiday_endpoints FROM academic_period WHERE id=?",plan.periodId());
         String label=jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,plan.groupId());
         return new Matrix(plan.rowVersion(),source,plan.groupName(),label,plan.editable(),((java.sql.Date)period.get("starts_on")).toLocalDate(),((java.sql.Date)period.get("ends_on")).toLocalDate(),(boolean)period.get("restrict_holiday_endpoints"),rows,definitions,catalogs(),members,holidays());
@@ -61,9 +63,9 @@ public class ActivityService {
     }
     @Transactional public Matrix save(UUID targetDocId,String email,Save input) {
         // Lock the document aggregate: metadata and matrix share one concurrency token.
-        plans.get(targetDocId,email);
-        jdbc.queryForList("SELECT id FROM work_plan WHERE id=? FOR UPDATE",targetDocId);
+        plans.lock(targetDocId,email);
         var current=get(targetDocId,email);
+        if(plans.get(targetDocId,email).documentType().equals("T2")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Las actividades del Informe se conservan desde el Plan aprobado.");
         if(!current.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
         if(current.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue antes de guardar la matriz.");
         Set<UUID> memberIds=new HashSet<>();current.members().forEach(m->memberIds.add(m.id()));
