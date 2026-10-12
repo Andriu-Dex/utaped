@@ -44,6 +44,8 @@ public class OrganizationService {
     }
     @Transactional public UUID createScope(String email,ScopeInput input) {
         admin(email);
+        new PeriodGuard(jdbc).writable(input.periodId());
+        if(jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=? AND workflow_locked_at IS NOT NULL",Integer.class,input.periodId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Los ámbitos del período activado están bloqueados. Configure el siguiente período.");
         jdbc.queryForList("SELECT id FROM institutional_group WHERE id=? FOR UPDATE",input.groupId());
         if(jdbc.queryForObject("SELECT count(*) FROM institutional_group WHERE id=? AND active",Integer.class,input.groupId())==0 || jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=?",Integer.class,input.periodId())==0) throw invalid("Seleccione grupo y período válidos.");
         if(input.careerId()!=null && jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE id=? AND active",Integer.class,input.careerId())==0) throw invalid("Seleccione una carrera activa.");
@@ -51,6 +53,8 @@ public class OrganizationService {
         UUID id=UUID.randomUUID();jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id,career_id) VALUES (?,?,?,?)",id,input.groupId(),input.periodId(),input.careerId());audit.record(accounts.current(email).id(),"SCOPE_CREATED",id);return id;
     }
     private Map<String,Object> lock(UUID scope) {
+        var periods=jdbc.queryForList("SELECT period_id FROM organizational_scope WHERE id=?",UUID.class,scope);
+        if(!periods.isEmpty()) new PeriodGuard(jdbc).writable(periods.getFirst());
         return jdbc.queryForList("SELECT * FROM organizational_scope WHERE id=? FOR UPDATE",scope).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Ámbito no disponible."));
     }
     @Transactional public void member(UUID scope,String email,MemberInput input) {

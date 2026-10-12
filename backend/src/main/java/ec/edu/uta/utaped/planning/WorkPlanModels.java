@@ -22,7 +22,7 @@ public final class WorkPlanModels {
         String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt) {}
     public record Page(List<Summary> items,long total,int page,int size) {}
     public record GroupOption(UUID id,String name) {}
-    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable) {}
+    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}
     public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate) {}
     public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {}
 }

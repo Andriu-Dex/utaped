@@ -46,6 +46,8 @@ management:
     health:
       show-details: never
 app:
+  periods:
+    archive-max-bytes: ${PERIOD_ARCHIVE_MAX_BYTES:134217728}
   signing:
     allow-http: ${SIGNING_ALLOW_HTTP:false}
   audit:

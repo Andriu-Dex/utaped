@@ -15,6 +15,8 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired OrganizationService organization;
     @Autowired ReviewService reviews;
     @Autowired WorkflowService workflows;
+    @Autowired PeriodWorkflowService periodWorkflows;
+    @Autowired ec.edu.uta.utaped.institution.PeriodArchiveService periodArchives;
     @Autowired ec.edu.uta.utaped.planning.EvidenceService evidence;
     @Autowired ec.edu.uta.utaped.planning.ReportService reports;
     @Autowired ec.edu.uta.utaped.planning.DocumentLifecycleService lifecycle;
@@ -30,11 +32,23 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("UPDATE work_plan SET scope_id=? WHERE id=?",scope,id);jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?)",id,user,user);
         var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW","PERSON",List.of(reviewer),null,"",signatureRequired),new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(approver),null,"",false)));
         workflows.save(group,"T1",email,new Save(0L,definition));workflows.configure(group,"T1",email,new Version(1L));
+        workflows.save(group,"T2",email,new Save(0L,definition));workflows.configure(group,"T2",email,new Version(1L));
+        for(String type:List.of("T1","T2")) periodWorkflows.assign(scope,type,email,new PeriodWorkflowService.Assign(workflows.get(group,type,email).current().id(),0L));
+        periodWorkflows.activate(period,email,new PeriodWorkflowService.Version(0L));
         var artifact=artifacts.generate(id,email,new Generate(version()));var fixture=signingFixture();authorFixture=fixture;bindings.register(user,email,new CertificateBindings.Register(fingerprint(fixture),true,"Identidad pública de prueba",null));
         var state=signatures.state(id,artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
         signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
         assertEquals("IN_REVIEW",plans.get(id,email).documentState());assertFalse(plans.get(id,email).editable());
         return reviews.inbox(reviewerEmail).getFirst().reviewId();
+    }
+    @Test void closedPeriodSuspendsReviewWithoutInventingApprovalOrLosingPdf() throws Exception {
+        UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();var before=reviews.state(review,reviewerEmail);
+        byte[] original=files.read((UUID)before.review().get("current_file_id"));
+        periodArchives.close(period,email,new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L,"Conservar la revisión pendiente"));
+        var after=reviews.state(review,reviewerEmail);assertFalse(after.canAct());assertEquals("IN_REVIEW",after.review().get("status"));assertEquals("ACTIVE",after.tasks().getFirst().get("status"));
+        assertArrayEquals(original,files.read((UUID)after.review().get("current_file_id")));
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->reviews.observe(task.id(),reviewerEmail,new ReviewService.Observation(task.rowVersion(),"Observación bloqueada",null,null,null,null,null))).getStatusCode().value());
     }
     @Test void sequentialStagesRejectFutureActorAndRequireEveryDecision() throws Exception {
         UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();
@@ -77,7 +91,6 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var report=reports.create(id,email);assertNotEquals(id,report.id());assertEquals("T2",report.documentType());assertEquals(report.id(),reports.create(id,email).id());
         var state=reports.get(report.id(),email);var results=state.data().results().stream().map(r->new ec.edu.uta.utaped.planning.ReportService.Result(r.activityId(),java.math.BigDecimal.valueOf(100),"Actividad ejecutada con evidencia de prueba.")).toList();
         reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Informe basado en el Plan aprobado, sin resolución ficticia.","Se completó la actividad de prueba.","Mejorar la organización del seguimiento.",results,List.of(new ec.edu.uta.utaped.planning.ReportService.Delegation("Gestión de prueba","Ambato","Unidad de ejemplo","Persona de ejemplo","contacto@example.invalid","Coordinación de actividades","Acuerdo de prueba"))));
-        workflows.save(group,"T2",email,new Save(0L,new Definition("Revisión del Informe",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW","PERSON",List.of(reviewer),null,"",false),new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(approver),null,"",false)))));workflows.configure(group,"T2",email,new Version(1L));
         var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
         var signing=signatures.state(report.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
         signatures.sign(report.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);

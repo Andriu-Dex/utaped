@@ -29,7 +29,7 @@ public class WorkPlanService {
         """;
     private static final String SELECT="""
         SELECT w.*,COALESCE(s.principal_user_id,w.teacher_id) AS responsible_id,u.display_name AS teacher_name,
-          g.name AS group_name,p.name AS period_name,p.preparation_starts_on,p.preparation_ends_on,p.starts_on,p.ends_on,
+          g.name AS group_name,p.name AS period_name,p.status AS period_status,p.preparation_starts_on,p.preparation_ends_on,p.starts_on,p.ends_on,
           (actor.id=COALESCE(s.principal_user_id,w.teacher_id)) AS is_editor
         FROM work_plan w JOIN app_user actor ON actor.id=?
         JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id
@@ -46,20 +46,20 @@ public class WorkPlanService {
     }
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
-        return rs.getBoolean("is_editor")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
+        return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
             &&(!enforceWindow||within(rs.getObject(rs.getString("document_type").equals("T2")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(rs.getString("document_type").equals("T2")?"ends_on":"preparation_ends_on",LocalDate.class)));
     }
     private Plan map(ResultSet rs,int index) throws SQLException {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
             rs.getObject("period_id",UUID.class),rs.getString("period_name"),rs.getString("title"),rs.getString("institutional_unit"),rs.getString("career"),rs.getString("justification"),rs.getString("objective"),
             rs.getString("document_state"),rs.getString("formal_version"),rs.getLong("row_version"),rs.getObject("preparation_date",LocalDate.class),
-            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor"));
+            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&rs.getString("period_status").equals("ACTIVE"));
     }
     public Options options(String email) {
         var actor=accounts.current(email);
         var scopes=jdbc.query("""
             SELECT s.id,s.group_id,s.period_id,g.name AS group_name,p.name AS period_name,c.name AS career_name,
-              (s.principal_user_id=?) AS is_principal,p.preparation_starts_on,p.preparation_ends_on,
+              (s.principal_user_id=? AND p.status='ACTIVE') AS is_principal,p.preparation_starts_on,p.preparation_ends_on,
               NOT EXISTS (SELECT 1 FROM work_plan w WHERE w.scope_id=s.id AND (w.archived_at IS NULL OR w.document_state='APPROVED') AND w.document_type='T1') AS available
             FROM organizational_scope s JOIN scope_member m ON m.scope_id=s.id AND m.user_id=? AND m.active
             JOIN institutional_group g ON g.id=s.group_id AND g.active JOIN academic_period p ON p.id=s.period_id
@@ -68,9 +68,9 @@ public class WorkPlanService {
             """,(rs,n)->new ScopeOption(rs.getObject("id",UUID.class),rs.getObject("group_id",UUID.class),rs.getObject("period_id",UUID.class),rs.getString("group_name"),rs.getString("period_name"),rs.getString("career_name"),
                 rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class)))),actor.id(),actor.id());
         var groups=jdbc.query("SELECT g.id,g.name FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND g.active ORDER BY g.name",(rs,n)->new GroupOption(rs.getObject("id",UUID.class),rs.getString("name")),actor.id());
-        var periods=jdbc.query("SELECT id,name,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
+        var periods=jdbc.query("SELECT id,name,status,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
-            return new PeriodOption(rs.getObject("id",UUID.class),rs.getString("name"),start,end,!enforceWindow||within(start,end));
+            return new PeriodOption(rs.getObject("id",UUID.class),rs.getString("name"),start,end,rs.getString("status").equals("ACTIVE")&&(!enforceWindow||within(start,end)),rs.getString("status"));
         });
         return new Options(groups,periods,true,enforceWindow,scopes);
     }
@@ -80,6 +80,7 @@ public class WorkPlanService {
     }
     public Plan lock(UUID targetDocId,String email) {
         var initial=get(targetDocId,email);
+        new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(initial.periodId());
         if(initial.scopeId()!=null) {
             jdbc.queryForList("SELECT id FROM organizational_scope WHERE id=? FOR SHARE",initial.scopeId());
             jdbc.queryForList("SELECT user_id FROM scope_member WHERE scope_id=? AND user_id=? FOR SHARE",initial.scopeId(),accounts.current(email).id());
@@ -96,6 +97,7 @@ public class WorkPlanService {
         return new Page(items,total,page,size);
     }
     @Transactional public Plan create(String email,Create data) {
+        new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(data.periodId());
         var actor=accounts.current(email);jdbc.queryForList("SELECT id FROM app_user WHERE id=? FOR UPDATE",actor.id());
         var existing=jdbc.queryForList("SELECT id,group_id,period_id,scope_id,creation_title FROM work_plan WHERE created_by=? AND request_key=?",actor.id(),data.requestKey());
         if(!existing.isEmpty()) {

@@ -55,6 +55,7 @@ public class DevelopmentSeed implements ApplicationRunner {
             jdbc.update("INSERT INTO workflow_configuration(id,group_id,document_type,draft) VALUES (?,?,?,?::jsonb) ON CONFLICT(id) DO NOTHING",configuration,group,type,json.writeValueAsString(definition));
             jdbc.update("INSERT INTO workflow_revision(id,configuration_id,revision_number,definition,actor_id) VALUES (?,?,1,?::jsonb,?) ON CONFLICT(id) DO NOTHING",revision,configuration,json.writeValueAsString(definition),id("admin"));
             jdbc.update("UPDATE workflow_configuration SET current_revision_id=? WHERE id=? AND current_revision_id IS NULL",revision,configuration);
+            jdbc.update("INSERT INTO period_workflow_assignment(scope_id,document_type,revision_id,assigned_by) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM academic_period WHERE id=? AND status='ACTIVE' AND workflow_locked_at IS NULL) ON CONFLICT DO NOTHING",scope,type,revision,id("admin"),period);
         }
     }
 }

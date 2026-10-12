@@ -74,7 +74,7 @@ public class InstitutionController {
         if(changed>0) audit.record(accounts.current(principal.getName()).id(),"MEMBERSHIP_REMOVED",id,userId);
     }
     @GetMapping("/periods") public List<Map<String,Object>> periods() {
-        var periods=jdbc.queryForList("SELECT * FROM academic_period ORDER BY starts_on DESC");
+        var periods=jdbc.queryForList("SELECT *,status='ACTIVE' AND (now() at time zone 'America/Guayaquil')::date BETWEEN starts_on AND ends_on AS is_current FROM academic_period ORDER BY starts_on DESC");
         periods.forEach(period -> period.replaceAll((key,value) -> value instanceof java.sql.Date date ? date.toLocalDate().toString() : value));
         return periods;
     }

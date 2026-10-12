@@ -125,6 +125,7 @@ public class ActivityService {
         jdbc.update("DELETE FROM planning_holiday WHERE holiday_date=?",date);audit.record(accounts.current(email).id(),"HOLIDAY_REMOVED",null);
     }
     @Transactional public void policy(UUID periodId,Policy input,String email) {
+        new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(periodId);
         if(jdbc.update("UPDATE academic_period SET restrict_holiday_endpoints=? WHERE id=?",input.enabled(),periodId)==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Período no disponible.");
         audit.record(accounts.current(email).id(),"PERIOD_HOLIDAY_POLICY_SAVED",periodId);
     }

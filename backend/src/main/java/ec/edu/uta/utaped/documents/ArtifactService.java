@@ -154,6 +154,8 @@ public class ArtifactService {
         var blockers=new ArrayList<Blocker>();
         if(!artifact.current()) blockers.add(new Blocker("Artefacto","El contenido, la plantilla o la configuración del flujo cambió. Genere una nueva previsualización."));
         if(!plan.editable()) blockers.add(new Blocker("Período","El Plan no está habilitado para elaboración en este momento."));
+        if(plan.scopeId()!=null&&jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=? AND workflow_locked_at IS NOT NULL",Integer.class,plan.periodId())==0)
+            blockers.add(new Blocker("Flujo","Administración debe activar y bloquear los flujos del período antes de firmar."));
         blockers.addAll(readiness(id,email).blockers());
         if(frozen.workflow()==null) blockers.add(new Blocker("Flujo","Esta previsualización no contiene una revisión de flujo configurada."));
         else for(var stage:frozen.workflow().stages()) {

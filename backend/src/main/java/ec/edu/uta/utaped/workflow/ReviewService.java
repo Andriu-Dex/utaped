@@ -86,7 +86,7 @@ public class ReviewService {
         var record=authorized(review,email);var file=files.metadata((UUID)record.get("current_file_id"));
         var tasks=jdbc.queryForList("SELECT id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,status,row_version,acted_at FROM review_task WHERE review_id=? ORDER BY position",review);
         var observations=jdbc.queryForList("SELECT o.*,u.display_name AS actor_name FROM review_observation o JOIN app_user u ON u.id=o.actor_id WHERE o.review_id=? ORDER BY o.created_at,o.id",review);
-        boolean canAct=tasks.stream().anyMatch(t->accounts.current(email).id().equals(t.get("actor_id"))&&t.get("status").equals("ACTIVE"));
+        boolean canAct=jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN academic_period p ON p.id=w.period_id WHERE w.id=? AND p.status='ACTIVE'",Integer.class,record.get("work_plan_id"))>0&&tasks.stream().anyMatch(t->accounts.current(email).id().equals(t.get("actor_id"))&&t.get("status").equals("ACTIVE"));
         return new State(record,tasks,observations,file.pageCount(),file.sha256(),canAct);
     }
     public List<Map<String,Object>> history(UUID doc,String email) { plans.get(doc,email);return jdbc.queryForList("SELECT id,round_number,status,created_at,closed_at FROM document_review WHERE work_plan_id=? ORDER BY round_number DESC",doc); }
