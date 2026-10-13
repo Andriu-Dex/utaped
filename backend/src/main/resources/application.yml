@@ -46,6 +46,17 @@ management:
     health:
       show-details: never
 app:
+  ai-writing:
+    enabled: ${AI_WRITING_ENABLED:false}
+    provider: ${AI_WRITING_PROVIDER:GROQ}
+    model: ${AI_WRITING_MODEL:}
+    groq-key: ${GROQ_API_KEY:}
+    openai-key: ${OPENAI_API_KEY:}
+    timeout-seconds: ${AI_WRITING_TIMEOUT_SECONDS:30}
+    max-input-characters: ${AI_WRITING_MAX_INPUT_CHARACTERS:8000}
+    max-output-tokens: ${AI_WRITING_MAX_OUTPUT_TOKENS:2000}
+    user-limit: ${AI_WRITING_USER_LIMIT:15}
+    concurrency: ${AI_WRITING_CONCURRENCY:2}
   notifications:
     deadline-enabled: ${DEADLINE_NOTICES_ENABLED:true}
     deadline-near-days: ${DEADLINE_NOTICE_NEAR_DAYS:3}

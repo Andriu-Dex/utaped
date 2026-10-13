@@ -78,6 +78,29 @@ public class ReviewService {
             WHERE t.actor_id=? AND t.status IN ('ACTIVE','COMPLETED','RETURNED') AND g.active ORDER BY (t.status='ACTIVE') DESC,r.created_at DESC,t.position LIMIT 200
             """,(rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),rs.getString("stage_label"),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),accounts.current(email).id());
     }
+    public record InboxMetrics(long active,long completed,long returned) {}
+    public record InboxPage(List<Task> items,long total,int page,int size,InboxMetrics metrics) {}
+    @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) {
+        if(query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
+            || !Set.of("","T1","T2").contains(documentType) || page<0 || page>1000000 || size<1 || size>100)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revise los filtros de la bandeja.");
+        UUID actor=accounts.current(email).id();
+        String from=" FROM review_task t JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id "
+            + "JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id "
+            + "WHERE t.actor_id=? AND t.status IN ('ACTIVE','COMPLETED','RETURNED') AND g.active";
+        var counts=jdbc.queryForMap("SELECT count(*) FILTER(WHERE t.status='ACTIVE') AS active,count(*) FILTER(WHERE t.status='COMPLETED') AS completed,count(*) FILTER(WHERE t.status='RETURNED') AS returned"+from,actor);
+        String filtered=from+" AND (?='' OR t.status=?) AND (?='' OR w.document_type=?) "
+            + "AND (?='' OR position(? in lower(w.title||' '||g.name||' '||p.name))>0)";
+        String search=query.strip().toLowerCase(Locale.ROOT);
+        Object[] arguments={actor,status,status,documentType,documentType,search,search};
+        long total=jdbc.queryForObject("SELECT count(*)"+filtered,Long.class,arguments);
+        var parameters=new ArrayList<Object>(Arrays.asList(arguments));parameters.add(size);parameters.add((long)page*size);
+        var items=jdbc.query("SELECT t.*,r.work_plan_id,r.round_number,w.title,g.name AS group_name,p.name AS period_name"+filtered
+            +" ORDER BY (t.status='ACTIVE') DESC,r.created_at DESC,t.position,t.id LIMIT ? OFFSET ?",
+            (rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),rs.getString("stage_label"),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),parameters.toArray());
+        return new InboxPage(items,total,page,size,new InboxMetrics(((Number)counts.get("active")).longValue(),((Number)counts.get("completed")).longValue(),((Number)counts.get("returned")).longValue()));
+    }
     private Map<String,Object> authorized(UUID review,String email) {
         var record=jdbc.queryForList("SELECT * FROM document_review WHERE id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));
         plans.get((UUID)record.get("work_plan_id"),email);return record;

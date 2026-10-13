@@ -59,6 +59,27 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertEquals(403,assertThrows(ResponseStatusException.class,()->reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()))).getStatusCode().value());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->reviews.observe(task.id(),reviewerEmail,new ReviewService.Observation(task.rowVersion(),"Observación bloqueada",null,null,null,null,null))).getStatusCode().value());
     }
+    @Test void reviewPaginationExceedsTwoHundredWithStableOrderAndPrivateFilteredMetrics() throws Exception {
+        UUID original=submit(false);
+        for(int i=2;i<=236;i++) {
+            UUID review=UUID.randomUUID();
+            jdbc.update("INSERT INTO document_review(id,work_plan_id,artifact_id,author_signature_id,current_file_id,round_number,status,created_at) SELECT ?,work_plan_id,artifact_id,author_signature_id,current_file_id,?,'RETURNED',created_at FROM document_review WHERE id=?",review,i,original);
+            jdbc.update("INSERT INTO review_task(id,review_id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,signature_action,status) SELECT ?,?,actor_id,actor_name,stage_label,stage_action,position,requires_signature,signature_action,? FROM review_task WHERE review_id=? AND actor_id=?",UUID.randomUUID(),review,i==236?"RETURNED":"COMPLETED",original,reviewer);
+        }
+        var seen=new HashSet<UUID>();
+        for(int page=0;page<12;page++) {
+            var result=reviews.inboxPage(reviewerEmail,"","","",page,20);assertEquals(236,result.total());
+            assertEquals(1,result.metrics().active());assertEquals(234,result.metrics().completed());assertEquals(1,result.metrics().returned());
+            for(var task:result.items()) assertTrue(seen.add(task.id()),"No duplicate across pages");
+            assertEquals(result.items(),reviews.inboxPage(reviewerEmail,"","","",page,20).items());
+        }
+        assertEquals(236,seen.size());assertEquals(200,reviews.inbox(reviewerEmail).size());
+        var filtered=reviews.inboxPage(reviewerEmail,"COMISIÓN","RETURNED","T1",0,10);assertEquals(1,filtered.total());assertEquals(234,filtered.metrics().completed());
+        assertEquals(0,reviews.inboxPage(reviewerEmail,"%_","","",0,20).total());assertEquals(0,reviews.inboxPage(reviewerEmail,"","","T2",0,20).total());
+        assertEquals(0,reviews.inboxPage(approverEmail,"","","",0,20).total());assertEquals(0,reviews.inboxPage(email,"","","",0,20).total());
+        for(int size:new int[]{0,101}) assertEquals(400,assertThrows(ResponseStatusException.class,()->reviews.inboxPage(reviewerEmail,"","","",0,size)).getStatusCode().value());
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->reviews.inboxPage(reviewerEmail,"","PENDING","",0,20)).getStatusCode().value());
+    }
     @Test void sequentialStagesRejectFutureActorAndRequireEveryDecision() throws Exception {
         UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();
         assertTrue(reviews.inbox(approverEmail).isEmpty());assertEquals(404,assertThrows(ResponseStatusException.class,()->reviews.state(review,approverEmail)).getStatusCode().value());
