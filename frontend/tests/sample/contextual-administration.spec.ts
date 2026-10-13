@@ -21,6 +21,22 @@ async function login(page: Page, username: string, password = environment.UTAPED
   return api(page, '/auth/me')
 }
 const date = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0,10)
+test('review inbox paginates and filters on desktop and dark tablet', async ({page}) => {
+  await login(page,'dev.reviewer')
+  const items=Array.from({length:225},(_,i)=>({id:randomUUID(),reviewId:randomUUID(),documentId:randomUUID(),title:'Documento de aceptación '+String(i+1).padStart(3,'0'),groupName:'Comisión de aceptación',periodName:'Período de aceptación',stageLabel:'Revisión técnica',requiresSignature:false,status:i<5?'ACTIVE':'COMPLETED',roundNumber:1,documentType:i%2?'T2':'T1'}))
+  await page.route('**/api/reviews/inbox?*',route=>{
+    const params=new URL(route.request().url()).searchParams, pageNumber=Number(params.get('page')), size=Number(params.get('size')), query=params.get('query')||'', status=params.get('status'), type=params.get('documentType')
+    const filtered=items.filter(t=>(!query||t.title.includes(query))&&(!status||t.status===status)&&(!type||t.documentType===type))
+    return route.fulfill({json:{items:filtered.slice(pageNumber*size,(pageNumber+1)*size),total:filtered.length,page:pageNumber,size,metrics:{active:5,completed:220,returned:0}}})
+  })
+  await page.getByRole('button',{name:'Revisión documental',exact:true}).click();await expect(page.getByText('225 tareas encontradas',{exact:true})).toBeVisible();await expect(page.getByRole('row')).toHaveCount(21)
+  await page.getByRole('button',{name:'Página siguiente',exact:true}).click();await expect(page.getByText('21–40 de 225',{exact:true})).toBeVisible();await expect(page.getByRole('row').filter({hasText:'Documento de aceptación 021'})).toBeVisible()
+  await page.getByLabel('Estado de la tarea').selectOption('ACTIVE');await expect(page.getByText('5 tareas encontradas',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Página anterior',exact:true})).toBeDisabled()
+  await page.getByLabel('Tipo de documento').selectOption('T2');await expect(page.getByText('2 tareas encontradas',{exact:true})).toBeVisible()
+  await page.getByLabel('Buscar documento, ámbito o período').fill('sin coincidencias');await page.getByRole('button',{name:'Buscar',exact:true}).click();await expect(page.getByText('No hay tareas con estos filtros.',{exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Limpiar filtros',exact:true}).click();await page.getByLabel('Tareas por página').selectOption('10');await expect(page.getByRole('row')).toHaveCount(11);await page.screenshot({path:'test-results/review-inbox-desktop.png',fullPage:true})
+  await page.getByRole('button',{name:'Modo oscuro',exact:true}).click();await page.setViewportSize({width:820,height:1180});await expect.poll(()=>page.locator('.theme-toggle').evaluate(e=>getComputedStyle(e).backgroundColor)).toMatch(/^rgb\((23, 43, 62|29, 58, 83)\)$/);await page.screenshot({path:'test-results/review-inbox-tablet-dark.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy()
+})
 test('career history and explicitly authorized coordinator recovery on desktop and tablet', async ({ browser }) => {
   const contexts = await Promise.all(Array.from({length:3}, () => browser.newContext({ baseURL: process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431', viewport: { width: 1440, height: 1000 } })))
   const [admin, coordinator, member] = await Promise.all(contexts.map(c => c.newPage()))

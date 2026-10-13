@@ -2,6 +2,19 @@
 .review-totals .card { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: center; }
 .review-totals strong { font-size: 1.8rem; color: var(--blue-700); }
 .review-totals span { grid-column: 2; color: var(--muted); font-size: .85rem; }
+.review-inbox-totals { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.review-inbox-totals .card { border-top: 3px solid var(--blue-700); }
+.review-filters { display: grid; grid-template-columns: minmax(300px,2fr) repeat(2,minmax(160px,1fr)); gap: 18px; padding: 22px 0; border-top: 1px solid var(--border); }
+.review-filters label { margin: 0; }
+.review-search > div { display: flex; gap: 8px; align-items: center; }
+.review-search input { min-width: 0; }
+.review-search svg { color: var(--muted); flex-shrink: 0; }
+.review-list-heading { display: flex; gap: 16px; align-items: center; margin-bottom: 18px; color: var(--muted); font-size: .9rem; }
+.review-list-heading > button:last-child { margin-left: auto; }
+.review-inbox-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid var(--border); margin-top: 22px; padding-top: 22px; color: var(--muted); font-size: .85rem; }
+.review-inbox-pagination label { display: flex; gap: 12px; align-items: center; margin: 0 auto 0 0; }
+.review-inbox-pagination select { width: 85px; }
+@media (min-width:768px) and (max-width:1150px) { .review-filters { grid-template-columns: repeat(2,minmax(0,1fr)); } .review-search { grid-column: 1/-1; } .review-inbox-totals { gap: 12px; } .review-inbox-totals .card { padding: 18px; } }
 .review-caption { display: block; color: var(--muted); margin-top: 6px; }
 .review-kicker { display: block; margin: 24px 0 8px; }
 .review-summary,.review-pagination,.review-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

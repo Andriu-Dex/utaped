@@ -10,6 +10,7 @@ import { ReviewHistory } from '../workflow/ReviewHistory'
 import { ExecutionWorkspace } from './ExecutionWorkspace'
 import { ReportEditor } from './ReportEditor'
 import { DocumentLifecycle } from './DocumentLifecycle'
+import { WritingAssistant } from './WritingAssistant'
 import { Icon } from '../shared/Icon'
 import './document-workspace.css'
 
@@ -98,7 +99,9 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
           <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
         </> : <>
           <label>Justificación<textarea rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} /></label>
+          <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="JUSTIFICATION" label="Justificación" value={draft.justification} disabled={busy || !plan.editable || conflict} onApply={text => change('justification', text)} />
           <label>Objetivo<textarea rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} /></label>
+          <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="OBJECTIVE" label="Objetivo" value={draft.objective} disabled={busy || !plan.editable || conflict} onApply={text => change('objective', text)} />
           <p>El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
         </>}
         <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
