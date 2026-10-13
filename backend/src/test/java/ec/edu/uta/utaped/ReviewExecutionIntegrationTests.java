@@ -21,6 +21,118 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ReportService reports;
     @Autowired ec.edu.uta.utaped.planning.DocumentLifecycleService lifecycle;
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
+    @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void boundedHttpLoadGeneratesAndRendersLongDocumentsForThreeIsolatedAuthors() throws Exception {
+        var probe=new DocumentLoadProbe();complete("Justificación extensa de planificación y seguimiento. ".repeat(100),35);signingAdmin();
+        var source=activities.get(id,email).activities();byte[] annex=pdf(12,false,false);
+        var browsers=new ArrayList<DocumentLoadProbe.Browser>();var docs=new ArrayList<UUID>();var versions=new ArrayList<Long>();
+        var fixtures=new ArrayList<SigningFixture>();
+        for(int i=0;i<3;i++) {
+            UUID actor=UUID.randomUUID();String owner="load"+i+"@example.invalid";
+            jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,?,'USER',false)",actor,owner,"Autor de carga "+i,encoder.encode("Test-only-password-2026"));
+            UUID ownGroup=UUID.randomUUID();jdbc.update("INSERT INTO institutional_group(id,name,group_type) VALUES (?,?,'COMMISSION')",ownGroup,"Comisión de carga "+i);
+            UUID ownScope=organization.createScope(email,new OrganizationService.ScopeInput(ownGroup,period,null));
+            organization.member(ownScope,email,new OrganizationService.MemberInput(actor,"MEMBER","Autor",true,0L));
+            organization.principal(ownScope,email,new OrganizationService.PrincipalInput(actor,0L));
+            var definition=new Definition("Aprobación ficticia de carga",List.of(new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(user),null,"",false)));
+            for(String type:List.of("T1","T2")) {
+                workflows.save(ownGroup,type,email,new Save(0L,definition));workflows.configure(ownGroup,type,email,new Version(1L));
+                periodWorkflows.assign(ownScope,type,email,new PeriodWorkflowService.Assign(workflows.get(ownGroup,type,email).current().id(),0L));
+            }
+            var fixture=signingFixture();fixtures.add(fixture);bindings.register(actor,email,new CertificateBindings.Register(fingerprint(fixture),true,"Identidad ficticia de carga",null));
+            UUID doc=plans.create(owner,new ec.edu.uta.utaped.planning.WorkPlanModels.Create(ownGroup,period,UUID.randomUUID(),"Documento extenso "+i,ownScope)).id();
+            var created=plans.get(doc,owner);
+            plans.update(doc,owner,new ec.edu.uta.utaped.planning.WorkPlanModels.Update(created.rowVersion(),"Documento extenso "+i,created.institutionalUnit(),created.career(),"Justificación extensa. ".repeat(180),"Objetivo de carga "+i));
+            var rows=source.stream().map(a->new ec.edu.uta.utaped.planning.ActivityModels.Activity(UUID.randomUUID(),null,a.title(),a.category(),false,a.startsOn(),a.endsOn(),List.of(actor),false,a.resources(),a.means())).toList();
+            activities.save(doc,owner,new ec.edu.uta.utaped.planning.ActivityModels.Save(plans.get(doc,owner).rowVersion(),"Fuente de carga",rows));
+            attachments.settings(doc,owner,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(plans.get(doc,owner).rowVersion(),true,false));
+            attachments.upload(doc,owner,plans.get(doc,owner).rowVersion(),UUID.randomUUID(),"Anexo extenso",new org.springframework.mock.web.MockMultipartFile("file","anexo.pdf","application/pdf",annex));
+            browsers.add(new DocumentLoadProbe.Browser(port,jdbc,owner));docs.add(doc);versions.add(plans.get(doc,owner).rowVersion());
+        }
+        periodWorkflows.activate(period,email,new PeriodWorkflowService.Version(0L));
+        var generating=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<3;i++) {int index=i;generating.add(()->probe.retryBusy(()->browsers.get(index).request("POST","/api/work-plans/"+docs.get(index)+"/artifacts","application/json",("{\"rowVersion\":"+versions.get(index)+"}").getBytes(java.nio.charset.StandardCharsets.UTF_8))));}
+        var generated=probe.phase("http-generate-three-authors",generating);var ids=new ArrayList<UUID>();var hashes=new ArrayList<String>();
+        for(int i=0;i<3;i++) {
+            assertEquals(200,generated.get(i).status());String body=new String(generated.get(i).body(),java.nio.charset.StandardCharsets.UTF_8);
+            UUID artifact=UUID.fromString(com.jayway.jsonpath.JsonPath.read(body,"$.id"));ids.add(artifact);
+            byte[] bytes=artifacts.content(docs.get(i),artifact,"load"+i+"@example.invalid");hashes.add(ec.edu.uta.utaped.documents.StoredFiles.hash(bytes));
+            try(var parsed=org.apache.pdfbox.Loader.loadPDF(bytes)) {assertTrue(parsed.getNumberOfPages()>=20);assertEquals(parsed.getNumberOfPages(),((Number)com.jayway.jsonpath.JsonPath.read(body,"$.pageCount")).intValue());}
+            assertEquals(versions.get(i),plans.get(docs.get(i),"load"+i+"@example.invalid").rowVersion());
+            assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM document_artifact WHERE work_plan_id=?",Integer.class,docs.get(i)));
+        }
+        var rendering=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<8;i++) {int index=i%3,page=i/3;rendering.add(()->probe.retryBusy(()->browsers.get(index).request("GET","/api/work-plans/"+docs.get(index)+"/artifacts/"+ids.get(index)+"/pages/"+page,null,null)));}
+        for(var result:probe.phase("http-render-eight-readers",rendering)) {assertEquals(200,result.status());assertNotNull(javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(result.body())));}
+        var downloads=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<8;i++) {int index=i%3;downloads.add(()->probe.measured(()->browsers.get(index).request("GET","/api/work-plans/"+docs.get(index)+"/artifacts/"+ids.get(index)+"/content",null,null)));}
+        var results=probe.phase("http-block-eight-preliminary-downloads",downloads);
+        for(var result:results) assertEquals(403,result.status());
+        for(int i=0;i<3;i++) assertEquals(hashes.get(i),ec.edu.uta.utaped.documents.StoredFiles.hash(artifacts.content(docs.get(i),ids.get(i),"load"+i+"@example.invalid")));
+        assertEquals(404,browsers.get(0).request("GET","/api/work-plans/"+docs.get(1)+"/artifacts/"+ids.get(1)+"/pages/0",null,null).status());
+        var signing=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<3;i++) {
+            int index=i;UUID key=UUID.randomUUID();
+            signing.add(()->probe.retryBusy(()->{
+                byte[] material=signingBody(fixtures.get(index),"Test-only-signing-password");
+                try {var signed=signatures.sign(docs.get(index),ids.get(index),"load"+index+"@example.invalid",versions.get(index),hashes.get(index),key,material,true);return new DocumentLoadProbe.Result(200,signatures.content(docs.get(index),signed.id(),"load"+index+"@example.invalid"));}
+                catch(ResponseStatusException error) {return new DocumentLoadProbe.Result(error.getStatusCode().value(),new byte[0]);}
+                finally {assertArrayEquals(new byte[material.length],material);}
+            }));
+        }
+        var signed=probe.phase("service-sign-three-distinct-authors",signing);var reviewIds=new ArrayList<UUID>();
+        for(int i=0;i<3;i++) {
+            assertEquals(200,signed.get(i).status());byte[] unsigned=artifacts.content(docs.get(i),ids.get(i),"load"+i+"@example.invalid");assertArrayEquals(unsigned,Arrays.copyOf(signed.get(i).body(),unsigned.length));
+            try(var pdf=org.apache.pdfbox.Loader.loadPDF(signed.get(i).body())) {assertEquals(1,pdf.getSignatureDictionaries().size());}
+            int index=i;var task=reviews.inbox(email).stream().filter(t->t.documentId().equals(docs.get(index))).findFirst().orElseThrow();reviewIds.add(task.reviewId());
+            reviews.decide(task.id(),email,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()));
+            assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact WHERE work_plan_id=?",Integer.class,docs.get(i)));
+            assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM document_review WHERE work_plan_id=?",Integer.class,docs.get(i)));
+        }
+        downloads.clear();
+        for(int i=0;i<8;i++) {int index=i%3;downloads.add(()->probe.measured(()->browsers.get(index).request("GET","/api/reviews/"+reviewIds.get(index)+"/content",null,null)));}
+        var approved=probe.phase("http-long-signed-download-eight-readers",downloads);
+        for(int i=0;i<8;i++) {assertEquals(200,approved.get(i).status());assertArrayEquals(signed.get(i%3).body(),approved.get(i).body());}
+        probe.save("long-documents-http");
+    }
+    @Test void concurrentEvidenceAndReportSignaturesPreserveVersionsAndSignedPlan() throws Exception {
+        var probe=new DocumentLoadProbe();UUID baseReview=submit(false);approve(baseReview);
+        jdbc.update("UPDATE app_user SET password_hash=? WHERE id=?",encoder.encode("Test-only-password-2026"),user);
+        var browser=new DocumentLoadProbe.Browser(port,jdbc,email);byte[] original=reviews.content(baseReview,email);var plan=plans.get(id,email);
+        var downloads=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<8;i++) downloads.add(()->probe.measured(()->browser.request("GET","/api/reviews/"+baseReview+"/content",null,null)));
+        for(var result:probe.phase("http-approved-download-eight-readers",downloads)) {assertEquals(200,result.status());assertArrayEquals(original,result.body());}
+        var activity=activities.get(id,email).activities().getFirst();byte[] evidencePdf=pdf(12,false,false);
+        String boundary="utaped-load-"+UUID.randomUUID();var multipart=new java.io.ByteArrayOutputStream();
+        multipart.write(("--"+boundary+"\r\nContent-Disposition: form-data; name=\"file\"; filename=\"evidencia.pdf\"\r\nContent-Type: application/pdf\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));multipart.write(evidencePdf);multipart.write(("\r\n--"+boundary+"--\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        for(int version=0;version<2;version++) {
+            int expected=version;var uploading=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+            for(int i=0;i<4;i++) uploading.add(()->probe.measured(()->browser.request("POST","/api/work-plans/"+id+"/execution/activities/"+activity.id()+"/media/0?expectedVersion="+expected,"multipart/form-data; boundary="+boundary,multipart.toByteArray())));
+            var uploaded=probe.phase("http-evidence-version-"+(version+1),uploading);
+            assertEquals(1,uploaded.stream().filter(r->r.status()==200).count());assertEquals(3,uploaded.stream().filter(r->r.status()==409).count());
+        }
+        var evidenceVersions=evidence.get(id,email).activities().getFirst().media().getFirst().versions();assertEquals(2,evidenceVersions.size());
+        for(var item:evidenceVersions) assertArrayEquals(evidencePdf,evidence.content(id,item.id(),email));
+        var report=reports.create(id,email);reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),"Informe extenso de carga","Antecedentes de carga. ".repeat(220),"Conclusiones. ".repeat(100),"Mejoras. ".repeat(100),List.of(new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.valueOf(100),"Cumplida con evidencia")),List.of()));
+        var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));byte[] unsigned=artifacts.content(report.id(),artifact.id(),email);
+        var preparation=signatures.state(report.id(),artifact.id(),email,true).preparation();UUID key=UUID.randomUUID();
+        var signing=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
+        for(int i=0;i<2;i++) signing.add(()->probe.measured(()->{
+            byte[] material=signingBody(authorFixture,"Test-only-signing-password");
+            try {var signed=signatures.sign(report.id(),artifact.id(),email,preparation.rowVersion(),preparation.pdfHash(),key,material,true);return new DocumentLoadProbe.Result(200,signatures.content(report.id(),signed.id(),email));}
+            catch(ResponseStatusException error) {return new DocumentLoadProbe.Result(error.getStatusCode().value(),new byte[0]);}
+            catch(org.springframework.dao.ConcurrencyFailureException error) {return new DocumentLoadProbe.Result(409,new byte[0]);}
+            finally {assertArrayEquals(new byte[material.length],material);}
+        }));
+        var signed=probe.phase("service-same-key-signing-two-callers",signing);assertTrue(signed.stream().anyMatch(r->r.status()==200));assertTrue(signed.stream().allMatch(r->r.status()==200||r.status()==409));
+        byte[] retry=signingBody(authorFixture,"Test-only-signing-password");var confirmed=signatures.sign(report.id(),artifact.id(),email,preparation.rowVersion(),preparation.pdfHash(),key,retry,true);assertArrayEquals(new byte[retry.length],retry);
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact WHERE work_plan_id=?",Integer.class,report.id()));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM document_review WHERE work_plan_id=?",Integer.class,report.id()));
+        byte[] signedBytes=signatures.content(report.id(),confirmed.id(),email);assertArrayEquals(unsigned,Arrays.copyOf(signedBytes,unsigned.length));
+        UUID review=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(review);
+        assertArrayEquals(signedBytes,reviews.content(review,email));assertArrayEquals(original,reviews.content(baseReview,email));assertEquals(plan.rowVersion(),plans.get(id,email).rowVersion());
+        probe.save("evidence-and-signing");
+    }
     SigningFixture authorFixture;
     UUID reviewer,approver; String reviewerEmail="reviewer@example.invalid",approverEmail="approver@example.invalid";
     UUID submit(boolean signatureRequired) throws Exception { return submit(signatureRequired,false); }
