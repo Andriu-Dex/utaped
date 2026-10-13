@@ -163,6 +163,9 @@ def restore(args):
         raise RuntimeError("El destino debe llamarse utaped-restore-*; no se restaura sobre el proyecto principal.")
     if containers(args.project) or run(["docker", "volume", "ls", "-q", "--filter", "label=com.docker.compose.project=" + args.project]).strip():
         raise RuntimeError("El proyecto de destino ya existe. Elija uno nuevo; no se borrará ni sobrescribirá.")
+    existing_volumes = set(run(["docker", "volume", "ls", "-q"]).decode().split())
+    if existing_volumes.intersection({args.project + "_postgres-data", args.project + "_document-data"}):
+        raise RuntimeError("Ya existe un volumen con el nombre del destino, aunque no tenga etiquetas. Elija otro proyecto.")
     if args.start_application:
         try:
             with socket.socket() as probe:
@@ -170,6 +173,8 @@ def restore(args):
         except OSError:
             raise RuntimeError("El puerto de recuperación ya está ocupado. Use --web-port con un puerto libre.")
     directory = args.backup.resolve()
+    if "," in str(directory):
+        raise RuntimeError("La ruta del respaldo no debe contener comas.")
     manifest = verify_backup(directory)
     if "application-images.tar" in manifest["checksums"]:
         run(["docker", "image", "load", "-i", str(directory / "application-images.tar")])

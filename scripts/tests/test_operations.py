@@ -83,6 +83,12 @@ class PairedBackupTests(unittest.TestCase):
             self.assertTrue(any(call.args[0] == ["docker", "start", "backend-test"] for call in process.call_args_list))
             self.assertFalse((self.directory / "failed-backup/manifest.json").exists())
 
+    def test_unlabelled_existing_volume_cannot_be_reused_by_restore(self):
+        with patch.object(operations, "containers", return_value=[]), patch.object(operations, "run", side_effect=[b"", b"utaped-restore-existing_document-data\n"]) as execute:
+            with self.assertRaises(RuntimeError):
+                operations.restore(SimpleNamespace(project="utaped-restore-existing", backup=self.directory))
+            self.assertFalse(any("compose" in call.args[0] for call in execute.call_args_list))
+
 
 if __name__ == "__main__":
     unittest.main()
