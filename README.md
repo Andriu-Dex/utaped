@@ -4,6 +4,8 @@ Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Incl
 
 ## Arranque
 
+Operación institucional: [configuración HTTPS en 64430, SMTP y recuperación comprobada](docs/operations/production-readiness.md). Se entrega un override separado; el arranque local siguiente permanece igual.
+
 Copiar .env.example a .env y configurar secretos únicos. Ejecutar `docker compose --profile web up --build -d` y abrir http://localhost:64430. El administrador inicial debe cambiar su contraseña temporal. [Guía completa](docs/development/local-setup.md).
 
 El acceso admite usuario o correo y exige CAPTCHA generado por servidor. El directorio permite consultar los usernames migrados y restablecer cuentas administrativamente. No hay registro público. [Contrato de acceso](docs/api/local-access.md).

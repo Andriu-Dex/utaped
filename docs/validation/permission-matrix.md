@@ -2,6 +2,8 @@
 
 ## Permisos implementados al 2026-10-12
 
+Aceptación técnica ampliada: siete identidades separadas, revocación de pertenencia con sesión vigente y comprobación de acceso a APIs/documentos/artefactos. [Escenarios y evidencia](../testing/role-and-document-acceptance.md). No se conceden permisos nuevos por esta comprobación.
+
 | Operación | Autorización vigente |
 |---|---|
 | Crear/editar T1 o T2 | Responsable principal activo del ámbito, ventana habilitada, borrador no archivado. |

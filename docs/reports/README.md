@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-12 — Aceptación por roles, documentos largos y preparación operativa](2026-10-12-06-role-acceptance-and-operational-readiness.md).
+
 - [2026-10-12 — Redacción asistida T1/T2 y bandeja paginada](2026-10-12-05-writing-assistance-and-review-inbox.md).
 
 Crear Markdown nuevo por entrega: YYYY-MM-DD-NN-description.md. No restaurar reportes eliminados ni sobrescribirlos por conveniencia.

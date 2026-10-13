@@ -1,5 +1,9 @@
 # Decisiones pendientes y contradicciones
 
+## Preparación operativa y aceptación — 2026-10-12
+
+Se entregan override HTTPS en 64430 con SMTP externo configurable, preflight, backup de DB/volumen/imágenes y restauración verificada en un destino aislado. Faltan hostname/certificado/CA y SMTP reales, condiciones de red, custodio/cifrado/frecuencia/RPO/RTO y aceptación institucional. Se amplió aceptación por siete identidades y T2 de 18 páginas; no equivale a dimensionamiento bajo carga documental. [Guía](../operations/production-readiness.md).
+
 ## Redacción y agente externo — 2026-10-12
 
 Asistencia T1/T2 entregada mediante propuestas explícitas y proveedores Groq/OpenAI configurables en backend, deshabilitada por defecto. Falta configurar cuenta/modelo/clave y validar tratamiento de datos, costos y calidad con contenido autorizado. [Configuración](../development/writing-configuration.md). El propietario construye por separado el agente de código/Trello; no pertenece a las implementaciones pendientes de este producto. Bandeja paginada y búsqueda/filtros entregados; las menciones históricas a redacción/bandeja sin implementar quedan superadas en ese alcance.

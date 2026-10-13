@@ -1,5 +1,7 @@
 # Índice documental
 
+- [Aceptación por roles y documentos largos](testing/role-and-document-acceptance.md) y [HTTPS/SMTP/respaldo/restauración](operations/production-readiness.md).
+
 - [Redacción asistida y bandeja paginada](api/writing-and-review-inbox.md), [configuración de proveedor](development/writing-configuration.md) y [ADR-0009](architecture/adr/0009-writing-provider-abstraction.md).
 
 - [Plan Maestro vigente](decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md).

@@ -35,6 +35,17 @@ La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con 
 
 ## Fuentes y alcance
 
+### Aceptación y operación — 2026-10-12
+
+| ID | Requisito técnico entregado | Evidencia |
+|---|---|---|
+| UT-REV-080 | Navegación directa por página real, accesos derivados a firmas/anexos/observaciones y estado de carga, conservando el PDF firmado y resaltados. | Navegador compartido; circuito Playwright y revisión visual PC/tableta. |
+| UT-ACC-080 | Comprobar separación de ADMIN, principal, coordinador, integrante, revisor, aprobador y ajeno; baja con sesión abierta. | Matriz HTTP y nuevo escenario de siete identidades, sin ampliar permisos institucionales. |
+| UT-DOC-080 | T2 extenso con contenido completo, índices y slots reales, evidencia paginada y firma/descarga que conserva bytes y Plan base. | Caso de 18 páginas y render Poppler, adicional a T1 extenso existente. |
+| UT-OPS-080 | HTTPS en 64430, configuración privada de SMTP y respaldo consistente DB/archivos/imágenes con restauración aislada verificada. | Override productivo, preflight, herramientas operativas y ensayo de datos ficticios. Insumos/aprobación institucional pendientes. |
+
+Estos IDs registran configuración/aceptación técnica dentro de la entrega autorizada; no crean normativa, roles nuevos ni políticas de retención. [Aceptación](docs/testing/role-and-document-acceptance.md), [operación y límites](docs/operations/production-readiness.md).
+
 ### Cierre histórico y flujos temporales — 2026-10-12
 
 | ID | Requisito / fuente | Estado / aceptación |
