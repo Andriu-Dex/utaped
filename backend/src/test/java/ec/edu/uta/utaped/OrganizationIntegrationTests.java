@@ -17,6 +17,22 @@ class OrganizationIntegrationTests extends WorkPlanIntegrationTests {
         organization.member(id,"admin@example.invalid",new OrganizationService.MemberInput(user,"MEMBER","Responsable",true,0L));
         organization.principal(id,"admin@example.invalid",new OrganizationService.PrincipalInput(user,0L));return id;
     }
+    @Test void httpRoleMatrixAndMembershipRevocationKeepSessionsFromBypassingDocumentPermissions() throws Exception {
+        UUID scope=scope();organization.member(scope,"admin@example.invalid",new OrganizationService.MemberInput(outsider,"MEMBER","Integrante",true,0L));
+        var plan=plans.create("user@example.invalid",new Create(group,period,UUID.randomUUID(),"Aceptación por rol",scope));
+        Browser owner=new Browser(),member=new Browser(),administrator=new Browser(),anonymous=new Browser();
+        owner.login("user@example.invalid",PASSWORD);member.login("other@example.invalid",PASSWORD);administrator.login("admin@example.invalid",PASSWORD);
+        String path="/api/work-plans/"+plan.id();
+        assertEquals(401,anonymous.request("GET",path,null,false).statusCode());
+        assertEquals(200,owner.request("GET",path,null,false).statusCode());assertEquals(200,member.request("GET",path,null,false).statusCode());
+        assertEquals(404,administrator.request("GET",path,null,false).statusCode());assertEquals(404,administrator.request("GET",path+"/artifacts",null,false).statusCode());
+        assertEquals(403,member.request("PUT",path,updateBody(0,"Intrusión"),true).statusCode());assertEquals(403,member.request("POST",path+"/artifacts","{\"rowVersion\":0}",true).statusCode());
+        assertEquals(403,owner.request("GET","/api/admin/users",null,false).statusCode());assertEquals(200,administrator.request("GET","/api/admin/users",null,false).statusCode());
+        organization.member(scope,"admin@example.invalid",new OrganizationService.MemberInput(outsider,"MEMBER","Baja",false,1L));
+        assertEquals(404,member.request("GET",path,null,false).statusCode());assertEquals(404,member.request("GET",path+"/artifacts",null,false).statusCode());
+        assertEquals(404,member.request("GET",path+"/history",null,false).statusCode());assertEquals(200,owner.request("GET",path,null,false).statusCode());
+        assertEquals("Aceptación por rol",plans.get(plan.id(),"user@example.invalid").title());assertEquals(0,plans.get(plan.id(),"user@example.invalid").rowVersion());
+    }
     @Test void staleMembershipAndGeneralRemovalCannotOverwritePeriodMembership() throws Exception {
         UUID scope=scope();
         assertEquals(409,assertThrows(ResponseStatusException.class,()->organization.member(scope,"admin@example.invalid",new OrganizationService.MemberInput(user,"MEMBER","Cambio obsoleto",true,0L))).getStatusCode().value());

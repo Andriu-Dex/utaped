@@ -111,6 +111,44 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var first=reviews.inbox(reviewerEmail).stream().filter(t->t.reviewId().equals(review)).findFirst().orElseThrow();reviews.decide(first.id(),reviewerEmail,new ReviewService.Decision(first.rowVersion(),"COMPLETE","",UUID.randomUUID()));
         var last=reviews.inbox(approverEmail).stream().filter(t->t.reviewId().equals(review)).findFirst().orElseThrow();reviews.decide(last.id(),approverEmail,new ReviewService.Decision(last.rowVersion(),"COMPLETE","",UUID.randomUUID()));
     }
+    @Test void longT2PreservesEveryNarrativeEvidenceAndSignaturePageWithoutChangingItsPlan() throws Exception {
+        UUID baseReview=submit(false);approve(baseReview);
+        var base=plans.get(id,email);var baseHash=reviews.state(baseReview,email).pdfHash();
+        var activity=activities.get(id,email).activities().getFirst();
+        evidence.upload(id,activity.id(),0,0,email,new org.springframework.mock.web.MockMultipartFile("file","evidencia-extensa.pdf","application/pdf",pdf(7,false,false)));
+        var report=reports.create(id,email);var data=reports.get(report.id(),email).data();
+        String background="Antecedente institucional verificable de la planificación, ejecución y conservación de evidencias. ".repeat(220)+"FIN_ANTECEDENTES_EXTENSOS";
+        String conclusions="La ejecución documentada permite identificar resultados y conservar la trazabilidad del trabajo. ".repeat(90)+"FIN_CONCLUSIONES_EXTENSAS";
+        String improvements="Organizar el seguimiento de actividades y mejorar la documentación de resultados verificables. ".repeat(90)+"FIN_MEJORAS_EXTENSAS";
+        var results=data.results().stream().map(result->new ec.edu.uta.utaped.planning.ReportService.Result(result.activityId(),java.math.BigDecimal.valueOf(100),"Resultados comprobados con evidencia de siete páginas.")).toList();
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),background,conclusions,improvements,results,List.of()));
+        var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));
+        byte[] unsigned=artifacts.content(report.id(),artifact.id(),email);
+        java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-long.pdf"),unsigned);
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(unsigned)) {
+            assertEquals(pdf.getNumberOfPages(),artifact.pageCount());assertEquals(artifact.pages().size(),artifact.pageCount());assertTrue(artifact.pageCount()>15);
+            String text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+            for(String marker:List.of("FIN_ANTECEDENTES_EXTENSOS","FIN_CONCLUSIONES_EXTENSAS","FIN_MEJORAS_EXTENSAS")) assertTrue(text.contains(marker),marker);
+            assertFalse(text.contains("@@PN@@"));assertEquals(7,artifact.pages().stream().filter(page->page.kind().equals("ANNEX")).count());
+            for(var slot:artifact.signatureSlots()) {
+                assertEquals(slot.pageIndex()+1,slot.pageNumber());assertNotEquals("ANNEX",artifact.pages().get(slot.pageIndex()).kind());assertNotNull(slot.bounds());
+                var page=pdf.getPage(slot.pageIndex());assertTrue(slot.bounds().x()+slot.bounds().width()<=page.getMediaBox().getWidth()+1);assertTrue(slot.bounds().y()+slot.bounds().height()<=page.getMediaBox().getHeight()+1);
+            }
+            var stripper=new org.apache.pdfbox.text.PDFTextStripper();
+            for(String section:List.of("ANTECEDENTES","CONCLUSIONES","OPORTUNIDADES DE MEJORA")) {
+                int actual=-1;
+                for(int page=0;page<pdf.getNumberOfPages();page++) { stripper.setStartPage(page+1);stripper.setEndPage(page+1);if(stripper.getText(pdf).lines().anyMatch(line->line.strip().replaceAll("^\\d+[.\\s]*", "").equals(section))) {actual=page+1;break;} }
+                assertTrue(actual>0,section);assertTrue(text.matches("(?s).*"+section+" \\.{3,} "+actual+".*"),section+" index");
+            }
+        }
+        var preparation=signatures.state(report.id(),artifact.id(),email,true);
+        signatures.sign(report.id(),artifact.id(),email,preparation.preparation().rowVersion(),preparation.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        UUID review=reviews.inbox(reviewerEmail).stream().filter(task->task.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();
+        byte[] signed=files.read((UUID)reviews.state(review,email).review().get("current_file_id"));assertArrayEquals(unsigned,Arrays.copyOf(signed,unsigned.length));approve(review);
+        assertArrayEquals(signed,reviews.content(review,email));assertEquals(baseHash,reviews.state(baseReview,email).pdfHash());assertEquals(base.rowVersion(),plans.get(id,email).rowVersion());
+        assertEquals(artifact.pageCount(),reviews.state(review,email).pageCount());
+        assertTrue(reviews.page(review,artifact.pageCount()-1,email).length>1000);
+    }
     @Test void evidenceVersionsAndIndependentT2CompleteTheDocumentCircuit() throws Exception {
         UUID review=submit(false);approve(review);var parent=plans.get(id,email);var activity=activities.get(id,email).activities().getFirst();
         var upload=new org.springframework.mock.web.MockMultipartFile("file","evidencia.pdf","application/pdf",pdf(1,false,false));
