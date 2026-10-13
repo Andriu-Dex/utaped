@@ -4,7 +4,7 @@ export class ApiError extends Error {
 }
 export async function download(path: string, filename: string) {
   const response = await fetch('/api' + path, { credentials: 'same-origin' })
-  if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const error = await response.json().catch(() => ({ message: 'No se pudo descargar el archivo.' })); throw new ApiError(error.message, response.status) }
+  if (!response.ok) { if (response.status === 401) { csrf = undefined; window.dispatchEvent(new Event('session-expired')) } const error = await response.json().catch(() => ({ message: 'No se pudo descargar el archivo.' })); throw new ApiError(error.message, response.status) }
   const url = URL.createObjectURL(await response.blob()); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 let csrf: { headerName: string; token: string } | undefined
@@ -17,7 +17,7 @@ export async function signPdf<T>(path: string, file: File, password: string): Pr
     new DataView(payload.buffer).setUint32(0, encoded.length); payload.set(encoded, 4); payload.set(container, 4 + encoded.length)
     if (!csrf) await refreshCsrf()
     const response = await fetch('/api' + path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', [csrf!.headerName]: csrf!.token }, body: payload.buffer })
-    if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const error = await response.json().catch(() => ({ message: 'No se pudo firmar el PDF.' })); throw new ApiError(error.message, response.status) }
+    if (!response.ok) { if (response.status === 401) { csrf = undefined; window.dispatchEvent(new Event('session-expired')) } const error = await response.json().catch(() => ({ message: 'No se pudo firmar el PDF.' })); throw new ApiError(error.message, response.status) }
     return await response.json()
   } finally { encoded.fill(0); container?.fill(0); payload?.fill(0) }
 }
@@ -29,7 +29,7 @@ export async function refreshCsrf() {
 export async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
   if (method !== 'GET') {
-    if (!csrf) await refreshCsrf()
+    if (!csrf || (path === '/auth/login' && method === 'POST')) await refreshCsrf()
     headers[csrf!.headerName] = csrf!.token
   }
   const form = body instanceof URLSearchParams
@@ -39,7 +39,10 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     body: body instanceof FormData ? body : body ? form ? body.toString() : JSON.stringify(body) : undefined,
   })
   if (!response.ok) {
-    if (response.status === 401 && !['/auth/me', '/auth/login'].includes(path)) window.dispatchEvent(new Event('session-expired'))
+    if (response.status === 401) {
+      csrf = undefined
+      if (!['/auth/me', '/auth/login'].includes(path)) window.dispatchEvent(new Event('session-expired'))
+    }
     const data = await response.json().catch(() => ({ message: 'No se pudo completar la solicitud.' }))
     throw new ApiError(data.message, response.status)
   }
