@@ -1,5 +1,9 @@
 # Decisiones pendientes y contradicciones
 
+## Redacción y agente externo — 2026-10-12
+
+Asistencia T1/T2 entregada mediante propuestas explícitas y proveedores Groq/OpenAI configurables en backend, deshabilitada por defecto. Falta configurar cuenta/modelo/clave y validar tratamiento de datos, costos y calidad con contenido autorizado. [Configuración](../development/writing-configuration.md). El propietario construye por separado el agente de código/Trello; no pertenece a las implementaciones pendientes de este producto. Bandeja paginada y búsqueda/filtros entregados; las menciones históricas a redacción/bandeja sin implementar quedan superadas en ese alcance.
+
 ## Administración contextual — 2026-10-12
 
 Entregados: edición de carreras, historial de cargos/principales/prórrogas, recuperación por coordinador con delegación explícita de ADMIN y alertas internas configurables de vencimiento/evidencia pendiente. Las menciones históricas a estos bloqueos quedan superadas en el alcance del [contrato](../api/contextual-administration.md). No se concede alta/importación global ni permisos de Decano/Subdecano. Frecuencias iniciales técnicas ajustables, no normativa institucional.

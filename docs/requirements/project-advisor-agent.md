@@ -1,5 +1,7 @@
 # Agente de inspección y recomendaciones
 
+Decisión vigente del propietario, 2026-10-12: está construyendo esta herramienta por separado. Queda fuera de las tandas de implementación de UTAPED y no bloquea el circuito institucional ni la asistencia de redacción. No se implementan conexiones al repositorio/Trello en este producto; los requisitos siguientes se conservan como referencia del alcance externo.
+
 Fuente: solicitud explícita del propietario del 2026-10-03. Estado funcional mínimo: CONFIRMADO-PROYECTO. Implementación: NO IMPLEMENTADO. Prioridad y entrega pendientes de planificación. Este alcance es nuevo y no procede del mockup ni sustituye la asistencia para redactar contenido T1.
 
 Alcance confirmado por el propietario: código y planificación del desarrollo de UTAPED. No se refiere a los proyectos institucionales gestionados por los usuarios del aplicativo.

@@ -1,5 +1,7 @@
 # Índice documental
 
+- [Redacción asistida y bandeja paginada](api/writing-and-review-inbox.md), [configuración de proveedor](development/writing-configuration.md) y [ADR-0009](architecture/adr/0009-writing-provider-abstraction.md).
+
 - [Plan Maestro vigente](decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md).
 - [Acceso local, CAPTCHA y perfiles](api/local-access.md), [ADR-0003](architecture/adr/0003-modern-workspace-access.md) y [base de interfaz moderna](design/interface-foundations.md).
 

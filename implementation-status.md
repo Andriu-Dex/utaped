@@ -8,7 +8,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 |---|---|
 | Organización | Edición/desactivación de carreras con concurrencia, historial visible de cargos/principales, recuperación delegada explícitamente a coordinadores; catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
 | T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firma real del elaborador y envío a revisión atómico en documentos por ámbito. |
-| Revisión | Bandeja propia, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
+| Revisión | Bandeja propia paginada con búsqueda/filtros/indicadores personales, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
 | Firmas sucesivas | Certificados personales temporales, vinculación pública por usuario, append incremental y comprobación de CMS/bytes previos. Sin material privado persistente ni afirmación de cadena/revocación/TSA. |
 | Ejecución | PDF privado o enlace HTTPS versionado según el medio congelado en matriz; referencias textuales en T2 y manifiesto histórico, permisos del responsable asignado, fechas personales, cobertura e historial de evidencias. |
 | Prórrogas | Coordinador del ámbito, destinatario individual, fecha original conservada, concurrencia e historial. Máximo técnico ajustable de tres días calendario dentro del período, pendiente de ratificación institucional. |
@@ -22,10 +22,13 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Importación | CSV administrativo UTF-8 prevalidado por fila, lotes atómicos, cuentas USER con contraseña aleatoria individual de descarga única y pertenencia opcional sin principal/permisos de recuperación; caducidad y limpieza de filas temporales. |
 | Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
 | Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
+| Redacción | Propuestas T1/T2 con consentimiento, comparación, aplicar/descartar y protección ante cambios locales/versiones. Groq/OpenAI detrás de interfaz backend; deshabilitado por defecto, claves/modelo pendientes de configuración externa. |
 
 Persistencia: Flyway V13–V21 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
 
 Importaciones/enlaces: [contrato](docs/api/user-imports-and-external-evidence.md) y [reporte](docs/reports/2026-10-12-04-user-imports-and-external-evidence.md). Validación de esta tanda: 116 ejecuciones de pruebas de backend sin fallos, ocho escenarios E2E, lint/build y revisión visual de interfaces/T2.
+
+Redacción/bandeja: [contrato](docs/api/writing-and-review-inbox.md), [configuración](docs/development/writing-configuration.md) y [reporte](docs/reports/2026-10-12-05-writing-assistance-and-review-inbox.md). Validación vigente: 129 ejecuciones backend en 19 suites sin fallos, cinco E2E generales y cuatro escenarios del entorno de ejemplo, lint/build y revisión visual PC/tableta. Transporte IA con fixtures locales; no se consumió una cuenta externa. El agente de código/Trello se desarrolla aparte por el propietario.
 
 ### Trabajo que aún falta para completar el producto
 
@@ -34,12 +37,12 @@ Importaciones/enlaces: [contrato](docs/api/user-imports-and-external-evidence.md
 - Administración avanzada de ámbitos, catálogo completo de cargos/fechas de vigencia, pertenencias globales por carrera y alta/importación delegada. Edición de carreras, historial visible de cargos/prórrogas y recuperación contextual ya están entregados.
 - Archivos adjuntos no PDF y formatos documentales oficiales adicionales: pendientes de especificación/plantillas. Referencias HTTPS ya entregadas, sin descarga ni comprobación remota de disponibilidad/integridad.
 - Importación delegada, actualización de cuentas por archivo y distribución institucional de credenciales aún no entregadas. CSV administrativo ya implementado. Canales/frecuencia institucional y correo de recordatorios pendientes.
-- Asistencia de redacción y agente de inspección de código/Trello, con configuración de proveedor/credenciales y permisos. No implementados en esta tanda.
-- Paginación completa de la bandeja de revisión (límite actual 200), alternativa accesible al CAPTCHA visual, pruebas de carga y ampliación de casos documentales largos.
+- Habilitación de redacción con cuenta/modelo/clave y aceptación de tratamiento de datos, presupuesto y calidad real. El agente de código/Trello lo construye el propietario por separado; queda fuera de este producto.
+- Alternativa accesible al CAPTCHA visual, pruebas de carga y ampliación de casos documentales largos. La interfaz de revisión ya usa paginación completa; la API anterior de tareas conserva límite 200 por compatibilidad.
 - Ratificación de ventanas T2, días de prórroga, múltiples elaboradores y secuencias/personas oficiales; los ejemplos no reemplazan esas decisiones.
 - HTTPS, SMTP institucional, respaldos con restauración comprobada, retención y despliegue operativo. Puerto web principal 64430, enlazado localmente hasta configurar la red institucional.
 
-Próxima tanda propuesta: asistencia de redacción con revisión/aplicación explícita y herramienta separada de inspección de código/Trello, con proveedores, credenciales y fuentes autorizadas. Después: ampliar pruebas de aceptación, documentos largos/carga y preparar operación con HTTPS, SMTP y restauración de respaldos. No se declara terminado el producto.
+Próxima tanda propuesta: ampliar pruebas de aceptación por rol, documentos largos y carga; alternativa accesible de verificación de acceso y preparación operativa con HTTPS, SMTP y restauración comprobada de respaldos. El agente externo no bloquea estas tareas. No se declara terminado el producto.
 
 ## Registro histórico de entregas
 

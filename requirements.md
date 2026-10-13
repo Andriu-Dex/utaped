@@ -57,7 +57,9 @@ La aplicación requiere autenticación, autorización, persistencia, almacenamie
 
 ## Especificación organizada
 
-Nuevo alcance confirmado el 2026-10-03: [agente para inspeccionar el proyecto, Trello y proponer mejoras](docs/requirements/project-advisor-agent.md). Es independiente de la asistencia de redacción T1; su alcance técnico y criterios de aceptación están pendientes de definición. Estos tres requisitos nuevos complementan los 122 registros de la fuente heredada.
+Nuevo alcance confirmado el 2026-10-03: [agente para inspeccionar el proyecto, Trello y proponer mejoras](docs/requirements/project-advisor-agent.md). El propietario lo construye aparte según decisión del 2026-10-12; queda fuera de las entregas del producto institucional. Estos tres requisitos nuevos complementan los 122 registros de la fuente heredada y no bloquean la entrega de UTAPED.
+
+Entrega 2026-10-12: asistencia de redacción para JUSTIFICATION/OBJECTIVE de T1 y BACKGROUND/CONCLUSIONS/IMPROVEMENTS de T2. Solo texto existente, autorización de borrador antes/después de la llamada, consentimiento por envío, comparación y aplicar/descartar sin guardado automático. Groq/OpenAI configurables y deshabilitados por defecto; requiere cuenta/modelo/clave y aceptación operativa. No se conserva historial textual. Bandeja propia paginada, búsqueda literal por título/grupo/período y filtros de estado/tipo, sin límite visual de 200. [Contrato y límites](docs/api/writing-and-review-inbox.md).
 
 - [Requisitos funcionales y aceptación](docs/requirements/functional.md).
 - [Requisitos no funcionales](docs/requirements/non-functional.md).

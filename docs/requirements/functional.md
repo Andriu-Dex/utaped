@@ -18,7 +18,7 @@ Estado HEREDADO salvo indicación contraria. Las referencias § remiten a [basel
 | Notificaciones P1 | §51 | Bandeja por usuario y navegación al objeto correcto bajo permisos. Canales y entrega pendientes. |
 | Auditoría e histórico P0 | §52–55 | Eventos atribuibles; documentos, versiones, actividades, firmas y evidencias preservados. Histórico cerrado solo lectura. Reportes documentales/de estado, sin ranking ni sanciones. Cierre pendiente. |
 | Interfaz P1 | §56–59; instruction.md | Español y azul institucional; cargando/vacío/error/éxito/permiso. Iconos con nombre accesible y tooltip, teclado, resoluciones medianas y legibilidad A4. Login como referencia; CAPTCHA DEMO no acredita seguridad. |
-| Asistencia IA P2 | §9 FR-T1-CONT-*, §61 FR-ARCH-AI-001 | Mostrar original/sugerencia, aplicar/descartar explícito; fallo no bloquea edición. Proveedores backend configurables; habilitación y privacidad pendientes. |
+| Asistencia IA P2 | §9 FR-T1-CONT-*, §61 FR-ARCH-AI-001 | T1/T2 con original/sugerencia y aplicar/descartar explícito, sin guardado automático. Proveedores backend Groq/OpenAI configurables, límites y consentimiento por envío. Entregado; habilitación de cuenta/modelo/clave y aceptación de privacidad/calidad pendientes. |
 
 ## Escenarios mínimos
 

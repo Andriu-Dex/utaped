@@ -1,5 +1,7 @@
 # Registro de decisiones de arquitectura
 
+[ADR-0009: abstracción de proveedores de redacción](0009-writing-provider-abstraction.md), entrega del 2026-10-12. La numeración sigue el identificador solicitado por el Plan Maestro; no implica que ADR-0004–0008 estén ya formalizados.
+
 [ADR-0003: interfaz moderna y acceso local](0003-modern-workspace-access.md), entrega del 2026-10-06. El Plan Maestro aportado por el propietario prevalece sobre antecedentes funcionales contradictorios; JPA/API v1/OpenAPI/Testcontainers se mantienen como transición pendiente explícita.
 
 [ADR-0002: anexos privados y preparación T1](0002-t1-document-preparation.md), adoptado como configuración técnica inicial.
