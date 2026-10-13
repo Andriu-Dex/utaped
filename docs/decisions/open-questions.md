@@ -81,3 +81,5 @@ Actualización 2026-10-02: Q-008 resuelta para mecanismo de acceso: credenciales
 Para cerrar: respuesta, persona/área validadora, fecha y evidencia verificable; actualizar requisitos, ADR y casos afectados.
 
 2026-10-05: firma visible del elaborador entregada con confianza directa por huella pública administrativa y comprobación de vigencia/integridad. El usuario mantiene archivo + contraseña + Firmar. No se valida cadena/revocación y se informa expresamente. Q-003/Q-018 permanecen pendientes; no se habilitan finalización, envío o aprobación. [API y operación](../api/author-signing.md).
+
+2026-10-12: importación CSV exclusiva de ADMIN y evidencia URL entregadas según el Plan Maestro. Alta/importación delegada, cargos oficiales con vigencia y políticas de acceso/retención de repositorios siguen pendientes. La descarga única de credenciales y limpieza de prevalidaciones son decisiones técnicas iniciales documentadas en [el contrato](../api/user-imports-and-external-evidence.md).

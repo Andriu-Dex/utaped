@@ -58,3 +58,10 @@ Desde V19, las semillas asignan las revisiones de ejemplo sin activar automátic
 Tras reconstruir el entorno, Flyway incorpora V20 sin reiniciar los datos. En Carreras y ámbitos, ADMIN puede editar carreras y conceder recuperación de cuentas al COORDINATOR seleccionado. En Mi organización, ese coordinador ve el historial y las cuentas recuperables del ámbito. Las semillas no conceden automáticamente esta autorización. En Períodos académicos aparece la configuración técnica de avisos y la comprobación manual. Variables opcionales y defaults: [contrato](../api/contextual-administration.md).
 
 La suite sample añade un escenario de edición de carrera, historial, autorización/revocación, reset y cambio obligatorio de una cuenta ficticia nueva; conserva las credenciales semilla. El circuito T1/T2 comprueba avisos y el historial visible de una prórroga individual.
+
+
+## Importaciones y referencias externas
+
+V21 se aplica al reconstruir, conservando datos existentes. Usuarios → Importar usuarios permite descargar plantilla CSV, prevalidar y confirmar cuentas USER nuevas; la credencial temporal se descarga una sola vez y se ignora por Git con el nombre de exportación. No importe datos institucionales privados en este entorno de ejemplo. Perfiles existentes no se sobrescriben.
+
+Para probar enlaces: Administración → Recursos y medios → Medio de verificación → Enlace HTTPS externo. Seleccione ese medio en la matriz antes de firmar T1. Tras aprobar el Plan, el responsable registra título/URL desde Actividades y evidencias; puede reemplazar la referencia conservando versiones. El T2 incluye texto y solo anexa archivos PDF. Las pruebas sample cubren importación/primer acceso y PDF + URL versionada con T2/cierre, además del escenario de administración contextual.

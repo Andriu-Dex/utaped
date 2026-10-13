@@ -97,3 +97,13 @@ Una cuenta ADMIN con pertenencia activa puede elegir explícitamente su espacio 
 | UT-EXE-050 | Historial visible de prórrogas individuales. Plan Maestro §39. | CONFIRMADO-PROYECTO, P1. Plazos anterior/nuevo, motivo, autorizador y fecha por actividad/documento; datos originales conservados. |
 
 Frecuencia técnica inicial ajustable: comprobación horaria, aviso previo de tres días, reiteración diaria de pendientes vencidos. No equivale a frecuencia institucional confirmada. [Contrato y límites](docs/api/contextual-administration.md), [reporte y pruebas](docs/reports/2026-10-12-03-contextual-administration-and-notices.md). Las menciones anteriores a recuperación por coordinador pendiente quedan superadas en este alcance; alta/importación delegada y otros permisos institucionales siguen pendientes.
+
+
+## Importación y evidencias externas — 2026-10-12
+
+| ID | Requisito y fuente | Estado / aceptación |
+|---|---|---|
+| UT-AUTH-060 | Importación administrativa con contraseña temporal. Plan Maestro §§6–7. | CONFIRMADO-PROYECTO, P1. CSV prevalidado, errores por fila, lote atómico, revalidación concurrente, USER y pertenencia opcional; credencial individual descargada una vez, cambio obligatorio y auditoría. No sobrescribe cuentas. |
+| UT-EXE-060 | Referencias/repositorios como evidencia y texto al final de T2. Plan Maestro §§40 y 44. | CONFIRMADO-PROYECTO, P1. Medio PDF/URL definido y conservado en la matriz; HTTPS, responsable/plazo/período, versiones, cobertura, historial y T2 congelado. Sin convertir URL en PDF ni afirmar integridad remota. |
+
+Límites técnicos y contrato: [importaciones y enlaces](docs/api/user-imports-and-external-evidence.md). No quedan ratificados cargos/fechas institucionales, alta delegada ni política de retención por entregar estas capacidades.

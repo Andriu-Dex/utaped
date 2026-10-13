@@ -32,3 +32,5 @@ Actualización 2026-10-12: UT-ORG-050, UT-AUTH-050, UT-NOT-050 y UT-EXE-050 inco
 6. Consultar histórico/auditoría bajo permisos y comprobar revocación de sesión/pertenencia.
 
 Antes de cada módulo, desglosar requisitos atómicos y permisos. No convertir pendientes en pruebas de una normativa inventada.
+
+Actualización 2026-10-12: UT-AUTH-060 y UT-EXE-060 incorporan CSV administrativo y medios URL según el Plan Maestro. El requisito heredado de un PDF por medio aplica a medios PDF; los medios URL conservan una referencia vigente versionada y representación textual en T2. [Contrato](../api/user-imports-and-external-evidence.md).

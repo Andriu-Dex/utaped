@@ -11,7 +11,7 @@ Estado HEREDADO; no acredita ratificación institucional nueva.
 - BR-007: etapa posterior espera aprobaciones obligatorias; órgano colegiado no implica firma personal.
 - BR-008: mínimo un responsable; representación colectiva preserva identidades.
 - BR-009: catálogos administrables; Otro requiere texto; anexos se ordenan/renumeran automáticamente.
-- BR-010: un PDF vigente por medio; reemplazo conserva historia y requiere nueva validación; solo responsables modifican.
+- BR-010: una evidencia vigente por medio (PDF o referencia HTTPS según el tipo congelado en matriz, conforme al Plan Maestro); reemplazo conserva historia y requiere nueva validación; solo responsables modifican.
 - BR-011: fecha de elaboración congelada al finalizar; observaciones congeladas al decidir.
 - BR-012: histórico cerrado solo lectura; cierre ACTIVE→CLOSED sin purga y ZIP privado implementados según Plan Maestro. Reapertura y retención institucional pendientes. [Contrato](../api/period-control.md).
 - BR-013: no inventar autoridades, resoluciones, QR, prórrogas o flujos externos.
@@ -19,4 +19,7 @@ Estado HEREDADO; no acredita ratificación institucional nueva.
 - BR-015 (Plan Maestro, 2026-10-12): aviso interno de vencimiento usa el plazo personal, requiere Plan aprobado y acceso actual, y conserva una clave persistente por destinatario/actividad/plazo/intervalo. Cierre, archivo y evidencia completa impiden nuevos avisos.
 - BR-016 (Plan Maestro, 2026-10-12): cargos y principales conservan registros sucesivos. La línea base migrada no inventa fechas de vigencia históricas. Desactivar una carrera no elimina ámbitos ni altera artefactos firmados.
 
-Resolver condiciones de duplicados, plazos, etapas, cierre y formatos antes de implementar sus casos límite.
+- BR-017 (Plan Maestro, 2026-10-12): CSV administrativo nunca sobrescribe cuentas; confirma el lote completo con revalidación, credenciales temporales individuales de descarga única y cambio obligatorio. Pertenencia importada no designa principal ni autoriza recuperar cuentas.
+- BR-018 (Plan Maestro, 2026-10-12): URL de evidencia conserva versiones y referencia textual congelada en T2. No es un archivo PDF, no se descarga desde el servidor ni acredita contenido remoto; PDFs mantienen anexos como páginas.
+
+Resolver condiciones institucionales aún pendientes de plazos, etapas y formatos antes de implementar sus casos límite.
