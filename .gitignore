@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.*.example
+credenciales-importadas*.csv
 *.p12
 *.pfx
 *.key

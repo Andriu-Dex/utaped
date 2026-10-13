@@ -53,6 +53,13 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
   const text = await response.text()
   return text ? JSON.parse(text) : undefined as T
 }
+export async function downloadPrivateResult(path: string, filename: string) {
+  if (!csrf) await refreshCsrf()
+  const response = await fetch('/api' + path, { method: 'POST', credentials: 'same-origin', headers: { [csrf!.headerName]: csrf!.token } })
+  if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const data = await response.json().catch(() => ({ message: 'No se pudo completar la importación.' })); throw new ApiError(data.message, response.status) }
+  const url = URL.createObjectURL(await response.blob())
+  try { const link = document.createElement('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove() } finally { window.setTimeout(() => URL.revokeObjectURL(url), 1000) }
+}
 export interface Account { id: string; email: string; username: string | null; firstNames: string | null; lastNames: string | null; displayName: string; systemRole: 'ADMIN' | 'USER'; mustChangePassword: boolean }
 export interface Group { id: string; name: string; group_type: string; membership_role: string | null; collective_label: string; active: boolean; row_version: number }
 export interface Member { id: string; display_name: string; membership_role: string }

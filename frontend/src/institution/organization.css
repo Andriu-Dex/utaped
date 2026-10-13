@@ -15,3 +15,6 @@
 .scope-timeline small { color: var(--muted); }
 .contextual-recovery { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 24px; }
 @media (min-width:768px) and (max-width:1100px) { .organization-setup { grid-template-columns: 1fr; } }
+
+.scope-import-id { max-width:530px; margin:18px 0; font-size:.85rem; }
+.scope-import-id input { font-family:monospace; font-size:.85rem; }

@@ -1,3 +1,4 @@
+import { UserImportWorkspace } from './UserImportWorkspace'
 import { DeadlineNotices } from './DeadlineNotices'
 import { PeriodControl } from './PeriodControl'
 import { Toast } from '../shared/Toast'
@@ -20,11 +21,12 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
   const [visible, setVisible] = useState(false); const [showCreateUser, setShowCreateUser] = useState(false)
   const createDirty = dirtyCreates.length > 0
   function markCreate(key: string) { setDirtyCreates(current => current.includes(key) ? current : [...current, key]) }
+  const [importDirty, setImportDirty] = useState(false)
   const [flowDirty, setFlowDirty] = useState(false); const [profileDirty, setProfileDirty] = useState(false)
   const [reload, setReload] = useState(0); const [directoryQuery, setDirectoryQuery] = useState('')
   const [memberSearch, setMemberSearch] = useState(''); const [memberOptions, setMemberOptions] = useState<User[]>([])
   useEffect(() => { let active = true; api<{ items: User[] }>('/admin/users/directory?' + new URLSearchParams({ query: memberSearch, active: 'true', size: '100' })).then(data => { if (active) setMemberOptions(data.items) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [memberSearch, reload])
-  useEffect(() => { onDirtyChange(createDirty || flowDirty || profileDirty); return () => onDirtyChange(false) }, [createDirty, flowDirty, profileDirty, onDirtyChange])
+  useEffect(() => { onDirtyChange(createDirty || flowDirty || profileDirty || importDirty); return () => onDirtyChange(false) }, [createDirty, flowDirty, profileDirty, importDirty, onDirtyChange])
   useEffect(() => {
     let cancelled = false
     if (memberGroup) api<Member[]>('/groups/' + memberGroup + '/members').then(data => { if (!cancelled) { setMembers(data); setLoadedMemberGroup(memberGroup) } }).catch(e => { if (!cancelled) setError(e.message) })
@@ -62,6 +64,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
       <label>Permiso del sistema<select name="systemRole"><option value="USER">Usuario</option><option value="ADMIN">Administrador</option></select></label>
       <div className="auth-password-field"><label htmlFor="admin-temporary-password">Contraseña temporal</label><span className="password-control"><input id="admin-temporary-password" type={visible ? 'text' : 'password'} name="temporaryPassword" required minLength={12} maxLength={72} autoComplete="new-password" /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(v => !v)}><Icon name="eye" /></button></span></div>
       <button disabled={busy}>Crear usuario</button></form></section>}
+    <UserImportWorkspace onDirtyChange={setImportDirty} onChange={async () => { await load(); await onChange() }} />
     <DirectoryAdministration mode="users" groups={groups} reload={reload} suggestedQuery={directoryQuery} onChange={async () => { await load(); await onChange() }} onDirtyChange={setProfileDirty} />
     </>}
     {page === 'groups' && <>

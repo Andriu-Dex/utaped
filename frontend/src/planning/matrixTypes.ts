@@ -1,8 +1,8 @@
 export type Category = 'POA' | 'IMPROVEMENT_PLAN' | 'IMPROVEMENT_ACTION' | 'OTHER'
 export const categoryLabels: Record<Category, string> = { POA: 'POA', IMPROVEMENT_PLAN: 'Plan de Mejoras', IMPROVEMENT_ACTION: 'Acción de Mejora', OTHER: 'Otra' }
-export interface Catalog { id: string; kind: 'RESOURCE' | 'MEANS'; label: string; active: boolean }
+export interface Catalog { id: string; kind: 'RESOURCE' | 'MEANS'; label: string; active: boolean; evidenceKind?: 'PDF' | 'URL' }
 export interface Definition { id: string; groupId: string; title: string; category: Category; mandatory: boolean; active: boolean }
-export interface Choice { catalogId: string | null; other: string | null; label: string | null }
+export interface Choice { catalogId: string | null; other: string | null; label: string | null; evidenceKind?: 'PDF' | 'URL' }
 export interface Activity {
   id: string; catalogId: string | null; title: string; category: Category; mandatory: boolean
   startsOn: string | null; endsOn: string | null; responsibleIds: string[]; collective: boolean; resources: Choice[]; means: Choice[]
