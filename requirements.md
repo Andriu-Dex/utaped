@@ -35,6 +35,15 @@ La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con 
 
 ## Fuentes y alcance
 
+### Accesibilidad y carga documental — 2026-10-13
+
+| ID | Requisito y fuente | Estado / prioridad / aceptación |
+|---|---|---|
+| UT-AUTH-090 | Alternativa de audio al CAPTCHA visual, mismo código/sesión/caducidad/consumo, sin servicio externo. Autorización del propietario del 2026-10-13. | CONFIRMADO-PROYECTO, P1. Teclado, reproducción y renovación; otra sesión/consumo/expiración rechazados; V22, HTTP, PCM y Playwright. |
+| UT-DOC-090 | Carga acotada de generación/renderizado/descarga, evidencias y firmas concurrentes con integridad/aislamiento y mediciones. Misma autorización. | CONFIRMADO-PROYECTO, P0/P1. Tres autores/ámbitos, ocho lectores, conflictos de versiones y firma idempotente; PostgreSQL aislado y JSON por fase. |
+
+[Contrato de acceso](docs/api/local-access.md), [pruebas y límites](docs/testing/captcha-and-document-load.md). Aceptación de audio con usuarios y dimensionamiento/SLA institucional pendientes; no se declara conformidad WCAG completa ni se amplían permisos.
+
 ### Aceptación y operación — 2026-10-12
 
 | ID | Requisito técnico entregado | Evidencia |

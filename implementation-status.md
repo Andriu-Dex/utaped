@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-12
+## Estado vigente al 2026-10-13
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
@@ -20,19 +20,23 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Seguimiento | Filtros y CSV de totales/estados/cobertura con permisos. ADMIN ve agregados sin acceso automático a contenido privado. |
 | Desarrollo | Entorno y semillas aislados en utaped_dev, siete usuarios ficticios, configuración y pruebas sin modificar la DB principal. |
 | Importación | CSV administrativo UTF-8 prevalidado por fila, lotes atómicos, cuentas USER con contraseña aleatoria individual de descarga única y pertenencia opcional sin principal/permisos de recuperación; caducidad y limpieza de filas temporales. |
+| CAPTCHA accesible | Mismo reto visual y audio español privado, teclado, reproducción/pausa/repetición, ID/sesión/caducidad/consumo únicos, sin proveedor externo. Aceptación de pronunciación con usuarios pendiente. |
+| Carga documental | Escenarios aislados de tres autores/ámbitos, T1 extensos y T2 con evidencia paginada: generación, rasterizado, descarga, conflictos de evidencia y firmas concurrentes. Métricas por fase; no acredita capacidad institucional sostenida. |
 | Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
 | Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
 | Redacción | Propuestas T1/T2 con consentimiento, comparación, aplicar/descartar y protección ante cambios locales/versiones. Groq/OpenAI detrás de interfaz backend; deshabilitado por defecto. El propietario configuró proveedor/modelo/clave en sus entornos; aceptación de privacidad/calidad institucional pendiente. |
 | Documentos extensos | Navegación directa por página, firmas/anexos/observaciones y estado de carga. Aceptación T1 extenso y T2 de 18 páginas con evidencia/índice/slots/firmas e integridad del Plan base. |
 | Operación | Override HTTPS 64430 con servicios internos sin publicar, SMTP externo configurable y preflight. Respaldo conjunto DB/volumen/imágenes, validación y restauración en proyectos nuevos; ensayo completo con datos ficticios. No desplegado institucionalmente. |
 
-Persistencia: Flyway V13–V21 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
+Persistencia: Flyway V13–V22 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
 
 Importaciones/enlaces: [contrato](docs/api/user-imports-and-external-evidence.md) y [reporte](docs/reports/2026-10-12-04-user-imports-and-external-evidence.md). Validación de esta tanda: 116 ejecuciones de pruebas de backend sin fallos, ocho escenarios E2E, lint/build y revisión visual de interfaces/T2.
 
 Redacción/bandeja: [contrato](docs/api/writing-and-review-inbox.md), [configuración](docs/development/writing-configuration.md) y [reporte](docs/reports/2026-10-12-05-writing-assistance-and-review-inbox.md). Validación vigente: 129 ejecuciones backend en 19 suites sin fallos, cinco E2E generales y cuatro escenarios del entorno de ejemplo, lint/build y revisión visual PC/tableta. Transporte IA con fixtures locales; no se consumió una cuenta externa. El agente de código/Trello se desarrolla aparte por el propietario.
 
 Aceptación/operación: [escenarios](docs/testing/role-and-document-acceptance.md), [herramientas](docs/operations/production-readiness.md) y [reporte](docs/reports/2026-10-12-06-role-acceptance-and-operational-readiness.md). Validación actual: 131 ejecuciones backend en 19 suites, diez escenarios E2E y siete pruebas de herramientas, sin fallos finales; lint/build y revisión visual. Recuperación de 57 documentos/156 archivos e imágenes originales; HTTPS con certificado temporal, cookie Secure, login y PDF firmado con hash intacto. Cuarenta consultas de salud concurrentes no acreditan dimensionamiento institucional.
+
+Accesibilidad/carga (2026-10-13): [contrato](docs/api/local-access.md), [escenarios reproducibles](docs/testing/captcha-and-document-load.md) y [reporte](docs/reports/2026-10-13-01-accessible-captcha-and-document-load.md). Validación: 135 ejecuciones backend en 20 suites, siete E2E generales y cinco de ejemplo; dos escenarios de audio repetidos sobre Nginx, sin fallos finales. Lint/build y revisión visual PC/tableta. No se modificaron datos principales, proveedores ni variables privadas. La concurrencia de firma se prueba en servicios reales con fixture de transporte seguro; no es carga de certificados por HTTPS.
 
 ### Trabajo que aún falta para completar el producto
 
@@ -42,11 +46,11 @@ Aceptación/operación: [escenarios](docs/testing/role-and-document-acceptance.m
 - Archivos adjuntos no PDF y formatos documentales oficiales adicionales: pendientes de especificación/plantillas. Referencias HTTPS ya entregadas, sin descarga ni comprobación remota de disponibilidad/integridad.
 - Importación delegada, actualización de cuentas por archivo y distribución institucional de credenciales aún no entregadas. CSV administrativo ya implementado. Canales/frecuencia institucional y correo de recordatorios pendientes.
 - Aceptación de tratamiento de datos, presupuesto y calidad real de redacción. El propietario configuró Groq/modelo/clave en el entorno principal y agregó variables al ejemplo; se verificó una llamada real con texto ficticio en la revisión anterior. Las pruebas automatizadas controlan sus respuestas y no consumen la cuenta. El agente de código/Trello lo construye el propietario por separado; queda fuera de este producto.
-- Alternativa accesible al CAPTCHA visual, pruebas de carga y ampliación de casos documentales largos. La interfaz de revisión ya usa paginación completa; la API anterior de tareas conserva límite 200 por compatibilidad.
+- Aceptación del audio con usuarios, necesidades que no cubre imagen/audio, prueba de carga documental sostenida y del transporte de firma HTTPS en infraestructura institucional. Carga acotada e integridad ya comprobadas; no se fija SLA. La API anterior de tareas conserva límite 200 por compatibilidad.
 - Ratificación de ventanas T2, días de prórroga, múltiples elaboradores y secuencias/personas oficiales; los ejemplos no reemplazan esas decisiones.
 - Insumos reales HTTPS/DNS/CA/firewall y SMTP institucional, custodio/cifrado/frecuencia/retención/RPO/RTO de respaldos y despliegue operativo. Las herramientas y restauración técnica de ejemplo ya están comprobadas; todavía se requiere ensayo/aceptación institucional. Puerto web principal 64430; el override productivo requiere selección explícita.
 
-Próxima tanda propuesta: alternativa accesible al CAPTCHA visual, ampliación de carga documental y ejecución del recorrido de aceptación con el cliente; conectar/validar insumos reales de operación cuando DTIC los entregue. El agente externo no bloquea estas tareas. No se declara terminado el producto institucional.
+Próxima etapa propuesta: recorrido de aceptación con el cliente, evaluación del audio con usuarios y ajuste de incidencias; cerrar reglas institucionales pendientes y validar carga/insumos reales de operación con DTIC. El agente externo no bloquea estas tareas. No se declara terminado el producto institucional.
 
 ## Registro histórico de entregas
 

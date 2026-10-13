@@ -1,5 +1,9 @@
 # Decisiones pendientes y contradicciones
 
+## Accesibilidad y carga — 2026-10-13
+
+El propietario autorizó y se incorpora audio español al mismo CAPTCHA con controles de teclado y protecciones de sesión/expiración/consumo. Se añaden escenarios concurrentes de PDFs extensos, evidencia y firma con datos aislados. Quedan aceptación con usuarios (incluidas necesidades que no cubre imagen/audio), prueba sostenida/SLA/concurrencia institucional y carga de transporte de certificados por HTTPS. [Alcance y reproducción](../testing/captcha-and-document-load.md). Las menciones históricas a ausencia de alternativa o de pruebas de carga quedan superadas exclusivamente en este alcance acotado.
+
 ## Preparación operativa y aceptación — 2026-10-12
 
 Se entregan override HTTPS en 64430 con SMTP externo configurable, preflight, backup de DB/volumen/imágenes y restauración verificada en un destino aislado. Faltan hostname/certificado/CA y SMTP reales, condiciones de red, custodio/cifrado/frecuencia/RPO/RTO y aceptación institucional. Se amplió aceptación por siete identidades y T2 de 18 páginas; no equivale a dimensionamiento bajo carga documental. [Guía](../operations/production-readiness.md).

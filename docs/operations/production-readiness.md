@@ -93,6 +93,8 @@ Usa certificado local temporal, la plantilla HTTPS productiva y las imágenes de
 
 ## Evidencia y pendientes
 
+La entrega del 2026-10-13 añade CAPTCHA sonoro sin variables nuevas; reconstruir backend/frontend para aplicar Flyway V22, clips y CSP para imágenes Blob/audio del mismo origen. Se incorpora [carga documental acotada](../testing/captcha-and-document-load.md) en base aislada. No sustituye el ensayo sostenido en infraestructura institucional ni la carga HTTPS de certificados; los semáforos devuelven ocupación 503 para limitar consumo.
+
 [Reporte de aceptación](../reports/2026-10-12-06-role-acceptance-and-operational-readiness.md). Se verificaron respaldos/restauración de datos ficticios, HTTPS de prueba y un PDF firmado recuperado. Para operar faltan los insumos reales anteriores, prueba de envío a un destinatario autorizado, acuerdo de retención/RPO/RTO y ensayo institucional con datos autorizados. No se acredita capacidad de carga por las lecturas acotadas de /healthz.
 
 Referencias técnicas: [Nginx HTTPS](https://nginx.org/en/docs/http/configuring_https_servers.html), [merge de Compose](https://docs.docker.com/reference/compose-file/merge/), [pg_restore 18](https://www.postgresql.org/docs/18/app-pgrestore.html).
