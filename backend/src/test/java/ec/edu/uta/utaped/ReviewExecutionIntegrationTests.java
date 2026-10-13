@@ -23,8 +23,17 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
     SigningFixture authorFixture;
     UUID reviewer,approver; String reviewerEmail="reviewer@example.invalid",approverEmail="approver@example.invalid";
-    UUID submit(boolean signatureRequired) throws Exception {
+    UUID submit(boolean signatureRequired) throws Exception { return submit(signatureRequired,false); }
+    UUID submit(boolean signatureRequired,boolean external) throws Exception {
         complete("Justificación de prueba para revisión",1);signingAdmin();
+        if(external) {
+            var catalog=activities.saveCatalog(null,new ec.edu.uta.utaped.planning.ActivityModels.CatalogInput("MEANS","Repositorio externo",true,"URL"),email);
+            var matrix=activities.get(id,email);var a=matrix.activities().getFirst();
+            activities.save(id,email,new ec.edu.uta.utaped.planning.ActivityModels.Save(version(),matrix.source(),List.of(new ec.edu.uta.utaped.planning.ActivityModels.Activity(a.id(),a.catalogId(),a.title(),a.category(),a.mandatory(),a.startsOn(),a.endsOn(),a.responsibleIds(),a.collective(),a.resources(),List.of(a.means().getFirst(),new ec.edu.uta.utaped.planning.ActivityModels.Choice(catalog.id(),null,null,"PDF"))))));
+            assertEquals("URL",activities.get(id,email).activities().getFirst().means().get(1).evidenceKind());
+            activities.saveCatalog(catalog.id(),new ec.edu.uta.utaped.planning.ActivityModels.CatalogInput("MEANS","Repositorio cambiado",true,"PDF"),email);
+            assertEquals("URL",activities.get(id,email).activities().getFirst().means().get(1).evidenceKind());
+        }
         reviewer=UUID.randomUUID();approver=UUID.randomUUID();
         for(var entry:Map.of(reviewer,reviewerEmail,approver,approverEmail).entrySet()) jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','USER',false)",entry.getKey(),entry.getValue(),entry.getValue());
         UUID scope=organization.createScope(email,new OrganizationService.ScopeInput(group,period,null));
@@ -129,4 +138,37 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM deadline_extension_history WHERE work_plan_id=? AND user_id=?",Integer.class,id,user));
         assertEquals(409,assertThrows(ResponseStatusException.class,()->evidence.extend(id,activity.id(),reviewerEmail,grant)).getStatusCode().value());
         assertEquals(400,assertThrows(ResponseStatusException.class,()->evidence.extend(id,activity.id(),reviewerEmail,new ec.edu.uta.utaped.planning.EvidenceService.Extension(0L,approver,activity.endsOn().plusDays(1),"No es responsable"))).getStatusCode().value());
-    }}
+    }
+    @Test void externalReferencesRespectMediumPermissionsVersionsAndFrozenT2() throws Exception {
+        UUID review=submit(false,true);approve(review);assertFalse(jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE work_plan_id=?",String.class,id).contains("externalReferences"));var activity=activities.get(id,email).activities().getFirst();
+        var upload=new org.springframework.mock.web.MockMultipartFile("file","evidencia.pdf","application/pdf",pdf(1,false,false));
+        var reference=new ec.edu.uta.utaped.planning.EvidenceService.Reference(0,"Acta externa","https://example.invalid/acta?revision=1");
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),0,email,reference)).getStatusCode().value());
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->evidence.upload(id,activity.id(),1,0,email,upload)).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,reviewerEmail,reference)).getStatusCode().value());
+        for(String url:List.of("http://example.invalid/acta","javascript:alert(1)","https://user:password@example.invalid/acta","https://example.invalid/with space"))
+            assertEquals(400,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,new ec.edu.uta.utaped.planning.EvidenceService.Reference(0,"Acta",url))).getStatusCode().value());
+        var first=evidence.reference(id,activity.id(),1,email,reference);
+        assertEquals("URL",first.evidenceKind());assertNull(first.sha256());assertNull(first.originalName());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->evidence.content(id,first.id(),email)).getStatusCode().value());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,reference)).getStatusCode().value());
+        assertEquals(1,evidence.get(id,email).coveredMedia());assertFalse(evidence.get(id,email).activities().getFirst().complete());
+        evidence.upload(id,activity.id(),0,0,email,upload);assertEquals(2,evidence.get(id,email).coveredMedia());assertTrue(evidence.get(id,email).activities().getFirst().complete());
+        var report=reports.create(id,email);var state=reports.get(report.id(),email);
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Antecedentes de prueba","Conclusiones de prueba","Recomendaciones de prueba",state.data().results().stream().map(r->new ec.edu.uta.utaped.planning.ReportService.Result(r.activityId(),java.math.BigDecimal.valueOf(100),"Cumplimiento documentado")).toList(),List.of()));
+        var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));
+        assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
+        String snapshot=jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE id=?",String.class,artifact.id());assertTrue(snapshot.contains(first.externalUrl()));
+        var signing=signatures.state(report.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
+        signatures.sign(report.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        UUID reportReview=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(reportReview);
+        byte[] frozen=reviews.content(reportReview,email);
+        try(var rendered=org.apache.pdfbox.Loader.loadPDF(frozen)) {String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertTrue(text.contains("Acta externa"));assertTrue(text.contains("https://example.invalid/acta?revision=1"));java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-external.pdf"),frozen);java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-external-first.png"),artifacts.renderPage(frozen,0));}
+        var second=evidence.reference(id,activity.id(),1,email,new ec.edu.uta.utaped.planning.EvidenceService.Reference(1,"Acta corregida","https://example.invalid/acta?revision=2"));assertEquals(2,second.version());
+        assertEquals(2,evidence.get(id,email).activities().getFirst().media().get(1).versions().size());assertArrayEquals(frozen,reviews.content(reportReview,email));
+        assertEquals(snapshot,jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE id=?",String.class,artifact.id()));
+        periodArchives.close(period,email,new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L,"Cierre de prueba con referencias"));
+        boolean found=false;try(var zip=new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(periodArchives.download(period,email)))) {java.util.zip.ZipEntry entry;while((entry=zip.getNextEntry())!=null) {byte[] bytes=zip.readAllBytes();if(entry.getName().equals("documents/"+id+"/manifest.json")) {String manifest=new String(bytes,java.nio.charset.StandardCharsets.UTF_8);assertTrue(manifest.contains(first.externalUrl()));assertTrue(manifest.contains(second.externalUrl()));found=true;}}}assertTrue(found);
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,new ec.edu.uta.utaped.planning.EvidenceService.Reference(2,"Acta","https://example.invalid/acta"))).getStatusCode().value());
+    }
+}

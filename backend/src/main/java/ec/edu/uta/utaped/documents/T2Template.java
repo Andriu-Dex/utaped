@@ -40,7 +40,7 @@ public class T2Template {
     public List<String> sections(Snapshot s) {
         var sections=new ArrayList<>(List.of("ANTECEDENTES","DESARROLLO DE ACTIVIDADES","CONCLUSIONES","OPORTUNIDADES DE MEJORA"));
         if(!s.report().delegations().isEmpty()) sections.add("REGISTRO DE CONTACTOS Y GESTIONES DE LA DELEGACIÓN");
-        if(!s.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));return List.copyOf(sections);
+        if(!s.attachments().isEmpty()||(s.externalReferences()!=null&&!s.externalReferences().isEmpty())) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));return List.copyOf(sections);
     }
     public byte[] compose(Snapshot s,Map<String,Integer> pageNumbers) {
         try(var input=new ZipInputStream(new ByteArrayInputStream(reference));var buffer=new ByteArrayOutputStream();var out=new ZipOutputStream(buffer)) {
@@ -83,7 +83,8 @@ public class T2Template {
                 for(int i=0;i<cells.size();i++) cell(cells.get(i),values.get(i));contact.appendChild(dataRow);result.add(contact);
             }
         }
-        if(!s.attachments().isEmpty()) { heading(result,sectionNodes,source.get(58),"ANEXOS");for(var a:s.attachments()) { result.add(paragraph(source.get(34),a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(source.get(34),a.description())); } }
+        if(!s.attachments().isEmpty()||(s.externalReferences()!=null&&!s.externalReferences().isEmpty())) { heading(result,sectionNodes,source.get(58),"ANEXOS");for(var a:s.attachments()) { result.add(paragraph(source.get(34),a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(source.get(34),a.description())); } }
+        if(s.externalReferences()!=null&&!s.externalReferences().isEmpty()) { for(var reference:s.externalReferences()) { result.add(paragraph(source.get(34),"Referencia externa · "+reference.activity()+" · "+reference.medium()+" · v"+reference.version()+".0")); result.add(paragraph(source.get(34),reference.title()+": "+reference.url())); } }
         heading(result,sectionNodes,source.get(63),"FIRMAS DE RESPONSABILIDAD");property(sectionNodes.get("FIRMAS DE RESPONSABILIDAD"),"pageBreakBefore");var signatures=source.get(65);var signatureRows=children(signatures,"tr");var signaturePrototype=(Element)signatureRows.get(1).cloneNode(true);for(int i=1;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
         signature(signatures,signaturePrototype,"Elaborado por:",s.plan().teacherName(),"");int slot=1;
         if(s.workflow()!=null) for(var stage:s.workflow().stages()) for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),stage.requiresSignature()?String.valueOf(slot++):null);

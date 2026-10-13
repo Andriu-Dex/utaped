@@ -52,7 +52,7 @@ public class PeriodArchiveService {
             SELECT file_id FROM document_artifact WHERE work_plan_id=?
             UNION SELECT file_id FROM signed_document_artifact WHERE work_plan_id=?
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=?
-            UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=?
+            UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
             UNION SELECT current_file_id FROM document_review WHERE work_plan_id=?
             UNION SELECT t.output_file_id FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? AND t.output_file_id IS NOT NULL
             ORDER BY 1
@@ -125,7 +125,7 @@ public class PeriodArchiveService {
         var downloadable=new HashMap<UUID,Set<UUID>>();
         for(var document:permitted) downloadable.put(document,new HashSet<>(jdbc.queryForList("""
             SELECT current_file_id FROM document_review WHERE work_plan_id=? AND status='APPROVED'
-            UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=?
+            UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL
             UNION SELECT a.file_id FROM document_artifact a JOIN work_plan w ON w.id=a.work_plan_id WHERE w.id=? AND w.scope_id IS NULL
             UNION SELECT a.file_id FROM signed_document_artifact a JOIN work_plan w ON w.id=a.work_plan_id WHERE w.id=? AND w.scope_id IS NULL

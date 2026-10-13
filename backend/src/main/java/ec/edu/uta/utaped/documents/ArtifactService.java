@@ -76,6 +76,7 @@ public class ArtifactService {
             a.collective()?matrix.collectiveLabel():String.join("\n",a.responsibleIds().stream().map(m->names.getOrDefault(m,"Responsable no disponible")).toList()),
             a.responsibleIds(),a.resources().stream().map(c->c.label()).toList(),a.means().stream().map(c->c.label()).toList())).toList();
         var annexList=new ArrayList<>(annexes.items());
+        var references=new ArrayList<ExternalReference>();
         var report=plan.documentType().equals("T2")?reports.data(id,email):null;
         if(report!=null) {
             // T2 keeps the approved Plan's labels and responsible identities, even after directory changes.
@@ -84,7 +85,13 @@ public class ArtifactService {
             var execution=evidence.get(report.basePlanId(),email);var linked=new ArrayList<Activity>();int annexIndex=annexList.size();
             for(int i=0;i<rows.size();i++) {
                 var a=rows.get(i);var means=new ArrayList<String>();
-                for(var medium:execution.activities().get(i).media()) means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
+                for(var medium:execution.activities().get(i).media()) {
+                    if(medium.evidenceKind().equals("URL")&&!medium.versions().isEmpty()) {
+                        var reference=medium.versions().getFirst();
+                        means.add(medium.label()+" — "+reference.referenceTitle()+": "+reference.externalUrl());
+                        references.add(new ExternalReference(reference.id(),reference.version(),a.title(),medium.label(),reference.referenceTitle(),reference.externalUrl()));
+                    } else means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
+                }
                 linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means)));
             }
             rows=List.copyOf(linked);annexList.addAll(evidence.annexes(report.basePlanId(),email));
@@ -92,7 +99,7 @@ public class ArtifactService {
         // Labels are derived once for the complete sequence, including evidence PDFs.
         var labelled=new ArrayList<AttachmentModels.Attachment>();
         for(var a:annexList) labelled.add(new AttachmentModels.Attachment(a.id(),a.fileId(),AttachmentService.label(labelled.size()),a.title(),a.description(),a.originalName(),a.sizeBytes(),a.pageCount(),a.sha256()));
-        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report);
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references));
     }
     private String hash(Snapshot snapshot) {
         // Permissions belong to the requesting account, not to the document content.

@@ -23,7 +23,7 @@ public class ActivityService {
         this.jdbc=jdbc;this.plans=plans;this.accounts=accounts;this.audit=audit;
     }
     private ResponseStatusException invalid(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST,message); }
-    public List<Catalog> catalogs() { return jdbc.query("SELECT * FROM planning_catalog ORDER BY kind,label",(rs,n)->new Catalog(rs.getObject("id",UUID.class),rs.getString("kind"),rs.getString("label"),rs.getBoolean("active"))); }
+    public List<Catalog> catalogs() { return jdbc.query("SELECT * FROM planning_catalog ORDER BY kind,label",(rs,n)->new Catalog(rs.getObject("id",UUID.class),rs.getString("kind"),rs.getString("label"),rs.getBoolean("active"),rs.getString("evidence_kind"))); }
     public List<Definition> definitions(UUID groupId) {
         return jdbc.query("SELECT * FROM activity_catalog WHERE group_id=? ORDER BY mandatory DESC,title,id",(rs,n)->new Definition(rs.getObject("id",UUID.class),groupId,rs.getString("title"),rs.getString("category"),rs.getBoolean("mandatory"),rs.getBoolean("active")),groupId);
     }
@@ -56,7 +56,7 @@ public class ActivityService {
                 var previous=old.stream().filter(c->choice.catalogId().equals(c.catalogId())).findFirst();
                 if(previous.isPresent()) { result.add(previous.get());continue; }
                 var entry=catalog.stream().filter(c->c.id().equals(choice.catalogId()) && c.kind().equals(kind) && c.active()).findFirst().orElseThrow(()->invalid("Seleccione un elemento activo del catálogo correspondiente."));
-                result.add(new Choice(entry.id(),null,entry.label()));
+                result.add(new Choice(entry.id(),null,entry.label(),entry.evidenceKind()));
             }
         }
         return result;
@@ -101,8 +101,10 @@ public class ActivityService {
         return get(targetDocId,email);
     }
     @Transactional public Catalog saveCatalog(UUID id,CatalogInput input,String email) {
-        if(id==null) { id=UUID.randomUUID();jdbc.update("INSERT INTO planning_catalog(id,kind,label,active) VALUES (?,?,?,?)",id,input.kind(),input.label().trim(),input.active()); }
-        else if(jdbc.update("UPDATE planning_catalog SET label=?,active=? WHERE id=? AND kind=?",input.label().trim(),input.active(),id,input.kind())==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Elemento no disponible.");
+        String evidenceKind=input.evidenceKind()==null?"PDF":input.evidenceKind();
+        if(input.kind().equals("RESOURCE")&&!evidenceKind.equals("PDF")) throw invalid("Solo un medio de verificación puede configurarse como recurso externo.");
+        if(id==null) { id=UUID.randomUUID();jdbc.update("INSERT INTO planning_catalog(id,kind,label,active,evidence_kind) VALUES (?,?,?,?,?)",id,input.kind(),input.label().trim(),input.active(),evidenceKind); }
+        else if(jdbc.update("UPDATE planning_catalog SET label=?,active=?,evidence_kind=? WHERE id=? AND kind=?",input.label().trim(),input.active(),evidenceKind,id,input.kind())==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Elemento no disponible.");
         audit.record(accounts.current(email).id(),"PLANNING_CATALOG_SAVED",id);
         UUID target=id;return catalogs().stream().filter(c->c.id().equals(target)).findFirst().orElseThrow();
     }

@@ -16,8 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EvidenceService {
-    public record Evidence(UUID id,UUID activityId,int mediumIndex,int version,String originalName,long sizeBytes,int pageCount,String sha256,String uploadedBy,OffsetDateTime uploadedAt) {}
-    public record Medium(int index,String label,List<Evidence> versions) {}
+    public record Evidence(UUID id,UUID activityId,int mediumIndex,int version,String originalName,long sizeBytes,int pageCount,String sha256,String uploadedBy,OffsetDateTime uploadedAt,String evidenceKind,String externalUrl,String referenceTitle) {}
+    public record Medium(int index,String label,List<Evidence> versions,String evidenceKind) {}
+    public record Reference(@NotNull @PositiveOrZero Integer expectedVersion,@NotBlank @Size(max=200) String title,@NotBlank @Size(max=2048) String url) {}
     public record Responsible(UUID id,String name,LocalDate deadline,long extensionVersion) {}
     public record Execution(UUID id,String title,LocalDate startsOn,LocalDate endsOn,LocalDate deadline,long extensionVersion,boolean canUpload,boolean complete,List<Medium> media,List<Responsible> responsible) {}
     public record State(UUID documentId,String documentState,boolean coordinator,int requiredMedia,int coveredMedia,int completedActivities,List<Execution> activities,long maxFileBytes) {}
@@ -29,7 +30,7 @@ public class EvidenceService {
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.files=files;this.validation=validation;this.accounts=accounts;this.audit=audit;this.zone=ZoneId.of(zone);this.maxBytes=maxBytes;this.extensionDays=extensionDays;
     }
     private List<Evidence> evidence(UUID doc) {
-        return jdbc.query("SELECT e.*,f.original_name,f.size_bytes,f.page_count,f.sha256,u.display_name FROM execution_evidence e JOIN stored_file f ON f.id=e.file_id JOIN app_user u ON u.id=e.uploaded_by WHERE e.work_plan_id=? ORDER BY e.version_number DESC,e.id",(rs,n)->new Evidence(rs.getObject("id",UUID.class),rs.getObject("activity_id",UUID.class),rs.getInt("medium_index"),rs.getInt("version_number"),rs.getString("original_name"),rs.getLong("size_bytes"),rs.getInt("page_count"),rs.getString("sha256"),rs.getString("display_name"),rs.getObject("uploaded_at",OffsetDateTime.class)),doc);
+        return jdbc.query("SELECT e.*,f.original_name,f.size_bytes,f.page_count,f.sha256,u.display_name FROM execution_evidence e LEFT JOIN stored_file f ON f.id=e.file_id JOIN app_user u ON u.id=e.uploaded_by WHERE e.work_plan_id=? ORDER BY e.version_number DESC,e.id",(rs,n)->new Evidence(rs.getObject("id",UUID.class),rs.getObject("activity_id",UUID.class),rs.getInt("medium_index"),rs.getInt("version_number"),rs.getString("original_name"),rs.getLong("size_bytes"),rs.getInt("page_count"),rs.getString("sha256"),rs.getString("display_name"),rs.getObject("uploaded_at",OffsetDateTime.class),rs.getString("evidence_kind"),rs.getString("external_url"),rs.getString("reference_title")),doc);
     }
     public State get(UUID doc,String email) {
         var plan=plans.get(doc,email);var actor=accounts.current(email);var matrix=activities.get(doc,email);var evidence=evidence(doc);
@@ -41,7 +42,7 @@ public class EvidenceService {
             var media=new ArrayList<Medium>();
             for(int i=0;i<activity.means().size();i++) {
                 int index=i;var versions=evidence.stream().filter(e->e.activityId().equals(activity.id())&&e.mediumIndex()==index).toList();
-                media.add(new Medium(i,activity.means().get(i).label(),versions));required++;if(!versions.isEmpty()) covered++;
+                media.add(new Medium(i,activity.means().get(i).label(),versions,activity.means().get(i).effectiveEvidenceKind()));required++;if(!versions.isEmpty()) covered++;
             }
             boolean complete=!media.isEmpty()&&media.stream().allMatch(m->!m.versions().isEmpty());if(complete) completed++;
             boolean open=deadline!=null&&Instant.now().isBefore(deadline.plusDays(1).atStartOfDay(zone).toInstant());
@@ -60,6 +61,7 @@ public class EvidenceService {
         var state=get(doc,email);var row=state.activities().stream().filter(a->a.id().equals(activity)).findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Actividad no disponible."));
         if(!row.canUpload()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo los responsables pueden cargar evidencias de un Plan aprobado dentro del plazo.");
         if(medium<0||medium>=row.media().size()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Medio de verificación no disponible.");
+        if(!row.media().get(medium).evidenceKind().equals("PDF")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Este medio requiere una referencia externa, no un PDF.");
         var versions=row.media().get(medium).versions();int version=versions.isEmpty()?0:versions.getFirst().version();
         if(version!=expectedVersion) throw new ResponseStatusException(HttpStatus.CONFLICT,"La evidencia cambió. Recargue antes de reemplazarla.");
         if(input.isEmpty()||input.getSize()>maxBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El PDF supera el límite de tamaño permitido.");
@@ -67,6 +69,21 @@ public class EvidenceService {
         int pages=validation.pages(bytes);String name=Objects.toString(input.getOriginalFilename(),"evidencia.pdf").replaceAll("[\\p{Cntrl}/\\\\]","_");if(name.length()>200) name=name.substring(name.length()-200);
         var stored=files.put(bytes,name,pages);UUID id=UUID.randomUUID();jdbc.update("INSERT INTO execution_evidence(id,work_plan_id,activity_id,medium_index,version_number,file_id,uploaded_by) VALUES (?,?,?,?,?,?,?)",id,doc,activity,medium,version+1,stored.id(),accounts.current(email).id());
         audit.record(accounts.current(email).id(),"EXECUTION_EVIDENCE_UPLOADED",doc);return evidence(doc).stream().filter(e->e.id().equals(id)).findFirst().orElseThrow();
+    }
+    @Transactional public Evidence reference(UUID doc,UUID activity,int medium,String email,Reference input) {
+        plans.lock(doc,email);var row=get(doc,email).activities().stream().filter(a->a.id().equals(activity)).findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Actividad no disponible."));
+        if(!row.canUpload()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo los responsables pueden registrar evidencias dentro del plazo de un Plan aprobado.");
+        if(medium<0||medium>=row.media().size()||!row.media().get(medium).evidenceKind().equals("URL")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Este medio requiere PDF; no se admite un enlace como sustituto.");
+        var versions=row.media().get(medium).versions();int version=versions.isEmpty()?0:versions.getFirst().version();
+        if(version!=input.expectedVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"La referencia cambió. Recargue antes de reemplazarla.");
+        String url=input.url().trim();
+        try {
+            var uri=new java.net.URI(url);
+            if(!"https".equalsIgnoreCase(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null||url.chars().anyMatch(c->Character.isWhitespace(c)||Character.isISOControl(c))) throw new IllegalArgumentException();
+        } catch(java.net.URISyntaxException|IllegalArgumentException error) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Use una URL HTTPS absoluta, sin credenciales ni espacios."); }
+        UUID id=UUID.randomUUID();jdbc.update("INSERT INTO execution_evidence(id,work_plan_id,activity_id,medium_index,version_number,uploaded_by,evidence_kind,external_url,reference_title) VALUES (?,?,?,?,?,?,'URL',?,?)",id,doc,activity,medium,version+1,accounts.current(email).id(),url,input.title().trim());
+        audit.record(accounts.current(email).id(),"EXECUTION_REFERENCE_REGISTERED",doc);
+        return evidence(doc).stream().filter(e->e.id().equals(id)).findFirst().orElseThrow();
     }
     @Transactional public void extend(UUID doc,UUID activity,String email,Extension input) {
         plans.lock(doc,email);var plan=plans.get(doc,email);var state=get(doc,email);
@@ -83,7 +100,7 @@ public class EvidenceService {
         audit.record(actor,"ACTIVITY_EXTENSION_GRANTED",doc,input.userId());
     }
     public byte[] content(UUID doc,UUID evidence,String email) {
-        plans.get(doc,email);var file=jdbc.queryForList("SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND id=?",UUID.class,doc,evidence).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Evidencia no disponible."));return files.read(file);
+        plans.get(doc,email);var file=jdbc.queryForList("SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND id=? AND evidence_kind='PDF'",UUID.class,doc,evidence).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"PDF no disponible para esta evidencia."));return files.read(file);
     }
     public List<Map<String,Object>> extensionHistory(UUID doc,String email) {
         plans.get(doc,email);
@@ -91,7 +108,7 @@ public class EvidenceService {
     }
     public List<AttachmentModels.Attachment> annexes(UUID doc,String email) {
         var state=get(doc,email);var list=new ArrayList<AttachmentModels.Attachment>();
-        for(var row:state.activities()) for(var medium:row.media()) if(!medium.versions().isEmpty()) {
+        for(var row:state.activities()) for(var medium:row.media()) if(!medium.versions().isEmpty()&&medium.evidenceKind().equals("PDF")) {
             var e=medium.versions().getFirst();UUID file=jdbc.queryForObject("SELECT file_id FROM execution_evidence WHERE id=?",UUID.class,e.id());
             list.add(new AttachmentModels.Attachment(e.id(),file,AttachmentService.label(list.size()),medium.label(),row.title()+" · Evidencia v"+e.version()+".0",e.originalName(),e.sizeBytes(),e.pageCount(),e.sha256()));
         }
