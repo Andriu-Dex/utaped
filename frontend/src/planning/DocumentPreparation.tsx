@@ -4,6 +4,7 @@ import { api } from '../shared/api'
 import { SignaturePreparation } from './SignaturePreparation'
 import { AuthorSigning } from './AuthorSigning'
 import { Icon } from '../shared/Icon'
+import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
@@ -12,6 +13,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
   const [ready, setReady] = useState<Readiness | null>(null); const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [selected, setSelected] = useState<Artifact | null>(null); const [page, setPage] = useState(0); const [plan, setPlan] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const [imageError, setImageError] = useState(false); const [reload, setReload] = useState(0)
+  const [loadedImage, setLoadedImage] = useState('')
   const label = documentType === 'T2' ? 'Informe' : 'Plan'
   useEffect(() => { let active = true; Promise.all([api<Readiness>(path + '/readiness'), api<Artifact[]>(path), api<WorkPlan>('/work-plans/' + targetDocId)]).then(([r, a, p]) => { if (active) { setReady(r); setArtifacts(a); setPlan(p); setSelected(a[0] ?? null); setPage(0) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path, targetDocId, reload])
   async function generate() {
@@ -27,9 +29,10 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     {selected && <div className="card"><p>{selected.current ? 'Coincide con el contenido actual.' : 'Artefacto conservado de una preparación anterior. Consulte las rondas para ver los bytes firmados.'}</p><p>Espacios de firma: {selected.signatureSlots.map(s => s.label + ', página ' + s.pageNumber).join('; ')}.</p>
       {mode !== 'preview' && <SignaturePreparation key={targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} />}
       {mode !== 'preview' && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} onSigned={() => { setReload(n => n + 1) }} />}
-      <nav className="review-pagination" aria-label="Páginas del PDF"><button className="secondary" disabled={page === 0} onClick={() => { setPage(page - 1); setImageError(false) }}>Página anterior</button><span role="status"> Página {page + 1} de {selected.pageCount} </span><button className="secondary" disabled={page + 1 === selected.pageCount} onClick={() => { setPage(page + 1); setImageError(false) }}>Página siguiente</button></nav>
+      <DocumentPageNavigator key={selected.id} page={page} pageCount={selected.pageCount} disabled={busy} onChange={target => { setPage(target); setImageError(false) }} references={[...selected.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })), ...selected.pages.filter((item, index) => item.kind === 'ANNEX' && selected.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' }))]} />
       {imageError && <Toast message="No se pudo cargar la página. Vuelva a seleccionar la previsualización para reintentar." />}
-      <img className="document-page" key={selected.id + '-' + page} width={Math.round(selected.pages[page].width * 1.5)} height={Math.round(selected.pages[page].height * 1.5)} src={'/api' + path + '/' + selected.id + '/pages/' + page} alt={'Página ' + (page + 1) + ' del ' + label + ' ' + documentType} onError={() => setImageError(true)} />
+      {!imageError && loadedImage !== selected.id + '-' + page && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
+      <img className="document-page" key={selected.id + '-' + page} width={Math.round(selected.pages[page].width * 1.5)} height={Math.round(selected.pages[page].height * 1.5)} src={'/api' + path + '/' + selected.id + '/pages/' + page} alt={'Página ' + (page + 1) + ' del ' + label + ' ' + documentType} onLoad={() => setLoadedImage(selected.id + '-' + page)} onError={() => setImageError(true)} />
     </div>}
   </section>
 }
