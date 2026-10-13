@@ -59,7 +59,7 @@ public class SecurityConfig {
     @Bean SecurityFilterChain security(HttpSecurity http, Accounts accounts, AuthThrottle throttle, AuditService audit, CaptchaService captcha) throws Exception {
         http.csrf(csrf -> csrf.csrfTokenRepository(new HttpSessionCsrfTokenRepository()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/csrf", "/api/auth/captcha", "/api/auth/login", "/api/auth/forgot-password", "/api/auth/reset-password", "/actuator/health", "/error").permitAll()
+                .requestMatchers("/api/auth/csrf", "/api/auth/captcha", "/api/auth/captcha/audio", "/api/auth/login", "/api/auth/forgot-password", "/api/auth/reset-password", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .formLogin(form -> form.loginProcessingUrl("/api/auth/login")

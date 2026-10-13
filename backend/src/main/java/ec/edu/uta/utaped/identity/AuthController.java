@@ -25,6 +25,11 @@ public class AuthController {
             .header("X-Captcha-Id",challenge.id().toString()).body(challenge.image());
     }
     @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) { return Map.of("headerName",token.getHeaderName(),"token",token.getToken()); }
+    @GetMapping(value="/captcha/audio",produces="audio/wav") public org.springframework.http.ResponseEntity<byte[]> audio(HttpServletRequest request,@RequestParam java.util.UUID id) {
+        throttle.check("captcha-audio-ip:"+request.getRemoteAddr(),100);
+        return org.springframework.http.ResponseEntity.ok().header("Cache-Control","no-store, private").header("Vary","Cookie")
+            .header("X-Content-Type-Options","nosniff").body(captcha.audio(request,id));
+    }
     @GetMapping("/me") public Accounts.Account me(Principal principal) { return accounts.current(principal.getName()); }
     public record Change(@NotBlank @Size(max=128) String currentPassword, @NotBlank @Size(max=72) String newPassword) {}
     @PostMapping("/change-password") public void change(@Valid @RequestBody Change data,Principal principal,HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response) {

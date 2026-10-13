@@ -19,10 +19,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class CaptchaService {
     private static final String BINDING="utaped.captcha.binding";
-    private static final String ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    static final String ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private final SecureRandom random=new SecureRandom();
     private final JdbcTemplate jdbc;
-    public CaptchaService(JdbcTemplate jdbc) { this.jdbc=jdbc; }
+    private final CaptchaAudio audio;
+    public CaptchaService(JdbcTemplate jdbc,CaptchaAudio audio) { this.jdbc=jdbc;this.audio=audio; }
     public record Challenge(UUID id, byte[] image) {}
 
     public Challenge issue(HttpServletRequest request) throws IOException {
@@ -35,10 +36,19 @@ public class CaptchaService {
         byte[] image=render(text.toString());
         jdbc.update("DELETE FROM login_captcha WHERE expires_at<=now()");
         jdbc.update("""
-            INSERT INTO login_captcha(id,session_hash,answer_hash,expires_at) VALUES (?,?,?,now()+interval '3 minutes')
-            ON CONFLICT(session_hash) DO UPDATE SET id=excluded.id,answer_hash=excluded.answer_hash,expires_at=excluded.expires_at
-            """,id,AuthThrottle.digest(binding),answerHash(id,text.toString()));
+            INSERT INTO login_captcha(id,session_hash,answer_hash,expires_at,audio) VALUES (?,?,?,now()+interval '3 minutes',?)
+            ON CONFLICT(session_hash) DO UPDATE SET id=excluded.id,answer_hash=excluded.answer_hash,expires_at=excluded.expires_at,audio=excluded.audio
+            """,id,AuthThrottle.digest(binding),answerHash(id,text.toString()),audio.render(text.toString()));
         return new Challenge(id,image);
+    }
+    public byte[] audio(HttpServletRequest request,UUID id) {
+        var session=request.getSession(false);
+        if(session!=null && session.getAttribute(BINDING) instanceof String binding) {
+            var rows=jdbc.query("SELECT audio FROM login_captcha WHERE id=? AND session_hash=? AND expires_at>now() AND audio IS NOT NULL",
+                (rs,n)->rs.getBytes(1),id,AuthThrottle.digest(binding));
+            if(!rows.isEmpty()) return rows.getFirst();
+        }
+        throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,"El código ya no está disponible. Cambie el código de verificación.");
     }
     public boolean consume(HttpServletRequest request) {
         var session=request.getSession(false);

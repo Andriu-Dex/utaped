@@ -28,3 +28,16 @@ No se añaden variables de entorno. Flyway ejecuta V12 al arrancar la nueva vers
 ## Recuperación contextual — 2026-10-12
 
 Se incorpora recuperación por coordinador con delegación expresa, sin permiso global. [Contrato](contextual-administration.md). Los cambios de contraseña también incrementan row_version; los resets se rechazan si se prepararon antes de ese cambio. ADMIN y coordinador generan un aviso interno privado al titular. La renovación del CAPTCHA queda deshabilitada mientras la imagen está cargando para evitar peticiones simultáneas sobre la misma sesión.
+
+
+## CAPTCHA visual y audio — 2026-10-13
+
+El propietario autorizó una alternativa sonora en español al mismo reto visual. `GET /api/auth/captcha` sigue devolviendo PNG y `X-Captcha-Id`; `GET /api/auth/captcha/audio?id=<UUID>` devuelve `audio/wav` solo a la sesión que recibió ese ID, mientras esté vigente y sin consumir. Ambos usan `Cache-Control: no-store, private` y `Vary: Cookie`. ID desconocido, otra sesión, reto renovado/consumido/expirado o un reto antiguo sin audio: 404 con mensaje genérico. UUID inválido: 400. La lectura tiene su propio límite de 100 solicitudes por IP en 15 minutos; no renueva, consume ni prolonga el reto.
+
+El código sigue siendo seis caracteres de `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, sin distinción de mayúsculas, tres minutos y un solo intento. Flyway V22 incorpora el WAV a la fila temporal del reto, con máximo 1 MiB. Se conserva únicamente el hash de respuesta como texto; el WAV contiene su representación audible y se elimina junto con el reto al consumir/renovar o al purgar vencidos en nuevas emisiones. No se conserva la respuesta textual ni se envía a proveedores. El audio no es una contraseña ni material de firma; tampoco se registra en auditoría o logs. Los WAV del alfabeto incluidos en el servidor son recursos compartidos y no retos emitidos.
+
+El navegador solicita el PNG, obtiene el ID de su cabecera y muestra un objeto Blob local; no contiene la respuesta en alt, JSON o etiquetas. Nginx permite `blob:` únicamente para imágenes y audio del mismo origen. “Escuchar código” muestra controles nativos de reproducción, pausa, repetición y volumen, enfocados con teclado; no hay reproducción automática. Renovar elimina el audio anterior y vacía únicamente el código, manteniendo credenciales. Se descartan respuestas tardías y se liberan las URLs temporales. Si falla la imagen, el audio permanece utilizable; si falla o expira el audio se informa con toast y se ofrece renovar.
+
+No se necesitan variables nuevas, cuenta de voz, clave o instalación de sintetizador en el servidor. Para actualizar Docker: reconstruir backend y frontend del entorno elegido; migración automática al arrancar. Antes de actualizar datos reales, seguir el respaldo habitual. Prototipos permanece congelado.
+
+Esta alternativa mejora el acceso al reto visual; no acredita conformidad WCAG integral ni resistencia a reconocimiento automático. Se conservan CSRF, comprobación de credenciales, sesión y límites de acceso. Falta aceptación de pronunciación/usabilidad con usuarios destinatarios, y definir asistencia institucional para quienes no pueden resolver ninguna de las dos modalidades. Referencias: [W3C G143](https://www.w3.org/WAI/WCAG21/Techniques/general/G143), [W3C G144](https://www.w3.org/WAI/WCAG21/Techniques/general/G144.html).

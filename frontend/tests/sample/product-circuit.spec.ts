@@ -13,7 +13,7 @@ async function api(page: Page, path: string, method = 'GET', body?: unknown) {
 }
 async function login(page: Page, role: string) {
   console.info('Signing in sample role: ' + role); await page.goto('/'); await page.getByLabel('Usuario', { exact: true }).fill('dev.' + role); await page.getByLabel('Contraseña', { exact: true }).fill(environment.UTAPED_SEED_PASSWORD)
-  await expect.poll(() => page.getByAltText('Código de verificación de seis caracteres').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
+  await expect.poll(() => page.getByAltText('Código de seis caracteres. También puedes escucharlo con Escuchar código.').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
   const promise = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/captcha')
   await page.getByRole('button', { name: 'Cambiar código de verificación', exact: true }).click()
   const captcha = await promise; const id = captcha.headers()['x-captcha-id']; expect(id).toMatch(/^[a-f0-9-]{36}$/)

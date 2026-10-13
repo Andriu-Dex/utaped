@@ -2,16 +2,17 @@ import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, refreshCsrf, type Account } from '../shared/api'
 import { Brand, Icon } from '../shared/Icon'
+import { CaptchaField } from './CaptchaField'
 
 export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
   const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('reset'))
   const [mode, setMode] = useState<'login' | 'forgot' | 'reset'>(resetToken ? 'reset' : 'login')
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
-  const [challenge, setChallenge] = useState(() => crypto.randomUUID()); const [captchaReady, setCaptchaReady] = useState(false); const [captchaError, setCaptchaError] = useState(false)
+  const [challenge, setChallenge] = useState(() => crypto.randomUUID()); const [captchaReady, setCaptchaReady] = useState(false)
   const [visible, setVisible] = useState(false)
   const answer = useRef<HTMLInputElement>(null)
   useEffect(() => { if (!busy && error && mode === 'login') answer.current?.focus() }, [busy, error, mode])
-  function renew() { setCaptchaReady(false); setCaptchaError(false); setChallenge(crypto.randomUUID()); if (answer.current) answer.current.value = '' }
+  function renew() { setCaptchaReady(false); setChallenge(crypto.randomUUID()); if (answer.current) answer.current.value = '' }
   function switchMode(next: typeof mode) { setMode(next); setError(''); setNotice(''); setVisible(false); if (next === 'login') renew() }
   useEffect(() => {
     const changed = () => { const token = new URLSearchParams(window.location.hash.slice(1)).get('reset'); setResetToken(token); setMode(token ? 'reset' : 'login'); setError(''); setNotice(''); setVisible(false); renew() }
@@ -52,12 +53,7 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         {mode === 'forgot' && <label>Correo institucional<input required type="email" name="email" maxLength={254} autoComplete="email" placeholder="usuario@uta.edu.ec" /></label>}
         {mode !== 'forgot' && <div className="auth-password-field"><label htmlFor="access-password">{mode === 'reset' ? 'Nueva contraseña' : 'Contraseña'}</label><span className="password-control"><input id="access-password" required type={visible ? 'text' : 'password'} name="password" minLength={mode === 'reset' ? 12 : undefined} maxLength={72} autoComplete={mode === 'reset' ? 'new-password' : 'current-password'} /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span></div>}
         {mode === 'reset' && <div className="auth-password-field"><label htmlFor="access-confirm-password">Confirmar contraseña</label><span className="password-control"><input id="access-confirm-password" required name="confirmation" type={visible ? 'text' : 'password'} minLength={12} maxLength={72} autoComplete="new-password" /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span><small className="field-help">Usa al menos 12 caracteres; máximo 72 bytes UTF-8.</small></div>}
-        {mode === 'login' && <div className="captcha-field"><div className="captcha-heading"><label htmlFor="captcha-answer">Código de verificación</label><button type="button" className="icon-button" title="Cambiar código de verificación" aria-label="Cambiar código de verificación" disabled={busy || (!captchaReady && !captchaError)} onClick={renew}><Icon name="refresh" /></button></div>
-          {!captchaError && <img key={challenge} className="captcha-image" src={'/api/auth/captcha?v=' + challenge} alt="Código de verificación de seis caracteres" onLoad={() => { setCaptchaReady(true); setCaptchaError(false) }} onError={() => { setCaptchaReady(false); setCaptchaError(true) }} />}
-          {captchaError && <Toast message="No se pudo cargar el código. Pulsa Cambiar código de verificación para reintentar." />}
-          {!captchaReady && !captchaError && <p className="field-help">Cargando código…</p>}
-          <input ref={answer} id="captcha-answer" name="captcha" required minLength={6} maxLength={6} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="Escribe el código" />
-        </div>}
+        {mode === 'login' && <CaptchaField key={challenge} nonce={challenge} busy={busy} answer={answer} onReady={setCaptchaReady} onRenew={renew} />}
         {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
         <button className="access-submit" disabled={busy || (mode === 'login' && !captchaReady)}>{busy ? 'Procesando…' : mode === 'login' ? 'Ingresar' : mode === 'forgot' ? 'Enviar enlace' : 'Guardar contraseña'}<Icon name="arrow" size={18} /></button>
         </fieldset>

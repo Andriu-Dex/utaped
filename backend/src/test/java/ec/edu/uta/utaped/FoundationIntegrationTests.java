@@ -166,6 +166,30 @@ class FoundationIntegrationTests {
         jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",challenge.id());
         assertEquals(400,other.request("POST","/api/auth/login",body,true).statusCode());
     }
+    @Test void audioCaptchaIsPrivateRepeatableExpiringAndConsumedWithTheVisualChallenge() throws Exception {
+        Browser b=new Browser(),other=new Browser();b.csrf();other.csrf();
+        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        String path="/api/auth/captcha/audio?id="+challenge.id();
+        var request=HttpRequest.newBuilder(URI.create("http://localhost:"+port+path)).GET().build();
+        var response=b.client.send(request,HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200,response.statusCode());assertEquals("audio/wav",response.headers().firstValue("Content-Type").orElseThrow());
+        assertTrue(response.headers().firstValue("Cache-Control").orElseThrow().contains("no-store"));
+        assertArrayEquals(jdbc.queryForObject("SELECT audio FROM login_captcha WHERE id=?",byte[].class,challenge.id()),response.body());
+        assertArrayEquals(response.body(),b.client.send(request,HttpResponse.BodyHandlers.ofByteArray()).body());
+        try(var sound=javax.sound.sampled.AudioSystem.getAudioInputStream(new java.io.ByteArrayInputStream(response.body()))) {
+            assertEquals(22050,sound.getFormat().getSampleRate());assertTrue(sound.getFrameLength()>22050*4);assertTrue(sound.getFrameLength()<22050*20);
+        }
+        assertEquals(404,other.request("GET",path,null,false).statusCode());
+        assertEquals(204,b.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD+"&captcha=abc234",true).statusCode());
+        assertEquals(404,b.request("GET",path,null,false).statusCode());
+        var old=LoginChallenges.issue(other.client,port,jdbc,"ABC234");LoginChallenges.issue(other.client,port,jdbc,"XYZ789");
+        assertEquals(404,other.request("GET","/api/auth/captcha/audio?id="+old.id(),null,false).statusCode());
+        var expiring=LoginChallenges.issue(other.client,port,jdbc,"ABC234");jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",expiring.id());
+        assertEquals(404,other.request("GET","/api/auth/captcha/audio?id="+expiring.id(),null,false).statusCode());
+        LoginChallenges.issue(other.client,port,jdbc,"ABC234");
+        assertEquals(400,other.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD+"&captcha=WRONG9",true).statusCode());
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha",Integer.class));
+    }
     @Test void refreshingAndIncorrectCaptchaInvalidatePreviousAnswer() throws Exception {
         Browser b=new Browser();b.csrf();
         var old=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
