@@ -28,16 +28,56 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
     })
     return () => { controller.abort(); if (image) URL.revokeObjectURL(image) }
   }, [nonce, onReady])
-  function showAudio() { setAudioShown(true); setError(''); requestAnimationFrame(() => audio.current?.focus()) }
+  function showAudio() {
+    setAudioShown(shown => {
+      const next = !shown
+      if (next) {
+        setError('')
+        requestAnimationFrame(() => audio.current?.focus())
+      }
+      return next
+    })
+  }
   return <div className="captcha-field">
     <div className="captcha-heading"><label htmlFor="captcha-answer">Código de verificación</label>
-      <button type="button" className="icon-button" title="Cambiar código de verificación" aria-label="Cambiar código de verificación" disabled={busy || (!challenge && !error)} onClick={onRenew}><Icon name="refresh" /></button>
+      <div className="captcha-actions">
+        <button
+          type="button"
+          className="icon-button captcha-listen"
+          title="Escuchar código"
+          aria-label="Escuchar código"
+          aria-expanded={audioShown}
+          aria-controls="captcha-audio"
+          disabled={busy || (!challenge && !error)}
+          onClick={showAudio}
+        >
+          <Icon name="volume" size={18} />
+        </button>
+        <button
+          type="button"
+          className="icon-button"
+          title="Cambiar código de verificación"
+          aria-label="Cambiar código de verificación"
+          disabled={busy || (!challenge && !error)}
+          onClick={onRenew}
+        >
+          <Icon name="refresh" />
+        </button>
+      </div>
     </div>
     {challenge && !imageFailed && <img className="captcha-image" src={challenge.image} alt="Código de seis caracteres. También puedes escucharlo con Escuchar código." onError={() => setImageFailed(true)} />}
-    {challenge && <div className="captcha-audio-panel">
-      <button type="button" className="captcha-listen" aria-expanded={audioShown} aria-controls="captcha-audio" onClick={showAudio} disabled={busy}><Icon name="volume" size={18} />Escuchar código</button>
-      {audioShown && <audio id="captcha-audio" ref={audio} tabIndex={0} controls preload="none" aria-label="Audio del código de verificación" aria-describedby="captcha-help" src={'/api/auth/captcha/audio?id=' + challenge.id}
-        onError={() => setError('No se pudo reproducir el audio o el código expiró. Cambia el código de verificación para reintentar.')} />}
+    {challenge && audioShown && <div className="captcha-audio-panel animate-reveal">
+      <audio
+        id="captcha-audio"
+        ref={audio}
+        tabIndex={0}
+        controls
+        preload="none"
+        aria-label="Audio del código de verificación"
+        aria-describedby="captcha-help"
+        src={'/api/auth/captcha/audio?id=' + challenge.id}
+        onError={() => setError('No se pudo reproducir el audio o el código expiró. Cambia el código de verificación para reintentar.')}
+      />
     </div>}
     {!challenge && !error && <p className="field-help" role="status">Cargando código…</p>}
     {imageFailed && <p className="field-help">La imagen no está disponible. Puedes escuchar el código.</p>}

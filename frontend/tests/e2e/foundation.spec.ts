@@ -146,7 +146,7 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.getByLabel('Nueva contraseña', { exact: true }).fill('E2e-only-recovered-password')
   await page.getByLabel('Confirmar contraseña', { exact: true }).fill('E2e-only-recovered-password')
   await page.getByRole('button', { name: 'Guardar contraseña' }).click()
-  await expect(page.getByRole('status')).toContainText('Contraseña actualizada')
+  await expect(page.getByRole('status').filter({ hasText: 'Contraseña actualizada' })).toContainText('Contraseña actualizada')
   await page.getByRole('textbox', { name: 'Usuario', exact: true }).fill(email)
   await page.getByLabel('Contraseña', { exact: true }).fill('E2e-only-recovered-password')
   await solveCaptcha(page); await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
