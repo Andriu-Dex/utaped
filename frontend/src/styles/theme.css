@@ -46,9 +46,9 @@
 .document-page { color-scheme: light; background: #fff; }
 .captcha-image { color-scheme: light; background: #ecf5f8; }
 :root[data-theme='dark'] .paper-tag { color: #177369; }
-.theme-switch { position: fixed; right: 24px; bottom: 24px; z-index: 900; }
-.theme-toggle { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 4px 18px #00000024; transition: background 0.15s, box-shadow 0.15s; cursor: pointer; }
-.theme-toggle:hover { background: var(--blue-100); }
+.theme-switch { position: fixed; right: 24px; bottom: 24px; z-index: 100000; pointer-events: auto; }
+.theme-toggle { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--surface); color: var(--text); border: 1.5px solid var(--border); box-shadow: 0 4px 22px rgba(0, 0, 0, 0.2); transition: background 0.15s, box-shadow 0.15s, transform 0.15s; cursor: pointer; }
+.theme-toggle:hover { background: var(--blue-100); transform: scale(1.05); box-shadow: 0 6px 26px rgba(0, 0, 0, 0.28); }
 .access-form-pane { padding-bottom: 88px; }
 .workspace main { padding-bottom: 88px; }
 .workspace-footer { padding-right: 96px; }

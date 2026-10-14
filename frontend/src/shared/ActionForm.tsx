@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './Icon'
+import { containDialogFocus } from './dialog-focus'
 import './action-form.css'
 
 export function ActionForm({ label, children, dirty, disabled = false, onCancel, openSignal, modal = false }: {
@@ -17,7 +18,8 @@ export function ActionForm({ label, children, dirty, disabled = false, onCancel,
     if (!modal || !open) return
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previous }
+    const removeTrap = dialog.current ? containDialogFocus(dialog.current) : () => {}
+    return () => { removeTrap(); document.body.style.overflow = previous }
   }, [open, modal])
   function cancel() {
     if (disabled || ((dirty ?? touched) && !window.confirm('Hay cambios sin guardar. ¿Cancelar y descartarlos?'))) return
@@ -30,12 +32,6 @@ export function ActionForm({ label, children, dirty, disabled = false, onCancel,
     </>
   return <div className="action-form" onKeyDown={e => { if (!modal && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel() } }}>
     {(!open || modal) && <button ref={button} type="button" disabled={disabled} aria-expanded={open} aria-haspopup={modal ? 'dialog' : undefined} onClick={() => setOpen(true)}><Icon name="plus" size={17} />{label}</button>}
-    {modal ? <dialog ref={dialog} className="action-form-dialog" aria-labelledby={id + '-heading'} onCancel={e => { e.preventDefault(); cancel() }} onKeyDown={e => {
-      if (e.key !== 'Tab') return
-      const controls = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')].filter(el => el.getClientRects().length > 0)
-      const first = controls[0], last = controls.at(-1)
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
-    }}>{open && content}</dialog> : open && content}
+    {modal ? <dialog ref={dialog} className="action-form-dialog" aria-labelledby={id + '-heading'} onCancel={e => { e.preventDefault(); cancel() }}>{open && content}</dialog> : open && content}
   </div>
 }
