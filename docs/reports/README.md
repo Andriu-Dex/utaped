@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-14 — Formularios mediante acciones explícitas](2026-10-14-02-explicit-form-actions.md).
+
 - [2026-10-14 — Selector documental y nombres automáticos](2026-10-14-01-document-creation-options.md).
 
 - [2026-10-13 — Publicación y PR hacia develop](2026-10-13-02-develop-pull-request-publication.md).

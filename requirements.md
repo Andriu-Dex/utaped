@@ -93,6 +93,14 @@ Entrega 2026-10-12: asistencia de redacción para JUSTIFICATION/OBJECTIVE de T1 
 - [Catálogo trazable de 122 registros fuente](docs/requirements/catalog.md), con [datos estructurados](docs/requirements/catalog.json).
 - [Reconciliación con el mockup](docs/validation/reconciliation.md), [permisos](docs/validation/permission-matrix.md) y [plan de validación](docs/validation/validation-plan.md).
 
+## Formularios mediante acciones explícitas — 2026-10-14
+
+| ID | Descripción y fuente | Estado / prioridad / aceptación |
+|---|---|---|
+| UT-UI-110 | El propietario exige que creación, edición y acciones comiencen cerradas y se abran con un botón. Aclaración expresa: acceso y filtros visibles. | CONFIRMADO-PROYECTO, P1. Entrar al módulo no abre formularios mutadores; Crear/Editar/Adjuntar/Firmar/Observar los abre expresamente. Cancelar o Escape confirma cambios pendientes, conserva datos si se rechaza y devuelve el foco al cerrar. Los errores conservan los datos. Los editores abiertos por Editar o pasos del asistente ya cumplen. PC/tabletas, ambos temas. |
+
+Dependencias: permisos, validaciones y protección de navegación existentes; no cambia el contrato backend. Verificación: Playwright general y sample, incluidas apertura, ausencia de campos al entrar, cancelación rechazada/aceptada, teclado, filtros y circuito T1/T2. [Reporte](docs/reports/2026-10-14-02-explicit-form-actions.md).
+
 ## Estados
 
 - HEREDADO: aparece en las fuentes; requiere revisión productiva.

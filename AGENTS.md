@@ -28,6 +28,8 @@ Standing owner authorization (2026-10-03): after completing each implementation 
 
 Owner override (2026-10-07): only local commits on the current branch until explicitly instructed to push/update the pull request. UI targets PCs and tablets; do not add phone-specific responsive styles. Existing historical phone styles/tests are not a requirement for new delivery.
 
+Owner UI decision (2026-10-14): creation, editing and mutation/action forms must start closed and open through an explicit button or action. Login, recovery/password access and search/filter forms remain visible. Document editors opened through Edit or wizard actions and existing button-controlled import/reset forms satisfy this rule; do not add redundant gates. Cancellation must confirm unsaved changes, errors must retain entered data, and entering a module must not automatically open mutation forms. Preserve keyboard focus and PC/tablet presentation.
+
 Stack decision: docs/architecture/adr/0001-production-foundation.md. Frontend: React/TypeScript/Vite; backend: Java 21/Spring Boot; DB: PostgreSQL/Flyway. Local credentials, server-side JDBC sessions and CSRF are mandatory. No tokens or passwords in browser storage. Run frontend lint/build and isolated PostgreSQL integration tests for affected logic; Playwright for affected flows. Preserve independent feature branches and PRs to develop; main is reserved for completed releases. Inherited AI model names are not verified availability.
 
 ---
