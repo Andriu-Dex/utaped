@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { solveCaptcha } from './login'
 import { test, expect } from '@playwright/test'
@@ -82,8 +83,8 @@ test('local identity, administration, context isolation, recovery and logout', a
   await expect(page.getByLabel('Nombre del período')).toHaveCount(0)
   await expect(page.getByLabel('Nombre del grupo')).toHaveCount(0)
   await openAction(page, 'Crear o editar elemento');await page.getByLabel('Denominación del catálogo').fill('Cambios pendientes')
-  page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Usuarios', exact: true }).click()
+
+  await withConfirmation(page, false, async () => { await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Usuarios', exact: true }).click() });
   await expect(page.getByLabel('Denominación del catálogo')).toHaveValue('Cambios pendientes')
   await openAction(page, 'Crear o editar elemento');await page.getByLabel('Denominación del catálogo').fill('Recurso E2E ' + suffix)
   await page.getByRole('button', { name: 'Crear elemento', exact: true }).click()

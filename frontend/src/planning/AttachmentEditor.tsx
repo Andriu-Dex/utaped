@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
@@ -28,7 +29,7 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
   }
   async function saveEdit(e: FormEvent) { e.preventDefault(); if (!state || !editing) return; if (await mutate(() => api<State>(path + '/' + editing.id, 'PUT', { rowVersion: state.rowVersion, title: editing.title, description: editing.description }), 'Anexo actualizado.')) setEditing(null) }
   function move(index: number, delta: number) { if (!state) return; const ids = state.items.map(a => a.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; void mutate(() => api<State>(path + '/order', 'PUT', { rowVersion: state.rowVersion, attachmentIds: ids }), 'Orden actualizado.') }
-  return <section><button className="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm('¿Descartar los cambios sin guardar?')) onBack() }}>Volver al Plan</button><h1>Anexos del Plan T1</h1>
+  return <section><button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios sin guardar?'))) onBack() }}>Volver al Plan</button><h1>Anexos del Plan T1</h1>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p>Cargando anexos…</p> : <div className="card">
       <p>Archivos PDF privados. Máximo {state.maxAttachments} anexos, {Math.floor(state.maxFileBytes / 1048576)} MB por archivo y {Math.floor(state.maxTotalBytes / 1048576)} MB en total. Límites técnicos configurables.</p>
@@ -44,10 +45,10 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
         <button className="secondary" title={'Editar ' + a.label} aria-label={'Editar ' + a.label} disabled={busy || !state.editable || dirty} onClick={() => setEditing({ ...a })}>✎</button>{' '}
         <button className="secondary" title={'Subir ' + a.label} aria-label={'Subir ' + a.label} disabled={busy || !state.editable || dirty || index === 0} onClick={() => move(index, -1)}>↑</button>{' '}
         <button className="secondary" title={'Bajar ' + a.label} aria-label={'Bajar ' + a.label} disabled={busy || !state.editable || dirty || index === state.items.length - 1} onClick={() => move(index, 1)}>↓</button>{' '}
-        <button className="danger" title={'Quitar ' + a.label} aria-label={'Quitar ' + a.label} disabled={busy || !state.editable || dirty} onClick={() => { if (window.confirm('¿Quitar este anexo del borrador? Las previsualizaciones anteriores se conservarán.')) void mutate(() => api<State>(path + '/' + a.id + '?rowVersion=' + state.rowVersion, 'DELETE'), 'Anexo quitado y etiquetas actualizadas.') }}>×</button>
+        <button className="danger" title={'Quitar ' + a.label} aria-label={'Quitar ' + a.label} disabled={busy || !state.editable || dirty} onClick={async () => { if ((await confirmAction('¿Quitar este anexo del borrador? Las previsualizaciones anteriores se conservarán.'))) void mutate(() => api<State>(path + '/' + a.id + '?rowVersion=' + state.rowVersion, 'DELETE'), 'Anexo quitado y etiquetas actualizadas.') }}>×</button>
       </article>)}
       {editing && <form onSubmit={saveEdit}><fieldset disabled={busy}><legend>Editar anexo</legend><label>Nuevo título del anexo<input required maxLength={200} value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} /></label><label>Descripción del anexo<textarea maxLength={2000} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} /></label><button>Guardar anexo</button><button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar edición</button></fieldset></form>}
-      <button className="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm('¿Descartar los cambios locales y recargar?')) { setTitle(''); setFile(null); setEditing(null); requestKey.current = crypto.randomUUID(); if (fileInput.current) fileInput.current.value = ''; void mutate(() => api<State>(path), 'Versión actual cargada.') } }}>Recargar anexos</button>
+      <button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios locales y recargar?'))) { setTitle(''); setFile(null); setEditing(null); requestKey.current = crypto.randomUUID(); if (fileInput.current) fileInput.current.value = ''; void mutate(() => api<State>(path), 'Versión actual cargada.') } }}>Recargar anexos</button>
     </div>}
   </section>
 }

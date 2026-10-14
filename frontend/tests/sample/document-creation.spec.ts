@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
@@ -28,7 +29,7 @@ test('document type chooser proposes the institutional name and excludes draft P
     await expect(principal.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: ' + groupName)
     await expect(principal.getByLabel('Título del nuevo Plan')).toBeEnabled()
     await expect(principal.getByLabel('Ámbito del nuevo Plan')).toHaveValue(scope.id)
-    principal.once('dialog', dialog => dialog.dismiss()); await reportChoice.click(); await expect(planChoice).toBeChecked()
+     await withConfirmation(principal, false, async () => { await reportChoice.click(); }); await expect(planChoice).toBeChecked()
     await principal.screenshot({ path: 'test-results/document-creation-plan-desktop.png', fullPage: true })
     await principal.getByRole('button', { name: 'Crear borrador', exact: true }).click()
     await expect(principal.getByRole('heading', { name: 'Plan de Trabajo: ' + groupName, exact: true })).toBeVisible()

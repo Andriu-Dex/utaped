@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { test, expect } from '@playwright/test'
 import { api, login } from './sample-fixtures'
 import { openAction } from '../open-action'
@@ -18,10 +19,10 @@ test('template-based example scopes use July–December 2026 inside the document
   await page.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
   await expect(page.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: Unidad de Titulación')
   await expect(page.getByLabel('Ámbito del nuevo Plan').locator('option:checked')).toContainText('Julio–Diciembre 2026')
-  page.once('dialog', d => d.dismiss()); await page.keyboard.press('Escape')
+   await withConfirmation(page, false, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByRole('dialog', { name: 'Crear documento', exact: true })).toBeVisible()
   await expect(page.getByLabel('Ámbito del nuevo Plan')).toHaveValue(scope.id)
-  page.once('dialog', d => d.accept()); await page.keyboard.press('Escape')
+   await withConfirmation(page, true, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByRole('dialog', { name: 'Crear documento', exact: true })).not.toBeVisible()
   await openAction(page, 'Crear documento')
   await expect(page.getByLabel('Ámbito del nuevo Plan')).toHaveValue('')

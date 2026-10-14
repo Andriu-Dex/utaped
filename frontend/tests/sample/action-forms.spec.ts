@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { test, expect } from '@playwright/test'
 import { login } from './sample-fixtures'
 import { openAction } from '../open-action'
@@ -10,9 +11,9 @@ test('administrative creation forms stay closed and cancellation clears only con
   await openAction(page, 'Crear grupo')
   await expect(page.getByLabel('Nombre del grupo')).toBeFocused()
   await page.getByLabel('Nombre del grupo').fill('Borrador que se debe descartar')
-  page.once('dialog', dialog => dialog.dismiss()); await page.keyboard.press('Escape')
+   await withConfirmation(page, false, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByLabel('Nombre del grupo')).toHaveValue('Borrador que se debe descartar')
-  page.once('dialog', dialog => dialog.accept()); await page.keyboard.press('Escape')
+   await withConfirmation(page, true, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByLabel('Nombre del grupo')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Crear grupo', exact: true })).toBeFocused()
   await openAction(page, 'Crear grupo'); await expect(page.getByLabel('Nombre del grupo')).toHaveValue('')

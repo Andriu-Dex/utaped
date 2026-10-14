@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
@@ -89,8 +90,8 @@ test('modern access preserves credentials, supports username and administrative 
   await expect(reset.getByLabel('Nueva contraseña temporal')).toBeFocused()
   await reset.getByLabel('Nueva contraseña temporal').fill('E2e-only-admin-reset-password')
   await reset.getByLabel('Confirmar contraseña temporal').fill('E2e-only-admin-reset-password')
-  page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Panel general', exact: true }).click()
+
+  await withConfirmation(page, false, async () => { await page.getByRole('button', { name: 'Panel general', exact: true }).click() });
   await expect(reset.getByLabel('Nueva contraseña temporal')).toHaveValue('E2e-only-admin-reset-password')
   await reset.getByLabel('Confirmo el restablecimiento de esta cuenta.').check()
   let releaseRefresh = () => {}; let capturedRefresh = () => {}; let completedRefresh = () => {}

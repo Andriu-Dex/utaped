@@ -1,3 +1,4 @@
+import { confirmAction } from './confirm-action'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './Icon'
 import { containDialogFocus } from './dialog-focus'
@@ -21,8 +22,8 @@ export function ActionForm({ label, children, dirty, disabled = false, onCancel,
     const removeTrap = dialog.current ? containDialogFocus(dialog.current) : () => {}
     return () => { removeTrap(); document.body.style.overflow = previous }
   }, [open, modal])
-  function cancel() {
-    if (disabled || ((dirty ?? touched) && !window.confirm('Hay cambios sin guardar. ¿Cancelar y descartarlos?'))) return
+  async function cancel() {
+    if (disabled || ((dirty ?? touched) && !(await confirmAction('Hay cambios sin guardar. ¿Cancelar y descartarlos?')))) return
     onCancel?.(); setOpen(false); setTouched(false)
     requestAnimationFrame(() => button.current?.focus())
   }

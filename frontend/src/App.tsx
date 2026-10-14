@@ -1,3 +1,4 @@
+import { confirmAction } from './shared/confirm-action'
 import { Toast } from './shared/Toast'
 import { useEffect, useRef, useState } from 'react'
 import { Access, ChangePassword } from './identity/Access'
@@ -30,20 +31,20 @@ export default function App() {
   const documentGroups = groups.filter(group => group.membership_role != null)
   const canUseDocuments = account?.systemRole !== 'ADMIN' || documentGroups.length > 0
   const administrative = account?.systemRole === 'ADMIN' && (workspace === 'administration' || !canUseDocuments)
-  function switchWorkspace(next: 'administration' | 'documents') {
+  async function switchWorkspace(next: 'administration' | 'documents') {
     if (next === 'documents' && !canUseDocuments) return
-    if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) return
+    if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) return
     setDraftDirty(false); setDocumentTarget(null); setWorkspace(next); setView('home'); setSelected(''); setMembers([])
   }
-  function navigate(next: View, targetDocId: string | null = null) {
+  async function navigate(next: View, targetDocId: string | null = null) {
     if (isAdminPage(next) && next !== 'reporting' && account?.systemRole !== 'ADMIN') return
     if (next === 'documents' && (administrative || !canUseDocuments)) return
     if (next === view && targetDocId === documentTarget) return
-    if (!draftDirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) { setDraftDirty(false); setDocumentTarget(targetDocId); setView(next) }
+    if (!draftDirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) { setDraftDirty(false); setDocumentTarget(targetDocId); setView(next) }
   }
   async function openNotification(target: NotificationTarget) {
     const epoch = identityEpoch.current
-    if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) return
+    if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) return
     setDraftDirty(false)
     if (target.type === 'ACCOUNT') { setDocumentTarget(null); setView('password') }
     else if (target.type === 'WORK_PLAN') { if (!canUseDocuments) { setError('No tiene una pertenencia activa para acceder al espacio documental.'); return } setWorkspace('documents'); setDocumentTarget(target.id); setView('documents') }
@@ -77,7 +78,7 @@ export default function App() {
     if (selected) api<Member[]>('/groups/' + selected + '/members').then(data => { if (!cancelled) setMembers(data) }).catch(e => { if (!cancelled) setError(e.message) }).finally(() => { if (!cancelled) setMembersLoading(false) })
     return () => { cancelled=true }
   }, [selected])
-  async function logout() { if (draftDirty && !window.confirm('Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?')) return; try { await api('/auth/logout','POST'); setLoading(true); clearAccount(); setError(''); await refreshCsrf() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo cerrar sesión.') } finally { setLoading(false) } }
+  async function logout() { if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?'))) return; try { await api('/auth/logout','POST'); setLoading(true); clearAccount(); setError(''); await refreshCsrf() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo cerrar sesión.') } finally { setLoading(false) } }
   if (loading) return <main className="connecting"><Brand /><p role="status">Conectando con UTAPED…</p></main>
   if (!account) return <>{error && <Toast message={error} />}<Access onLogin={a => {setError('');setAccount(a)}} /></>
   function navButton(target: View, label: string, icon: IconName) { return <button key={target} aria-current={view === target ? 'page' : undefined} onClick={() => navigate(target)}><Icon name={icon} /><span>{label}</span>{view === target && <span className="nav-active-dot" />}</button> }

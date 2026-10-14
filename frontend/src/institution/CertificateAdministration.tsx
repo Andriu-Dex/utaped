@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -18,7 +19,7 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo vincular el certificado.') } finally { setBusy(false) }
   }
   async function revoke(binding: Binding) {
-    if (!window.confirm('¿Desvincular esta huella para impedir nuevas firmas? Los PDFs firmados permanecerán conservados.')) return
+    if (!(await confirmAction('¿Desvincular esta huella para impedir nuevas firmas? Los PDFs firmados permanecerán conservados.'))) return
     setBusy(true); setError('')
     try { await api('/admin/users/' + user + '/signing-certificates/' + binding.id, 'DELETE'); setBindings(await api<Binding[]>('/admin/users/' + user + '/signing-certificates')); setNotice('Huella desvinculada.') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo desvincular la huella.') } finally { setBusy(false) }
@@ -27,7 +28,7 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
     <p>Vincule la huella SHA-256 obtenida del certificado público después de comprobar la identidad del titular por un canal confiable. No introduzca archivos privados ni contraseñas. Esto no acredita validación de la entidad emisora o revocación.</p>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
-    <label>Cuenta del firmante<select value={user} disabled={busy} onChange={e => { if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')) return; setDirty(false); setUser(e.target.value); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
+    <label>Cuenta del firmante<select value={user} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if (dirty && !(await confirmAction('Hay cambios sin guardar. ¿Descartarlos?'))) return; setDirty(false); setUser(nextValue); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
     {user && <><ActionForm label="Vincular certificado público" dirty={dirty} disabled={busy} onCancel={() => setDirty(false)}><form key={user} onChange={() => setDirty(true)} onSubmit={event => void register(event)}><fieldset disabled={busy}>
       <label>Huella SHA-256 pública<input name="fingerprint" pattern="[a-fA-F0-9]{64}" required minLength={64} maxLength={64} /></label>
       <label>Referencia de comprobación de identidad<textarea name="verificationNote" required maxLength={500} /></label>

@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
@@ -51,13 +52,13 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     finally { setBusy(false) }
   }
   async function back() {
-    if (dirty && !window.confirm('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?')) return
+    if (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?'))) return
     setBusy(true)
     try { await onBack() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo volver.'); setBusy(false) }
   }
   async function compare() { try { setLatest(await api<Matrix>('/work-plans/' + targetDocId + '/matrix')) } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo consultar.') } }
-  function reload() {
-    if (!latest || !window.confirm('¿Descartar cambios locales y cargar la matriz actual del servidor?')) return
+  async function reload() {
+    if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
     setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
   if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>

@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import { api, signPdf, download } from '../shared/api'
@@ -47,7 +48,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange }:
   const closedTask = state && !state.canAct && state.tasks.some(t => t.actor_id === accountId && t.status === 'ACTIVE')
   useEffect(() => { onDirtyChange(!!message.trim() || !!region); return () => onDirtyChange(false) }, [message, region, onDirtyChange])
   useEffect(() => { let active = true; api<ReviewState>('/reviews/' + id).then(s => { if (active) setState(s) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [id, reload])
-  function back() { if ((!message.trim() && !region) || window.confirm('Hay observaciones sin guardar. ¿Salir y descartarlas?')) onBack() }
+  async function back() { if ((!message.trim() && !region) || (await confirmAction('Hay observaciones sin guardar. ¿Salir y descartarlas?'))) onBack() }
   function point(event: PointerEvent<HTMLDivElement>) { const b = event.currentTarget.getBoundingClientRect(); return { x: Math.max(0, Math.min(1, (event.clientX - b.left) / b.width)), y: Math.max(0, Math.min(1, (event.clientY - b.top) / b.height)) } }
   function begin(event: PointerEvent<HTMLDivElement>) { if (!task || busy || loadedImage !== id + '-' + page + '-' + reload || event.button !== 0) return; anchor.current = point(event); event.currentTarget.setPointerCapture(event.pointerId); setRegion(null) }
   function move(event: PointerEvent<HTMLDivElement>) { if (!anchor.current) return; const p = point(event), a = anchor.current; setRegion({ x: Math.min(p.x, a.x), y: Math.min(p.y, a.y), width: Math.abs(p.x - a.x), height: Math.abs(p.y - a.y) }) }
@@ -58,7 +59,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange }:
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
   async function decide(action: 'COMPLETE' | 'RETURN') {
-    if (!task || !window.confirm(action === 'RETURN' ? '¿Devolver el documento con estas observaciones?' : '¿Completar tu etapa y continuar el flujo?')) return
+    if (!task || !(await confirmAction(action === 'RETURN' ? '¿Devolver el documento con estas observaciones?' : '¿Completar tu etapa y continuar el flujo?'))) return
     setBusy(true); setError('')
     try { await api('/reviews/tasks/' + task.id + '/decisions', 'POST', { rowVersion: task.row_version, action, message: action === 'RETURN' ? message : '', requestKey }); setMessage(''); setRegion(null); setNotice(action === 'RETURN' ? 'Documento devuelto para corrección.' : 'Etapa completada.'); setReload(r => r + 1) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo registrar la decisión.') } finally { setBusy(false) }
@@ -68,7 +69,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange }:
     try { await signPdf('/reviews/tasks/' + task.id + '/signing?' + new URLSearchParams({ rowVersion: String(task.row_version), inputHash: state.pdfHash, requestKey }), file, password); setNotice('Firma aplicada y etapa completada.'); setReload(r => r + 1) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo firmar.') } finally { form.reset(); setBusy(false) }
   }
-  const changePage = (index: number) => { if (region && !window.confirm('¿Descartar la zona seleccionada para cambiar de página?')) return; setPage(index); setRegion(null); setImageError(false) }
+  const changePage = async (index: number) => { if (region && !(await confirmAction('¿Descartar la zona seleccionada para cambiar de página?'))) return; setPage(index); setRegion(null); setImageError(false) }
   return <section><button type="button" className="secondary" disabled={busy} onClick={back}>Volver</button><span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span><h1>{title}</h1>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {!state ? <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
     {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}

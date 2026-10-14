@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 import { Icon } from '../shared/Icon'
@@ -26,9 +27,9 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
     }).catch(e => { if (active) { setError(e.message); setLoading(false) } })
     return () => { active = false }
   }, [kind, filter])
-  function switchKind(next: typeof kind) {
+  async function switchKind(next: typeof kind) {
     if (kind === next || busy) return
-    if (dirty && !window.confirm('¿Descartar los datos de creación para cambiar de tipo documental?')) return
+    if (dirty && !(await confirmAction('¿Descartar los datos de creación para cambiar de tipo documental?'))) return
     setScopeId(''); setTitleOverride(null); setReportId(''); setError(''); setRequestKey(crypto.randomUUID()); setKind(next)
     if (next === 'T2') { setCandidates(null); setLoading(true); setSearch(''); setFilter({ query: '', page: 0 }) }
   }
@@ -38,7 +39,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
     try {
       if (kind === 'T1' && scope) onCreated(await api<WorkPlan>('/work-plans', 'POST', { scopeId: scope.id, groupId: scope.groupId, periodId: scope.periodId, title: titleOverride, requestKey }))
       else if (kind === 'T2' && report) onCreated(await api<WorkPlan>('/work-plans/' + report.id + '/report', 'POST'))
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear el documento.') }
+    } catch (e) { setError(e instanceof TypeError ? 'No se pudo conectar con el servidor.' : e instanceof Error ? e.message : 'No se pudo crear el documento.') }
     finally { onBusyChange(false) }
   }
   return <section className="card animate-reveal document-creation">

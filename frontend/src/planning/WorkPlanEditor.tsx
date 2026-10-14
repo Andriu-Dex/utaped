@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
@@ -54,11 +55,11 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
     try { setLatest(await api<WorkPlan>('/work-plans/' + plan.id)) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recuperar la versión actual.') }
   }
-  function reload() {
-    if (!latest || !window.confirm('¿Descartar sus cambios locales y cargar la versión del servidor?')) return
+  async function reload() {
+    if (!latest || !(await confirmAction('¿Descartar sus cambios locales y cargar la versión del servidor?'))) return
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
-  function back() { if (!dirty || window.confirm('Hay cambios sin guardar. ¿Salir y descartarlos?')) onBack() }
+  async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
   async function returnToPlan() {
     try {
     const current = await api<WorkPlan>('/work-plans/' + plan.id)

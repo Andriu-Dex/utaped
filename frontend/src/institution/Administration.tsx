@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { UserImportWorkspace } from './UserImportWorkspace'
 import { DeadlineNotices } from './DeadlineNotices'
@@ -59,7 +60,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     {page === 'organization' && <OrganizationAdministration groups={groups} periods={periods} onDirtyChange={setProfileDirty} onChange={onChange} />}
     {page === 'users' && <>
     {!showCreateUser ? <div style={{ margin: '20px 0' }}><button onClick={() => setShowCreateUser(true)}>+ Agregar Usuario</button></div> :
-    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" disabled={busy} onClick={() => { if (!dirtyCreates.includes('/admin/users') || window.confirm('Hay cambios sin guardar. ¿Cancelar la creación?')) { setShowCreateUser(false); setVisible(false); setDirtyCreates(keys => keys.filter(key => key !== '/admin/users')) } }}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => void submit(e, '/admin/users')}>
+    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" disabled={busy} onClick={async () => { if (!dirtyCreates.includes('/admin/users') || (await confirmAction('Hay cambios sin guardar. ¿Cancelar la creación?'))) { setShowCreateUser(false); setVisible(false); setDirtyCreates(keys => keys.filter(key => key !== '/admin/users')) } }}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => void submit(e, '/admin/users')}>
       <div className="grid"><label>Nombres<input name="firstNames" required maxLength={80} /></label><label>Apellidos<input name="lastNames" required maxLength={80} /></label></div><label>Correo<input type="email" name="email" required maxLength={254} /></label>
       <label>Identificador de acceso<input name="username" aria-label="Identificador de acceso" maxLength={100} pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{0,99}" autoCapitalize="none" autoComplete="off" /><small className="field-help">Opcional. Si se deja vacío se deriva del correo; debe ser único.</small></label>
       <label>Permiso del sistema<select name="systemRole"><option value="USER">Usuario</option><option value="ADMIN">Administrador</option></select></label>

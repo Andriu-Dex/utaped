@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
 import { useCallback, useEffect, useState } from 'react'
 import { api, download } from '../shared/api'
@@ -31,7 +32,7 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
     return () => { cancelled = true }
   }, [filters, reload])
   async function open(id: string) {
-    if (creationDirty && !window.confirm('¿Descartar los datos del nuevo documento?')) return
+    if (creationDirty && !(await confirmAction('¿Descartar los datos del nuevo documento?'))) return
     setCreationKey(n => n + 1); creationChanged(false)
     setBusy(true); setError('')
     try { setSelected(await api<WorkPlan>('/work-plans/' + id)) }

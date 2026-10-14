@@ -1,3 +1,4 @@
+import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { test, expect, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
@@ -62,7 +63,7 @@ test('career history and explicitly authorized coordinator recovery on desktop a
     await coordinator.reload(); await coordinator.getByRole('button',{name:'Mi organización',exact:true}).click(); await coordinator.getByLabel('Mi ámbito institucional').selectOption(scope.id)
     await coordinator.getByText('Historial de cargos y responsables',{exact:true}).click(); await expect(coordinator.getByText('Coordinador · Coordinación inicial · Activo',{exact:true})).toBeVisible(); await expect(coordinator.getByText(/Coordinación autorizada · Activo/)).toBeVisible()
     await openAction(coordinator, 'Restablecer cuenta de integrante');await coordinator.getByLabel('Cuenta del integrante').selectOption(user.id); await coordinator.getByLabel('Contraseña temporal',{exact:true}).fill(next)
-    await coordinator.evaluate(() => { (document.activeElement as HTMLElement)?.blur(); window.scrollTo({top:0,behavior:'instant'}) }); await coordinator.screenshot({path:'test-results/contextual-desktop.png',fullPage:true}); coordinator.once('dialog',d=>d.accept()); await coordinator.getByRole('button',{name:'Restablecer acceso',exact:true}).click(); await expect(coordinator.getByText(/Acceso restablecido. Entregue/)).toBeVisible()
+    await coordinator.evaluate(() => { (document.activeElement as HTMLElement)?.blur(); window.scrollTo({top:0,behavior:'instant'}) });; await coordinator.screenshot({path:'test-results/contextual-desktop.png',fullPage:true});  await withConfirmation(coordinator, true, async () => { await coordinator.getByRole('button',{name:'Restablecer acceso',exact:true}).click(); }); await expect(coordinator.getByText(/Acceso restablecido. Entregue/)).toBeVisible()
     expect((await member.request.get('/api/auth/me')).status()).toBe(401)
     await login(member,'recovery.'+suffix,next); await expect(member.getByRole('heading',{name:'Acceso temporal'})).toBeVisible()
     await member.getByLabel('Contraseña actual',{exact:true}).fill(next); await member.getByLabel('Nueva contraseña',{exact:true}).fill('E2E-only-final-password-2026'); await member.getByLabel('Confirmar contraseña',{exact:true}).fill('E2E-only-final-password-2026'); await member.getByRole('button',{name:'Guardar contraseña',exact:true}).click(); await expect(member.getByRole('button',{name:'Documentos',exact:true})).toBeVisible()

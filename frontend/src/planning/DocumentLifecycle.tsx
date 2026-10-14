@@ -1,3 +1,4 @@
+import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
@@ -9,7 +10,7 @@ export function DocumentLifecycle({ plan, disabled, onChange, onDirtyChange }: {
   useEffect(() => { onDirtyChange(!!reason); return () => onDirtyChange(false) }, [reason, onDirtyChange])
   useEffect(() => { let active = true; api<Version[]>('/work-plans/' + plan.id + '/versions').then(v => { if (active) setVersions(v) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [plan.id, plan.rowVersion])
   async function change(action: 'archive' | 'versions') {
-    if (!window.confirm(action === 'archive' ? '¿Archivar este documento como historial de solo lectura?' : '¿Crear una nueva versión formal y conservar la aprobada como historial?')) return
+    if (!(await confirmAction(action === 'archive' ? '¿Archivar este documento como historial de solo lectura?' : '¿Crear una nueva versión formal y conservar la aprobada como historial?'))) return
     setBusy(true); setError('')
     try { const next = await api<WorkPlan>('/work-plans/' + plan.id + '/' + action, 'POST', { rowVersion: plan.rowVersion, reason }); setReason(''); onChange(next) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar.') } finally { setBusy(false) }
