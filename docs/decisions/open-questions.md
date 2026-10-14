@@ -1,5 +1,10 @@
 # Decisiones pendientes y contradicciones
 
+## Selector y denominación — 2026-10-14
+
+El propietario autorizó recuperar Plan/Informe en creación y proponer nombres institucionales automáticamente. Se mantiene Informe Final derivado de Plan aprobado y único. El patrón de identificador individual (por ejemplo el nombre `TI-JD2026-UTIT-PLAN-V01-signed.pdf`) aún no tiene regla completa confirmada: los códigos de plantilla T1/T2 no sustituyen un consecutivo documental. No generar ni presentar códigos individuales como oficiales por deducción. [Contrato actualizado](../api/document-circuit.md).
+
+
 ## Accesibilidad y carga — 2026-10-13
 
 El propietario autorizó y se incorpora audio español al mismo CAPTCHA con controles de teclado y protecciones de sesión/expiración/consumo. Se añaden escenarios concurrentes de PDFs extensos, evidencia y firma con datos aislados. Quedan aceptación con usuarios (incluidas necesidades que no cubre imagen/audio), prueba sostenida/SLA/concurrencia institucional y carga de transporte de certificados por HTTPS. [Alcance y reproducción](../testing/captcha-and-document-load.md). Las menciones históricas a ausencia de alternativa o de pruebas de carga quedan superadas exclusivamente en este alcance acotado.

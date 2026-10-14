@@ -33,6 +33,10 @@ Las prórrogas son individuales y auditadas. Se implementa como configuración t
 
 La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con ejecutores individuales explícitos. Una etapa colegiada sin representante sigue bloqueada. Los PDFs históricos no se regeneran ni se convierten automáticamente al nuevo flujo. Cierre de períodos, ZIP, agentes, redacción asistida, evidencias externas y capacidades restantes siguen registrados en [estado actual](implementation-status.md).
 
+## Creación documental — decisión del propietario del 2026-10-14
+
+UT-UI-100 / UT-DOC-100, CONFIRMADO-PROYECTO, P1: recuperar el selector Plan de Trabajo / Informe y proponer nombre institucional automático según grupo/unidad. El Informe exige selección de Plan aprobado del responsable principal y conserva la familia existente. Permitir ajustar el título del Plan; no renombrar históricos ni inventar códigos individuales. Fuente: corrección autorizada por el propietario tras revisar Plan Maestro §42 y prototipos. Aceptación: nombres sin entrada manual, búsqueda/paginación autorizada, descarte confirmado, conservación al filtrar, rechazo de Plan no aprobado y reapertura sin duplicado. [Contrato](docs/api/document-circuit.md), [reporte](docs/reports/2026-10-14-01-document-creation-options.md).
+
 ## Fuentes y alcance
 
 ### Accesibilidad y carga documental — 2026-10-13

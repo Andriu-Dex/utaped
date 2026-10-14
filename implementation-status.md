@@ -1,12 +1,13 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-13
+## Estado vigente al 2026-10-14
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
 | Capacidad | Alcance entregado |
 |---|---|
 | Organización | Edición/desactivación de carreras con concurrencia, historial visible de cargos/principales, recuperación delegada explícitamente a coordinadores; catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
+| Creación documental | Selector Plan/Informe, título propuesto por grupo/unidad y backend automático, búsqueda/paginación de Planes aprobados autorizados; crear o abrir Informe existente. Descarte confirmado y selección conservada al filtrar. Históricos intactos; código individual pendiente de definición. |
 | T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firma real del elaborador y envío a revisión atómico en documentos por ámbito. |
 | Revisión | Bandeja propia paginada con búsqueda/filtros/indicadores personales, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
 | Firmas sucesivas | Certificados personales temporales, vinculación pública por usuario, append incremental y comprobación de CMS/bytes previos. Sin material privado persistente ni afirmación de cadena/revocación/TSA. |
@@ -37,6 +38,8 @@ Redacción/bandeja: [contrato](docs/api/writing-and-review-inbox.md), [configura
 Aceptación/operación: [escenarios](docs/testing/role-and-document-acceptance.md), [herramientas](docs/operations/production-readiness.md) y [reporte](docs/reports/2026-10-12-06-role-acceptance-and-operational-readiness.md). Validación actual: 131 ejecuciones backend en 19 suites, diez escenarios E2E y siete pruebas de herramientas, sin fallos finales; lint/build y revisión visual. Recuperación de 57 documentos/156 archivos e imágenes originales; HTTPS con certificado temporal, cookie Secure, login y PDF firmado con hash intacto. Cuarenta consultas de salud concurrentes no acreditan dimensionamiento institucional.
 
 Accesibilidad/carga (2026-10-13): [contrato](docs/api/local-access.md), [escenarios reproducibles](docs/testing/captcha-and-document-load.md) y [reporte](docs/reports/2026-10-13-01-accessible-captcha-and-document-load.md). Validación: 135 ejecuciones backend en 20 suites, siete E2E generales y cinco de ejemplo; dos escenarios de audio repetidos sobre Nginx, sin fallos finales. Lint/build y revisión visual PC/tableta. No se modificaron datos principales, proveedores ni variables privadas. La concurrencia de firma se prueba en servicios reales con fixture de transporte seguro; no es carga de certificados por HTTPS.
+
+Corrección del 2026-10-14: selector y nombres automáticos autorizados; [reporte](docs/reports/2026-10-14-01-document-creation-options.md). 137 ejecuciones backend en 20 suites, siete E2E generales y seis de ejemplo aprobados; circuito reejecutado para reapertura sin duplicación. Lint/build y capturas PC/tableta. Ajustes visuales staged del propietario conservados en commit separado. Sin push/PR de esta rama ni modificaciones de DB principal.
 
 ### Trabajo que aún falta para completar el producto
 

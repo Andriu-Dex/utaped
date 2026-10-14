@@ -61,3 +61,18 @@ Flyway V13–V18 conserva documentos previos y agrega ámbitos, revisión, evide
 ## Períodos y flujos temporales (V19)
 
 Las nuevas firmas por ámbito requieren asignaciones T1/T2 y activación explícita de los flujos del período. CLOSED bloquea las operaciones de escritura y conserva documentos y revisiones. El archivo histórico no sustituye los controles de descarga de preliminares. [Contrato de control y archivo](period-control.md).
+
+
+## Creación desde Documentos — 2026-10-14
+
+La decisión del propietario recupera el selector Plan de Trabajo / Informe. El Informe Final continúa siendo derivado de un Plan aprobado, vigente y del responsable principal; no se habilitan Informes independientes.
+
+`GET /api/work-plans/options` añade `suggestedTitle` a cada ámbito: `Plan de Trabajo: <grupo/unidad>`, acotado a 200 caracteres. Al seleccionar el ámbito, la UI propone ese nombre y permite ajustarlo. `POST /api/work-plans` acepta `title` omitido, null o vacío únicamente para generación automática de un documento por ámbito autorizado; conserva título explícito y validación de 200 caracteres. La clave de creación conserva el título solicitado, incluso vacío, de modo que un reintento no cambia ID/nombre si se renombró el grupo. La creación antigua sin ámbito permanece limitada a fixtures y exige título.
+
+`GET /api/reports/options?query=&page=0&size=20` devuelve `{ items, total, page, size }`. Cada opción incluye ID/título del Plan, grupo, período, versión formal, `suggestedTitle` y `reportId` si existe un Informe que se abrirá. Búsqueda literal por título/grupo/período; tamaño 1–50, página 0–100000 y búsqueda máximo 200 caracteres. Solo se listan T1 aprobados, no archivados, en ámbitos activos autorizados del principal y período ACTIVE. Un Informe nuevo exige fecha dentro del período; un Informe ya existente consultable puede abrirse fuera de esa ventana conforme al contrato anterior. Integrante, revisor o ADMIN sin principal designado no reciben opciones por su rol.
+
+La selección llama al endpoint existente `POST /api/work-plans/{id}/report`, que vuelve a comprobar elegibilidad y mantiene unicidad. El nombre nuevo es `Informe: <nombre del Plan>`, quitando el prefijo exacto `Plan de Trabajo: ` si está presente. Se muestran los nombres guardados de Informes existentes; no se renombran documentos históricos ni PDFs firmados.
+
+La interfaz mantiene seleccionadas las entradas al filtrar la bandeja; al cambiar de tipo u abrir otro documento solicita confirmación si se descartan datos. Carga/error/vacío y navegación de candidatos son explícitos. Se conserva el acceso «Crear o abrir Informe T2» dentro del Plan aprobado.
+
+Los códigos mostrados son de formato `UTA-SGC-A-2-1-P7-T1/T2`. No se genera un consecutivo o código institucional individual sin definición confirmada. No hay migraciones ni variables nuevas; reconstruir backend y frontend para esta entrega.

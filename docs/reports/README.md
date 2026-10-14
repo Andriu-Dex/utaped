@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-14 — Selector documental y nombres automáticos](2026-10-14-01-document-creation-options.md).
+
 - [2026-10-13 — Publicación y PR hacia develop](2026-10-13-02-develop-pull-request-publication.md).
 
 - [2026-10-13 — CAPTCHA accesible y carga documental](2026-10-13-01-accessible-captcha-and-document-load.md).
