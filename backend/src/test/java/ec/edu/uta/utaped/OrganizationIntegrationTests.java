@@ -17,6 +17,19 @@ class OrganizationIntegrationTests extends WorkPlanIntegrationTests {
         organization.member(id,"admin@example.invalid",new OrganizationService.MemberInput(user,"MEMBER","Responsable",true,0L));
         organization.principal(id,"admin@example.invalid",new OrganizationService.PrincipalInput(user,0L));return id;
     }
+    @Test void scopedCreationProvidesCanonicalDefaultTitleAndStableRetryWithoutAClientTitle() throws Exception {
+        UUID scope=scope(),key=UUID.randomUUID();Browser owner=new Browser();owner.login("user@example.invalid",PASSWORD);
+        String expected="Plan de Trabajo: "+jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,group);
+        assertEquals(expected,plans.options("user@example.invalid").scopes().getFirst().suggestedTitle());
+        String body="{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"scopeId\":\""+scope+"\"}";
+        var created=owner.request("POST","/api/work-plans",body,true);assertEquals(200,created.statusCode());
+        assertEquals(expected,com.jayway.jsonpath.JsonPath.read(created.body(),"$.title"));
+        String id=com.jayway.jsonpath.JsonPath.read(created.body(),"$.id");
+        jdbc.update("UPDATE institutional_group SET name='Grupo con denominación actualizada' WHERE id=?",group);
+        var retried=owner.request("POST","/api/work-plans",body,true);assertEquals(200,retried.statusCode());
+        assertEquals(id,com.jayway.jsonpath.JsonPath.read(retried.body(),"$.id"));assertEquals(expected,com.jayway.jsonpath.JsonPath.read(retried.body(),"$.title"));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE scope_id=?",Integer.class,scope));
+    }
     @Test void httpRoleMatrixAndMembershipRevocationKeepSessionsFromBypassingDocumentPermissions() throws Exception {
         UUID scope=scope();organization.member(scope,"admin@example.invalid",new OrganizationService.MemberInput(outsider,"MEMBER","Integrante",true,0L));
         var plan=plans.create("user@example.invalid",new Create(group,period,UUID.randomUUID(),"Aceptación por rol",scope));

@@ -1,0 +1,19 @@
+.document-kind-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 24px 0; }
+.document-kind-card { display: flex; align-items: center; gap: 14px; padding: 22px; border: 1px solid var(--border); background: var(--canvas); border-radius: 16px; cursor: pointer; transition: border-color .15s, box-shadow .15s; margin: 0; }
+.document-kind-card.selected { border-color: var(--blue-500, #2381b7); box-shadow: inset 0 0 0 1px var(--blue-500, #2381b7); background: var(--blue-100); }
+.document-kind-card:focus-within { outline: 3px solid #439ccc; outline-offset: 3px; }
+.document-kind-card input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #1b719f; }
+.document-kind-icon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: var(--surface); color: var(--text); }
+.document-kind-card strong { display: block; font-size: 1.05rem; }
+.document-kind-card small { display: block; color: var(--muted); font-weight: 400; margin-top: 4px; line-height: 1.5; }
+.document-kind-format { display: block; color: var(--muted); font-size: .68rem; margin-top: 8px; letter-spacing: .04em; }
+.document-create-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; align-items: start; }
+.document-create-fields button { justify-self: end; grid-column: 1/-1; display: inline-flex; align-items: center; gap: 8px; }
+.document-base-search { display: flex; align-items: end; gap: 14px; margin-bottom: 20px; }
+.document-base-search label { flex: 1; margin: 0; }
+.document-base-search button { display: inline-flex; align-items: center; gap: 8px; }
+@media (min-width: 701px) and (max-width: 1100px) {
+  .document-kind-card { padding: 16px; gap: 10px; align-items: flex-start; }
+  .document-kind-icon { display: none; }
+  .document-create-fields { grid-template-columns: 1fr; }
+}

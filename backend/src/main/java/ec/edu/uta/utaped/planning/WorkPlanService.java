@@ -66,7 +66,7 @@ public class WorkPlanService {
             LEFT JOIN academic_career c ON c.id=s.career_id WHERE s.active AND (c.id IS NULL OR c.active)
             ORDER BY p.starts_on DESC,g.name,c.name
             """,(rs,n)->new ScopeOption(rs.getObject("id",UUID.class),rs.getObject("group_id",UUID.class),rs.getObject("period_id",UUID.class),rs.getString("group_name"),rs.getString("period_name"),rs.getString("career_name"),
-                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class)))),actor.id(),actor.id());
+                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name"))),actor.id(),actor.id());
         var groups=jdbc.query("SELECT g.id,g.name FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND g.active ORDER BY g.name",(rs,n)->new GroupOption(rs.getObject("id",UUID.class),rs.getString("name")),actor.id());
         var periods=jdbc.query("SELECT id,name,status,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
@@ -97,12 +97,13 @@ public class WorkPlanService {
         return new Page(items,total,page,size);
     }
     @Transactional public Plan create(String email,Create data) {
+        String requestedTitle=Objects.toString(data.title(),"").trim();
         new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(data.periodId());
         var actor=accounts.current(email);jdbc.queryForList("SELECT id FROM app_user WHERE id=? FOR UPDATE",actor.id());
         var existing=jdbc.queryForList("SELECT id,group_id,period_id,scope_id,creation_title FROM work_plan WHERE created_by=? AND request_key=?",actor.id(),data.requestKey());
         if(!existing.isEmpty()) {
             var prior=existing.getFirst();
-            if(!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(data.title().trim())) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
+            if(!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(requestedTitle)) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
             return get((UUID)prior.get("id"),email);
         }
         String career="";
@@ -123,7 +124,9 @@ public class WorkPlanService {
             if(singlePlan&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE teacher_id=? AND group_id=? AND period_id=? AND archived_at IS NULL",Integer.class,actor.id(),data.groupId(),data.periodId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan para este ámbito anterior.");
         }
         requireWindow(data.periodId());UUID id=UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),data.title().trim(),data.title().trim(),LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career);
+        if(data.scopeId()==null && requestedTitle.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Indique un título para el documento anterior.");
+        String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career);
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
         audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
     }

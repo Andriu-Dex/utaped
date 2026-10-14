@@ -22,6 +22,24 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.DocumentLifecycleService lifecycle;
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void reportCreationOptionsRequireApprovedAccessiblePlansAndPreserveExistingNames() throws Exception {
+        UUID review=submit(false);assertEquals(0,reports.options(email,"",0,20).total());approve(review);
+        var source=plans.get(id,email);String originalHash=reviews.state(review,email).pdfHash();
+        var options=reports.options(email,"",0,1);assertEquals(1,options.total());assertEquals(id,options.items().getFirst().id());assertNull(options.items().getFirst().reportId());
+        assertEquals("Informe: "+source.title(),options.items().getFirst().suggestedTitle());
+        assertEquals(0,reports.options(reviewerEmail,"",0,20).total());assertEquals(0,reports.options(approverEmail,"",0,20).total());
+        String adminEmail="unassigned-admin@example.invalid";jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','ADMIN',false)",UUID.randomUUID(),adminEmail,"Administrador sin ámbito");assertEquals(0,reports.options(adminEmail,"",0,20).total());
+        assertEquals(0,reports.options(email,"%_",0,20).total());assertEquals(0,reports.options(email,"",1,1).items().size());
+        assertEquals(1,reports.options(email,"COMISIÓN",0,20).total());
+        jdbc.update("UPDATE app_user SET password_hash=? WHERE id=?",encoder.encode("Test-only-password-2026"),user);
+        var browser=new DocumentLoadProbe.Browser(port,jdbc,email);var response=browser.request("GET","/api/reports/options?size=1",null,null);assertEquals(200,response.status());
+        assertEquals(400,browser.request("GET","/api/reports/options?size=51",null,null).status());
+        var report=reports.create(id,email);assertEquals(options.items().getFirst().suggestedTitle(),report.title());
+        var draft=reports.data(report.id(),email);reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),"Informe revisado por el responsable","","","",draft.results(),draft.delegations()));
+        var existing=reports.options(email,"",0,20).items().getFirst();assertEquals(report.id(),existing.reportId());assertEquals("Informe revisado por el responsable",existing.suggestedTitle());
+        assertEquals(report.id(),reports.create(id,email).id());assertEquals(source.rowVersion(),plans.get(id,email).rowVersion());assertEquals(originalHash,reviews.state(review,email).pdfHash());
+        jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);assertEquals(0,reports.options(email,"",0,20).total());
+    }
     @Test void boundedHttpLoadGeneratesAndRendersLongDocumentsForThreeIsolatedAuthors() throws Exception {
         var probe=new DocumentLoadProbe();complete("Justificación extensa de planificación y seguimiento. ".repeat(100),35);signingAdmin();
         var source=activities.get(id,email).activities();byte[] annex=pdf(12,false,false);

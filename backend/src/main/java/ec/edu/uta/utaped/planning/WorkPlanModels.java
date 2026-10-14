@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public final class WorkPlanModels {
     private WorkPlanModels() {}
-    public record Create(@NotNull UUID groupId,@NotNull UUID periodId,@NotNull UUID requestKey,@NotBlank @Size(max=200) String title,UUID scopeId) {
+    public record Create(@NotNull UUID groupId,@NotNull UUID periodId,@NotNull UUID requestKey,@Size(max=200) String title,UUID scopeId) {
         public Create(UUID groupId,UUID periodId,UUID requestKey,String title) { this(groupId,periodId,requestKey,title,null); }
     }
     public record Update(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=200) String title,
@@ -23,6 +23,6 @@ public final class WorkPlanModels {
     public record Page(List<Summary> items,long total,int page,int size) {}
     public record GroupOption(UUID id,String name) {}
     public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}
-    public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate) {}
+    public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate,String suggestedTitle) {}
     public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {}
 }

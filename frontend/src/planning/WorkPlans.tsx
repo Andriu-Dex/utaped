@@ -1,10 +1,11 @@
 import { Toast } from '../shared/Toast'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api, download } from '../shared/api'
 import { WorkPlanEditor } from './WorkPlanEditor'
 import type { WorkPlan, PlanOptions, PlanPage } from './types'
 import { Icon } from '../shared/Icon'
 import { ReportEditor } from './ReportEditor'
+import { DocumentCreation } from './DocumentCreation'
 
 export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dirty: boolean) => void; initialDocId?: string | null }) {
   const [options, setOptions] = useState<PlanOptions | null>(null)
@@ -13,9 +14,10 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
   const [error, setError] = useState(''); const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false)
   const [filters, setFilters] = useState({ groupId: '', periodId: '', query: '', page: 0 })
   const [search, setSearch] = useState('')
-  const [newPlan, setNewPlan] = useState({ title: '', scopeId: '', groupId: '', periodId: '', requestKey: crypto.randomUUID() })
+  const [creationDirty, setCreationDirty] = useState(false); const [creationKey, setCreationKey] = useState(0)
+  const creationChanged = useCallback((dirty: boolean) => { setCreationDirty(dirty); onDirtyChange(dirty) }, [onDirtyChange])
   const [reload, setReload] = useState(0)
-  useEffect(() => { if (!selected) onDirtyChange(Boolean(newPlan.title || newPlan.scopeId)) }, [newPlan.title, newPlan.scopeId, selected, onDirtyChange])
+
   useEffect(() => { let active = true; if (initialDocId) api<WorkPlan>('/work-plans/' + initialDocId).then(plan => { if (active) setSelected(plan) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [initialDocId])
   useEffect(() => {
     let cancelled = false
@@ -27,14 +29,9 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
     }).catch(e => { if (!cancelled) { setError(e.message); setLoading(false) } })
     return () => { cancelled = true }
   }, [filters, reload])
-  async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError(''); setBusy(true)
-    try { setSelected(await api<WorkPlan>('/work-plans', 'POST', newPlan)); setNewPlan({ title: '', scopeId: '', groupId: '', periodId: '', requestKey: crypto.randomUUID() }) }
-    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear el Plan.') } finally { setBusy(false) }
-  }
   async function open(id: string) {
-    if ((newPlan.title || newPlan.scopeId) && !window.confirm('¿Descartar los datos del nuevo Plan?')) return
-    setNewPlan({ title: '', scopeId: '', groupId: '', periodId: '', requestKey: crypto.randomUUID() })
+    if (creationDirty && !window.confirm('¿Descartar los datos del nuevo documento?')) return
+    setCreationKey(n => n + 1); creationChanged(false)
     setBusy(true); setError('')
     try { setSelected(await api<WorkPlan>('/work-plans/' + id)) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir el Plan.') } finally { setBusy(false) }
@@ -46,23 +43,8 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
     <h1>Gestión Documental Académica</h1>
     <p className="muted">Planes de Trabajo T1 e Informes T2 de sus ámbitos institucionales. La edición corresponde al responsable principal.</p>
     {error && <Toast message={error} />}
+    {options && <DocumentCreation key={creationKey} options={options} busy={busy || loading} onBusyChange={setBusy} onDirtyChange={creationChanged} onCreated={document => { creationChanged(false); setSelected(document) }} />}
     {loading ? <p role="status">Cargando documentos…</p> : <>
-      <section className="card animate-reveal">
-        <div className="section-heading">
-          <span className="section-icon"><Icon name="document" /></span>
-          <div>
-            <span className="section-kicker">NUEVO DOCUMENTO</span>
-            <h2>Nuevo Plan de Trabajo</h2>
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: 8 }}>Inicia la elaboración del borrador formal institucional para el período académico vigente.</p>
-        {!options?.scopes.some(s => s.canCreate) ? <div className="empty-state"><Icon name="users" size={32} /><p>No tiene ámbitos disponibles para crear un Plan.</p><small>Requiere designación como responsable principal, ventana abierta y un ámbito sin otro Plan activo. Los documentos disponibles siguen en la bandeja.</small></div> : <form onSubmit={create}><fieldset disabled={busy} className="grid">
-          <label>Título del nuevo Plan<input required maxLength={200} placeholder="Ej: Plan de Trabajo Comisión Académica" value={newPlan.title} onChange={e => setNewPlan(p => ({ ...p, title: e.target.value, requestKey: crypto.randomUUID() }))} /></label>
-          <label>Ámbito del nuevo Plan<select aria-label="Ámbito del nuevo Plan" required value={newPlan.scopeId} onChange={e => { const s = options.scopes.find(s => s.id === e.target.value); setNewPlan(p => ({ ...p, scopeId: s?.id ?? '', groupId: s?.groupId ?? '', periodId: s?.periodId ?? '', requestKey: crypto.randomUUID() })) }}><option value="">Seleccione grupo, carrera y período</option>{options.scopes.filter(s => s.canCreate).map(s => <option value={s.id} key={s.id}>{s.groupName} · {s.careerName ?? 'Facultad'} · {s.periodName}</option>)}</select></label>
-          <button disabled={busy || !newPlan.scopeId}><Icon name="document" size={16} />{busy ? 'Creando…' : 'Crear borrador'}</button>
-        </fieldset></form>}
-      </section>
-
       <section className="card">
         <div className="section-heading">
           <span className="section-icon"><Icon name="calendar" /></span>
