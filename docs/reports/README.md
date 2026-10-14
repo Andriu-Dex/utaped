@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-13 — Publicación y PR hacia develop](2026-10-13-02-develop-pull-request-publication.md).
+
 - [2026-10-13 — CAPTCHA accesible y carga documental](2026-10-13-01-accessible-captcha-and-document-load.md).
 
 - [2026-10-12 — Aceptación por roles, documentos largos y preparación operativa](2026-10-12-06-role-acceptance-and-operational-readiness.md).
