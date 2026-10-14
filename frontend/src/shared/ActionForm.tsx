@@ -2,25 +2,40 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './Icon'
 import './action-form.css'
 
-export function ActionForm({ label, children, dirty, disabled = false, onCancel, openSignal }: {
-  label: string; children: ReactNode; dirty?: boolean; disabled?: boolean; onCancel?: () => void; openSignal?: string
+export function ActionForm({ label, children, dirty, disabled = false, onCancel, openSignal, modal = false }: {
+  label: string; children: ReactNode; dirty?: boolean; disabled?: boolean; onCancel?: () => void; openSignal?: string; modal?: boolean
 }) {
   const [open, setOpen] = useState(!!openSignal), [touched, setTouched] = useState(false)
   const [previousSignal, setPreviousSignal] = useState(openSignal)
   const button = useRef<HTMLButtonElement>(null), body = useRef<HTMLDivElement>(null), id = useId()
+  const dialog = useRef<HTMLDialogElement>(null)
   if (previousSignal !== openSignal) { setPreviousSignal(openSignal); if (openSignal) setOpen(true); setTouched(false) }
   useEffect(() => {
+    if (modal && open && dialog.current && !dialog.current.open) dialog.current.showModal()
+    if (modal && !open && dialog.current?.open) dialog.current.close()
     if (open) body.current?.querySelector<HTMLElement>('input:not(:disabled),select:not(:disabled),textarea:not(:disabled),button:not(:disabled)')?.focus()
-  }, [open])
+    if (!modal || !open) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [open, modal])
   function cancel() {
     if (disabled || ((dirty ?? touched) && !window.confirm('Hay cambios sin guardar. ¿Cancelar y descartarlos?'))) return
     onCancel?.(); setOpen(false); setTouched(false)
     requestAnimationFrame(() => button.current?.focus())
   }
-  return <div className="action-form" onKeyDown={e => { if (open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel() } }}>
-    {!open ? <button ref={button} type="button" disabled={disabled} aria-expanded={false} aria-controls={id} onClick={() => setOpen(true)}><Icon name="plus" size={17} />{label}</button> : <>
-      <div className="action-form-heading"><strong>{label}</strong><button type="button" className="secondary" disabled={disabled} aria-label={'Cancelar: ' + label} onClick={cancel}>Cancelar</button></div>
+  const content = <>
+      <div className="action-form-heading"><strong id={id + '-heading'}>{label}</strong><button type="button" className="secondary" disabled={disabled} aria-label={'Cancelar: ' + label} onClick={cancel}>Cancelar</button></div>
       <div ref={body} id={id} role="region" aria-label={'Formulario: ' + label} className="action-form-body" onChangeCapture={() => setTouched(true)} onResetCapture={() => setTouched(false)}>{children}</div>
-    </>}
+    </>
+  return <div className="action-form" onKeyDown={e => { if (!modal && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel() } }}>
+    {(!open || modal) && <button ref={button} type="button" disabled={disabled} aria-expanded={open} aria-haspopup={modal ? 'dialog' : undefined} onClick={() => setOpen(true)}><Icon name="plus" size={17} />{label}</button>}
+    {modal ? <dialog ref={dialog} className="action-form-dialog" aria-labelledby={id + '-heading'} onCancel={e => { e.preventDefault(); cancel() }} onKeyDown={e => {
+      if (e.key !== 'Tab') return
+      const controls = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')].filter(el => el.getClientRects().length > 0)
+      const first = controls[0], last = controls.at(-1)
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+    }}>{open && content}</dialog> : open && content}
   </div>
 }

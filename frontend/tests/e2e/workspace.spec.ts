@@ -146,6 +146,7 @@ test('modern access preserves credentials, supports username and administrative 
   }
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()
   await openAction(page, 'Crear documento'); await expect(page.getByText('No tiene ámbitos disponibles para crear un Plan.')).toBeVisible()
+  await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await page.setViewportSize({ width: 820, height: 1180 })
   await expect(page.getByRole('button', { name: 'Ingresar', exact: true })).toBeEnabled()

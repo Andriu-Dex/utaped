@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-14 — Modal documental y ejemplos institucionales](2026-10-14-03-document-modal-and-reference-seeds.md).
+
 - [2026-10-14 — Formularios mediante acciones explícitas](2026-10-14-02-explicit-form-actions.md).
 
 - [2026-10-14 — Selector documental y nombres automáticos](2026-10-14-01-document-creation-options.md).
