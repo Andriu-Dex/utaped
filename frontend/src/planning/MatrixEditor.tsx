@@ -1,3 +1,4 @@
+import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
@@ -11,7 +12,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
   const [catalogId, setCatalogId] = useState(''); const [otherTitle, setOtherTitle] = useState('')
   const [attempted, setAttempted] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
-  const dirty = !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
+  const dirty = !!catalogId || !!otherTitle || !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
   useEffect(() => {
@@ -74,8 +75,8 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
     <p>Elaborado por: {saved.elaboratedBy}</p>
     <form ref={formRef} onSubmit={save}><fieldset disabled={busy || !saved.editable}><label>Fuente de la matriz<input maxLength={500} value={draft.source} onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }} /></label>
-      <div className="card"><h2>Seleccionar actividades</h2><label>Actividad del catálogo<select value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Otra actividad</option>{saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => <option key={d.id} value={d.id}>{categoryLabels[d.category]} · {d.title}</option>)}</select></label>
-        {!catalogId && <label>Título de Otra actividad<input maxLength={500} value={otherTitle} onChange={e => setOtherTitle(e.target.value)} /></label>}<button type="button" disabled={draft.activities.length >= 100} onClick={add}>Agregar actividad</button></div>
+      <ActionForm label="Agregar actividad" disabled={busy || !saved.editable} dirty={!!catalogId || !!otherTitle} onCancel={() => { setCatalogId(''); setOtherTitle('') }}><div className="card"><h2>Seleccionar actividades</h2><label>Actividad del catálogo<select value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Otra actividad</option>{saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => <option key={d.id} value={d.id}>{categoryLabels[d.category]} · {d.title}</option>)}</select></label>
+        {!catalogId && <label>Título de Otra actividad<input maxLength={500} value={otherTitle} onChange={e => setOtherTitle(e.target.value)} /></label>}<button type="button" disabled={draft.activities.length >= 100} onClick={add}>Agregar actividad</button></div></ActionForm>
       {draft.activities.length === 0 && <p>No hay actividades seleccionadas.</p>}
       {draft.activities.map((row, index) => <section className="card" key={row.id} aria-label={`Actividad ${index + 1}`}><h2>{index + 1}. {row.title}</h2><p>{categoryLabels[row.category]}{row.mandatory ? ' · Obligatoria' : ''}</p>
         {!row.catalogId && <label>Título de la actividad<input required maxLength={500} value={row.title} onChange={e => update(row.id, { title: e.target.value })} /></label>}

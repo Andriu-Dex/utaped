@@ -1,3 +1,4 @@
+import { openAction } from '../open-action'
 import { test, expect, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
@@ -55,12 +56,12 @@ test('career history and explicitly authorized coordinator recovery on desktop a
     await api(admin, '/admin/organization/scopes/'+scope.id+'/principal', 'PUT', {userId:actor.id,rowVersion:0})
     await coordinator.reload(); await coordinator.getByRole('button',{name:'Mi organización',exact:true}).click(); await coordinator.getByLabel('Mi ámbito institucional').selectOption(scope.id); await expect(coordinator.getByText(/No hay cuentas que pueda restablecer/)).toBeVisible()
     await admin.reload(); await admin.getByRole('button',{name:'Carreras y ámbitos',exact:true}).click(); await admin.getByLabel('Ámbito institucional',{exact:true}).selectOption(scope.id)
-    await admin.getByLabel('Buscar integrante').fill(actor.username); await admin.getByLabel('Integrante del ámbito').selectOption(actor.id)
+    await openAction(admin, 'Asignar o editar integrante');await admin.getByLabel('Buscar integrante').fill(actor.username); await admin.getByLabel('Integrante del ámbito').selectOption(actor.id)
     await admin.getByLabel('Cargo o función').fill('Coordinación autorizada'); await admin.getByLabel('Autorizar recuperación de cuentas de este ámbito (solo coordinadores)').check(); await admin.getByRole('button',{name:'Guardar pertenencia',exact:true}).click(); await expect(admin.getByText('Configuración guardada.',{exact:true})).toBeVisible()
     await admin.getByText('Editar o desactivar una carrera',{exact:true}).click(); await admin.getByLabel('Carrera a editar').selectOption(career.id); await admin.getByLabel('Nombre actualizado').fill('Carrera actualizada '+suffix); await admin.getByRole('button',{name:'Guardar carrera',exact:true}).click(); await expect(admin.getByText('Carrera actualizada. Sus ámbitos e historial se conservan.',{exact:true})).toBeVisible()
     await coordinator.reload(); await coordinator.getByRole('button',{name:'Mi organización',exact:true}).click(); await coordinator.getByLabel('Mi ámbito institucional').selectOption(scope.id)
     await coordinator.getByText('Historial de cargos y responsables',{exact:true}).click(); await expect(coordinator.getByText('Coordinador · Coordinación inicial · Activo',{exact:true})).toBeVisible(); await expect(coordinator.getByText(/Coordinación autorizada · Activo/)).toBeVisible()
-    await coordinator.getByLabel('Cuenta del integrante').selectOption(user.id); await coordinator.getByLabel('Contraseña temporal',{exact:true}).fill(next)
+    await openAction(coordinator, 'Restablecer cuenta de integrante');await coordinator.getByLabel('Cuenta del integrante').selectOption(user.id); await coordinator.getByLabel('Contraseña temporal',{exact:true}).fill(next)
     await coordinator.evaluate(() => { (document.activeElement as HTMLElement)?.blur(); window.scrollTo({top:0,behavior:'instant'}) }); await coordinator.screenshot({path:'test-results/contextual-desktop.png',fullPage:true}); coordinator.once('dialog',d=>d.accept()); await coordinator.getByRole('button',{name:'Restablecer acceso',exact:true}).click(); await expect(coordinator.getByText(/Acceso restablecido. Entregue/)).toBeVisible()
     expect((await member.request.get('/api/auth/me')).status()).toBe(401)
     await login(member,'recovery.'+suffix,next); await expect(member.getByRole('heading',{name:'Acceso temporal'})).toBeVisible()

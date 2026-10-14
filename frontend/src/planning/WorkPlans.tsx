@@ -6,6 +6,7 @@ import type { WorkPlan, PlanOptions, PlanPage } from './types'
 import { Icon } from '../shared/Icon'
 import { ReportEditor } from './ReportEditor'
 import { DocumentCreation } from './DocumentCreation'
+import { ActionForm } from '../shared/ActionForm'
 
 export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dirty: boolean) => void; initialDocId?: string | null }) {
   const [options, setOptions] = useState<PlanOptions | null>(null)
@@ -43,7 +44,7 @@ export function WorkPlans({ onDirtyChange, initialDocId }: { onDirtyChange: (dir
     <h1>Gestión Documental Académica</h1>
     <p className="muted">Planes de Trabajo T1 e Informes T2 de sus ámbitos institucionales. La edición corresponde al responsable principal.</p>
     {error && <Toast message={error} />}
-    {options && <DocumentCreation key={creationKey} options={options} busy={busy || loading} onBusyChange={setBusy} onDirtyChange={creationChanged} onCreated={document => { creationChanged(false); setSelected(document) }} />}
+    {options && <ActionForm label="Crear documento" dirty={creationDirty} disabled={busy || loading} onCancel={() => { setCreationKey(n => n + 1); creationChanged(false) }}><DocumentCreation key={creationKey} options={options} busy={busy || loading} onBusyChange={setBusy} onDirtyChange={creationChanged} onCreated={document => { creationChanged(false); setSelected(document) }} /></ActionForm>}
     {loading ? <p role="status">Cargando documentos…</p> : <>
       <section className="card">
         <div className="section-heading">

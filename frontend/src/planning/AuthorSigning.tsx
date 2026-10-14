@@ -1,3 +1,4 @@
+import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, signPdf } from '../shared/api'
@@ -36,11 +37,11 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDoc
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
       {state.signingBlockers.length > 0 && !signed && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
-      {!signed && <form onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
+      {!signed && <ActionForm label="Preparar firma" disabled={busy || !state.signingEnabled}><form onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
         <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? 'Firmando…' : 'Firmar'}</button>
-      </fieldset></form>}
+      </fieldset></form></ActionForm>}
       {signed && <><p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
         <p>Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
         {!state.automaticSubmission && <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>}

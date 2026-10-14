@@ -1,3 +1,4 @@
+import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type User } from '../shared/api'
@@ -27,11 +28,11 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
     <label>Cuenta del firmante<select value={user} disabled={busy} onChange={e => { if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')) return; setDirty(false); setUser(e.target.value); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
-    {user && <><form key={user} onChange={() => setDirty(true)} onSubmit={event => void register(event)}><fieldset disabled={busy}>
+    {user && <><ActionForm label="Vincular certificado público" dirty={dirty} disabled={busy} onCancel={() => setDirty(false)}><form key={user} onChange={() => setDirty(true)} onSubmit={event => void register(event)}><fieldset disabled={busy}>
       <label>Huella SHA-256 pública<input name="fingerprint" pattern="[a-fA-F0-9]{64}" required minLength={64} maxLength={64} /></label>
       <label>Referencia de comprobación de identidad<textarea name="verificationNote" required maxLength={500} /></label>
       <label className="checkbox"><input name="identityVerified" type="checkbox" required />He comprobado que el certificado público corresponde a esta cuenta.</label>
-      <button>Vincular huella pública</button></fieldset></form>
+      <button>Vincular huella pública</button></fieldset></form></ActionForm>
       <ul>{bindings.map(binding => <li key={binding.id}><p style={{ overflowWrap: 'anywhere' }}>{binding.fingerprint} · {binding.active ? 'Vinculada' : 'Desvinculada'}</p><p>{binding.verificationNote}</p>{binding.active && <button className="secondary" disabled={busy} onClick={() => void revoke(binding)}>Desvincular huella</button>}</li>)}</ul></>}
   </section>
 }

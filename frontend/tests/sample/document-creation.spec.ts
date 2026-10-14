@@ -1,3 +1,4 @@
+import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { api, login } from './sample-fixtures'
@@ -16,10 +17,12 @@ test('document type chooser proposes the institutional name and excludes draft P
     await api(admin, '/admin/organization/scopes/' + scope.id + '/members', 'PUT', { userId: actor.id, membershipRole: 'MEMBER', positionLabel: 'Responsable de ejemplo', active: true, rowVersion: 0 })
     await api(admin, '/admin/organization/scopes/' + scope.id + '/principal', 'PUT', { userId: actor.id, rowVersion: 0 })
     await principal.reload(); await principal.getByRole('button', { name: 'Documentos', exact: true }).click()
+    await expect(principal.getByRole('radio', { name: /^Plan de Trabajo/ })).toHaveCount(0)
+    await openAction(principal, 'Crear documento')
     const planChoice = principal.getByRole('radio', { name: /^Plan de Trabajo/ }), reportChoice = principal.getByRole('radio', { name: /^Informe/ })
     await expect(planChoice).toBeChecked()
     await expect(principal.getByLabel('Título del nuevo Plan')).toBeDisabled()
-    await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
+    await openAction(principal, 'Crear documento');await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
     await expect(principal.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: ' + groupName)
     await principal.getByLabel('Buscar por título').fill(suffix)
     await principal.getByRole('button', { name: 'Buscar', exact: true }).click()
@@ -31,7 +34,7 @@ test('document type chooser proposes the institutional name and excludes draft P
     await expect(principal.getByRole('heading', { name: 'Plan de Trabajo: ' + groupName, exact: true })).toBeVisible()
     const created = (await api(principal, '/work-plans?query=' + encodeURIComponent(groupName))).items[0]
     await principal.getByRole('button', { name: 'Volver a documentos', exact: true }).click()
-    await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click()
+    await openAction(principal, 'Crear documento'); await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click()
     await expect(principal.getByText('No hay Planes aprobados que coincidan con la búsqueda.', { exact: true })).toBeVisible()
     expect((await api(principal, '/reports/options?query=' + encodeURIComponent(groupName))).total).toBe(0)
     await principal.setViewportSize({ width: 820, height: 1180 }); await principal.getByRole('button', { name: 'Modo oscuro', exact: true }).click()

@@ -1,3 +1,4 @@
+import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
@@ -37,7 +38,7 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
         <label className="check"><input type="checkbox" checked={state.privacyNoticeEnabled} onChange={e => void mutate(() => api<State>(path + '/settings', 'PUT', { rowVersion: state.rowVersion, enabled: state.enabled, privacyNoticeEnabled: e.target.checked }), 'Opciones guardadas.')} />Incluir nota de protección de datos personales de la plantilla</label>
         <p>Seleccione la nota cuando corresponda al contenido del documento; no se activa automáticamente.</p>
       </fieldset>
-      {state.enabled && <form onSubmit={upload}><fieldset disabled={busy || !state.editable || editing !== null}><legend>Agregar anexo</legend><label>Título del anexo<input required maxLength={200} value={title} onChange={e => setTitle(e.target.value)} /></label><label>Archivo PDF del anexo<input ref={fileInput} required type="file" accept="application/pdf,.pdf" onChange={e => { setFile(e.target.files?.[0] ?? null); requestKey.current = crypto.randomUUID() }} /></label><button disabled={state.items.length >= state.maxAttachments}>Agregar PDF</button></fieldset></form>}
+      {state.enabled && <ActionForm label="Agregar anexo" dirty={!!title || !!file} disabled={busy || !state.editable || editing !== null} onCancel={() => { setTitle(''); setFile(null); requestKey.current = crypto.randomUUID() }}><form onSubmit={upload}><fieldset disabled={busy || !state.editable || editing !== null}><legend>Agregar anexo</legend><label>Título del anexo<input required maxLength={200} value={title} onChange={e => setTitle(e.target.value)} /></label><label>Archivo PDF del anexo<input ref={fileInput} required type="file" accept="application/pdf,.pdf" onChange={e => { setFile(e.target.files?.[0] ?? null); requestKey.current = crypto.randomUUID() }} /></label><button disabled={state.items.length >= state.maxAttachments}>Agregar PDF</button></fieldset></form></ActionForm>}
       {state.items.map((a, index) => <article className="card" key={a.id} aria-label={a.label}><h2>{a.label}. {a.title}</h2><p>{a.originalName} · {a.pageCount} páginas · {(a.sizeBytes / 1024).toFixed(1)} KB</p><p className="preserve-text">{a.description}</p>
         <a href={'/api' + path + '/' + a.id + '/content'}>Descargar original</a>{' '}
         <button className="secondary" title={'Editar ' + a.label} aria-label={'Editar ' + a.label} disabled={busy || !state.editable || dirty} onClick={() => setEditing({ ...a })}>✎</button>{' '}
