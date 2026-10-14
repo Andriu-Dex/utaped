@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 interface Stage { id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
@@ -26,9 +27,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     try { const saved = await api<State>(path + suffix, method, body); setState(saved); setDraft(saved.draft); setNotice('Configuración guardada.'); setRevision(null) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar el flujo.') } finally { setBusy(false) }
   }
-  return <section className="card"><h3>Flujos por grupo</h3><p>Configure etapas y destinatarios de cada tipo documental. Las revisiones guardadas conservan su definición; esta configuración todavía no inicia revisión ni aplica firmas.</p>
+  return <section className="card"><h3>Plantillas de flujo por grupo</h3><p>Prepare revisiones reutilizables para T1 y T2. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
     <div className="grid"><label>Grupo del flujo<select value={group} disabled={busy} onChange={e => choose(e.target.value, type)}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><label>Tipo documental del flujo<select value={type} disabled={busy} onChange={e => choose(group, e.target.value)}><option value="T1">Plan T1</option><option value="T2">Informe T2</option></select></label></div>
-    {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {group && !state && <p role="status">Cargando flujo…</p>}
     {state && <><p>{state.current ? 'Revisión de configuración vigente: ' + state.current.revisionNumber : 'Sin configuración vigente.'}</p>{!state.groupActive && <p>Grupo inactivo: configuración de solo lectura.</p>}
       <label>Buscar participantes del flujo<input maxLength={200} value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} /></label><p>{options.total} participantes activos coinciden.</p><div className="pagination"><button className="secondary" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Participantes anteriores</button><button className="secondary" disabled={(page + 1) * 20 >= options.total} onClick={() => setPage(p => p + 1)}>Participantes siguientes</button></div>

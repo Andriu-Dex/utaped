@@ -38,7 +38,7 @@ class ActivityIntegrationTests {
         }
         void csrf() throws Exception { token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token"); }
         HttpResponse<String> login(String email,String password) throws Exception {
-            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password,true);csrf();return response;
+            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password+"&captcha="+LoginChallenges.answer(client,port,jdbc),true);csrf();return response;
         }
     }
     @BeforeEach void seed() {
@@ -59,7 +59,7 @@ class ActivityIntegrationTests {
     UUID period;
     void openPeriod() {
         period=UUID.randomUUID();
-        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',CURRENT_DATE-10,CURRENT_DATE+100,CURRENT_DATE-10,CURRENT_DATE+10,CURRENT_DATE+11,CURRENT_DATE+20)",period);
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
     }
     String createBody(UUID key) { return "{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"title\":\"Plan inicial\"}"; }
     String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"FISEI\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
@@ -121,7 +121,7 @@ class ActivityIntegrationTests {
         assertEquals(404,other.request("PUT",path,matrixBody(1,outsider,"Evidence"),true).statusCode());
         assertEquals(403,b.request("GET","/api/admin/planning/catalogs",null,false).statusCode());
         assertEquals(403,b.request("PUT",path,matrixBody(1,user,"Evidence"),false).statusCode());
-        jdbc.update("UPDATE academic_period SET preparation_ends_on=CURRENT_DATE-1 WHERE id=?",period);
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=(now() at time zone 'America/Guayaquil')::date-1 WHERE id=?",period);
         assertEquals(false,JsonPath.read(b.request("GET",path,null,false).body(),"$.editable"));
         jdbc.update("INSERT INTO activity_catalog(id,group_id,title,category,mandatory) VALUES (?,?,'Late required','POA',true)",UUID.randomUUID(),group);
         assertEquals(1,JsonPath.<Integer>read(b.request("GET",path,null,false).body(),"$.activities.length()"));

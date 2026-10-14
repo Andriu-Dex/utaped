@@ -1,0 +1,14 @@
+.document-page-navigator { border: 1px solid var(--border); border-radius: 16px; background: color-mix(in srgb,var(--blue-700) 4%,var(--surface)); padding: 18px; margin: 20px 0; }
+.document-navigator-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.document-navigator-heading strong,.document-navigator-heading [role=status] { display: block; }
+.document-navigator-heading strong { font-size: .95rem; }
+.document-navigator-heading [role=status] { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+.document-page-progress { margin-left: auto; width: 110px; height: 6px; border-radius: 8px; background: var(--border); overflow: hidden; }
+.document-page-progress span { display: block; height: 100%; background: var(--teal-700); }
+.document-navigator-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.document-navigator-controls > button { min-height: 44px; }
+.document-navigator-controls label { margin: 0; font-size: .78rem; }
+.document-navigator-controls label:last-child { flex: 1; min-width: 200px; }
+.document-navigator-controls label > div { display: flex; gap: 8px; }
+.document-navigator-controls input { width: 85px; min-height: 44px; }
+.document-navigator-controls select { min-height: 44px; }

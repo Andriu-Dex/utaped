@@ -8,6 +8,8 @@ Docker incluye Liberation Sans y DejaVu Sans; instalarlas al ejecutar sin Docker
 
 ## Respaldo consistente
 
+Actualización 2026-10-12: se entregan `scripts/operations.py` para respaldo conjunto DB/volumen/imágenes, validación y restauración en destinos nuevos; se comprobó con 57 documentos y 156 archivos ficticios. [Herramientas, comandos y límites](../operations/production-readiness.md). Los pasos manuales siguientes quedan como explicación del procedimiento, no como ausencia de herramientas.
+
 Este procedimiento todavía no constituye un programador de respaldos ni un RPO/RTO institucional.
 
 1. Identificar proyecto Compose y volúmenes reales; no confundir pruebas con institución.
@@ -22,7 +24,7 @@ DB y archivos son un único conjunto de respaldo. La DB sola no recupera PDFs.
 
 Probar primero en entorno aislado con escrituras detenidas: pg_restore para DB, archivo del volumen para documentos y permisos del usuario utaped. Usar la misma versión de aplicativo y verificar Flyway antes de actualizar. Autenticar propietario, descargar anexos/artefactos históricos, verificar hashes y visualizar páginas.
 
-Probar recuperación completa con datos autorizados antes de habilitar operación institucional. Esta entrega verifica rollback e integridad individual; no afirma haber probado una restauración operacional completa.
+Probar recuperación completa con datos institucionales autorizados antes de habilitar operación. Se ensayó restauración técnica completa con datos de ejemplo, Flyway/conteos, hashes de archivos, acceso HTTPS y descarga de un PDF firmado con los mismos bytes. Este ensayo no acredita los insumos ni la política de operación institucional.
 
 ## Retención
 

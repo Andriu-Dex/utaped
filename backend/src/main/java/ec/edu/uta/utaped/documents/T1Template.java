@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine2"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine4"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -121,6 +121,19 @@ public class T1Template {
             for(var r:children(p,"r")) {
                 var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(doc,"rPr");r.insertBefore(e,r.getFirstChild());return e;});
                 var size=element(doc,"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size);
+            }
+        }
+        if(s.workflow()!=null) {
+            int slot=1;
+            for(var stage:s.workflow().stages()) for(var person:stage.participants()) {
+                var row=(Element)signatureRows.get(1).cloneNode(true);var cells=children(row,"tc");
+                cell(cells.get(0),stage.label()+":");cell(cells.get(1),person.name());cell(cells.get(2),"");
+                if(stage.requiresSignature()) {
+                    // Preserve marker layout while making each slot independently discoverable.
+                    for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace("@@SIGTOP@@","@@SIGTOP"+slot+"@@").replace("@@SIGBOTTOM@@","@@SIGBOTTOM"+slot+"@@"));
+                    slot++;
+                } else cell(cells.get(3),"");
+                signatures.appendChild(row);
             }
         }
         result.add(signatures);

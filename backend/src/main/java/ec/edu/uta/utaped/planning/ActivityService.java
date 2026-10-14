@@ -23,7 +23,7 @@ public class ActivityService {
         this.jdbc=jdbc;this.plans=plans;this.accounts=accounts;this.audit=audit;
     }
     private ResponseStatusException invalid(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST,message); }
-    public List<Catalog> catalogs() { return jdbc.query("SELECT * FROM planning_catalog ORDER BY kind,label",(rs,n)->new Catalog(rs.getObject("id",UUID.class),rs.getString("kind"),rs.getString("label"),rs.getBoolean("active"))); }
+    public List<Catalog> catalogs() { return jdbc.query("SELECT * FROM planning_catalog ORDER BY kind,label",(rs,n)->new Catalog(rs.getObject("id",UUID.class),rs.getString("kind"),rs.getString("label"),rs.getBoolean("active"),rs.getString("evidence_kind"))); }
     public List<Definition> definitions(UUID groupId) {
         return jdbc.query("SELECT * FROM activity_catalog WHERE group_id=? ORDER BY mandatory DESC,title,id",(rs,n)->new Definition(rs.getObject("id",UUID.class),groupId,rs.getString("title"),rs.getString("category"),rs.getBoolean("mandatory"),rs.getBoolean("active")),groupId);
     }
@@ -36,9 +36,11 @@ public class ActivityService {
         if(!stored.isEmpty()) rows.addAll(Arrays.asList(json.readValue((String)stored.getFirst().get("activities"),Activity[].class)));
         var definitions=definitions(plan.groupId());
         // Required entries are materialized for editing; saved snapshots are never rebuilt from the catalog.
-        for(var d:definitions) if(plan.editable() && d.active() && d.mandatory() && rows.stream().noneMatch(a->d.id().equals(a.catalogId())))
+        for(var d:definitions) if(plan.documentType().equals("T1") && plan.editable() && d.active() && d.mandatory() && rows.stream().noneMatch(a->d.id().equals(a.catalogId())))
             rows.add(new Activity(d.id(),d.id(),d.title(),d.category(),true,null,null,List.of(),false,List.of(),List.of()));
-        var members=jdbc.query("SELECT u.id,u.display_name FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.groupId());
+        var members=plan.scopeId()==null
+            ?jdbc.query("SELECT u.id,u.display_name FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.groupId())
+            :jdbc.query("SELECT u.id,u.display_name FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.active AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.scopeId());
         var period=jdbc.queryForMap("SELECT starts_on,ends_on,restrict_holiday_endpoints FROM academic_period WHERE id=?",plan.periodId());
         String label=jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,plan.groupId());
         return new Matrix(plan.rowVersion(),source,plan.groupName(),label,plan.editable(),((java.sql.Date)period.get("starts_on")).toLocalDate(),((java.sql.Date)period.get("ends_on")).toLocalDate(),(boolean)period.get("restrict_holiday_endpoints"),rows,definitions,catalogs(),members,holidays());
@@ -54,16 +56,16 @@ public class ActivityService {
                 var previous=old.stream().filter(c->choice.catalogId().equals(c.catalogId())).findFirst();
                 if(previous.isPresent()) { result.add(previous.get());continue; }
                 var entry=catalog.stream().filter(c->c.id().equals(choice.catalogId()) && c.kind().equals(kind) && c.active()).findFirst().orElseThrow(()->invalid("Seleccione un elemento activo del catálogo correspondiente."));
-                result.add(new Choice(entry.id(),null,entry.label()));
+                result.add(new Choice(entry.id(),null,entry.label(),entry.evidenceKind()));
             }
         }
         return result;
     }
     @Transactional public Matrix save(UUID targetDocId,String email,Save input) {
         // Lock the document aggregate: metadata and matrix share one concurrency token.
-        plans.get(targetDocId,email);
-        jdbc.queryForList("SELECT id FROM work_plan WHERE id=? FOR UPDATE",targetDocId);
+        plans.lock(targetDocId,email);
         var current=get(targetDocId,email);
+        if(plans.get(targetDocId,email).documentType().equals("T2")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Las actividades del Informe se conservan desde el Plan aprobado.");
         if(!current.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
         if(current.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue antes de guardar la matriz.");
         Set<UUID> memberIds=new HashSet<>();current.members().forEach(m->memberIds.add(m.id()));
@@ -99,8 +101,10 @@ public class ActivityService {
         return get(targetDocId,email);
     }
     @Transactional public Catalog saveCatalog(UUID id,CatalogInput input,String email) {
-        if(id==null) { id=UUID.randomUUID();jdbc.update("INSERT INTO planning_catalog(id,kind,label,active) VALUES (?,?,?,?)",id,input.kind(),input.label().trim(),input.active()); }
-        else if(jdbc.update("UPDATE planning_catalog SET label=?,active=? WHERE id=? AND kind=?",input.label().trim(),input.active(),id,input.kind())==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Elemento no disponible.");
+        String evidenceKind=input.evidenceKind()==null?"PDF":input.evidenceKind();
+        if(input.kind().equals("RESOURCE")&&!evidenceKind.equals("PDF")) throw invalid("Solo un medio de verificación puede configurarse como recurso externo.");
+        if(id==null) { id=UUID.randomUUID();jdbc.update("INSERT INTO planning_catalog(id,kind,label,active,evidence_kind) VALUES (?,?,?,?,?)",id,input.kind(),input.label().trim(),input.active(),evidenceKind); }
+        else if(jdbc.update("UPDATE planning_catalog SET label=?,active=?,evidence_kind=? WHERE id=? AND kind=?",input.label().trim(),input.active(),evidenceKind,id,input.kind())==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Elemento no disponible.");
         audit.record(accounts.current(email).id(),"PLANNING_CATALOG_SAVED",id);
         UUID target=id;return catalogs().stream().filter(c->c.id().equals(target)).findFirst().orElseThrow();
     }
@@ -123,6 +127,7 @@ public class ActivityService {
         jdbc.update("DELETE FROM planning_holiday WHERE holiday_date=?",date);audit.record(accounts.current(email).id(),"HOLIDAY_REMOVED",null);
     }
     @Transactional public void policy(UUID periodId,Policy input,String email) {
+        new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(periodId);
         if(jdbc.update("UPDATE academic_period SET restrict_holiday_endpoints=? WHERE id=?",input.enabled(),periodId)==0) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Período no disponible.");
         audit.record(accounts.current(email).id(),"PERIOD_HOLIDAY_POLICY_SAVED",periodId);
     }

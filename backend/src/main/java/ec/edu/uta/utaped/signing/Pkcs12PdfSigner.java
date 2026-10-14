@@ -34,15 +34,19 @@ public final class Pkcs12PdfSigner {
     /** Consumes and clears caller-owned container/password arrays, including on failure. */
     public byte[] sign(byte[] original,byte[] container,char[] password,String boundFingerprint,
         Set<TrustAnchor> anchors,Instant now) {
-        return sign(original,container,password,boundFingerprint,anchors,now,null,null,false);
+        return sign(original,container,password,boundFingerprint,anchors,now,null,null,false,false);
     }
     /** Direct trust in an administratively bound public certificate, without claiming CA/revocation validation. */
     public byte[] signPinned(byte[] original,byte[] container,char[] password,String boundFingerprint,
         Instant now,SignatureSlot slot,String signerName) {
-        return sign(original,container,password,boundFingerprint,Set.of(),now,slot,signerName,true);
+        return sign(original,container,password,boundFingerprint,Set.of(),now,slot,signerName,true,false);
+    }
+    /** Adds a signature only to an intact, fully signed previous revision held by the application. */
+    public byte[] signPinnedAdditional(byte[] original,byte[] container,char[] password,String boundFingerprint,Instant now,SignatureSlot slot,String signerName) {
+        return sign(original,container,password,boundFingerprint,Set.of(),now,slot,signerName,true,true);
     }
     private byte[] sign(byte[] original,byte[] container,char[] password,String boundFingerprint,
-        Set<TrustAnchor> anchors,Instant now,SignatureSlot slot,String signerName,boolean pinned) {
+        Set<TrustAnchor> anchors,Instant now,SignatureSlot slot,String signerName,boolean pinned,boolean additional) {
         PrivateKey key=null;
         try {
             if(original==null || original.length==0 || original.length>MAX_PDF_BYTES) fail("PDF fuera del límite técnico de firma.");
@@ -62,8 +66,9 @@ public final class Pkcs12PdfSigner {
             validateCertificate(chain.getFirst(),chain,boundFingerprint,pinned?null:anchors,now);
             String algorithm=algorithm(key,chain.getFirst());
             try(var pdf=Loader.loadPDF(original);var options=new SignatureOptions()) {
-                if(pdf.isEncrypted() || pdf.getNumberOfPages()==0 || !pdf.getSignatureDictionaries().isEmpty())
+                if(pdf.isEncrypted() || pdf.getNumberOfPages()==0 || (!additional && !pdf.getSignatureDictionaries().isEmpty()))
                     fail("El núcleo inicial requiere un PDF sin cifrado ni firmas previas.");
+                if(additional) verifyPrevious(pdf,original);
                 var signature=new PDSignature();signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
                 signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
                 var calendar=GregorianCalendar.from(now.atZone(java.time.ZoneOffset.UTC));signature.setSignDate(calendar);
@@ -92,7 +97,7 @@ public final class Pkcs12PdfSigner {
         }
     }
 
-    /** Verifies only this core's single-signature incremental output, not arbitrary PDF revisions. */
+    /** Verifies the new incremental signature and the cryptographic integrity of previous signatures. */
     public void verify(byte[] original,byte[] signed,String boundFingerprint,Set<TrustAnchor> anchors,Instant now) {
         if(anchors==null) fail("Falta configuración de confianza.");
         verifyInternal(original,signed,boundFingerprint,anchors,now);
@@ -103,10 +108,11 @@ public final class Pkcs12PdfSigner {
             if(original==null || signed==null || original.length==0 || original.length>MAX_PDF_BYTES || signed.length>MAX_PDF_BYTES+1024*1024
                 || signed.length<=original.length || Arrays.mismatch(original,0,original.length,signed,0,original.length)!=-1)
                 fail("El PDF firmado no conserva los bytes originales.");
-            try(var pdf=Loader.loadPDF(signed)) {
+            try(var previous=Loader.loadPDF(original);var pdf=Loader.loadPDF(signed)) {
                 var signatures=pdf.getSignatureDictionaries();
-                if(signatures.size()!=1) fail("Resultado de firma no válido.");
-                var signature=signatures.getFirst();var range=signature.getByteRange();
+                if(signatures.size()!=previous.getSignatureDictionaries().size()+1) fail("Resultado de firma no válido.");
+                if(!previous.getSignatureDictionaries().isEmpty()) verifyPrevious(previous,original);
+                var signature=signatures.stream().max(Comparator.comparingInt(s->s.getByteRange()[2])).orElseThrow();var range=signature.getByteRange();
                 if(!PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED.getName().equals(signature.getSubFilter()) || range==null || range.length!=4
                     || range[0]!=0 || range[1]<original.length || range[2]<=range[1] || range[3]<0 || (long)range[2]+range[3]!=signed.length)
                     fail("La firma no cubre la revisión completa del PDF.");
@@ -126,6 +132,21 @@ public final class Pkcs12PdfSigner {
             }
         } catch(SigningException e) { throw e; }
         catch(Exception e) { throw new SigningException("No se pudo verificar la integridad y certificado del resultado firmado."); }
+    }
+    private static void verifyPrevious(PDDocument pdf,byte[] bytes) throws Exception {
+        var signatures=pdf.getSignatureDictionaries();if(signatures.isEmpty()||signatures.size()>100) fail("La revisión previa no contiene firmas verificables.");
+        long lastEnd=0;
+        for(var signature:signatures) {
+            var range=signature.getByteRange();
+            if(range==null||range.length!=4||range[0]!=0||range[1]<=0||range[2]<=range[1]||range[3]<0||(long)range[2]+range[3]>bytes.length||!PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED.getName().equals(signature.getSubFilter())) fail("Firma previa no verificable.");
+            lastEnd=Math.max(lastEnd,(long)range[2]+range[3]);
+            var cms=new CMSSignedData(new CMSProcessableByteArray(signature.getSignedContent(bytes)),new ByteArrayInputStream(signature.getContents(bytes)));
+            var signers=cms.getSignerInfos().getSigners();if(signers.size()!=1) fail("Firma previa no verificable.");var signer=signers.iterator().next();
+            var matches=cms.getCertificates().getMatches(null).stream().filter(signer.getSID()::match).toList();if(matches.size()!=1) fail("Certificado previo no disponible.");
+            var certificate=new JcaX509CertificateConverter().setProvider(PROVIDER).getCertificate(matches.getFirst());
+            if(!signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(PROVIDER).build(certificate))) fail("La integridad de una firma previa no es válida.");
+        }
+        if(lastEnd!=bytes.length) fail("El PDF tiene modificaciones posteriores a su última firma.");
     }
 
     private static void requirePolicy(String fingerprint,Set<TrustAnchor> anchors,Instant now) {
@@ -163,7 +184,7 @@ public final class Pkcs12PdfSigner {
         if(page.getRotation()!=0 || !Float.isFinite(b.x()+b.y()+b.width()+b.height()) || b.x()<0 || b.y()<0 || b.width()<60 || b.height()<30
             || b.x()+b.width()>box.getWidth() || b.y()+b.height()>box.getHeight()) fail("Ubicación de firma fuera de la página.");
         var field=pdf.getDocumentCatalog().getAcroForm().getFields().stream().filter(f->f instanceof PDSignatureField sf && sf.getSignature()!=null && signature.getCOSObject().equals(sf.getSignature().getCOSObject())).findFirst().orElseThrow();
-        field.setPartialName("UTAPED_AUTHOR");var widget=field.getWidgets().getFirst();widget.setRectangle(new PDRectangle(b.x(),b.y(),b.width(),b.height()));widget.setPage(page);widget.setPrinted(true);
+        field.setPartialName(slot.action().equals("ELABORADO_POR")?"UTAPED_AUTHOR":"UTAPED_"+slot.action()+"_"+slot.actorId());var widget=field.getWidgets().getFirst();widget.setRectangle(new PDRectangle(b.x(),b.y(),b.width(),b.height()));widget.setPage(page);widget.setPrinted(true);
         for(var p:pdf.getPages()) { var annotations=p.getAnnotations();annotations.removeIf(a->a.getCOSObject().equals(widget.getCOSObject()));p.setAnnotations(annotations); }page.getAnnotations().add(widget);
         var appearance=new PDAppearanceStream(pdf);appearance.setResources(new PDResources());appearance.setBBox(new PDRectangle(b.width(),b.height()));
         var font=new PDType1Font(Standard14Fonts.FontName.HELVETICA);

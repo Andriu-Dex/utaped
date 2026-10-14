@@ -27,6 +27,7 @@ spring:
         writetimeout: 5000
         auth: ${SMTP_AUTH:false}
         starttls.enable: ${SMTP_STARTTLS:false}
+        ssl.enable: ${SMTP_SSL:false}
 server:
   servlet:
     session:
@@ -46,6 +47,24 @@ management:
     health:
       show-details: never
 app:
+  ai-writing:
+    enabled: ${AI_WRITING_ENABLED:false}
+    provider: ${AI_WRITING_PROVIDER:GROQ}
+    model: ${AI_WRITING_MODEL:}
+    groq-key: ${GROQ_API_KEY:}
+    openai-key: ${OPENAI_API_KEY:}
+    timeout-seconds: ${AI_WRITING_TIMEOUT_SECONDS:30}
+    max-input-characters: ${AI_WRITING_MAX_INPUT_CHARACTERS:8000}
+    max-output-tokens: ${AI_WRITING_MAX_OUTPUT_TOKENS:2000}
+    user-limit: ${AI_WRITING_USER_LIMIT:15}
+    concurrency: ${AI_WRITING_CONCURRENCY:2}
+  notifications:
+    deadline-enabled: ${DEADLINE_NOTICES_ENABLED:true}
+    deadline-near-days: ${DEADLINE_NOTICE_NEAR_DAYS:3}
+    missing-repeat-days: ${DEADLINE_NOTICE_REPEAT_DAYS:1}
+    deadline-scan-ms: ${DEADLINE_NOTICE_SCAN_MS:3600000}
+  periods:
+    archive-max-bytes: ${PERIOD_ARCHIVE_MAX_BYTES:134217728}
   signing:
     allow-http: ${SIGNING_ALLOW_HTTP:false}
   audit:
@@ -57,9 +76,11 @@ app:
     max-attachments: ${DOCUMENT_MAX_ATTACHMENTS:20}
     max-attachment-pages: ${DOCUMENT_MAX_ATTACHMENT_PAGES:100}
     page-format: ${DOCUMENT_PAGE_FORMAT:A4}
-  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  public-url: ${APP_PUBLIC_URL:http://localhost:64430}
   mail-from: ${MAIL_FROM:no-reply@utaped.invalid}
   planning:
+    max-extension-days: ${PLANNING_MAX_EXTENSION_DAYS:3}
+    allow-legacy-creation: false
     single-plan-per-scope: ${PLANNING_SINGLE_PLAN_PER_SCOPE:false}
     enforce-preparation-window: ${PLANNING_ENFORCE_PREPARATION_WINDOW:true}
     time-zone: ${PLANNING_TIME_ZONE:America/Guayaquil}

@@ -1,0 +1,24 @@
+.writing-assistant { margin: 0 0 28px; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; background: var(--surface); }
+.writing-heading { display: flex; align-items: center; gap: 16px; padding: 20px; background: linear-gradient(110deg, color-mix(in srgb,var(--blue-700) 8%,var(--surface)),var(--surface)); }
+.writing-symbol { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; background: color-mix(in srgb,var(--blue-700) 13%,var(--surface)); color: var(--blue-700); }
+.writing-heading > div { flex: 1; min-width: 0; }
+.writing-heading strong,.writing-heading small { display: block; }
+.writing-heading small { color: var(--muted); margin-top: 5px; line-height: 1.5; }
+.writing-body { padding: 0 22px 22px; border-top: 1px solid var(--border); }
+.writing-options { display: flex; align-items: center; gap: 20px; padding-top: 20px; }
+.writing-options label { flex: 1; max-width: 280px; margin: 0; }
+.writing-counter { font-size: .8rem; color: var(--muted); margin-left: auto; }
+.writing-consent { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; font-size: .9rem; line-height: 1.6; }
+.writing-consent input { flex-shrink: 0; width: 18px; height: 18px; margin: 4px 0 0; }
+.writing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
+.writing-actions small,.writing-actions [role=status] { color: var(--muted); font-size: .82rem; }
+.writing-comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 24px; }
+.writing-comparison > section { border: 1px solid var(--border); border-radius: 14px; padding: 18px; min-width: 0; }
+.writing-comparison .writing-proposal { border-color: color-mix(in srgb,var(--blue-700) 45%,var(--border)); background: color-mix(in srgb,var(--blue-700) 5%,var(--surface)); }
+.writing-column-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.writing-column-heading > span { color: var(--blue-700); font-weight: 700; font-size: .8rem; }
+.writing-column-heading h3 { margin: 0; font-size: .95rem; }
+.writing-column-heading small { margin-left: auto; color: var(--muted); font-size: .75rem; }
+.writing-comparison p { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow: auto; line-height: 1.75; font-size: .92rem; }
+:root[data-theme='dark'] :is(.writing-symbol,.writing-column-heading > span) { color: #a6d4f8; }
+@media (min-width:768px) and (max-width:1050px) { .writing-heading { flex-wrap: wrap; } .writing-comparison { grid-template-columns: 1fr; } }

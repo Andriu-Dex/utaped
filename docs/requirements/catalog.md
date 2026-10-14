@@ -305,7 +305,9 @@ El docente puede:
 
 ## FR-T1-CONT-004
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 Puede existir asistente IA de redacción.
 
@@ -318,7 +320,9 @@ La IA puede sugerir:
 
 ## FR-T1-CONT-005
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 La IA nunca reemplaza automáticamente el contenido.
 
@@ -1345,7 +1349,9 @@ Cada documento nuevo conserva un snapshot con plantilla, versión, orden y visib
 
 ## FR-ARCH-AI-001
 
-Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 La integración futura de asistencia de redacción usa una abstracción de proveedor en backend: GroqCloud para desarrollo y OpenAI API para producción. El mockup mantiene un proveedor simulado y no expone claves en React.
 

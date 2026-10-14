@@ -1,3 +1,4 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 
@@ -23,16 +24,16 @@ export function SignaturePreparation({ targetDocId, artifactId }: { targetDocId:
     return () => { active = false }
   }, [targetDocId, artifactId, refresh])
   return <section aria-label="Preparación de firma"><h2>Firma y flujo del artefacto</h2>
-    <p>El envío y la aprobación permanecen deshabilitados hasta confirmar los flujos institucionales. La firma del elaborador dispone de una comprobación independiente en «Firmar PDF».</p>
-    {error ? <p role="alert" className="error">{error}</p> : !preparation ? <p role="status">Consultando preparación de firma…</p> : <>
+    <p>Las etapas se ejecutan en secuencia sobre el mismo PDF firmado. Solo la persona asignada a la tarea activa puede decidir; una etapa con firma obligatoria requiere su certificado personal.</p>
+    {error ? <Toast message={error} /> : !preparation ? <p role="status">Consultando preparación de firma…</p> : <>
       <p>Integridad del PDF almacenado comprobada. {preparation.artifactCurrent ? 'El artefacto coincide con la preparación actual.' : 'Artefacto anterior: vuelva a generar la previsualización.'}</p>
       {preparation.workflow ? <><h3>{preparation.workflow.name} · revisión técnica {preparation.workflow.revisionNumber}</h3>
-        <p>Configuración conservada al generar este artefacto; no representa asignaciones ni decisiones ejecutadas.</p>
+        <p>Configuración conservada al generar este artefacto. Consulte «Rondas y observaciones» para las asignaciones y decisiones ejecutadas.</p>
         <ol>{preparation.workflow.stages.map(stage => <li key={stage.id}><strong>{stage.label}</strong> · {actions[stage.action]} · {stage.requiresSignature ? 'Requiere firma según configuración' : 'Sin firma personal según configuración'}
           {stage.recipientKind === 'COLLEGIATE' && <p>Órgano colegiado: {stage.recipientLabel}</p>}
           <p>{stage.participants.length ? stage.participants.map(p => p.name + (p.active ? '' : ' (inactivo al generar)')).join('; ') : stage.recipientKind === 'COLLEGIATE' ? 'Sin representantes individuales en esta configuración.' : 'Sin participantes resueltos.'}</p>
         </li>)}</ol></> : <p>Este artefacto no contiene una revisión de flujo configurada.</p>}
-      <h3>Requisitos pendientes</h3><ul>{preparation.blockers.map((blocker, i) => <li key={i}><strong>{blocker.section}:</strong> {blocker.message}</li>)}</ul>
+      {preparation.blockers.length > 0 ? <><h3>Requisitos pendientes</h3><ul>{preparation.blockers.map((blocker, i) => <li key={i}><strong>{blocker.section}:</strong> {blocker.message}</li>)}</ul></> : <p className="field-help">Flujo preparado. La sección de firma comprueba también el certificado vinculado al elaborador.</p>}
     </>}
     <button className="secondary" onClick={() => { setPreparation(null); setError(''); setRefresh(value => value + 1) }}>Actualizar preparación de firma</button>
   </section>

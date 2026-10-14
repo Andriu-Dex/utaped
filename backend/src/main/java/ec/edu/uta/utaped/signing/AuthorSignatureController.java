@@ -24,7 +24,7 @@ public class AuthorSignatureController {
         finally { Arrays.fill(body,(byte)0); }
     }
     @GetMapping("/signed-artifacts/{signedId}/content") public ResponseEntity<byte[]> content(@PathVariable UUID targetDocId,@PathVariable UUID signedId,Principal p) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"plan-t1-firmado.pdf\"").body(signatures.content(targetDocId,signedId,p.getName()));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"plan-t1-firmado.pdf\"").body(signatures.export(targetDocId,signedId,p.getName()));
     }
     @GetMapping("/signed-artifacts/{signedId}/pages/{pageIndex}") public ResponseEntity<byte[]> page(@PathVariable UUID targetDocId,@PathVariable UUID signedId,@PathVariable int pageIndex,Principal p) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG).body(signatures.page(targetDocId,signedId,pageIndex,p.getName()));

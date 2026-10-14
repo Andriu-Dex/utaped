@@ -1,0 +1,25 @@
+.import-heading,.import-file,.import-toolbar { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; }
+.import-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:0; list-style:none; margin:26px 0; }
+.import-steps li { display:flex; align-items:center; gap:10px; padding:14px; border:1px solid var(--border); border-radius:12px; color:var(--muted); background:var(--surface); }
+.import-steps li span { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; border:1px solid var(--border); flex-shrink:0; }
+.import-steps .current { border-color:var(--blue-700); color:var(--text); font-weight:600; }
+.import-steps .current span { background:var(--blue-700); color:white; }
+.import-upload-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:24px; }
+.import-dropzone { display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; border:2px dashed var(--border); border-radius:16px; padding:32px 22px; background:var(--surface); }
+.import-dropzone span,.import-detail { color:var(--muted); font-size:.82rem; }
+.import-guide { padding:24px; border:1px solid var(--border); border-radius:16px; background:var(--surface); }
+.import-guide code { overflow-wrap:anywhere; }
+.import-file { padding:18px; border:1px solid var(--border); border-radius:12px; }
+.import-file > span { display:flex; align-items:center; gap:10px; }
+.import-detail { display:block; margin-top:5px; overflow-wrap:anywhere; }
+.import-toolbar { margin:24px 0 12px; }
+.import-toolbar label { width:260px; }
+.import-errors { color:var(--danger); padding-left:16px; font-size:.83rem; margin:0; }
+.import-confirm,.import-result { margin-top:24px; padding:24px; border:1px solid var(--border); border-radius:14px; background:var(--surface); }
+.import-confirm small { display:block; color:var(--muted); margin-top:12px; }
+.import-result { display:flex; align-items:flex-start; gap:18px; }
+.import-workspace td { max-width:340px; overflow-wrap:anywhere; }
+@media (min-width:768px) and (max-width:1100px) { .import-upload-grid { grid-template-columns:1fr; } .import-steps { gap:8px; } }
+
+:root[data-theme='dark'] .import-errors { color:#ffb0bb; }
+:root[data-theme='dark'] .import-steps .current { border-color:#a6d4f8; }

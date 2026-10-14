@@ -1,5 +1,13 @@
 # Reportes
 
+- [2026-10-13 — Publicación y PR hacia develop](2026-10-13-02-develop-pull-request-publication.md).
+
+- [2026-10-13 — CAPTCHA accesible y carga documental](2026-10-13-01-accessible-captcha-and-document-load.md).
+
+- [2026-10-12 — Aceptación por roles, documentos largos y preparación operativa](2026-10-12-06-role-acceptance-and-operational-readiness.md).
+
+- [2026-10-12 — Redacción asistida T1/T2 y bandeja paginada](2026-10-12-05-writing-assistance-and-review-inbox.md).
+
 Crear Markdown nuevo por entrega: YYYY-MM-DD-NN-description.md. No restaurar reportes eliminados ni sobrescribirlos por conveniencia.
 
 Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alcance.
@@ -19,3 +27,24 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-03 — Inspección inicial de firma y revisión](2026-10-03-11-signature-review-preparation.md).
 - [2026-10-04 — Núcleo de firma y snapshots de flujo](2026-10-04-01-signature-core-workflow-snapshots.md).
 - [2026-10-05 — Firma visible del elaborador T1](2026-10-05-01-visible-author-signing.md).
+- [2026-10-06 — Espacio de trabajo moderno y acceso local](2026-10-06-01-modern-workspace-access.md).
+
+- [2026-10-07 — Diseño de contraseña y avisos toast](2026-10-07-01-password-layout-and-toasts.md).
+- [2026-10-07 — Modo claro y oscuro para PC y tablet](2026-10-07-02-color-themes.md).
+
+- [2026-10-07 — Separación del espacio administrativo](2026-10-07-03-admin-workspace-separation.md).
+
+- [2026-10-07 — Proxy persistente de desarrollo](2026-10-07-04-persistent-development-proxy.md).
+
+- [2026-10-11 — Commit de cambios actuales](2026-10-11-01-current-changes-commit.md).
+
+- [2026-10-11 — Revisión de la nueva especificación maestra](2026-10-11-02-master-specification-review.md).
+
+- [2026-10-11 — Preparación de entrega amplia y revisión de interfaz](2026-10-11-03-large-delivery-and-interface-review.md).
+
+- [2026-10-12 — Circuito documental integrado T1 y T2](2026-10-12-01-large-document-circuit.md).
+- [2026-10-12 — Cierre histórico y flujos por ámbito/período](2026-10-12-02-period-closure-and-workflows.md).
+
+- [2026-10-12 — Administración contextual, historial y avisos](2026-10-12-03-contextual-administration-and-notices.md).
+
+- [2026-10-12 — Importación administrativa y evidencias externas](2026-10-12-04-user-imports-and-external-evidence.md).

@@ -68,11 +68,13 @@ public class InstitutionController {
         if(changed>0) audit.record(actor.id(),"MEMBERSHIP_ASSIGNED",id,data.userId());
     }
     @DeleteMapping("/admin/groups/{id}/members/{userId}") @Transactional public void removeMember(@PathVariable UUID id,@PathVariable UUID userId,Principal principal) {
+        if(jdbc.queryForObject("SELECT count(*) FROM scope_member m JOIN organizational_scope s ON s.id=m.scope_id WHERE s.group_id=? AND m.user_id=? AND m.active",Integer.class,id,userId)>0)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Actualice primero las pertenencias por período en Carreras y ámbitos.");
         int changed=jdbc.update("DELETE FROM membership WHERE group_id=? AND user_id=?",id,userId);
         if(changed>0) audit.record(accounts.current(principal.getName()).id(),"MEMBERSHIP_REMOVED",id,userId);
     }
     @GetMapping("/periods") public List<Map<String,Object>> periods() {
-        var periods=jdbc.queryForList("SELECT * FROM academic_period ORDER BY starts_on DESC");
+        var periods=jdbc.queryForList("SELECT *,status='ACTIVE' AND (now() at time zone 'America/Guayaquil')::date BETWEEN starts_on AND ends_on AS is_current FROM academic_period ORDER BY starts_on DESC");
         periods.forEach(period -> period.replaceAll((key,value) -> value instanceof java.sql.Date date ? date.toLocalDate().toString() : value));
         return periods;
     }

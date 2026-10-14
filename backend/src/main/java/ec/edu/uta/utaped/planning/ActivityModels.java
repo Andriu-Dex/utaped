@@ -8,8 +8,10 @@ import java.util.UUID;
 
 public final class ActivityModels {
     private ActivityModels() {}
-    public record Catalog(UUID id,String kind,String label,boolean active) {}
-    public record CatalogInput(@NotBlank @Pattern(regexp="RESOURCE|MEANS") String kind,@NotBlank @Size(max=200) String label,boolean active) {}
+    public record Catalog(UUID id,String kind,String label,boolean active,String evidenceKind) {}
+    public record CatalogInput(@NotBlank @Pattern(regexp="RESOURCE|MEANS") String kind,@NotBlank @Size(max=200) String label,boolean active,@Pattern(regexp="PDF|URL") String evidenceKind) {
+        public CatalogInput(String kind,String label,boolean active) { this(kind,label,active,"PDF"); }
+    }
     public record Definition(UUID id,UUID groupId,String title,String category,boolean mandatory,boolean active) {}
     public record DefinitionInput(@NotNull UUID groupId,@NotBlank @Size(max=500) String title,
         @NotBlank @Pattern(regexp="POA|IMPROVEMENT_PLAN|IMPROVEMENT_ACTION|OTHER") String category,boolean mandatory,boolean active) {}
@@ -17,7 +19,10 @@ public final class ActivityModels {
     public record Holiday(@NotNull LocalDate date,@NotBlank @Size(max=200) String label) {}
     public record Label(@NotNull @Size(max=200) String label) {}
     public record Policy(@NotNull Boolean enabled) {}
-    public record Choice(UUID catalogId,@Size(max=500) String other,String label) {}
+    public record Choice(UUID catalogId,@Size(max=500) String other,String label,String evidenceKind) {
+        public Choice(UUID id,String other,String label) { this(id,other,label,"PDF"); }
+        public String effectiveEvidenceKind() { return evidenceKind==null?"PDF":evidenceKind; }
+    }
     public record Activity(@NotNull UUID id,UUID catalogId,@NotBlank @Size(max=500) String title,
         @NotBlank @Pattern(regexp="POA|IMPROVEMENT_PLAN|IMPROVEMENT_ACTION|OTHER") String category,boolean mandatory,
         @NotNull LocalDate startsOn,@NotNull LocalDate endsOn,

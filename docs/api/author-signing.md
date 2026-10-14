@@ -1,5 +1,7 @@
 # Firma visible del elaborador T1
 
+Actualización 2026-10-12: en nuevos documentos por ámbito, firmar inicia automáticamente la revisión secuencial y permite firmas posteriores. Los documentos individuales anteriores conservan su comportamiento histórico. El contrato actual y las condiciones de descarga están en [circuito documental](document-circuit.md).
+
 Entrega 2026-10-05. Sesión JDBC/CSRF, propietario activo y pertenencia vigente; ADMIN no obtiene acceso documental por su rol. Todas las respuestas privadas llevan no-store. No hay transición desde DRAFT ni acceso de revisores.
 
 ## Vinculación administrativa

@@ -1,5 +1,12 @@
 # Índice documental
 
+- [Aceptación por roles y documentos largos](testing/role-and-document-acceptance.md) y [HTTPS/SMTP/respaldo/restauración](operations/production-readiness.md).
+
+- [Redacción asistida y bandeja paginada](api/writing-and-review-inbox.md), [configuración de proveedor](development/writing-configuration.md) y [ADR-0009](architecture/adr/0009-writing-provider-abstraction.md).
+
+- [Plan Maestro vigente](decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md).
+- [Acceso local, CAPTCHA y perfiles](api/local-access.md), [ADR-0003](architecture/adr/0003-modern-workspace-access.md) y [base de interfaz moderna](design/interface-foundations.md).
+
 - [Preparación documental T1 y anexos](api/t1-document-preparation.md), [decisión](architecture/adr/0002-t1-document-preparation.md) y [almacenamiento/respaldo](development/document-storage.md).
 
 - [Entorno local y pruebas](development/local-setup.md).
@@ -30,3 +37,7 @@ Documentación en español para revisión institucional; identificadores técnic
 - [Seguimiento personal](api/tracking.md).
 - [Notificaciones internas](api/notifications.md).
 - [Firma visible del elaborador T1](api/author-signing.md).
+
+- [Circuito T1, revisión, ejecución y T2](api/document-circuit.md).
+- [Datos de ejemplo y entorno aislado](development/sample-environment.md).
+- [Períodos, flujos por ámbito y archivo histórico](api/period-control.md).

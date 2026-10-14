@@ -287,7 +287,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-T1-CONT-005",
@@ -297,7 +298,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-ACT-001",
@@ -1279,7 +1281,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-ARCH-DB-001",

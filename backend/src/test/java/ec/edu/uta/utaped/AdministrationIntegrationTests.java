@@ -22,7 +22,7 @@ class AdministrationIntegrationTests {
             var builder=HttpRequest.newBuilder(URI.create("http://localhost:"+port+path));if(body!=null) builder.header("Content-Type",path.endsWith("/login")?"application/x-www-form-urlencoded":"application/json");if(csrf) builder.header("X-CSRF-TOKEN",token);
             return client.send(builder.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofString(body instanceof String s?s:json.writeValueAsString(body))).build(),HttpResponse.BodyHandlers.ofString());
         }
-        void login(String email) throws Exception { token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token");assertEquals(204,request("POST","/api/auth/login","username="+email+"&password=Test-only-password-2026",true).statusCode());token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token"); }
+        void login(String email) throws Exception { token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token");assertEquals(204,request("POST","/api/auth/login","username="+email+"&password=Test-only-password-2026&captcha="+LoginChallenges.answer(client,port,jdbc),true).statusCode());token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token"); }
     }
     @BeforeEach void seed() {
         assertEquals("utaped_test",jdbc.queryForObject("SELECT current_database()",String.class));jdbc.execute("TRUNCATE app_user,institutional_group,academic_period,auth_throttle,SPRING_SESSION CASCADE");admin=UUID.randomUUID();user=UUID.randomUUID();group=UUID.randomUUID();
@@ -50,7 +50,7 @@ class AdministrationIntegrationTests {
     }
     @Test void groupDeactivationPreservesDataAndImmediatelyRevokesDocumentScope() throws Exception {
         var b=new Browser();b.login("admin@example.invalid");var u=new Browser();u.login("user@example.invalid");UUID period=UUID.randomUUID();
-        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',CURRENT_DATE-10,CURRENT_DATE+100,CURRENT_DATE-10,CURRENT_DATE+10,CURRENT_DATE+11,CURRENT_DATE+20)",period);
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
         var created=u.request("POST","/api/work-plans",Map.of("groupId",group,"periodId",period,"requestKey",UUID.randomUUID(),"title","Preserved plan"),true);assertEquals(200,created.statusCode());String id=JsonPath.read(created.body(),"$.id");
         String path="/api/admin/groups/"+group;var disabled=Map.of("rowVersion",0,"name","Renamed","groupType","UNIT","active",false);
         assertEquals(200,b.request("PUT",path,disabled,true).statusCode());assertEquals(404,u.request("GET","/api/work-plans/"+id,null,false).statusCode());assertEquals("[]",u.request("GET","/api/groups",null,false).body());

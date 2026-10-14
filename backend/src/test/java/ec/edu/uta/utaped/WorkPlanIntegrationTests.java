@@ -38,7 +38,7 @@ class WorkPlanIntegrationTests {
         }
         void csrf() throws Exception { token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token"); }
         HttpResponse<String> login(String email,String password) throws Exception {
-            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password,true);csrf();return response;
+            csrf(); var response=request("POST","/api/auth/login","username="+email+"&password="+password+"&captcha="+LoginChallenges.answer(client,port,jdbc),true);csrf();return response;
         }
     }
     @BeforeEach void seed() {
@@ -59,7 +59,7 @@ class WorkPlanIntegrationTests {
     UUID period;
     void openPeriod() {
         period=UUID.randomUUID();
-        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',CURRENT_DATE-10,CURRENT_DATE+100,CURRENT_DATE-10,CURRENT_DATE+10,CURRENT_DATE+11,CURRENT_DATE+20)",period);
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
     }
     String createBody(UUID key) { return "{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"title\":\"Plan inicial\"}"; }
     String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"FISEI\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
@@ -94,7 +94,7 @@ class WorkPlanIntegrationTests {
         assertEquals(403,b.request("PUT","/api/work-plans/"+id,updateBody(0,"No CSRF"),false).statusCode());
         assertEquals(400,b.request("GET","/api/work-plans?size=51",null,false).statusCode());
         assertEquals(400,b.request("POST","/api/work-plans","{}",true).statusCode());
-        jdbc.update("UPDATE academic_period SET preparation_starts_on=CURRENT_DATE-10,preparation_ends_on=CURRENT_DATE-1 WHERE id=?",period);
+        jdbc.update("UPDATE academic_period SET preparation_starts_on=(now() at time zone 'America/Guayaquil')::date-10,preparation_ends_on=(now() at time zone 'America/Guayaquil')::date-1 WHERE id=?",period);
         assertEquals(false,JsonPath.read(b.request("GET","/api/work-plans/"+id,null,false).body(),"$.editable"));
         assertEquals(403,b.request("PUT","/api/work-plans/"+id,updateBody(0,"Closed"),true).statusCode());
         assertEquals(403,b.request("POST","/api/work-plans",createBody(UUID.randomUUID()),true).statusCode());

@@ -1,6 +1,7 @@
 package ec.edu.uta.utaped.identity;
 
 import ec.edu.uta.utaped.audit.AuditService;
+import ec.edu.uta.utaped.institution.PeriodGuard;
 import java.security.SecureRandom;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -20,21 +21,57 @@ import org.springframework.scheduling.annotation.Async;
 @Service
 public class PasswordService {
     private final JdbcTemplate jdbc;
+    private final Accounts accounts;
     private final PasswordEncoder encoder;
     private final JdbcIndexedSessionRepository sessions;
     private final JavaMailSender mail;
     private final AuditService audit;
     private final String publicUrl;
     private final String mailFrom;
-    public PasswordService(JdbcTemplate jdbc, PasswordEncoder encoder, JdbcIndexedSessionRepository sessions, JavaMailSender mail, AuditService audit,
+    public PasswordService(JdbcTemplate jdbc, Accounts accounts, PasswordEncoder encoder, JdbcIndexedSessionRepository sessions, JavaMailSender mail, AuditService audit,
         @Value("${app.public-url}") String publicUrl, @Value("${app.mail-from}") String mailFrom) {
-        this.jdbc=jdbc; this.encoder=encoder; this.sessions=sessions; this.mail=mail; this.audit=audit; this.publicUrl=publicUrl; this.mailFrom=mailFrom;
+        this.jdbc=jdbc; this.accounts=accounts; this.encoder=encoder; this.sessions=sessions; this.mail=mail; this.audit=audit; this.publicUrl=publicUrl; this.mailFrom=mailFrom;
     }
     public static void validate(String password) {
         if (password == null || password.length() < 12 || password.getBytes(StandardCharsets.UTF_8).length > 72)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Use al menos 12 caracteres y un máximo de 72 bytes UTF-8.");
     }
     private void revoke(String email) { sessions.findByPrincipalName(email).keySet().forEach(sessions::deleteById); }
+    @Transactional public void administrativeReset(Accounts.Account actor,UUID id,long rowVersion,String next) {
+        if(!actor.systemRole().equals("ADMIN")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"No tiene permiso para restablecer esta cuenta.");
+        resetTemporary(actor,id,rowVersion,next,"ADMIN_PASSWORD_RESET");
+    }
+    @Transactional public void contextualReset(String email,UUID scope,UUID id,long rowVersion,String next) {
+        var actor=accounts.current(email);
+        var rows=jdbc.queryForList("SELECT period_id FROM organizational_scope WHERE id=?",UUID.class,scope);
+        if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Ámbito no disponible.");
+        new PeriodGuard(jdbc).writable(rows.getFirst());
+        // Document creation locks its actor before the scope; keep that same order.
+        jdbc.queryForList("SELECT id FROM app_user WHERE id IN (?,?) ORDER BY (system_role='ADMIN') DESC,id FOR UPDATE",actor.id(),id);
+        jdbc.queryForList("SELECT id FROM organizational_scope WHERE id=? FOR UPDATE",scope);
+        actor=accounts.current(email);
+        boolean allowed=jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id AND g.active
+              JOIN scope_member a ON a.scope_id=s.id AND a.user_id=? AND a.active AND a.membership_role='COORDINATOR' AND a.password_reset_authorized
+              JOIN scope_member t ON t.scope_id=s.id AND t.user_id=? AND t.active
+              JOIN app_user u ON u.id=t.user_id AND u.active AND u.system_role='USER'
+              WHERE s.id=? AND s.active)
+            """,Boolean.class,actor.id(),id,scope);
+        if(!allowed) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"No tiene autorización para recuperar esta cuenta en este ámbito.");
+        resetTemporary(actor,id,rowVersion,next,"COORDINATOR_PASSWORD_RESET");
+    }
+    private void resetTemporary(Accounts.Account actor,UUID id,long rowVersion,String next,String action) {
+        if(actor.id().equals(id)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Use Cambiar contraseña para su propia cuenta.");
+        validate(next);
+        var rows=jdbc.queryForList("SELECT email,password_hash,row_version FROM app_user WHERE id=? AND active FOR UPDATE",id);
+        if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Usuario activo no disponible.");
+        var row=rows.getFirst();
+        if(((Number)row.get("row_version")).longValue()!=rowVersion) throw new ResponseStatusException(HttpStatus.CONFLICT,"La cuenta cambió. Recargue antes de restablecerla.");
+        if(encoder.matches(next,(String)row.get("password_hash"))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Use una contraseña temporal diferente.");
+        jdbc.update("UPDATE app_user SET password_hash=?,must_change_password=true,row_version=row_version+1 WHERE id=?",encoder.encode(next),id);
+        jdbc.update("DELETE FROM password_reset WHERE user_id=?",id);revoke((String)row.get("email"));
+        audit.record(actor.id(),action,id,id);
+    }
     @Transactional public void change(Accounts.Account account, String current, String next) {
         validate(next);
         String hash=jdbc.queryForObject("SELECT password_hash FROM app_user WHERE id=? FOR UPDATE",String.class,account.id());
@@ -43,7 +80,7 @@ public class PasswordService {
         update(account.id(),account.email(),next,"PASSWORD_CHANGED");
     }
     private void update(UUID id, String email, String password, String action) {
-        jdbc.update("UPDATE app_user SET password_hash=?,must_change_password=false WHERE id=?",encoder.encode(password),id);
+        jdbc.update("UPDATE app_user SET password_hash=?,must_change_password=false,row_version=row_version+1 WHERE id=?",encoder.encode(password),id);
         jdbc.update("DELETE FROM password_reset WHERE user_id=?",id);
         revoke(email);
         audit.record(id,action,id);

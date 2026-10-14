@@ -17,12 +17,18 @@ BOOTSTRAP_ADMIN_EMAIL=admin-e2e@example.invalid
 BOOTSTRAP_ADMIN_PASSWORD=$adminPassword
 APP_PUBLIC_URL=http://127.0.0.1:15173
 COOKIE_SECURE=false
-BACKEND_PORT=18080
-DB_PORT=15433
-MAIL_UI_PORT=18025
-MAIL_SMTP_PORT=11025
+WEB_PORT=24430
+BACKEND_PORT=28081
+DB_PORT=25433
+MAIL_UI_PORT=28025
+MAIL_SMTP_PORT=21025
 "@ | Set-Content -LiteralPath '.env.e2e' -Encoding utf8
     }
+    $entries = Get-Content -LiteralPath '.env.e2e'
+    $apiPort = ($entries | Where-Object { $_ -match '^BACKEND_PORT=' }) -replace '^BACKEND_PORT=', ''
+    $mailPort = ($entries | Where-Object { $_ -match '^MAIL_UI_PORT=' }) -replace '^MAIL_UI_PORT=', ''
+    $env:E2E_API_URL = "http://127.0.0.1:$apiPort"
+    $env:E2E_MAIL_URL = "http://127.0.0.1:$mailPort"
     docker compose -p utaped-e2e --env-file .env.e2e up --build -d
     if ($LASTEXITCODE -ne 0) { throw 'E2E stack did not start' }
     # Only the dedicated test project's throttle rows are cleared for repeatable validation.

@@ -6,7 +6,9 @@ This repository builds the modular production application for academic document 
 
 The frozen mockup is external at `C:\Documentos\Documentos\Universidad UTA\Ingenieria De Software\Semestre 7\Gestion de Proyectos\Proyecto\Prototipos`. Do not modify it or import DEMO persistence, credentials or simulated signatures as production mechanisms.
 
-Before changing behavior, read requirements.md, relevant docs/requirements files, docs/decisions/open-questions.md and implementation-status.md. Requirements govern intent; status records delivery, not requirements. docs/reference copies are historical sources; mockup phase restrictions do not govern this product. Record contradictions instead of silently choosing current code.
+Before changing behavior, read requirements.md, relevant docs/requirements files, docs/decisions/open-questions.md and implementation-status.md. The owner-provided docs/decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md (2026-10-06) governs functional decisions where older documents contradict it; subsequent explicit owner decisions take priority. Status records delivery, not requirements. docs/reference copies are historical sources; mockup phase restrictions do not govern this product. Record contradictions instead of silently choosing current code.
+
+Frontend decision (2026-10-06): redesign the production interface with modern hierarchy, navigation and a shared visual system. Institutional blue remains prominent with complementary colors. Prototipos is a read-only functional reference, not a visual design to clone. Preserve institutional T1/T2 document layouts independently of the web interface. The temporary /Prototipos copy must remain ignored and must not become a runtime dependency.
 
 Distinguish project-confirmed decisions, inherited requirements, proposals and institutionally pending rules. Never invent authorities, resolutions, exceptions or signature policies. Record uncertainty and defer only dependent implementation.
 
@@ -23,6 +25,8 @@ Preserve the general conventions below. Spanish stakeholder documentation and UI
 Update implementation-status.md for delivered functionality. Create new reports in docs/reports and update the index; never restore deleted reports. Report only checks actually performed. Do not commit, push, deploy or publish unless authorized by the task.
 
 Standing owner authorization (2026-10-03): after completing each implementation and its checks, commit the appropriate files, push the feature branch and open a pull request to develop automatically unless the owner explicitly says otherwise. The owner reviews and merges; never merge automatically. This authorization does not include deployment or publication to main.
+
+Owner override (2026-10-07): only local commits on the current branch until explicitly instructed to push/update the pull request. UI targets PCs and tablets; do not add phone-specific responsive styles. Existing historical phone styles/tests are not a requirement for new delivery.
 
 Stack decision: docs/architecture/adr/0001-production-foundation.md. Frontend: React/TypeScript/Vite; backend: Java 21/Spring Boot; DB: PostgreSQL/Flyway. Local credentials, server-side JDBC sessions and CSRF are mandatory. No tokens or passwords in browser storage. Run frontend lint/build and isolated PostgreSQL integration tests for affected logic; Playwright for affected flows. Preserve independent feature branches and PRs to develop; main is reserved for completed releases. Inherited AI model names are not verified availability.
 

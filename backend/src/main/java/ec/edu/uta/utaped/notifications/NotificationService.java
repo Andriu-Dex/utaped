@@ -19,8 +19,11 @@ public class NotificationService {
     public NotificationService(JdbcTemplate jdbc,Accounts accounts,WorkPlanService plans) { this.jdbc=jdbc;this.accounts=accounts;this.plans=plans; }
     private static final String SELECT="""
         SELECT n.*,CASE WHEN n.target_type='WORK_PLAN' THEN EXISTS (
-          SELECT 1 FROM work_plan w JOIN institutional_group g ON g.id=w.group_id WHERE w.id=n.target_id AND w.teacher_id=n.recipient_id AND g.active
-          AND EXISTS (SELECT 1 FROM membership m WHERE m.group_id=w.group_id AND m.user_id=n.recipient_id))
+          SELECT 1 FROM work_plan w JOIN app_user actor ON actor.id=n.recipient_id JOIN institutional_group g ON g.id=w.group_id
+          LEFT JOIN organizational_scope s ON s.id=w.scope_id WHERE w.id=n.target_id AND
+        """+WorkPlanService.ACCESS+"""
+          )
+        WHEN n.target_type='ACCOUNT' THEN n.target_id=n.recipient_id
         ELSE EXISTS (SELECT 1 FROM institutional_group g WHERE g.id=n.target_id AND g.active AND (? OR EXISTS (SELECT 1 FROM membership m WHERE m.group_id=g.id AND m.user_id=n.recipient_id))) END AS target_available
         FROM personal_notification n WHERE n.recipient_id=?
         """;

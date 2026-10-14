@@ -1,0 +1,16 @@
+.period-control { margin-top: 32px; }
+.period-selector { max-width: 760px; }
+.period-overview { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+.period-overview > .card { margin-bottom: 0; }
+.period-totals { display: flex; align-items: center; justify-content: space-around; gap: 20px; }
+.period-totals > div { display: flex; flex-direction: column; gap: 5px; }
+.period-totals strong { font-size: 2rem; color: var(--blue-700); }
+.period-totals span { color: var(--muted); font-size: .82rem; }
+.period-assignments { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+.period-assignment { padding: 20px; border: 1px solid var(--border); border-radius: 14px; }
+.period-assignment h4 { margin: 8px 0 12px; }
+.period-activation { border-top: 1px solid var(--border); margin-top: 22px; padding-top: 15px; }
+.period-closure code { overflow-wrap: anywhere; }
+:root[data-theme='dark'] .period-totals strong { color: #a6d4f8; }
+@media (max-width: 1050px) { .period-overview { grid-template-columns: 1fr; } }
+@media (max-width: 850px) { .period-assignments { grid-template-columns: 1fr; } }

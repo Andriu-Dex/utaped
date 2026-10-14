@@ -38,3 +38,5 @@ ADMIN obligatorio, validación de referencias y auditoría para todas las mutaci
 ## Límites
 
 No hay PDF T1 oficial, firma, finalización, anexos, nota de datos personales ni evidencia PDF en esta entrega. Recursos, medios del Plan y evidencias futuras son entidades diferentes. Q-001/Q-002 siguen abiertos; este editor no fija el número final de pasos ni cambia la unicidad provisional.
+
+Actualización 2026-10-12: catálogos MEANS aceptan `evidenceKind: PDF | URL`, con PDF predeterminado, y cada selección conserva tipo y etiqueta desde el servidor. RESOURCE solo usa PDF; `Otro` mantiene PDF. Cambios del catálogo no alteran medios ya guardados. Ver [contrato vigente](user-imports-and-external-evidence.md).

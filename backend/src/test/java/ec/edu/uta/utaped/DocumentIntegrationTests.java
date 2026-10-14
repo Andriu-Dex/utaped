@@ -40,7 +40,7 @@ class DocumentIntegrationTests {
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Docente de prueba',?,'USER',false)",user,email,encoder.encode("Test-only-password-2026"));
         jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,'Comisión de prueba','COMMISSION','Responsable de la comisión')",group);
         jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,'MEMBER')",user,group);
-        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período de prueba',CURRENT_DATE-10,CURRENT_DATE+100,CURRENT_DATE-10,CURRENT_DATE+10,CURRENT_DATE+11,CURRENT_DATE+20)",period);
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período de prueba',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
         id=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan de Trabajo de prueba")).id();
     }
     long version() { return plans.get(id,email).rowVersion(); }
@@ -79,7 +79,7 @@ class DocumentIntegrationTests {
         long row=version();assertThrows(ResponseStatusException.class,()->upload("Falso",UUID.randomUUID(),"Not a PDF".getBytes(),row));assertEquals(row,version());
         assertThrows(ResponseStatusException.class,()->validation.pages(pdf(1,true,false)));
         assertThrows(ResponseStatusException.class,()->validation.pages(pdf(1,false,true)));
-        jdbc.update("UPDATE academic_period SET preparation_ends_on=CURRENT_DATE-1 WHERE id=?",period);
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=(now() at time zone 'America/Guayaquil')::date-1 WHERE id=?",period);
         assertEquals(403,assertThrows(ResponseStatusException.class,()->attachments.remove(id,a.id(),email,version())).getStatusCode().value());
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertThrows(ResponseStatusException.class,()->attachments.content(id,a.id(),email));

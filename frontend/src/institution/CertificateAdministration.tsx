@@ -1,7 +1,10 @@
+import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type User } from '../shared/api'
 interface Binding { id: string; fingerprint: string; verificationNote: string; active: boolean; createdAt: string }
-export function CertificateAdministration() {
+export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+  const [dirty, setDirty] = useState(false)
+  useEffect(() => { onDirtyChange(dirty); const prevent = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }; window.addEventListener('beforeunload', prevent); return () => { onDirtyChange(false); window.removeEventListener('beforeunload', prevent) } }, [dirty, onDirtyChange])
   const [query, setQuery] = useState(''); const [users, setUsers] = useState<User[]>([]); const [user, setUser] = useState('')
   const [bindings, setBindings] = useState<Binding[]>([]); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   useEffect(() => { let active = true; api<{ items: User[] }>('/admin/users/directory?' + new URLSearchParams({ query, active: 'true', size: '100' })).then(result => { if (active) setUsers(result.items) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [query])
@@ -10,7 +13,7 @@ export function CertificateAdministration() {
     event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); setBusy(true); setError(''); setNotice('')
     try {
       await api('/admin/users/' + user + '/signing-certificates', 'POST', { fingerprint: String(data.get('fingerprint')), identityVerified: data.get('identityVerified') === 'on', verificationNote: String(data.get('verificationNote')), expectedBindingId: bindings.find(b => b.active)?.id ?? null })
-      setBindings(await api<Binding[]>('/admin/users/' + user + '/signing-certificates')); form.reset(); setNotice('Huella pública vinculada.')
+      setBindings(await api<Binding[]>('/admin/users/' + user + '/signing-certificates')); form.reset(); setDirty(false); setNotice('Huella pública vinculada.')
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo vincular el certificado.') } finally { setBusy(false) }
   }
   async function revoke(binding: Binding) {
@@ -21,10 +24,10 @@ export function CertificateAdministration() {
   }
   return <section className="card" aria-label="Vinculación de certificados"><h2>Certificados públicos de firmantes</h2>
     <p>Vincule la huella SHA-256 obtenida del certificado público después de comprobar la identidad del titular por un canal confiable. No introduzca archivos privados ni contraseñas. Esto no acredita validación de la entidad emisora o revocación.</p>
-    {error && <p role="alert" className="error">{error}</p>}{notice && <p role="status">{notice}</p>}
+    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
-    <label>Cuenta del firmante<select value={user} disabled={busy} onChange={e => { setUser(e.target.value); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
-    {user && <><form key={user} onSubmit={event => void register(event)}><fieldset disabled={busy}>
+    <label>Cuenta del firmante<select value={user} disabled={busy} onChange={e => { if (dirty && !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')) return; setDirty(false); setUser(e.target.value); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
+    {user && <><form key={user} onChange={() => setDirty(true)} onSubmit={event => void register(event)}><fieldset disabled={busy}>
       <label>Huella SHA-256 pública<input name="fingerprint" pattern="[a-fA-F0-9]{64}" required minLength={64} maxLength={64} /></label>
       <label>Referencia de comprobación de identidad<textarea name="verificationNote" required maxLength={500} /></label>
       <label className="checkbox"><input name="identityVerified" type="checkbox" required />He comprobado que el certificado público corresponde a esta cuenta.</label>

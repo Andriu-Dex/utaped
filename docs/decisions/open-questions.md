@@ -1,5 +1,59 @@
 # Decisiones pendientes y contradicciones
 
+## Accesibilidad y carga — 2026-10-13
+
+El propietario autorizó y se incorpora audio español al mismo CAPTCHA con controles de teclado y protecciones de sesión/expiración/consumo. Se añaden escenarios concurrentes de PDFs extensos, evidencia y firma con datos aislados. Quedan aceptación con usuarios (incluidas necesidades que no cubre imagen/audio), prueba sostenida/SLA/concurrencia institucional y carga de transporte de certificados por HTTPS. [Alcance y reproducción](../testing/captcha-and-document-load.md). Las menciones históricas a ausencia de alternativa o de pruebas de carga quedan superadas exclusivamente en este alcance acotado.
+
+## Preparación operativa y aceptación — 2026-10-12
+
+Se entregan override HTTPS en 64430 con SMTP externo configurable, preflight, backup de DB/volumen/imágenes y restauración verificada en un destino aislado. Faltan hostname/certificado/CA y SMTP reales, condiciones de red, custodio/cifrado/frecuencia/RPO/RTO y aceptación institucional. Se amplió aceptación por siete identidades y T2 de 18 páginas; no equivale a dimensionamiento bajo carga documental. [Guía](../operations/production-readiness.md).
+
+## Redacción y agente externo — 2026-10-12
+
+Asistencia T1/T2 entregada mediante propuestas explícitas y proveedores Groq/OpenAI configurables en backend, deshabilitada por defecto. Falta configurar cuenta/modelo/clave y validar tratamiento de datos, costos y calidad con contenido autorizado. [Configuración](../development/writing-configuration.md). El propietario construye por separado el agente de código/Trello; no pertenece a las implementaciones pendientes de este producto. Bandeja paginada y búsqueda/filtros entregados; las menciones históricas a redacción/bandeja sin implementar quedan superadas en ese alcance.
+
+## Administración contextual — 2026-10-12
+
+Entregados: edición de carreras, historial de cargos/principales/prórrogas, recuperación por coordinador con delegación explícita de ADMIN y alertas internas configurables de vencimiento/evidencia pendiente. Las menciones históricas a estos bloqueos quedan superadas en el alcance del [contrato](../api/contextual-administration.md). No se concede alta/importación global ni permisos de Decano/Subdecano. Frecuencias iniciales técnicas ajustables, no normativa institucional.
+
+## Actualización del 2026-10-12
+
+Cierre ACTIVE→CLOSED sin purga, archivo histórico verificable y asignaciones T1/T2 por ámbito/período están entregados en alcance inicial. La activación es explícita y obligatoria antes de nuevas firmas; congela participantes y revisiones. ADMIN puede operar el cierre, pero su rol no concede lectura del ZIP completo. El ZIP descargable respeta también el bloqueo de preliminares por ámbito. [Contrato](../api/period-control.md).
+
+Siguen pendientes retención/reapertura, permisos institucionales de Decano/Subdecano, sustitución de ejecutores tras bajas y exportación operativa de grandes volúmenes. Las menciones a cierre y configuración temporal pendientes en los párrafos siguientes describen el estado previo de la tanda amplia.
+
+Ámbitos, titularidad, tareas secuenciales, firmas sucesivas, evidencias PDF, T2 derivado y archivo/versiones cuentan ya con implementación inicial. Las filas históricas que indican ausencia de esas tablas o motores quedan superadas por [el estado vigente](../../implementation-status.md).
+
+Continúan pendientes las asignaciones oficiales, múltiples elaboradores, políticas de baja de revisores, configuración temporal por ámbito/período, cierre de períodos/ZIP y aceptación operativa. Prórroga técnica: máximo configurable de tres días calendario, individual y limitada al fin del período; no se presenta como cómputo institucional ratificado. Ventana T2 inicial: período académico completo. Evidencia incompleta exige explicación y no produce avance físico automático.
+
+No se incorporan correos o permisos reales desde el PDF de unidades/comisiones sin alta y designación explícitas. Los usuarios de desarrollo son ficticios. Asistencia de redacción y agente de código/Trello requieren su propia configuración y siguen sin implementar.
+
+
+## Reconciliación vigente — 2026-10-06
+
+El [Plan Maestro](PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md) sustituye las preguntas históricas que ya resuelve. La tabla original siguiente se conserva como historial, no como bloqueo vigente universal.
+
+| Cuestión histórica | Decisión vigente / trabajo restante |
+|---|---|
+| Q-001 | T1 de seis pasos; actividades y matriz comparten fuente. Falta completar el asistente productivo. |
+| Q-002 | Plan de comisión/grupo, carrera y período; responsable principal único. Falta migrar titularidad, ámbitos, unicidad y familias de versiones. |
+| Q-003/Q-018 | Revisión secuencial, todos obligatorios; no AL MENOS UNO ni paralelismo. Falta tabla de cargos/personas por ámbito y motor de tareas/rondas. |
+| Q-005 | Informe final derivado, uno por Plan; nunca independiente. Queda precisar relación con versiones formales y continuidad de evidencias. |
+| Q-007 | .p12/.pfx temporal en memoria; firmas acumulativas. Continúan pendientes aceptación operativa del certificado/perfil y política institucional; no se exige inventar una CA o TSA. |
+| Q-008 | Local: username, correo separado, Argon2id, CAPTCHA servidor y dos vías de recuperación. Se entrega ADMIN; coordinadores esperan ámbitos autorizados. |
+| Q-009 | Monolito modular Java/Spring, React/TS y PostgreSQL. Transición incremental JDBC→JPA, API v1/OpenAPI y Testcontainers aún pendientes. |
+| Q-010/Q-013 | Almacenamiento privado; T1/T2 institucionales adaptados a A4. Anexos de varios formatos: falta decidir conversión/representación y alcance de firma. |
+| Q-006/Q-011 | Zona America/Guayaquil, cierre ACTIVE→CLOSED sin purga, prórrogas individuales. Precisar los ~3 días, cómputo y cruce del cierre. |
+| Q-012/Q-017 | No pedir cédula/teléfono por defecto. Pertenencias por carrera/período/cargo; conservar historial. Falta completar catálogo y autorizaciones. |
+| Q-014/Q-019 | Asistencia de redacción con proveedor backend; agente código/Trello sigue como alcance separado. Proveedor, permisos, presupuesto y tablero pendientes. |
+| Q-004 | El Plan Maestro no ratifica expresamente la integración QIPOC heredada; no activarla por suposición. |
+
+El PDF de unidades/comisiones julio–diciembre 2026 aporta nombres, carreras y algunos cargos; no contiene correos, usuarios, todos los responsables principales ni la secuencia completa de aprobación. No convierte automáticamente a cada coordinador listado en administrador o firmante. Quedan por precisar también múltiples elaboradores, descarga de preliminares/anexos, elegibilidad del T2 con evidencias faltantes y fórmulas de indicadores. Estos puntos no bloquean el acceso ni el rediseño entregados.
+
+Accesibilidad del CAPTCHA: falta acordar una alternativa equivalente para personas que no pueden resolver un reto visual; el texto alternativo describe el reto sin revelar su respuesta. No se declara conformidad WCAG integral.
+
+## Registro histórico anterior al Plan Maestro
+
 2026-10-04: Q-007 parcialmente resuelta por el propietario: firma mediante archivos .p12/.pfx. Falta definir vinculación de titular/cuenta, autoridades confiables, revocación, perfil y tiempo. Q-003/Q-018 siguen pendientes: el propietario confirma que los flujos no están ratificados y acepta avanzar con preparación técnica manteniendo finalización/envío/aprobación bloqueados. [Contrato](signature-review-contract.md) y [ficha por grupo](../validation/workflow-signature-confirmation.md).
 
 2026-10-03: Q-010 parcialmente resuelta por el propietario: almacenamiento local privado persistente, 10 MB/anexo y 20 anexos como configuración técnica ajustable. Retención, restauración operacional y límites institucionales definitivos siguen pendientes. Q-013 parcialmente resuelta: páginas T1 en A4 conservando estructura y estilos, incluida matriz horizontal; anexos conservan su formato original. Aceptación institucional final y T2 pendientes. [ADR-0002](../architecture/adr/0002-t1-document-preparation.md).
@@ -39,3 +93,5 @@ Actualización 2026-10-02: Q-008 resuelta para mecanismo de acceso: credenciales
 Para cerrar: respuesta, persona/área validadora, fecha y evidencia verificable; actualizar requisitos, ADR y casos afectados.
 
 2026-10-05: firma visible del elaborador entregada con confianza directa por huella pública administrativa y comprobación de vigencia/integridad. El usuario mantiene archivo + contraseña + Firmar. No se valida cadena/revocación y se informa expresamente. Q-003/Q-018 permanecen pendientes; no se habilitan finalización, envío o aprobación. [API y operación](../api/author-signing.md).
+
+2026-10-12: importación CSV exclusiva de ADMIN y evidencia URL entregadas según el Plan Maestro. Alta/importación delegada, cargos oficiales con vigencia y políticas de acceso/retención de repositorios siguen pendientes. La descarga única de credenciales y limpieza de prevalidaciones son decisiones técnicas iniciales documentadas en [el contrato](../api/user-imports-and-external-evidence.md).

@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.*.example
+credenciales-importadas*.csv
 *.p12
 *.pfx
 *.key
@@ -26,6 +27,7 @@ runtime-data/
 /backups/
 # Frozen prototype stays outside this repository
 /Prototipos/
+instruction.md
 test-results/
 playwright-report/
 *.tsbuildinfo

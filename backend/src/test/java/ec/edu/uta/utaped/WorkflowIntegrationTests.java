@@ -27,7 +27,7 @@ class WorkflowIntegrationTests {
         }
         void login(String email) throws Exception {
             token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token");
-            assertEquals(204,request("POST","/api/auth/login","username="+email+"&password=Test-only-password-2026",true).statusCode());
+            assertEquals(204,request("POST","/api/auth/login","username="+email+"&password=Test-only-password-2026&captcha="+LoginChallenges.answer(client,port,jdbc),true).statusCode());
             token=JsonPath.read(request("GET","/api/auth/csrf",null,false).body(),"$.token");
         }
     }

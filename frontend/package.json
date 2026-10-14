@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:e2e": "playwright test",
+    "test:e2e:sample": "playwright test --config playwright.sample.config.ts",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
