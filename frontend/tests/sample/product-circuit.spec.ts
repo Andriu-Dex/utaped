@@ -6,25 +6,9 @@ import { execFileSync } from 'node:child_process'
 import { createHash, X509Certificate, randomUUID } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join, resolve, dirname, basename } from 'node:path'
-const environment = Object.fromEntries(readFileSync('../.env.sample', 'utf8').split(/\r?\n/).filter(line => line.includes('=')).map(line => { const i = line.indexOf('='); return [line.slice(0,i).trim(),line.slice(i+1).trim()] }))
-async function api(page: Page, path: string, method = 'GET', body?: unknown) {
-  const csrf = await (await page.request.get('/api/auth/csrf')).json()
-  const response = await page.request.fetch('/api' + path, { method, headers: { [csrf.headerName]: csrf.token }, data: body })
-  expect(response.status(), method + ' ' + path).toBeLessThan(300)
-  const content = await response.text(); return content ? JSON.parse(content) : undefined
-}
-async function login(page: Page, role: string) {
-  console.info('Signing in sample role: ' + role); await page.goto('/'); await page.getByLabel('Usuario', { exact: true }).fill('dev.' + role); await page.getByLabel('Contraseña', { exact: true }).fill(environment.UTAPED_SEED_PASSWORD)
-  await expect.poll(() => page.getByAltText('Código de seis caracteres. También puedes escucharlo con Escuchar código.').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
-  const promise = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/captcha')
-  await page.getByRole('button', { name: 'Cambiar código de verificación', exact: true }).click()
-  const captcha = await promise; const id = captcha.headers()['x-captcha-id']; expect(id).toMatch(/^[a-f0-9-]{36}$/)
-  const answer = 'ABC234', hash = createHash('sha256').update(id + ':' + answer).digest('hex')
-  const sql = `UPDATE login_captcha SET answer_hash='${hash}' WHERE id='${id}' AND current_database()='utaped_dev' RETURNING id`
-  const result = execFileSync('docker', ['compose','--env-file','../.env.sample','-p','utaped-sample','-f','../compose.yml','-f','../compose.sample.yml','exec','-T','db','psql','-v','ON_ERROR_STOP=1','-U','utaped','-d','utaped_dev','-c',sql], { encoding: 'utf8' }); expect(result).toContain(id)
-  await page.getByLabel('Código de verificación', { exact: true }).fill(answer); await page.getByRole('button', { name: 'Ingresar', exact: true }).click(); await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
-  return api(page, '/auth/me')
-}
+import { api, login as signIn, acceptanceBaseURL } from './sample-fixtures'
+const login = (page: Page, role: string) => signIn(page, 'dev.' + role)
+
 function certificate() {
   const root = resolve(tmpdir()), directory = mkdtempSync(join(root, 'utaped-signing-'))
   if (dirname(resolve(directory)) !== root || !basename(directory).startsWith('utaped-signing-')) throw new Error('Invalid fixture directory')
@@ -82,7 +66,7 @@ async function checkWriting(page: Page, label: string, doc: string, field: strin
 }
 test('independent scoped T1, return, sequential signatures, evidence, T2 and formal version', async ({browser})=>{
   test.setTimeout(360000)
-  const contexts=await Promise.all(Array.from({length:5},()=>browser.newContext({baseURL:process.env.SAMPLE_BASE_URL||'http://127.0.0.1:64431',viewport:{width:1440,height:1000}})))
+  const contexts=await Promise.all(Array.from({length:5},()=>browser.newContext({baseURL:acceptanceBaseURL,viewport:{width:1440,height:1000}})))
   const [admin,author,reviewer,approver,member]=await Promise.all(contexts.map(c=>c.newPage()));const roles=['admin','principal','reviewer','approver','member'];const identities=[]
   for(let i=0;i<roles.length;i++) identities.push(await login([admin,author,reviewer,approver,member][i],roles[i]))
   const authorCert=certificate(),reviewerCert=certificate(),suffix=Date.now().toString(),title='Plan integral '+suffix,externalLabel='Repositorio externo '+suffix

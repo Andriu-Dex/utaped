@@ -1,4 +1,4 @@
-# Must be used with compose.yml and project name utaped-sample.
+# Must be used with compose.yml and project name utaped-sample (manual) or utaped-acceptance (disposable tests).
 # Separate data and credentials; the default application never enables this profile.
 services:
   db:

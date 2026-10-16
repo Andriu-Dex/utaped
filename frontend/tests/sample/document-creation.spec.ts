@@ -1,3 +1,4 @@
+import { acceptanceBaseURL } from './acceptance-environment'
 import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
@@ -5,8 +6,8 @@ import { randomUUID } from 'node:crypto'
 import { api, login } from './sample-fixtures'
 
 test('document type chooser proposes the institutional name and excludes draft Plans from Reports', async ({ browser }) => {
-  const adminContext = await browser.newContext({ baseURL: 'http://127.0.0.1:64431' })
-  const principalContext = await browser.newContext({ baseURL: 'http://127.0.0.1:64431', viewport: { width: 1440, height: 1000 } })
+  const adminContext = await browser.newContext({ baseURL: acceptanceBaseURL })
+  const principalContext = await browser.newContext({ baseURL: acceptanceBaseURL, viewport: { width: 1440, height: 1000 } })
   const admin = await adminContext.newPage(), principal = await principalContext.newPage()
   try {
     await login(admin, 'dev.admin'); const actor = await login(principal, 'dev.principal')

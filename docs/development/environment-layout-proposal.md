@@ -1,6 +1,6 @@
 # Propuesta de organización de entornos locales
 
-Fecha: 2026-10-16. Estado: **PROPUESTA para acordar con el propietario**. No cambia Compose ni detiene/elimina recursos.
+Fecha: 2026-10-16. Estado: **APROBADA y aplicada**. Se conservan el nombre utaped-sample y su almacenamiento. [Comandos vigentes](sample-environment.md).
 
 ## Decisión recomendada
 
@@ -28,9 +28,9 @@ Las políticas de reinicio inspeccionadas eran `no`; no se atribuye el arranque 
 
 ## Corrección operativa necesaria
 
-Actualmente tests/sample usa utaped-sample y deja grupos, carreras, períodos y documentos de prueba en la misma base que se usa manualmente. Esos registros explican nombres como «Ámbito recuperación …». Aislar las bases solo entre utaped y sample no evita esta mezcla.
+Antes de la corrección, tests/sample usaba utaped-sample y deja grupos, carreras, períodos y documentos de prueba en la misma base que se usa manualmente. Esos registros explican nombres como «Ámbito recuperación …». Aislar las bases solo entre utaped y sample no evita esta mezcla.
 
-La siguiente reorganización debe mover esa suite a un entorno de aceptación desechable, parametrizar proyecto/puertos/conexión de sus fixtures y verificar que ninguna prueba escriba en el entorno manual. Mantener las semillas trazables de docs/templates y conservar los cambios del propietario. No ejecutar las pruebas destructivas contra una base de revisión o institucional.
+La reorganización mueve esa suite a un entorno de aceptación desechable, parametrizar proyecto/puertos/conexión de sus fixtures y verificar que ninguna prueba escriba en el entorno manual. Mantener las semillas trazables de docs/templates y conservar los cambios del propietario. No ejecutar las pruebas destructivas contra una base de revisión o institucional.
 
 ## Secuencia para aplicar la propuesta
 
@@ -41,4 +41,9 @@ La siguiente reorganización debe mover esa suite a un entorno de aceptación de
 5. Detener copias auxiliares fuera de uso; eliminar las restauraciones temporales solo después de verificar la evidencia y los datos que deben conservarse. No usar una purga global de Docker.
 6. Documentar comandos simples para desarrollo local, distribución Docker, pruebas y restauración. El puerto institucional de despliegue sigue siendo 64430; el cambio de puertos locales se realizará junto con la configuración, sin colisiones.
 
-No se ejecutó esta reorganización en la revisión visual del 2026-10-16. La separación de datos de pruebas sí es necesaria; la duplicación permanente de aplicaciones locales no lo es.
+La revisión visual inicial solo documentó la propuesta; la autorización posterior y su aplicación se registran debajo. La separación de datos de pruebas sí es necesaria; la duplicación permanente de aplicaciones locales no lo es.
+
+
+## Aplicación autorizada
+
+Entorno manual único utaped-sample: tres servicios con Vite o cuatro con frontend Docker opcional. Aceptación en utaped-acceptance desechable y sin fallback manual. Scripts E2E/backend limpian al finalizar, con KeepOnFailure. Vite lee el puerto de .env.sample y respeta API_TARGET explícito. Copias utaped/restauraciones detenidas; datos conservados. No se purgaron registros antiguos ni se renombraron volúmenes. Los ensayos de restauración requieren detener su proyecto exacto tras verificar su evidencia.

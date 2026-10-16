@@ -1,28 +1,10 @@
 import { withConfirmation } from '../confirmation'
-import { test, expect, type Page } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
-import { createHash, randomUUID } from 'node:crypto'
-const environment = Object.fromEntries(readFileSync('../.env.sample', 'utf8').split(/\r?\n/).filter(l => l.includes('=')).map(l => { const i = l.indexOf('='); return [l.slice(0,i).trim(), l.slice(i+1).trim()] }))
-async function api(page: Page, path: string, method = 'GET', body?: unknown) {
-  const csrf = await (await page.request.get('/api/auth/csrf')).json()
-  const r = await page.request.fetch('/api' + path, { method, headers: { [csrf.headerName]: csrf.token }, data: body })
-  expect(r.status(), method + ' ' + path).toBeLessThan(300); const data = await r.text(); return data ? JSON.parse(data) : undefined
-}
-async function login(page: Page, username: string, password = environment.UTAPED_SEED_PASSWORD) {
-  await page.goto('/'); await page.getByLabel('Usuario', { exact: true }).fill(username); await page.getByLabel('Contraseña', { exact: true }).fill(password)
-  await expect.poll(() => page.getByAltText('Código de seis caracteres. También puedes escucharlo con Escuchar código.').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
-  const pending = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/captcha')
-  await page.getByRole('button', { name: 'Cambiar código de verificación', exact: true }).click()
-  const response = await pending, id = response.headers()['x-captcha-id']; expect(id).toMatch(/^[a-f0-9-]{36}$/)
-  const answer = 'ABC234', hash = createHash('sha256').update(id + ':' + answer).digest('hex')
-  const sql = `UPDATE login_captcha SET answer_hash='${hash}' WHERE id='${id}' AND current_database()='utaped_dev' RETURNING id;`
-  const result = execFileSync('docker', ['compose','--env-file','../.env.sample','-p','utaped-sample','-f','../compose.yml','-f','../compose.sample.yml','exec','-T','db','psql','-v','ON_ERROR_STOP=1','-U','utaped','-d','utaped_dev','-c',sql], { encoding: 'utf8' }); expect(result).toContain(id)
-  await page.getByLabel('Código de verificación', { exact: true }).fill(answer); await page.getByRole('button', { name: 'Ingresar', exact: true }).click(); await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
-  return api(page, '/auth/me')
-}
+import { test, expect } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
+import { login, acceptanceBaseURL } from './sample-fixtures'
+
 test('CSV preview, correction, single credential download and forced password change', async ({ browser }) => {
-  const contexts = await Promise.all([browser.newContext({baseURL:process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431',viewport:{width:1440,height:1000}}),browser.newContext({baseURL:process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431'})]);const admin=await contexts[0].newPage(),member=await contexts[1].newPage();
+  const contexts = await Promise.all([browser.newContext({baseURL:acceptanceBaseURL,viewport:{width:1440,height:1000}}),browser.newContext({baseURL:acceptanceBaseURL})]);const admin=await contexts[0].newPage(),member=await contexts[1].newPage();
   const suffix=randomUUID().slice(0,8),username='import.'+suffix,email=username+'@example.invalid';
   try {
     await login(admin,'dev.admin');await admin.getByRole('button',{name:'Usuarios',exact:true}).click();await admin.getByRole('button',{name:'Abrir importador',exact:true}).click();

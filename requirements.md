@@ -1,5 +1,10 @@
 # Requisitos de UTAPED
 
+## Entorno diario y aislamiento de pruebas — 2026-10-16
+
+UT-DEV-110, CONFIRMADO-PROYECTO: un entorno manual persistente (utaped-sample existente), PostgreSQL/backend/Mailpit con Vite o frontend Docker opcional sobre los mismos datos. Conservar volúmenes y credenciales; no fusionar bases ni borrar históricos de revisión. Aceptación automatizada exclusivamente en utaped-acceptance desechable, sin fallback manual; E2E/integración bajo demanda con limpieza y opción KeepOnFailure. Vite sigue el puerto diario y permite API_TARGET explícito. Puerto institucional 64430 sin cambios. [Guía](docs/development/sample-environment.md).
+
+
 Estado: línea base inicial para revisión; no constituye aprobación institucional nueva.
 
 ## Fuente vigente desde el 2026-10-06

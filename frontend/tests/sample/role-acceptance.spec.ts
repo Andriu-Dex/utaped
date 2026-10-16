@@ -1,3 +1,4 @@
+import { acceptanceBaseURL } from './acceptance-environment'
 import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
@@ -5,7 +6,7 @@ import { api, login } from './sample-fixtures'
 
 test('seven roles preserve scope permissions, immutable access and revocation in active sessions', async ({ browser }) => {
   const roles = ['admin', 'principal', 'coordinator', 'member', 'reviewer', 'approver', 'outsider']
-  const contexts = await Promise.all(roles.map(() => browser.newContext({ baseURL: process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431', viewport: { width: 1440, height: 1000 } })))
+  const contexts = await Promise.all(roles.map(() => browser.newContext({ baseURL: acceptanceBaseURL, viewport: { width: 1440, height: 1000 } })))
   const pages = await Promise.all(contexts.map(context => context.newPage()))
   const [admin, principal, coordinator, member, reviewer, approver, outsider] = pages
   try {

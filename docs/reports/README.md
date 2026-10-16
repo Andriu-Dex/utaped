@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-16 — Entorno diario único y pruebas aisladas](2026-10-16-02-single-development-and-isolated-tests.md).
+
 - [2026-10-16 — Revisión visual del staged y propuesta Docker](2026-10-16-01-staged-ui-review-and-docker-plan.md).
 
 - [2026-10-14 — Confirmaciones propias y revisión del staged](2026-10-14-04-custom-confirmations-and-staged-review.md).

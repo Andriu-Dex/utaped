@@ -1,27 +1,9 @@
 import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
-import { test, expect, type Page } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
-import { createHash, randomUUID } from 'node:crypto'
-const environment = Object.fromEntries(readFileSync('../.env.sample', 'utf8').split(/\r?\n/).filter(l => l.includes('=')).map(l => { const i = l.indexOf('='); return [l.slice(0,i).trim(), l.slice(i+1).trim()] }))
-async function api(page: Page, path: string, method = 'GET', body?: unknown) {
-  const csrf = await (await page.request.get('/api/auth/csrf')).json()
-  const r = await page.request.fetch('/api' + path, { method, headers: { [csrf.headerName]: csrf.token }, data: body })
-  expect(r.status(), method + ' ' + path).toBeLessThan(300); const data = await r.text(); return data ? JSON.parse(data) : undefined
-}
-async function login(page: Page, username: string, password = environment.UTAPED_SEED_PASSWORD) {
-  await page.goto('/'); await page.getByLabel('Usuario', { exact: true }).fill(username); await page.getByLabel('Contraseña', { exact: true }).fill(password)
-  await expect.poll(() => page.getByAltText('Código de seis caracteres. También puedes escucharlo con Escuchar código.').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
-  const pending = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/captcha')
-  await page.getByRole('button', { name: 'Cambiar código de verificación', exact: true }).click()
-  const response = await pending, id = response.headers()['x-captcha-id']; expect(id).toMatch(/^[a-f0-9-]{36}$/)
-  const answer = 'ABC234', hash = createHash('sha256').update(id + ':' + answer).digest('hex')
-  const sql = `UPDATE login_captcha SET answer_hash='${hash}' WHERE id='${id}' AND current_database()='utaped_dev' RETURNING id;`
-  const result = execFileSync('docker', ['compose','--env-file','../.env.sample','-p','utaped-sample','-f','../compose.yml','-f','../compose.sample.yml','exec','-T','db','psql','-v','ON_ERROR_STOP=1','-U','utaped','-d','utaped_dev','-c',sql], { encoding: 'utf8' }); expect(result).toContain(id)
-  await page.getByLabel('Código de verificación', { exact: true }).fill(answer); await page.getByRole('button', { name: 'Ingresar', exact: true }).click(); await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
-  return api(page, '/auth/me')
-}
+import { test, expect } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
+import { api, login, acceptanceBaseURL } from './sample-fixtures'
+
 const date = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0,10)
 test('review inbox paginates and filters on desktop and dark tablet', async ({page}) => {
   await login(page,'dev.reviewer')
@@ -40,7 +22,7 @@ test('review inbox paginates and filters on desktop and dark tablet', async ({pa
   await page.getByRole('button',{name:'Modo oscuro',exact:true}).click();await page.setViewportSize({width:820,height:1180});await expect.poll(()=>page.locator('.theme-toggle').evaluate(e=>getComputedStyle(e).backgroundColor)).toMatch(/^rgb\((23, 43, 62|29, 58, 83)\)$/);await page.screenshot({path:'test-results/review-inbox-tablet-dark.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy()
 })
 test('career history and explicitly authorized coordinator recovery on desktop and tablet', async ({ browser }) => {
-  const contexts = await Promise.all(Array.from({length:3}, () => browser.newContext({ baseURL: process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431', viewport: { width: 1440, height: 1000 } })))
+  const contexts = await Promise.all(Array.from({length:3}, () => browser.newContext({ baseURL: acceptanceBaseURL, viewport: { width: 1440, height: 1000 } })))
   const [admin, coordinator, member] = await Promise.all(contexts.map(c => c.newPage()))
   const suffix = randomUUID().slice(0,8), initial = 'E2E-only-initial-password-2026', next = 'E2E-only-reset-password-2026'
   try {

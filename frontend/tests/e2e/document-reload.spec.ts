@@ -21,6 +21,14 @@ test('page reload preserves active document editor and step without resetting to
     await page.getByRole('button', { name: 'Ingresar', exact: true }).click()
   }
   await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+  // Fresh disposable databases require first access before any administrative setup.
+  if (await page.getByRole('heading', { name: 'Acceso temporal' }).isVisible()) {
+    await page.getByLabel('Contraseña actual').fill(environment.BOOTSTRAP_ADMIN_PASSWORD)
+    await page.getByLabel('Nueva contraseña', { exact: true }).fill('E2e-only-admin-password-2026')
+    await page.getByLabel('Confirmar contraseña').fill('E2e-only-admin-password-2026')
+    await page.getByRole('button', { name: 'Guardar contraseña' }).click()
+  }
+  await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
 
   const csrf = await (await page.request.get('/api/auth/csrf')).json()
   const headers = { [csrf.headerName]: csrf.token }

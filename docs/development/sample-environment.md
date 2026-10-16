@@ -1,14 +1,18 @@
 # Entorno de desarrollo con datos de ejemplo
 
-El entorno de ejemplo tiene su propia base `utaped_dev`, volúmenes, credenciales y proyecto Compose `utaped-sample`. No modifica los usuarios ni datos del entorno principal. Requiere Docker Desktop activo con contenedores Linux.
+El entorno de ejemplo tiene su propia base `utaped_dev`, volúmenes, credenciales y proyecto Compose `utaped-sample`. Es el único entorno diario recomendado; la copia histórica utaped permanece detenida con sus datos intactos. Requiere Docker Desktop activo con contenedores Linux.
 
 Desde la raíz del repositorio, en PowerShell:
 
 ```powershell
-./scripts/start-development-sample.ps1
+./scripts/start-development.ps1
 ```
 
-Abrir http://127.0.0.1:64431. La primera ejecución genera `.env.sample`, ignorado por Git, con contraseñas aleatorias. Consultar localmente `UTAPED_SEED_PASSWORD` para iniciar sesión; no compartir este archivo. El puerto institucional principal sigue siendo 64430. En este entorno aislado se usan API 18082, PostgreSQL 15435 y Mailpit 18027.
+Después ejecutar `cd frontend` y `npm run dev` en otra terminal; abrir http://127.0.0.1:5173. Primera instalación: npm ci. Son tres contenedores: PostgreSQL, backend y Mailpit.
+
+Para probar la distribución Docker: `./scripts/start-development.ps1 -Web` desde la raíz y abrir http://127.0.0.1:64431. Es la misma base, añadiendo un cuarto contenedor. Volver a ejecutar sin -Web detiene ese frontend. El script ajusta APP_PUBLIC_URL al modo seleccionado para que funcionen los enlaces de recuperación.
+
+La primera ejecución genera `.env.sample`, ignorado por Git, con contraseñas aleatorias. Consultar localmente `UTAPED_SEED_PASSWORD` para iniciar sesión; no compartir este archivo. El puerto institucional principal sigue siendo 64430. En este entorno aislado se usan API 18082, PostgreSQL 15435 y Mailpit 18027.
 
 | Usuario | Uso del escenario |
 |---|---|
@@ -42,14 +46,16 @@ docker compose --env-file .env.sample -p utaped-sample -f compose.yml -f compose
 
 ## Prueba del circuito
 
-Con el entorno iniciado y Chromium instalado:
+Con dependencias y Chromium instalados (`cd frontend; npm ci; npx playwright install chromium`), sin iniciar el entorno manual:
 
 ```powershell
 cd frontend
 npm run test:e2e:sample
 ```
 
-La prueba crea registros adicionales solo en el entorno de ejemplo y utiliza certificados temporales de pruebas en memoria. Recorre asignación/activación de flujos, elaboración, devolución, corrección, firmas sucesivas, aprobación, evidencia, T2, actualización formal y cierre histórico con ZIP autorizado, además de aislamiento y vista oscura en tableta. No utilizar certificados personales reales para las pruebas automatizadas.
+El comando crea **utaped-acceptance**, con credenciales aleatorias privadas en .env.acceptance, las mismas semillas y DB/volúmenes propios. Frontend 24431, API 28082, DB 25435 y Mailpit 28027. No escribe en utaped-sample; los fixtures rechazan proyecto/archivo/URL manuales antes de acceder. Limpia únicamente sus contenedores y volúmenes al finalizar, incluso con fallo. Conserva evidencias en frontend/test-results. Para diagnóstico: desde raíz `./scripts/test-acceptance.ps1 -KeepOnFailure`; la siguiente ejecución recrea ese entorno. No ejecutar directamente la configuración Playwright sample sin el lanzador.
+
+La prueba utiliza certificados temporales de pruebas en memoria. Recorre asignación/activación de flujos, elaboración, devolución, corrección, firmas sucesivas, aprobación, evidencia, T2, actualización formal y cierre histórico con ZIP autorizado, además de aislamiento y vista oscura en tableta. No utilizar certificados personales reales para las pruebas automatizadas.
 
 Desde V19, las semillas asignan las revisiones de ejemplo sin activar automáticamente el período. Para probar firmas manualmente: Administración → Períodos académicos → elegir período → revisar T1/T2 de cada ámbito → Activar flujos del período. No cierre el período de ejemplo hasta terminar el escenario: quedará de solo lectura y no existe reapertura automática. [Contrato y pasos](../api/period-control.md).
 
@@ -65,3 +71,11 @@ La suite sample añade un escenario de edición de carrera, historial, autorizac
 V21 se aplica al reconstruir, conservando datos existentes. Usuarios → Importar usuarios permite descargar plantilla CSV, prevalidar y confirmar cuentas USER nuevas; la credencial temporal se descarga una sola vez y se ignora por Git con el nombre de exportación. No importe datos institucionales privados en este entorno de ejemplo. Perfiles existentes no se sobrescriben.
 
 Para probar enlaces: Administración → Recursos y medios → Medio de verificación → Enlace HTTPS externo. Seleccione ese medio en la matriz antes de firmar T1. Tras aprobar el Plan, el responsable registra título/URL desde Actividades y evidencias; puede reemplazar la referencia conservando versiones. El T2 incluye texto y solo anexa archivos PDF. Las pruebas sample cubren importación/primer acceso y PDF + URL versionada con T2/cierre, además del escenario de administración contextual.
+
+## Entornos auxiliares y conservación
+
+`./scripts/test-e2e.ps1` recrea la DB E2E desde cero y elimina su proyecto/volúmenes al finalizar. `./scripts/test-backend.ps1` limpia contenedores y volúmenes desechables, conservando la caché externa utaped-maven-cache. Ambos admiten -KeepOnFailure. No dejar pruebas activas permanentemente.
+
+utaped y las restauraciones históricas quedaron detenidos, conservando contenedores y volúmenes. Pueden aparecer apagados en Docker Desktop; no consumen CPU de ejecución. No se renombraron proyectos ni se fusionaron bases. Los antiguos registros de pruebas ya existentes en sample se conservan: esta corrección evita nuevas escrituras automáticas, no borra trabajo de revisión.
+
+Las restauraciones siguen siendo ensayos explícitos con evidencia. Al terminar de comprobarlas, obtener sus IDs mediante `docker ps -q --filter "label=com.docker.compose.project=utaped-restore-NOMBRE"` y ejecutar `docker stop <IDs>`. Conservar sus volúmenes hasta decidir retención. No usar prune global ni down --volumes en el entorno manual.

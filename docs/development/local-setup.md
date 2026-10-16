@@ -2,7 +2,11 @@
 
 Anexos y previsualizaciones requieren volumen documental persistente además de DB: [configuración y respaldo](document-storage.md). Docker incluye fuentes para el conversor T1; sin Docker instalar Liberation Sans/DejaVu Sans.
 
-## Arranque completo con Docker
+## Entorno diario recomendado
+
+Desde raíz: `./scripts/start-development.ps1`; después `cd frontend` y `npm run dev` (primera instalación npm ci). URL http://127.0.0.1:5173. Para el compilado Docker: `./scripts/start-development.ps1 -Web`, URL 64431. Mismos datos. [Guía y credenciales](sample-environment.md). No iniciar otra copia local de la aplicación.
+
+## Configuración base sin semillas (alternativa histórica)
 
 Requisitos: Docker Desktop con contenedores Linux y Compose. No es necesario instalar Java/Maven para este modo.
 
@@ -25,12 +29,10 @@ Node 24. En `frontend`: `npm ci` (primera instalación) y `npm run dev`. Vite ab
 El destino se configura automáticamente y conserva los puertos de Docker:
 
 1. `API_TARGET` de la terminal o de `frontend/.env.local`, si se establece explícitamente.
-2. `http://127.0.0.1:<BACKEND_PORT>` usando `BACKEND_PORT` del `.env` de la raíz (o del entorno del proceso).
-3. `http://127.0.0.1:8080` si no hay configuración, igual que el puerto predeterminado de Compose.
+2. `http://127.0.0.1:<BACKEND_PORT>` usando únicamente BACKEND_PORT de `.env.sample`.
+3. `http://127.0.0.1:18082` si no existe ese archivo.
 
-Con `BACKEND_PORT=18080` en el `.env` principal basta ejecutar `npm run dev`, sin exportar variables cada vez. Para un backend Java iniciado directamente en otro puerto, copiar `frontend/.env.example` a `frontend/.env.local` y establecer, por ejemplo, `API_TARGET=http://127.0.0.1:8080`. Este archivo local permanece ignorado; no usar el prefijo `VITE_` ni colocar secretos en él. Reiniciar Vite después de cambiar estos valores.
-
-Si aparece `ECONNREFUSED`, verificar primero que el backend esté iniciado y que su puerto coincida. Desde la raíz: `docker compose up -d db mail backend`. Para recuperación de acceso desde Vite, configurar `APP_PUBLIC_URL=http://127.0.0.1:5173` en backend y recrearlo; el puerto de la interfaz Docker/institucional es independiente del proxy de desarrollo.
+El .env histórico de la raíz ya no selecciona la API de Vite. No se exponen secretos al navegador. Para Java directo, usar API_TARGET explícito (ejemplo http://127.0.0.1:8080); reiniciar Vite tras cambiarlo. Ante ECONNREFUSED, ejecutar primero start-development.ps1 y comprobar que no haya un API_TARGET antiguo en terminal/frontend/.env.local. El script ajusta APP_PUBLIC_URL al modo Vite/Docker para recuperación de acceso.
 
 ## Desarrollo backend sin Docker
 
@@ -41,9 +43,10 @@ En backend: `./mvnw spring-boot:run` o `./mvnw.cmd spring-boot:run` en Windows. 
 ## Verificación
 
 - Frontend: `npm run lint` y `npm run build`.
-- Backend: desde raíz, `docker compose -f compose.test.yml up --abort-on-container-exit --exit-code-from tests --attach tests`; después `docker compose -f compose.test.yml down`. DB utaped_test aislada y sin puertos públicos; credenciales del archivo son ficticias de pruebas.
-- Windows: scripts/test-backend.ps1 ejecuta y limpia contenedores de pruebas.
-- E2E: scripts/test-e2e.ps1 genera .env.e2e local e inicia proyecto utaped-e2e separado, instala Chromium y ejecuta frontend/tests/e2e. Puertos 28081, 25433, 28025 y 15173 (web Docker opcional 24430). Los datos E2E son ficticios, pueden conservarse entre ejecuciones; el script borra solo contadores de intentos de esa DB de pruebas.
+- Backend: `./scripts/test-backend.ps1`; DB utaped_test aislada sin puertos públicos. Prepara la caché Maven externa y limpia los recursos desechables al finalizar.
+- E2E: `./scripts/test-e2e.ps1`; proyecto utaped-e2e y DB nueva por ejecución. Puertos 28081, 25433, 28025 y Vite 15173.
+- Aceptación por roles/circuito: `./scripts/test-acceptance.ps1`; proyecto utaped-acceptance con frontend 24431. No escribe en el entorno manual.
+- Los tres lanzadores limpian al finalizar y admiten -KeepOnFailure para diagnóstico. Resultados bajo frontend/test-results y backend/target. Nunca ejecutar las suites contra una base manual o institucional.
 
 No hay envío hacia buzones reales en pruebas: Mailpit captura SMTP. SMTP institucional todavía debe configurarse para publicación.
 
