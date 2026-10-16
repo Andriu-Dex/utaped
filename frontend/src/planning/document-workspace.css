@@ -1,8 +1,836 @@
-.document-steps { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 10px; margin: 24px 0; }
-.document-steps button { justify-content: flex-start; text-align: left; font-size: .8rem; padding: 12px; }
-.document-steps button > span { display: grid; place-items: center; border-radius: 50%; min-width: 26px; height: 26px; background: var(--surface); color: var(--blue-700); border: 1px solid var(--border); }
-.document-steps button[aria-current='step'] { border-color: var(--blue-700); box-shadow: inset 0 -3px var(--blue-700); color: var(--blue-700); }
-.document-status-line,.document-save { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.document-status-line { margin: 18px 0; color: var(--muted); font-size: .85rem; }
-.document-save { margin: 24px 0; border-top: 1px solid var(--border); padding-top: 18px; }
-.report-result,.evidence-medium { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 16px; }
+/* Styles for academic document workspaces: T1 Work Plan & T2 Report (6-8 steps) */
+
+.document-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 22px 0 24px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 1080px) {
+  nav.document-steps[aria-label="Pasos del Plan"] {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  nav.document-steps[aria-label="Pasos del Informe"] {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1079px) {
+  nav.document-steps[aria-label="Pasos del Plan"] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  nav.document-steps[aria-label="Pasos del Informe"] {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.document-steps button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 10px 14px;
+  min-height: 52px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: var(--canvas);
+  color: var(--muted);
+  transition: all 0.18s ease-in-out;
+  cursor: pointer;
+}
+
+.document-steps button > span {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  transition: all 0.18s ease-in-out;
+  flex-shrink: 0;
+}
+
+.document-steps button:hover:not(:disabled):not([aria-current='step']) {
+  background: var(--blue-100);
+  color: var(--blue-900);
+  border-color: #bad3e8;
+  transform: translateY(-1px);
+}
+
+.document-steps button[aria-current='step'] {
+  background: linear-gradient(135deg, var(--blue-700) 0%, var(--blue-800) 100%);
+  color: #ffffff;
+  border-color: var(--blue-900);
+  box-shadow: 0 4px 14px rgba(23, 95, 148, 0.28);
+  transform: translateY(-1px);
+}
+
+.document-steps button[aria-current='step'] > span {
+  background: #ffffff;
+  color: var(--blue-800);
+  border-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.document-steps button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--canvas);
+  border-color: transparent;
+}
+
+/* Auxiliary / Review actions toolbar */
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 22px;
+  padding: 10px 18px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.review-actions::before {
+  content: 'Herramientas del documento:';
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.review-actions button {
+  border-radius: 20px;
+  padding: 7px 16px;
+  min-height: 36px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.review-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Document status bar and dirty indicator */
+.document-status-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 14px 0 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.document-status-line .status-badge {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.document-dirty-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  margin: 10px 0 16px;
+  transition: all 0.2s ease;
+}
+
+.document-dirty-indicator.is-clean {
+  background: var(--teal-100);
+  color: var(--teal-700);
+  border: 1px solid rgba(23, 115, 105, 0.25);
+}
+
+.document-dirty-indicator.is-clean::before {
+  content: '✓';
+  font-weight: 800;
+}
+
+.document-dirty-indicator.is-dirty {
+  background: var(--amber-100);
+  color: var(--amber-700);
+  border: 1px solid rgba(128, 85, 21, 0.3);
+}
+
+.document-dirty-indicator.is-dirty::before {
+  content: '●';
+  font-size: 0.9rem;
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Plan metadata overview */
+.plan-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px 0;
+  padding: 18px 22px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.plan-metadata > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 3px solid rgba(23, 95, 148, 0.25);
+}
+
+.plan-metadata dt {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.plan-metadata dd {
+  font-size: 0.94rem;
+  font-weight: 650;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Step Card Header */
+.step-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.step-card-header .section-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--blue-100);
+  color: var(--blue-800);
+  flex-shrink: 0;
+}
+
+.step-card-header h2 {
+  margin: 2px 0 0;
+  font-size: 1.25rem;
+}
+
+/* Step Action Buttons / Pagination Footer */
+.document-step-actions,
+.document-save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+/* Lifecycle Accordion */
+details.document-lifecycle {
+  margin: 14px 0 18px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+details.document-lifecycle summary {
+  cursor: pointer;
+  font-weight: 650;
+  font-size: 0.9rem;
+  color: var(--blue-800);
+  user-select: none;
+}
+
+details.document-lifecycle summary:hover {
+  color: var(--blue-900);
+}
+
+details.document-lifecycle ul {
+  margin: 14px 0 0;
+  padding-left: 20px;
+}
+
+details.document-lifecycle li {
+  margin: 8px 0;
+  font-size: 0.85rem;
+}
+
+/* Activity cards and Matrix Editor */
+.activity-card {
+  margin: 18px 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.activity-card:hover {
+  border-color: rgba(23, 95, 148, 0.35);
+  box-shadow: var(--shadow);
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.activity-index-pill {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  background: var(--blue-100);
+  color: var(--blue-800);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.activity-card-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.activity-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.activity-tags .is-mandatory {
+  background: var(--amber-100);
+  color: var(--amber-700);
+  border-color: rgba(128, 85, 21, 0.3);
+}
+
+.danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c92a2a !important;
+  border-color: rgba(201, 42, 42, 0.25) !important;
+  background: transparent !important;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+}
+
+.danger-btn:hover:not(:disabled) {
+  background: #fff5f5 !important;
+  border-color: #c92a2a !important;
+}
+
+/* Choice groups in matrix and forms */
+.choice-group {
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+
+.choice-group legend {
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal-700);
+  padding: 0 6px;
+}
+
+.choice-toolbar {
+  margin: 4px 0 12px;
+}
+
+.choice-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  min-height: 32px;
+  font-size: 0.76rem;
+}
+
+.choice-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.choice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-size: 0.83rem;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.choice-chip:hover {
+  border-color: var(--blue-700);
+  background: var(--blue-100);
+}
+
+.choice-chip.is-selected {
+  background: var(--blue-100);
+  border-color: var(--blue-700);
+  color: var(--blue-900);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(23, 95, 148, 0.15);
+}
+
+.choice-chip input[type="checkbox"] {
+  accent-color: var(--blue-700);
+  margin: 0;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.collective-toggle {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.choice-count {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin: 10px 0 0;
+  font-weight: 650;
+}
+
+/* Summary table styling */
+.matrix-summary-card {
+  margin-top: 28px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 18px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.table-scroll th {
+  background: var(--canvas);
+  color: var(--text);
+  font-weight: 700;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+
+.table-scroll td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table-scroll tr:last-child td {
+  border-bottom: none;
+}
+
+.table-scroll tr:hover td {
+  background: var(--blue-100);
+}
+
+.matrix-date-cell {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--canvas);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Reading Desk and A4 Viewer Frame */
+.document-reading-desk {
+  background: color-mix(in srgb, var(--blue-900) 4%, var(--canvas));
+  padding: 28px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+
+.document-page-wrapper {
+  display: inline-block;
+  position: relative;
+  box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  background: #ffffff;
+  line-height: 0;
+}
+
+.document-page-wrapper .document-page,
+.document-page {
+  display: block;
+  margin: 0;
+  border-radius: 4px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Report Results and Progress Bars */
+.report-result,
+.evidence-medium {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.report-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.report-result-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.result-progress-container {
+  margin: 10px 0 16px;
+}
+
+.result-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+
+.result-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 8px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.result-progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.result-progress-fill.is-complete {
+  background: linear-gradient(90deg, var(--teal-700), #28a745);
+}
+
+.result-progress-fill.is-progress {
+  background: linear-gradient(90deg, var(--blue-700), #388bfd);
+}
+
+.result-progress-fill.is-low {
+  background: linear-gradient(90deg, var(--amber-700), #d99b26);
+}
+
+/* Delegation Cards */
+.delegation-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin: 18px 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.delegation-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.delegation-card-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.delegation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.delegation-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+/* Signing card enhancements */
+.signing-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--teal-100);
+  border: 1px solid rgba(23, 115, 105, 0.25);
+  color: var(--teal-700);
+  margin: 16px 0;
+}
+
+.signing-success-banner strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.signing-success-banner span {
+  font-size: 0.82rem;
+}
+
+/* Dark Mode Overrides */
+:root[data-theme='dark'] .document-steps {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme='dark'] .document-steps button {
+  background: #112233;
+  color: #9cb4cb;
+  border-color: #1f364d;
+}
+
+:root[data-theme='dark'] .document-steps button:hover:not(:disabled):not([aria-current='step']) {
+  background: #19354e;
+  color: #d8e9f8;
+  border-color: #2b5175;
+}
+
+:root[data-theme='dark'] .document-steps button > span {
+  background: #172b3e;
+  color: #8faec9;
+  border-color: #2b4560;
+}
+
+:root[data-theme='dark'] .document-steps button[aria-current='step'] {
+  background: linear-gradient(135deg, #175f94 0%, #104167 100%);
+  color: #ffffff;
+  border-color: #3b7bb0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme='dark'] .document-steps button[aria-current='step'] > span {
+  background: #ffffff;
+  color: #104167;
+  border-color: #ffffff;
+}
+
+:root[data-theme='dark'] .review-actions {
+  background: #102131;
+  border-color: #23394e;
+}
+
+:root[data-theme='dark'] .review-actions::before {
+  color: #8da5bc;
+}
+
+:root[data-theme='dark'] .document-dirty-indicator.is-clean {
+  background: #143530;
+  color: #83dfcc;
+  border-color: #275d52;
+}
+
+:root[data-theme='dark'] .document-dirty-indicator.is-dirty {
+  background: #392b15;
+  color: #e9bf76;
+  border-color: #6a5323;
+}
+
+:root[data-theme='dark'] .plan-metadata {
+  background: #102131;
+  border-color: #223a4f;
+}
+
+:root[data-theme='dark'] .step-card-header .section-icon {
+  background: #1c3852;
+  color: #8ec3ea;
+}
+
+:root[data-theme='dark'] details.document-lifecycle {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] details.document-lifecycle summary {
+  color: #a4cef2;
+}
+
+:root[data-theme='dark'] .choice-group {
+  background: #112334;
+  border-color: #243c52;
+}
+
+:root[data-theme='dark'] .choice-group legend {
+  color: #83dfcc;
+}
+
+:root[data-theme='dark'] .choice-group .check:hover {
+  background: #1d354b;
+}
+
+:root[data-theme='dark'] .table-scroll th {
+  background: #122638;
+}
+
+:root[data-theme='dark'] .table-scroll tr:hover td {
+  background: #1a3248;
+}
+
+:root[data-theme='dark'] .document-page {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  outline: 1px solid #334e68;
+}
+
+:root[data-theme='dark'] .activity-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .activity-index-pill {
+  background: #1c3852;
+  color: #8ec3ea;
+}
+
+:root[data-theme='dark'] .activity-tags .is-mandatory {
+  background: #392b15;
+  color: #e9bf76;
+  border-color: #6a5323;
+}
+
+:root[data-theme='dark'] .danger-btn:hover:not(:disabled) {
+  background: rgba(201, 42, 42, 0.15) !important;
+}
+
+:root[data-theme='dark'] .choice-chip {
+  background: #112334;
+  border-color: #243c52;
+  color: #c0d8ef;
+}
+
+:root[data-theme='dark'] .choice-chip:hover {
+  background: #1d354b;
+  border-color: #3b7bb0;
+}
+
+:root[data-theme='dark'] .choice-chip.is-selected {
+  background: #173652;
+  border-color: #4092d6;
+  color: #ffffff;
+}
+
+:root[data-theme='dark'] .matrix-date-cell {
+  background: #102131;
+}
+
+:root[data-theme='dark'] .document-reading-desk {
+  background: #0d1a26;
+  border-color: #1e3347;
+}
+
+:root[data-theme='dark'] .document-page-wrapper {
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.6);
+  outline: 1px solid #2d4560;
+}
+
+:root[data-theme='dark'] .report-result,
+:root[data-theme='dark'] .delegation-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .signing-success-banner {
+  background: #12332c;
+  border-color: #24584b;
+  color: #7ee8d1;
+}

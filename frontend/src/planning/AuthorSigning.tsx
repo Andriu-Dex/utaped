@@ -2,6 +2,7 @@ import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, signPdf } from '../shared/api'
+import { Icon } from '../shared/Icon'
 
 interface Signed { id: string; signerName: string; signedAt: string; pageCount: number; signaturePageIndex: number }
 interface SigningState {
@@ -32,7 +33,14 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDoc
   }
   const signed = state?.signed[0]
   const index = page ?? signed?.signaturePageIndex ?? 0
-  return <section className="card" aria-label="Firma del elaborador"><h2>Firmar PDF</h2>
+  return <section className="card" aria-label="Firma del elaborador">
+    <div className="section-heading">
+      <span className="section-icon"><Icon name="lock" /></span>
+      <div>
+        <span className="section-kicker">AUTORÍA Y VALIDEZ JURÍDICA</span>
+        <h2>Firmar PDF</h2>
+      </div>
+    </div>
     <p>{state?.automaticSubmission ? 'Al firmar se conserva el artefacto y se activa automáticamente la primera etapa del flujo configurado.' : 'La firma se aplica al artefacto conservado. Este documento anterior necesita reconciliación con un ámbito para iniciar el flujo.'}</p>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
@@ -42,13 +50,25 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDoc
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? 'Firmando…' : 'Firmar'}</button>
       </fieldset></form></ActionForm>}
-      {signed && <><p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
-        <p>Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
+      {signed && <>
+        <div className="signing-success-banner">
+          <Icon name="check" size={24} />
+          <div>
+            <strong>Documento firmado digitalmente</strong>
+            <span>Identidad vinculada, integridad y vigencia comprobadas.</span>
+          </div>
+        </div>
+        <p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
+        <p className="field-help">Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
         {!state.automaticSubmission && <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>}
         {state.automaticSubmission && <p>Estado documental: {state.documentState === 'IN_REVIEW' ? 'En revisión' : state.documentState === 'APPROVED' ? 'Aprobado' : 'Borrador'}. Consulte las etapas y observaciones desde el documento.</p>}
-        <nav aria-label="Páginas del PDF firmado"><button className="secondary" disabled={index === 0} onClick={() => { setPage(index - 1); setImageError(false) }}>Anterior del firmado</button><span> Página {index + 1} de {signed.pageCount} </span><button className="secondary" disabled={index + 1 >= signed.pageCount} onClick={() => { setPage(index + 1); setImageError(false) }}>Siguiente del firmado</button></nav>
+        <nav aria-label="Páginas del PDF firmado" style={{ margin: '14px 0' }}><button className="secondary" disabled={index === 0} onClick={() => { setPage(index - 1); setImageError(false) }}>Anterior del firmado</button><span> Página {index + 1} de {signed.pageCount} </span><button className="secondary" disabled={index + 1 >= signed.pageCount} onClick={() => { setPage(index + 1); setImageError(false) }}>Siguiente del firmado</button></nav>
         {imageError && <Toast message="No se pudo cargar la página firmada. Puede descargar el PDF." />}
-        <img className="document-page" src={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/pages/' + index} alt={'Página ' + (index + 1) + ' del PDF firmado'} onError={() => setImageError(true)} />
+        <div className="document-reading-desk">
+          <div className="document-page-wrapper">
+            <img className="document-page" src={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/pages/' + index} alt={'Página ' + (index + 1) + ' del PDF firmado'} onError={() => setImageError(true)} />
+          </div>
+        </div>
       </>}
     </>}
     <button className="secondary" disabled={busy} onClick={() => { setError(''); setRefresh(value => value + 1) }}>Actualizar estado de firma</button>

@@ -3,6 +3,7 @@ import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, type User } from '../shared/api'
+import { Icon } from '../shared/Icon'
 interface Binding { id: string; fingerprint: string; verificationNote: string; active: boolean; createdAt: string }
 export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const [dirty, setDirty] = useState(false)
@@ -24,16 +25,30 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
     try { await api('/admin/users/' + user + '/signing-certificates/' + binding.id, 'DELETE'); setBindings(await api<Binding[]>('/admin/users/' + user + '/signing-certificates')); setNotice('Huella desvinculada.') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo desvincular la huella.') } finally { setBusy(false) }
   }
-  return <section className="card" aria-label="Vinculación de certificados"><h2>Certificados públicos de firmantes</h2>
-    <p>Vincule la huella SHA-256 obtenida del certificado público después de comprobar la identidad del titular por un canal confiable. No introduzca archivos privados ni contraseñas. Esto no acredita validación de la entidad emisora o revocación.</p>
+  return <section className="card" aria-label="Vinculación de certificados">
+    <div className="section-heading">
+      <div className="section-heading-icon" aria-hidden="true"><Icon name="lock" size={24} /></div>
+      <div>
+        <h2>Certificados públicos de firmantes</h2>
+        <p className="muted">Vincule la huella SHA-256 obtenida del certificado público después de comprobar la identidad del titular por un canal confiable. No introduzca archivos privados ni contraseñas. Esto no acredita validación de la entidad emisora o revocación.</p>
+      </div>
+    </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
-    <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
-    <label>Cuenta del firmante<select value={user} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if (dirty && !(await confirmAction('Hay cambios sin guardar. ¿Descartarlos?'))) return; setDirty(false); setUser(nextValue); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
+    <div className="filter-toolbar" style={{ margin: '16px 0' }}>
+      <label>Buscar firmante<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} maxLength={200} /></label>
+      <label>Cuenta del firmante<select value={user} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if (dirty && !(await confirmAction('Hay cambios sin guardar. ¿Descartarlos?'))) return; setDirty(false); setUser(nextValue); setBindings([]); setError(''); setNotice('') }}><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.email}</option>)}</select></label>
+    </div>
     {user && <><ActionForm label="Vincular certificado público" dirty={dirty} disabled={busy} onCancel={() => setDirty(false)}><form key={user} onChange={() => setDirty(true)} onSubmit={event => void register(event)}><fieldset disabled={busy}>
       <label>Huella SHA-256 pública<input name="fingerprint" pattern="[a-fA-F0-9]{64}" required minLength={64} maxLength={64} /></label>
       <label>Referencia de comprobación de identidad<textarea name="verificationNote" required maxLength={500} /></label>
       <label className="checkbox"><input name="identityVerified" type="checkbox" required />He comprobado que el certificado público corresponde a esta cuenta.</label>
       <button>Vincular huella pública</button></fieldset></form></ActionForm>
-      <ul>{bindings.map(binding => <li key={binding.id}><p style={{ overflowWrap: 'anywhere' }}>{binding.fingerprint} · {binding.active ? 'Vinculada' : 'Desvinculada'}</p><p>{binding.verificationNote}</p>{binding.active && <button className="secondary" disabled={busy} onClick={() => void revoke(binding)}>Desvincular huella</button>}</li>)}</ul></>}
+      <ul className="admin-catalog-list">{bindings.map(binding => <li key={binding.id} className="admin-catalog-item" style={{ alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ overflowWrap: 'anywhere', margin: '0 0 6px' }}><strong style={{ fontFamily: 'var(--font-mono, monospace)' }}>{binding.fingerprint}</strong> <span className={`status-badge ${binding.active ? 'active' : 'inactive'}`}>{binding.active ? 'Vinculada' : 'Desvinculada'}</span></p>
+          <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>{binding.verificationNote}</p>
+        </div>
+        {binding.active && <button className="secondary" disabled={busy} onClick={() => void revoke(binding)}>Desvincular huella</button>}
+      </li>)}</ul></>}
   </section>
 }

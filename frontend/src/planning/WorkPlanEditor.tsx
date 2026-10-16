@@ -20,10 +20,21 @@ function fields(plan: WorkPlan): DraftFields {
   return { title: plan.title, institutionalUnit: plan.institutionalUnit, career: plan.career, justification: plan.justification, objective: plan.objective }
 }
 
-export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: WorkPlan; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
+export type WorkPlanSection = 'general' | 'content' | 'matrix' | 'attachments' | 'preparation' | 'signing' | 'rounds' | 'execution' | 'history'
+const validSections: WorkPlanSection[] = ['general', 'content', 'matrix', 'attachments', 'preparation', 'signing', 'rounds', 'execution', 'history']
+
+export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBack, onDirtyChange, onDocumentOpen }: { initial: WorkPlan; onDocumentOpen?: (document: WorkPlan) => void; initialSection?: string | null; onSectionChange?: (section: WorkPlanSection) => void; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
-  const [section, setSection] = useState<'general' | 'content' | 'matrix' | 'attachments' | 'preparation' | 'signing' | 'rounds' | 'execution' | 'history'>('general')
+  const [section, setSectionState] = useState<WorkPlanSection>(() => {
+    return validSections.find(value => value === initialSection) ?? 'general'
+  })
+  const [previousSection, setPreviousSection] = useState(initialSection)
+  if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === initialSection) ?? 'general') }
+  function setSection(next: WorkPlanSection) {
+    setSectionState(next)
+    onSectionChange?.(next)
+  }
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
@@ -75,15 +86,15 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
   if (report) return <ReportEditor initial={report} onDirtyChange={onDirtyChange} onBack={() => setReport(null)} />
   async function createReport() {
     setBusy(true); setError('')
-    try { setReport(await api<WorkPlan>('/work-plans/' + plan.id + '/report', 'POST')) }
+    try { const next = await api<WorkPlan>('/work-plans/' + plan.id + '/report', 'POST'); if (onDocumentOpen) onDocumentOpen(next); else setReport(next) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear el Informe.') } finally { setBusy(false) }
   }
   return <section>
     <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
     <span className="section-kicker review-kicker">PLAN DE TRABAJO · T1</span>
     <h1>{plan.title}</h1><div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span></div>
-    <DocumentLifecycle plan={plan} disabled={busy || contentDirty} onDirtyChange={setLifecycleDirty} onChange={p => { setPlan(p); setDraft(fields(p)); setSection('general') }} />
-    <p role="status">{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
+    <DocumentLifecycle plan={plan} disabled={busy || contentDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
+    <p role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
     <nav className="document-steps" aria-label="Pasos del Plan"><button className="secondary" type="button" aria-current={section === 'general' ? 'step' : undefined} onClick={() => setSection('general')}><span>1</span>Información general</button><button className="secondary" type="button" aria-current={section === 'content' ? 'step' : undefined} onClick={() => setSection('content')}><span>2</span>Contenido</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}><span>3</span>Actividades y matriz</button>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('attachments')}><span>4</span>Anexos y opciones</button>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('preparation')}><span>5</span>Preparación y previsualización</button>
@@ -91,7 +102,15 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
     <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button></div>
     {dirty && <p>Guarde los cambios del Plan antes de abrir otra sección.</p>}
-    <div className="card"><dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
+    <div className="card">
+      <div className="step-card-header">
+        <span className="section-icon"><Icon name="document" /></span>
+        <div>
+          <span className="section-kicker">PASO {section === 'general' ? '1 DE 6' : '2 DE 6'}</span>
+          <h2>{section === 'general' ? 'Información general del Plan' : 'Contenido y redacción académica'}</h2>
+        </div>
+      </div>
+      <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy}>
         {section === 'general' ? <>
@@ -103,9 +122,14 @@ export function WorkPlanEditor({ initial, onBack, onDirtyChange }: { initial: Wo
           <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="JUSTIFICATION" label="Justificación" value={draft.justification} disabled={busy || !plan.editable || conflict} onApply={text => change('justification', text)} />
           <label>Objetivo<textarea rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} /></label>
           <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="OBJECTIVE" label="Objetivo" value={draft.objective} disabled={busy || !plan.editable || conflict} onApply={text => change('objective', text)} />
-          <p>El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
+          <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
         </>}
-        <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
+        <div className="document-step-actions">
+          {section === 'content' && <button type="button" className="secondary" disabled={busy} onClick={() => setSection('general')}>← Información general</button>}
+          <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
+          {section === 'general' && <button type="button" className="secondary" disabled={busy} onClick={() => setSection('content')}>Siguiente: Contenido →</button>}
+          {section === 'content' && <button type="button" className="secondary" disabled={dirty || busy} onClick={() => setSection('matrix')}>Siguiente: Actividades y matriz →</button>}
+        </div>
       </fieldset></form>
       {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
