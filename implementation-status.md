@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-14
+## Estado vigente al 2026-10-16
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
@@ -25,6 +25,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Carga documental | Escenarios aislados de tres autores/ámbitos, T1 extensos y T2 con evidencia paginada: generación, rasterizado, descarga, conflictos de evidencia y firmas concurrentes. Métricas por fase; no acredita capacidad institucional sostenida. |
 | Acceso temporal | Cambio obligatorio de contraseña mantiene el acceso con una sesión nueva; revoca sesiones previas y enlaces. El cambio voluntario normal sigue cerrando las sesiones. |
 | Interfaz | Se conserva la modernización del propietario y se amplía con tarjetas, métricas, editores por pasos, feedback toast, modo oscuro y adaptación a PC/tableta. |
+| Navegación documental | Diseño staged revisado; URL conserva documento y sección T1/T2 al recargar, protege cambios ante navegación del historial y sigue nuevos IDs de Informes/versiones. Solo recupera contenido guardado, sin autosalvado del borrador local. 8 E2E generales y 11 escenarios sample verificados, con repetición focalizada de recarga/circuito. [Reporte](docs/reports/2026-10-16-01-staged-ui-review-and-docker-plan.md). |
 | Formularios por acción | Creación, edición y acciones cerradas inicialmente, con apertura explícita por botón; acceso/filtros visibles. Cancelación con confirmación de cambios y retorno de foco; editores documentales y flujos ya abiertos por acción conservados. Lint/build, 7 E2E generales y 8 de sample aprobados. [Reporte](docs/reports/2026-10-14-02-explicit-form-actions.md). |
 | Confirmaciones y avisos | 41 llamadas confirm nativas sustituidas por modal asíncrono compartido; sin alert/confirm/prompt en src. Toasts y cambio de tema operables sobre el modal activo, teclado/foco de controles portales corregido. Staged del propietario validado y commit 59ceeb2; 7 E2E generales, 9 sample de regresión y 2 específicos aprobados. [Reporte](docs/reports/2026-10-14-04-custom-confirmations-and-staged-review.md). |
 | Redacción | Propuestas T1/T2 con consentimiento, comparación, aplicar/descartar y protección ante cambios locales/versiones. Groq/OpenAI detrás de interfaz backend; deshabilitado por defecto. El propietario configuró proveedor/modelo/clave en sus entornos; aceptación de privacidad/calidad institucional pendiente. |
