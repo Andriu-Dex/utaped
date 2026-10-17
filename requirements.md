@@ -1,5 +1,9 @@
 # Requisitos de UTAPED
 
+## Ejemplos con presentación realista — 2026-10-17
+
+Decisión del propietario: utilizar personas ficticias con nombres completos y cargos legibles en el entorno de desarrollo, en lugar de etiquetas técnicas como «Desarrollo principal». Conservar credenciales, permisos e identidades técnicas; no atribuir cargos ni firmas a personas reales. Las carreras, grupos, período y catálogos siguen las fuentes oficiales de docs/templates. La actualización respeta nombres/cargos personalizados y documentos previamente creados o firmados. [Cuentas del escenario](docs/development/sample-environment.md).
+
 ## Justificación inicial administrable — 2026-10-17
 
 La revisión del staged del propietario incorpora una configuración ADMIN para el texto inicial de Justificación del T1, con control de versión y auditoría. Se copia al crear un Plan nuevo; editar o restaurar la configuración no reescribe documentos existentes, campos vaciados intencionalmente ni artefactos firmados. El autor puede modificar su texto o restaurarlo explícitamente desde el editor. Esta configuración no sustituye las plantillas oficiales DOCX ni modifica su formato A4. El texto inicial aportado en el staged es editable y no constituye ratificación institucional de las referencias normativas que menciona. [Contrato](docs/api/document-templates.md).

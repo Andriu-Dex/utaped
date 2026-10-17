@@ -24,11 +24,18 @@ public class DevelopmentSeed implements ApplicationRunner {
     @Override @Transactional public void run(ApplicationArguments args) {
         if(!"utaped_dev".equals(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Development seeds require a separate database named utaped_dev");
         PasswordService.validate(password);
-        var roles=List.of("admin","principal","coordinator","reviewer","approver","member","outsider");
-        for(String role:roles) jdbc.update("""
-            INSERT INTO app_user(id,email,username,display_name,first_names,last_names,password_hash,system_role,must_change_password)
-            VALUES (?,?,?,?,?,?,?,?,false) ON CONFLICT(id) DO NOTHING
-            """,id(role),role+"@utaped.example.invalid","dev."+role,"Desarrollo "+role,"Desarrollo",role,encoder.encode(password),role.equals("admin")?"ADMIN":"USER");
+        for (var person : people()) {
+            String role=person.role();
+            jdbc.update("""
+                INSERT INTO app_user(id,email,username,display_name,first_names,last_names,password_hash,system_role,must_change_password)
+                VALUES (?,?,?,?,?,?,?,?,false) ON CONFLICT(id) DO NOTHING
+                """,id(role),role+"@utaped.example.invalid","dev."+role,person.displayName(),person.firstNames(),person.lastNames(),encoder.encode(password),role.equals("admin")?"ADMIN":"USER");
+            // Upgrade only untouched legacy seed profiles, never administrator-edited names or credentials.
+            jdbc.update("""
+                UPDATE app_user SET display_name=?,first_names=?,last_names=?,row_version=row_version+1
+                WHERE id=? AND username=? AND email=? AND display_name=? AND first_names='Desarrollo' AND last_names=?
+                """,person.displayName(),person.firstNames(),person.lastNames(),id(role),"dev."+role,role+"@utaped.example.invalid","Desarrollo "+role,role);
+        }
         var reference = DevelopmentReference.load();
         UUID period=id("period");
         upgradeUnusedLegacyReference(reference);
@@ -54,6 +61,28 @@ public class DevelopmentSeed implements ApplicationRunner {
         jdbc.update("UPDATE planning_catalog SET active=false WHERE id IN (?,?) AND label IN ('Equipo de trabajo — Ejemplo','Informe PDF — Ejemplo')",id("RESOURCE"),id("MEANS"));
         jdbc.update("UPDATE activity_catalog SET active=false WHERE id=? AND title='Preparar resultados de ejemplo'",id("activity"));
     }
+    // Fictional people for demonstrations; these are not institutional appointments.
+    private record Person(String role,String firstNames,String lastNames) {
+        String displayName() { return firstNames+" "+lastNames; }
+    }
+    private static List<Person> people() {
+        return List.of(
+            new Person("admin","María Fernanda","Salazar Torres"),
+            new Person("principal","Andrés Sebastián","Molina Vera"),
+            new Person("coordinator","Patricia Elizabeth","Cárdenas Ríos"),
+            new Person("reviewer","Carlos Eduardo","Benítez Paredes"),
+            new Person("approver","Gabriela Alejandra","Ruiz Medina"),
+            new Person("member","Luis Fernando","Acosta León"),
+            new Person("outsider","Daniela Isabel","Herrera Viteri")
+        );
+    }
+    private static String position(String role) {
+        return switch (role) {
+            case "principal" -> "Responsable principal";
+            case "coordinator" -> "Coordinador del ámbito";
+            default -> "Docente integrante";
+        };
+    }
     private void upgradeUnusedLegacyReference(DevelopmentReference reference) {
         // Never rewrite a period/group/career already referenced by a document or changed by an administrator.
         jdbc.update("UPDATE academic_career SET code='TI',name='Tecnologías de la Información',row_version=row_version+1 WHERE id=? AND code='DEV-SW' AND name='Carrera de ejemplo — Software' AND NOT EXISTS(SELECT 1 FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id WHERE s.career_id=?)",id("career"),id("career"));
@@ -67,15 +96,16 @@ public class DevelopmentSeed implements ApplicationRunner {
         for(String role:List.of("principal","coordinator","member")) {
             String membershipRole=role.equals("coordinator")?"COORDINATOR":"MEMBER";
             jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT DO NOTHING",id(role),group,membershipRole);
-            jdbc.update("INSERT INTO scope_member(scope_id,user_id,membership_role,position_label) VALUES (?,?,?,?) ON CONFLICT DO NOTHING",scope,id(role),membershipRole,"Función de ejemplo: "+role);
+            jdbc.update("INSERT INTO scope_member(scope_id,user_id,membership_role,position_label) VALUES (?,?,?,?) ON CONFLICT DO NOTHING",scope,id(role),membershipRole,position(role));
+            jdbc.update("UPDATE scope_member SET position_label=?,row_version=row_version+1 WHERE scope_id=? AND user_id=? AND position_label=?",position(role),scope,id(role),"Función de ejemplo: "+role);
         }
         var json=JsonMapper.builder().build();
         for(String type:List.of("T1","T2")) {
             String suffix=group.equals(id("group")) ? type : group+"-"+type;
             UUID configuration=id("configuration-"+suffix),revision=id("revision-"+suffix);
-            var definition=new Definition("Flujo secuencial de desarrollo — "+type,List.of(
-                new Stage(id("review-stage-"+type),"Revisión de ejemplo","REVIEW","PERSON",List.of(id("reviewer")),null,"",false),
-                new Stage(id("approval-stage-"+type),"Aprobación de ejemplo","APPROVE","PERSON",List.of(id("approver")),null,"",false)));
+            var definition=new Definition("Revisión y aprobación documental — "+type,List.of(
+                new Stage(id("review-stage-"+type),"Revisión documental","REVIEW","PERSON",List.of(id("reviewer")),null,"",false),
+                new Stage(id("approval-stage-"+type),"Aprobación del documento","APPROVE","PERSON",List.of(id("approver")),null,"",false)));
             int created=jdbc.update("INSERT INTO workflow_configuration(id,group_id,document_type,draft) VALUES (?,?,?,?::jsonb) ON CONFLICT(id) DO NOTHING",configuration,group,type,json.writeValueAsString(definition));
             if (created==1) {
                 jdbc.update("INSERT INTO workflow_revision(id,configuration_id,revision_number,definition,actor_id) VALUES (?,?,1,?::jsonb,?)",revision,configuration,json.writeValueAsString(definition),id("admin"));

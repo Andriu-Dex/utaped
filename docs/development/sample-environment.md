@@ -14,15 +14,17 @@ Para probar la distribución Docker: `./scripts/start-development.ps1 -Web` desd
 
 La primera ejecución genera `.env.sample`, ignorado por Git, con contraseñas aleatorias. Consultar localmente `UTAPED_SEED_PASSWORD` para iniciar sesión; no compartir este archivo. El puerto institucional principal sigue siendo 64430. En este entorno aislado se usan API 18082, PostgreSQL 15435 y Mailpit 18027.
 
-| Usuario | Uso del escenario |
-|---|---|
-| dev.admin | Usuarios, carreras, ámbitos, catálogos, flujos y certificados públicos. |
-| dev.principal | Elaboración del T1 y del Informe derivado. |
-| dev.coordinator | Coordinación y prórrogas individuales. |
-| dev.reviewer | Primera etapa del flujo. |
-| dev.approver | Aprobación final. |
-| dev.member | Consulta y responsabilidad de actividades si se asigna. |
-| dev.outsider | Comprobación de aislamiento; sin acceso al ámbito de ejemplo. |
+| Usuario | Nombre ficticio | Uso del escenario |
+|---|---|---|
+| dev.admin | María Fernanda Salazar Torres | Usuarios, carreras, ámbitos, catálogos, flujos y certificados públicos. |
+| dev.principal | Andrés Sebastián Molina Vera | Elaboración del T1 y del Informe derivado. |
+| dev.coordinator | Patricia Elizabeth Cárdenas Ríos | Coordinación y prórrogas individuales. |
+| dev.reviewer | Carlos Eduardo Benítez Paredes | Primera etapa del flujo. |
+| dev.approver | Gabriela Alejandra Ruiz Medina | Aprobación final. |
+| dev.member | Luis Fernando Acosta León | Consulta y responsabilidad de actividades si se asigna. |
+| dev.outsider | Daniela Isabel Herrera Viteri | Comprobación de aislamiento; sin acceso al ámbito de ejemplo. |
+
+Nombres ficticios con presentación realista, sin importar identidades ni autoridades de los documentos oficiales. Se conservan usuarios, correos de prueba, contraseñas, IDs y permisos. Al arrancar el backend actualizado se sustituyen únicamente los perfiles semilla que todavía conservan exactamente «Desarrollo + rol» y los cargos «Función de ejemplo: rol»; los nombres/cargos personalizados se respetan. No se resetea la base. Los cargos iniciales son Responsable principal, Coordinador del ámbito y Docente integrante. Los flujos nuevos usan Revisión documental / Aprobación del documento; revisiones previas y documentos firmados conservan su contenido.
 
 Los correos usan `example.invalid`. El período de referencia es **Julio–Diciembre 2026**, del 01/07/2026 al 31/12/2026. Los nombres de carreras, unidades/comisiones y los catálogos proceden de `docs/templates`; las cuentas y sus asignaciones son ficticias. Se incluyen 3 carreras, 23 grupos, 30 ámbitos, 15 recursos, 11 medios de verificación y 55 actividades opcionales. Las ventanas de elaboración y revisión abarcan el semestre para facilitar las pruebas; no son fechas oficiales ratificadas. No se importa un Plan firmado ni las firmas del PDF. Los flujos iniciales T1/T2 tienen dos personas sin firma de revisión obligatoria; ADMIN puede configurar una política distinta. [Procedencia y límites](institutional-reference.md).
 

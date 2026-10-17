@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-17 — Personas ficticias realistas](2026-10-17-05-realistic-development-identities.md).
+
 - [2026-10-17 — Revisión del staged: plantillas e interfaz](2026-10-17-04-staged-templates-and-ui-review.md).
 
 - [2026-10-17 — Previsualización simultánea T1](2026-10-17-03-simultaneous-t1-preview.md).

@@ -202,3 +202,7 @@ Vite obtiene automáticamente el puerto del backend desde `BACKEND_PORT` del `.e
 ## Revisión del staged — 2026-10-17
 
 Modernización del propietario conservada: menú plegable, editor/matriz T1, campos T2, vista simultánea y estudio modal de redacción con propuesta editable. Corregidas sustituciones silenciosas de justificaciones históricas, foco y confirmaciones anidadas, protección de propuestas editadas, nombres accesibles de matriz/logout y salto directo de página. La configuración ADMIN T1 no cambia documentos existentes ni plantillas A4. Backend completo (146 casos) y dos pruebas focalizadas aprobados; 13 escenarios de aceptación, ocho E2E generales, lint/build y revisión visual PC/tablet aprobados. [Revisión y validaciones](docs/reports/2026-10-17-04-staged-templates-and-ui-review.md).
+
+## Personas ficticias realistas — 2026-10-17
+
+Semillas con siete nombres completos y cargos legibles; actualización acotada de etiquetas originales, sin sobrescribir perfiles personalizados. Credenciales, permisos, documentos y artefactos conservados. Aplicado en utaped-sample con respaldo previo y comprobación de integridad; nuevas instalaciones usan la misma presentación. [Reporte](docs/reports/2026-10-17-05-realistic-development-identities.md).
