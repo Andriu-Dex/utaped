@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-17 — PR hacia develop y limpieza de ramas](2026-10-17-02-develop-pr-and-branch-cleanup.md).
+
 - [2026-10-17 — Limpieza de ejemplos y fuentes oficiales](2026-10-17-01-clean-development-examples.md).
 
 - [2026-10-16 — Entorno diario único y pruebas aisladas](2026-10-16-02-single-development-and-isolated-tests.md).
