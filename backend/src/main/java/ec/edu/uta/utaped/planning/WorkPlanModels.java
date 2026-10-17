@@ -30,5 +30,9 @@ public final class WorkPlanModels {
     public record GroupOption(UUID id,String name) {}
     public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}
     public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate,String suggestedTitle) {}
-    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {}
+    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes,String defaultJustification) {
+        public Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {
+            this(groups,periods,singlePlanPerScope,enforcePreparationWindow,scopes,InstitutionalTemplates.DEFAULT_JUSTIFICATION);
+        }
+    }
 }

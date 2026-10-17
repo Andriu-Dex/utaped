@@ -1,5 +1,10 @@
 # Requisitos de UTAPED
 
+## Justificación inicial administrable — 2026-10-17
+
+La revisión del staged del propietario incorpora una configuración ADMIN para el texto inicial de Justificación del T1, con control de versión y auditoría. Se copia al crear un Plan nuevo; editar o restaurar la configuración no reescribe documentos existentes, campos vaciados intencionalmente ni artefactos firmados. El autor puede modificar su texto o restaurarlo explícitamente desde el editor. Esta configuración no sustituye las plantillas oficiales DOCX ni modifica su formato A4. El texto inicial aportado en el staged es editable y no constituye ratificación institucional de las referencias normativas que menciona. [Contrato](docs/api/document-templates.md).
+
+
 ## Previsualización simultánea — 2026-10-17
 
 UT-UI-120, CONFIRMADO-PROYECTO: comenzar por Contenido del T1, edición izquierda y documento A4 derecha en PC, ancho ajustable y página ampliable. En tablet alternar edición/vista. Usar el motor institucional real, permitir ver cambios locales sin presentarlos como guardados, conservar pasos/validaciones y mostrar exclusivamente bytes conservados tras firmar. No alterar contenido de otro documento ni crear artefactos firmables automáticamente. [Diseño y límites](docs/design/simultaneous-preview.md).
