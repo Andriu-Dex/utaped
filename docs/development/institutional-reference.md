@@ -1,5 +1,8 @@
 # Datos de referencia Julio–Diciembre 2026
 
+Confirmación del propietario, 2026-10-17: **los documentos de templates son fuentes oficiales**. Sus datos institucionales son fiables dentro de lo que cada fuente define; no son nombres inventados. La excepción confirmada es el tamaño Carta de una referencia: el producto usa **A4** para T1 y T2. Cuentas, contraseñas, asignaciones del escenario y ventanas técnicas de prueba no adquieren carácter institucional por esta confirmación.
+
+
 Decisión del propietario: 2026-10-14. Semillas exclusivamente para el perfil `development-seed`, base `utaped_dev`. Los datos curados están en `backend/src/main/resources/development/institutional-reference.json`; no se leen los archivos originales durante el arranque ni se añaden dependencias de Excel/PDF al backend.
 
 ## Procedencia
@@ -31,3 +34,9 @@ Identificadores de semilla estables; inserción sin duplicados. Reiniciar no cam
 Los datos adicionales creados por pruebas/revisiones permanecen. No ejecutar un reinicio destructivo para actualizar estas semillas. Un reinicio completo con `-ResetData` es una operación voluntaria distinta documentada en [entorno de ejemplo](sample-environment.md), que elimina los registros de sample.
 
 No modifica la base principal ni configura el calendario productivo. Una vez terminado 2026, las ventanas respetarán las fechas almacenadas; el sistema no desplaza silenciosamente este período.
+
+## Limpieza autorizada del escenario — 2026-10-17
+
+El propietario permite reemplazar los datos de desarrollo actuales. Para retirar las pruebas acumuladas se reconstruyen los catálogos y ámbitos a partir del JSON trazable a templates, conservando los siete usuarios dev y sus hashes de contraseña. Se eliminan de la DB los documentos, cuentas extra, grupos/períodos/carreras y demás registros operativos de ejemplo; las sesiones se invalidan. Las referencias se regeneran con sus mismos identificadores estables y los nombres oficiales. No es un cambio de reglas de producción ni una migración Flyway.
+
+La herramienta scripts/clean-development-data.py requiere el proyecto exacto utaped-sample, la DB utaped_dev, el perfil development-seed y un respaldo emparejado verificado de esa misma base. Sin --apply solo muestra el alcance. La operación no elimina archivos del volumen: los antiguos archivos sin referencias quedan fuera de la UI y permanecen también en el respaldo; no se presenta como purga física de almacenamiento.

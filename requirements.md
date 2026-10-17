@@ -1,5 +1,10 @@
 # Requisitos de UTAPED
 
+## Fuentes oficiales y datos de desarrollo — 2026-10-17
+
+El propietario confirma que los archivos de docs/templates contienen información institucional oficial. Deben guiar carreras, unidades/comisiones, actividades y estructura documental; la excepción expresa es el tamaño Carta de una referencia: la salida T1/T2 utiliza A4. Las cuentas y asignaciones de desarrollo siguen siendo ficticias. Los registros actuales son ejemplos reemplazables y se autoriza limpiar/reconstruir el entorno de desarrollo, con respaldo previo para operaciones masivas. Esta aclaración actualiza la conservación de los antiguos escenarios de pruebas; no autoriza borrar una futura base institucional.
+
+
 ## Entorno diario y aislamiento de pruebas — 2026-10-16
 
 UT-DEV-110, CONFIRMADO-PROYECTO: un entorno manual persistente (utaped-sample existente), PostgreSQL/backend/Mailpit con Vite o frontend Docker opcional sobre los mismos datos. Conservar volúmenes y credenciales; no fusionar bases ni borrar históricos de revisión. Aceptación automatizada exclusivamente en utaped-acceptance desechable, sin fallback manual; E2E/integración bajo demanda con limpieza y opción KeepOnFailure. Vite sigue el puerto diario y permite API_TARGET explícito. Puerto institucional 64430 sin cambios. [Guía](docs/development/sample-environment.md).

@@ -76,6 +76,17 @@ Para probar enlaces: Administración → Recursos y medios → Medio de verifica
 
 `./scripts/test-e2e.ps1` recrea la DB E2E desde cero y elimina su proyecto/volúmenes al finalizar. `./scripts/test-backend.ps1` limpia contenedores y volúmenes desechables, conservando la caché externa utaped-maven-cache. Ambos admiten -KeepOnFailure. No dejar pruebas activas permanentemente.
 
-utaped y las restauraciones históricas quedaron detenidos, conservando contenedores y volúmenes. Pueden aparecer apagados en Docker Desktop; no consumen CPU de ejecución. No se renombraron proyectos ni se fusionaron bases. Los antiguos registros de pruebas ya existentes en sample se conservan: esta corrección evita nuevas escrituras automáticas, no borra trabajo de revisión.
+utaped y las restauraciones históricas quedaron detenidos, conservando contenedores y volúmenes. Pueden aparecer apagados en Docker Desktop; no consumen CPU de ejecución. No se renombraron proyectos ni se fusionaron bases. La separación del 2026-10-16 conservó inicialmente los registros antiguos. Con autorización posterior del 2026-10-17, se limpiaron los ejemplos y se reconstruyeron las referencias oficiales, conservando las siete cuentas dev y sus contraseñas; véase el apartado de limpieza.
 
 Las restauraciones siguen siendo ensayos explícitos con evidencia. Al terminar de comprobarlas, obtener sus IDs mediante `docker ps -q --filter "label=com.docker.compose.project=utaped-restore-NOMBRE"` y ejecutar `docker stop <IDs>`. Conservar sus volúmenes hasta decidir retención. No usar prune global ni down --volumes en el entorno manual.
+
+## Limpieza de ejemplos manteniendo credenciales
+
+Con autorización del propietario para reemplazar datos de desarrollo, se puede reconstruir el escenario oficial sin regenerar las contraseñas de los siete usuarios dev. Crear primero un respaldo nuevo con scripts/operations.py backup --project utaped-sample --destination backups/NOMBRE-NUEVO. Esperar a que termine correctamente antes del siguiente comando.
+
+```powershell
+python scripts/clean-development-data.py --backup backups/NOMBRE-NUEVO
+python scripts/clean-development-data.py --backup backups/NOMBRE-NUEVO --apply
+```
+
+El primer comando solo previsualiza. El segundo elimina los datos operativos de ejemplo, conserva las siete cuentas y Flyway, y reinicia los servicios que estaban activos para regenerar referencias oficiales. Cierra las sesiones existentes: iniciar sesión de nuevo y recargar la página. No usarlo sobre producción. No elimina archivos físicos del volumen. Los datos oficiales de templates son la fuente; T1/T2 permanecen en A4, aunque una referencia esté en Carta.

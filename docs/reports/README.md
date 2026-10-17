@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-17 — Limpieza de ejemplos y fuentes oficiales](2026-10-17-01-clean-development-examples.md).
+
 - [2026-10-16 — Entorno diario único y pruebas aisladas](2026-10-16-02-single-development-and-isolated-tests.md).
 
 - [2026-10-16 — Revisión visual del staged y propuesta Docker](2026-10-16-01-staged-ui-review-and-docker-plan.md).

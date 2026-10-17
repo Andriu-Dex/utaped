@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-16
+## Estado vigente al 2026-10-17
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
@@ -21,6 +21,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Seguimiento | Filtros y CSV de totales/estados/cobertura con permisos. ADMIN ve agregados sin acceso automático a contenido privado. |
 | Desarrollo | Entorno y semillas aislados en utaped_dev, siete usuarios ficticios; Julio–Diciembre 2026 fijo, 3 carreras, 23 grupos, 30 ámbitos, 55 actividades y catálogos procedentes de templates. Configuración y pruebas sin modificar la DB principal ni importar firmas/autoridades reales. [Procedencia](docs/development/institutional-reference.md). |
 | Aislamiento de entornos | Un entorno manual persistente utaped-sample; tres contenedores con Vite o cuarto frontend Docker opcional, mismos datos. Aceptación en utaped-acceptance desechable, guardas sin fallback manual, limpieza E2E/backend/aceptación y KeepOnFailure. Copias históricas detenidas y volúmenes conservados. Verificados 139 backend, 8 E2E, 11 de aceptación y 5 guardas; lint/build aprobados. [Reporte](docs/reports/2026-10-16-02-single-development-and-isolated-tests.md). |
+| Limpieza de ejemplos | Autorizada el 2026-10-17: respaldo validado, retirados los 122 documentos y usuarios extra de prueba; conservadas siete cuentas/contraseñas. Referencias oficiales reconstruidas: 3 carreras, 23 grupos, 30 ámbitos de Julio–Diciembre 2026, 55 actividades y 26 elementos de catálogo. A4 confirmado; archivos antiguos conservados fuera de la UI. [Reporte](docs/reports/2026-10-17-01-clean-development-examples.md). |
 | Importación | CSV administrativo UTF-8 prevalidado por fila, lotes atómicos, cuentas USER con contraseña aleatoria individual de descarga única y pertenencia opcional sin principal/permisos de recuperación; caducidad y limpieza de filas temporales. |
 | CAPTCHA accesible | Mismo reto visual y audio español privado, teclado, reproducción/pausa/repetición, ID/sesión/caducidad/consumo únicos, sin proveedor externo. Aceptación de pronunciación con usuarios pendiente. |
 | Carga documental | Escenarios aislados de tres autores/ámbitos, T1 extensos y T2 con evidencia paginada: generación, rasterizado, descarga, conflictos de evidencia y firmas concurrentes. Métricas por fase; no acredita capacidad institucional sostenida. |
