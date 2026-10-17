@@ -21,6 +21,7 @@ test('administrative creation forms stay closed and cancellation clears only con
   const screens = [
     ['Períodos académicos', 'Nombre del período', 'Crear período'],
     ['Carreras y ámbitos', 'Código de carrera', 'Crear carrera'],
+    ['Plantillas', 'Texto predeterminado de la Justificación:', 'Editar plantilla'],
     ['Recursos y medios', 'Denominación del catálogo', 'Crear o editar elemento'],
   ]
   for (const [screen, field, action] of screens) {

@@ -67,7 +67,15 @@ export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDir
     {!state || !draft ? <p role="status">Cargando Informe…</p> : <><div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {state.document.formalVersion} · Ronda {state.document.reviewRound}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div><DocumentLifecycle plan={state.document} disabled={busy || contentDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.id !== document.id && onDocumentOpen) onDocumentOpen(p); else { setDocument(p); setState(null); setStep(0); setReload(n => n + 1) } }} /><nav className="document-steps" aria-label="Pasos del Informe">{steps.map((label, i) => <button key={label} type="button" className="secondary" aria-current={step === i ? 'step' : undefined} onClick={() => choose(i)} disabled={busy}><span>{i + 1}</span>{label}</button>)}</nav>
     <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PASO {step + 1} DE 8</span><h2>{steps[step]}</h2></div></div><form onSubmit={save}><fieldset disabled={busy || !state.document.editable}>
       {step === 0 && <><label>Título del Informe<input required maxLength={200} value={title} onChange={e => setTitle(e.target.value)} /></label><dl className="plan-metadata"><div><dt>Plan base</dt><dd>Versión {draft.baseFormalVersion}</dd></div><div><dt>Ámbito</dt><dd>{state.document.groupName} · {state.document.career || 'Facultad'}</dd></div><div><dt>Período</dt><dd>{state.document.periodName}</dd></div><div><dt>Elaborador</dt><dd>{state.document.teacherName}</dd></div></dl><p className="field-help">Este Informe tiene identidad, artefactos y flujo propios. Sus actividades proceden del Plan aprobado.</p></>}
-      {step === 1 && <><label>Antecedentes<textarea rows={12} maxLength={50000} value={draft.background} onChange={e => setDraft({ ...draft, background: e.target.value })} placeholder="Documente el origen real del Plan y el propósito del Informe…" /></label><WritingAssistant key="background" documentId={document.id} rowVersion={state.document.rowVersion} field="BACKGROUND" label="Antecedentes" value={draft.background} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, background: text })} /></>}
+      {step === 1 && <>
+        <div className="field-header-row">
+          <label htmlFor={'report-background-' + document.id}>Antecedentes</label>
+          <div className="field-header-actions">
+            <WritingAssistant key="background" documentId={document.id} rowVersion={state.document.rowVersion} field="BACKGROUND" label="Antecedentes" value={draft.background} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, background: text })} />
+          </div>
+        </div>
+        <textarea id={'report-background-' + document.id} rows={12} maxLength={50000} value={draft.background} onChange={e => setDraft({ ...draft, background: e.target.value })} placeholder="Documente el origen real del Plan y el propósito del Informe…" />
+      </>}
       {step === 2 && <><p className="field-help">Cobertura de medios: {state.evidence.coveredMedia}/{state.evidence.requiredMedia}. El porcentaje de ejecución se declara por actividad; no se calcula a partir de la cantidad de PDFs.</p>{draft.results.map((r, i) => {
         const pct = typeof r.percentage === 'number' ? r.percentage : 0
         const toneClass = pct >= 100 ? 'is-complete' : pct >= 50 ? 'is-progress' : 'is-low'
@@ -94,8 +102,24 @@ export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDir
           <label>Observaciones de actividad {i + 1}<textarea maxLength={4000} rows={3} value={r.observations} onChange={e => setDraft({ ...draft, results: draft.results.map(v => v.activityId === r.activityId ? { ...v, observations: e.target.value } : v) })} /></label>
         </div>
       })}</>}
-      {step === 3 && <><label>Conclusiones<textarea rows={12} maxLength={50000} value={draft.conclusions} onChange={e => setDraft({ ...draft, conclusions: e.target.value })} /></label><WritingAssistant key="conclusions" documentId={document.id} rowVersion={state.document.rowVersion} field="CONCLUSIONS" label="Conclusiones" value={draft.conclusions} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, conclusions: text })} /></>}
-      {step === 4 && <><label>Oportunidades de mejora<textarea rows={12} maxLength={50000} value={draft.improvements} onChange={e => setDraft({ ...draft, improvements: e.target.value })} /></label><WritingAssistant key="improvements" documentId={document.id} rowVersion={state.document.rowVersion} field="IMPROVEMENTS" label="Oportunidades de mejora" value={draft.improvements} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, improvements: text })} /></>}
+      {step === 3 && <>
+        <div className="field-header-row">
+          <label htmlFor={'report-conclusions-' + document.id}>Conclusiones</label>
+          <div className="field-header-actions">
+            <WritingAssistant key="conclusions" documentId={document.id} rowVersion={state.document.rowVersion} field="CONCLUSIONS" label="Conclusiones" value={draft.conclusions} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, conclusions: text })} />
+          </div>
+        </div>
+        <textarea id={'report-conclusions-' + document.id} rows={12} maxLength={50000} value={draft.conclusions} onChange={e => setDraft({ ...draft, conclusions: e.target.value })} />
+      </>}
+      {step === 4 && <>
+        <div className="field-header-row">
+          <label htmlFor={'report-improvements-' + document.id}>Oportunidades de mejora</label>
+          <div className="field-header-actions">
+            <WritingAssistant key="improvements" documentId={document.id} rowVersion={state.document.rowVersion} field="IMPROVEMENTS" label="Oportunidades de mejora" value={draft.improvements} disabled={busy || !state.document.editable} onApply={text => setDraft({ ...draft, improvements: text })} />
+          </div>
+        </div>
+        <textarea id={'report-improvements-' + document.id} rows={12} maxLength={50000} value={draft.improvements} onChange={e => setDraft({ ...draft, improvements: e.target.value })} />
+      </>}
       {step === 5 && <><p className="field-help">Complete esta sección únicamente cuando existan delegaciones o gestiones aplicables.</p>{draft.delegations.map((d, i) => <div className="delegation-card" key={i}>
         <div className="delegation-card-header">
           <h3>Delegación {i + 1}</h3>

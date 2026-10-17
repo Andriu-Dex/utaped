@@ -24,7 +24,31 @@ function fields(plan: WorkPlan): DraftFields {
 export type WorkPlanSection = 'general' | 'content' | 'matrix' | 'attachments' | 'preparation' | 'signing' | 'rounds' | 'execution' | 'history'
 const validSections: WorkPlanSection[] = ['general', 'content', 'matrix', 'attachments', 'preparation', 'signing', 'rounds', 'execution', 'history']
 
-export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBack, onDirtyChange, onDocumentOpen }: { initial: WorkPlan; onDocumentOpen?: (document: WorkPlan) => void; initialSection?: string | null; onSectionChange?: (section: WorkPlanSection) => void; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
+export const INSTITUTIONAL_JUSTIFICATION =
+  'El presente Plan de Trabajo se formula en cumplimiento del Estatuto de la Universidad Técnica de Ambato, ' +
+  'el Reglamento de Carrera y Escalafón del Personal Académico del Sistema de Educación Superior y los lineamientos ' +
+  'académicos de la Facultad de Ingeniería en Sistemas, Electrónica e Industrial (FISEI). Su propósito es articular, ' +
+  'planificar y ejecutar de manera eficiente las actividades académicas, pedagógicas, de tutoría, investigación ' +
+  'formativa y vinculación con la sociedad correspondientes al presente período académico, garantizando el rigor ' +
+  'formativo y la calidad institucional.'
+
+export function WorkPlanEditor({
+  initial,
+  defaultJustification,
+  initialSection,
+  onSectionChange,
+  onBack,
+  onDirtyChange,
+  onDocumentOpen,
+}: {
+  initial: WorkPlan
+  defaultJustification?: string
+  onDocumentOpen?: (document: WorkPlan) => void
+  initialSection?: string | null
+  onSectionChange?: (section: WorkPlanSection) => void
+  onBack: () => void
+  onDirtyChange: (dirty: boolean) => void
+}) {
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
   const [section, setSectionState] = useState<WorkPlanSection>(() => {
@@ -37,7 +61,7 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
     onSectionChange?.(next)
   }
   const [previewFocus, setPreviewFocus] = useState<'JUSTIFICATION' | 'OBJECTIVE'>('JUSTIFICATION')
-  const [previewPane, setPreviewPane] = useState<'edit' | 'preview'>('edit')
+  const [previewPane, setPreviewPane] = useState<'split' | 'edit' | 'preview'>('split')
   const [editorWidth, setEditorWidth] = useState(46)
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
@@ -46,6 +70,16 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
   const [lifecycleDirty, setLifecycleDirty] = useState(false)
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
   const dirty = contentDirty || lifecycleDirty
+
+  async function restoreJustification() {
+    const template = defaultJustification?.trim() || INSTITUTIONAL_JUSTIFICATION
+    if (draft.justification.trim() && draft.justification.trim() !== template.trim()) {
+      const confirmed = await confirmAction('¿Desea reemplazar el texto actual de la justificación por la plantilla institucional modelo?')
+      if (!confirmed) return
+    }
+    change('justification', template)
+    setNotice('Plantilla institucional cargada en el formulario.')
+  }
   const dirtyRef = useRef(dirty)
   useEffect(() => { dirtyRef.current = dirty; onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
@@ -116,7 +150,62 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
-      {section === 'content' && plan.editable && <div className="live-preview-controls"><div className="live-preview-tabs" role="group" aria-label="Vista del contenido"><button type="button" className="secondary" aria-pressed={previewPane === 'edit'} onClick={() => setPreviewPane('edit')}>Editar contenido</button><button type="button" className="secondary" aria-pressed={previewPane === 'preview'} onClick={() => setPreviewPane('preview')}>Previsualizar documento</button></div><label className="live-preview-width">Ancho del formulario<input type="range" min="38" max="58" value={editorWidth} onChange={e => setEditorWidth(Number(e.target.value))} /></label></div>}
+      {section === 'content' && plan.editable && (
+        <div className="live-preview-controls">
+          <div className="live-preview-tabs" role="group" aria-label="Vista del contenido">
+            <button
+              type="button"
+              className={`preview-tab-btn ${previewPane === 'split' ? 'is-active' : ''}`}
+              aria-pressed={previewPane === 'split'}
+              onClick={() => setPreviewPane('split')}
+              title="Ver editor y documento lado a lado"
+            >
+              <Icon name="columns" size={15} />
+              <span>Vista dividida</span>
+            </button>
+            <button
+              type="button"
+              className={`preview-tab-btn ${previewPane === 'edit' ? 'is-active' : ''}`}
+              aria-pressed={previewPane === 'edit'}
+              onClick={() => setPreviewPane('edit')}
+              title="Ampliar editor a ancho completo para redactar cómodamente"
+            >
+              <Icon name="edit" size={15} />
+              <span>Editar contenido</span>
+            </button>
+            <button
+              type="button"
+              className={`preview-tab-btn ${previewPane === 'preview' ? 'is-active' : ''}`}
+              aria-pressed={previewPane === 'preview'}
+              onClick={() => setPreviewPane('preview')}
+              title="Ver el documento A4 generado"
+            >
+              <Icon name="document" size={15} />
+              <span>Previsualizar documento</span>
+            </button>
+          </div>
+          {previewPane === 'split' && (
+            <div className="live-preview-width-wrapper">
+              <label className="live-preview-width" htmlFor={'editor-width-' + plan.id}>
+                <span className="live-preview-width-label">
+                  <Icon name="columns" size={14} />
+                  <span>Ancho del formulario:</span>
+                  <strong>{editorWidth}%</strong>
+                </span>
+                <input
+                  id={'editor-width-' + plan.id}
+                  aria-label="Ancho del formulario"
+                  type="range"
+                  min="38"
+                  max="58"
+                  value={editorWidth}
+                  onChange={e => setEditorWidth(Number(e.target.value))}
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
       <div className={section === 'content' && plan.editable ? 'live-preview-layout' : undefined} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}><div className="live-preview-editor">
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy}>
         {section === 'general' ? <>
@@ -124,17 +213,80 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
           <label>Unidad institucional<input maxLength={200} readOnly={!!plan.scopeId} value={draft.institutionalUnit} onChange={e => change('institutionalUnit', e.target.value)} /></label>
           <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
         </> : <>
-          <label htmlFor={'justification-' + plan.id}>Justificación</label><textarea id={'justification-' + plan.id} onFocus={() => setPreviewFocus('JUSTIFICATION')} rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} />
-          <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="JUSTIFICATION" label="Justificación" value={draft.justification} disabled={busy || !plan.editable || conflict} onApply={text => change('justification', text)} />
-          <label htmlFor={'objective-' + plan.id}>Objetivo</label><textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
-          <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="OBJECTIVE" label="Objetivo" value={draft.objective} disabled={busy || !plan.editable || conflict} onApply={text => change('objective', text)} />
+          <div className="field-header-row">
+            <label htmlFor={'justification-' + plan.id}>Justificación</label>
+            <div className="field-header-actions">
+              {plan.editable && (
+                <button
+                  type="button"
+                  className="template-action-btn"
+                  onClick={restoreJustification}
+                  title={draft.justification.trim() ? 'Restaurar plantilla institucional oficial' : 'Cargar plantilla institucional'}
+                  aria-label="Restaurar plantilla institucional de Justificación"
+                >
+                  <Icon name="refresh" size={13} />
+                  <span>{draft.justification.trim() ? 'Restaurar texto institucional' : 'Cargar plantilla institucional'}</span>
+                </button>
+              )}
+              <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="JUSTIFICATION" label="Justificación" value={draft.justification} disabled={busy || !plan.editable || conflict} onApply={text => change('justification', text)} />
+            </div>
+          </div>
+          <textarea id={'justification-' + plan.id} onFocus={() => setPreviewFocus('JUSTIFICATION')} rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} />
+          <div className="field-header-row">
+            <label htmlFor={'objective-' + plan.id}>Objetivo</label>
+            <div className="field-header-actions">
+              <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="OBJECTIVE" label="Objetivo" value={draft.objective} disabled={busy || !plan.editable || conflict} onApply={text => change('objective', text)} />
+            </div>
+          </div>
+          <textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
           <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
         </>}
         <div className="document-step-actions">
-          {section === 'content' && <button type="button" className="secondary" disabled={busy} onClick={() => setSection('general')}>← Información general</button>}
-          <button disabled={!dirty || conflict}>{busy ? 'Guardando…' : 'Guardar borrador'}</button>
-          {section === 'general' && <button type="button" className="secondary" disabled={busy} onClick={() => setSection('content')}>Siguiente: Contenido →</button>}
-          {section === 'content' && <button type="button" className="secondary" disabled={dirty || busy} onClick={() => setSection('matrix')}>Siguiente: Actividades y matriz →</button>}
+          <div className="step-save-row">
+            <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
+              {dirty ? '• Hay cambios sin guardar' : '• Contenido sincronizado'}
+            </span>
+            <button
+              disabled={!dirty || conflict}
+              className={dirty ? 'primary-save-btn' : 'secondary'}
+            >
+              <Icon name="check" size={14} />
+              <span>{busy ? 'Guardando…' : 'Guardar borrador'}</span>
+            </button>
+          </div>
+          <div className="step-pagination-row">
+            {section === 'content' ? (
+              <button
+                type="button"
+                className="secondary step-prev-btn"
+                disabled={busy}
+                onClick={() => setSection('general')}
+              >
+                ← Información general
+              </button>
+            ) : <span className="step-nav-spacer" />}
+            {section === 'general' && (
+              <button
+                type="button"
+                className="secondary step-next-btn"
+                disabled={busy}
+                onClick={() => setSection('content')}
+              >
+                Siguiente: Contenido →
+              </button>
+            )}
+            {section === 'content' && (
+              <button
+                type="button"
+                className="secondary step-next-btn"
+                disabled={dirty || busy}
+                onClick={() => setSection('matrix')}
+                title={dirty ? 'Guarda el borrador antes de continuar al siguiente paso' : undefined}
+              >
+                Siguiente: Actividades y matriz →
+              </button>
+            )}
+          </div>
         </div>
       </fieldset></form></div>
       {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>

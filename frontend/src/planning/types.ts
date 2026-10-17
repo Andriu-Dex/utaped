@@ -11,5 +11,6 @@ export interface PlanOptions {
   periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean; status: 'ACTIVE' | 'CLOSED' }[]
   singlePlanPerScope: boolean; enforcePreparationWindow: boolean
   scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean; suggestedTitle: string }[]
+  defaultJustification?: string
 }
 export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt'>[]; total: number; page: number; size: number }

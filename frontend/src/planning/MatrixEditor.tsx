@@ -67,59 +67,328 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     if (!saved) return null
     const available = saved.catalogs.filter(c => c.kind === (key === 'resources' ? 'RESOURCE' : 'MEANS') && (c.active || row[key].some(v => v.catalogId === c.id)))
     const other = row[key].find(c => c.catalogId === null)
-    return <fieldset className="choice-group"><legend>{title}</legend>
-      <div className="choice-chip-grid">
-        {available.map(c => <label className={'choice-chip' + (row[key].some(v => v.catalogId === c.id) ? ' is-selected' : '')} key={c.id}>
-          <input type="checkbox" aria-label={row[key].find(v => v.catalogId === c.id)?.label || c.label} checked={row[key].some(v => v.catalogId === c.id)} onChange={e => toggleChoice(row, key, c.id, e.target.checked)} />
-          <span>{row[key].find(v => v.catalogId === c.id)?.label || c.label}</span>
-          {key === 'means' && <small className="status-badge doc-type-pill">{(row[key].find(v => v.catalogId === c.id)?.evidenceKind ?? c.evidenceKind) === 'URL' ? 'Enlace HTTPS' : 'PDF'}</small>}
-          {!c.active ? ' (inactivo)' : ''}
-        </label>)}
-        <label className={'choice-chip' + (other ? ' is-selected' : '')}><input type="checkbox" checked={!!other} onChange={e => toggleChoice(row, key, null, e.target.checked)} /><span>Otro</span></label>
-      </div>
-      {other && <><label>Descripción de Otro ({title})<input data-other="true" aria-invalid={!other.other?.trim()} aria-describedby={attempted && !other.other?.trim() ? `${row.id}-${key}-error` : undefined} maxLength={500} value={other.other ?? ''} onChange={e => update(row.id, { [key]: row[key].map(c => c.catalogId === null ? { ...c, other: e.target.value, label: null } : c) })} /></label>{attempted && !other.other?.trim() && <span className="error" id={`${row.id}-${key}-error`}>Escriba una descripción.</span>}</>}
-      <p className="choice-count">{row[key].filter(c => c.catalogId !== null || c.other?.trim()).length} seleccionados</p>
-    </fieldset>
+    const count = row[key].filter(c => c.catalogId !== null || c.other?.trim()).length
+
+    return (
+      <fieldset className="choice-group" aria-label={title}>
+        <div className="choice-group-header">
+          <span className="choice-group-title">{title}</span>
+          <span className={'choice-count-badge' + (count > 0 ? ' has-selected' : '')}>
+            {count} {count === 1 ? 'seleccionado' : 'seleccionados'}
+          </span>
+        </div>
+        <div className="choice-chip-grid">
+          {available.map(c => {
+            const isSelected = row[key].some(v => v.catalogId === c.id)
+            const resolvedLabel = row[key].find(v => v.catalogId === c.id)?.label || c.label
+            const evidenceKind = (row[key].find(v => v.catalogId === c.id)?.evidenceKind ?? c.evidenceKind)
+            return (
+              <label
+                className={'choice-chip' + (isSelected ? ' is-selected' : '')}
+                key={c.id}
+                title={resolvedLabel}
+              >
+                <input
+                  type="checkbox"
+                  aria-label={resolvedLabel}
+                  checked={isSelected}
+                  onChange={e => toggleChoice(row, key, c.id, e.target.checked)}
+                />
+                <span className="chip-label">{resolvedLabel}</span>
+                {key === 'means' && (
+                  <small className={'status-badge doc-type-pill' + (evidenceKind === 'URL' ? ' is-url' : '')}>
+                    {evidenceKind === 'URL' ? 'Enlace HTTPS' : 'PDF'}
+                  </small>
+                )}
+                {!c.active ? ' (inactivo)' : ''}
+              </label>
+            )
+          })}
+          <label className={'choice-chip choice-chip-other' + (other ? ' is-selected' : '')}>
+            <input
+              type="checkbox"
+              aria-label={'Otro (' + title + ')'}
+              checked={!!other}
+              onChange={e => toggleChoice(row, key, null, e.target.checked)}
+            />
+            <span className="chip-label">+ Otro</span>
+          </label>
+        </div>
+        {other && (
+          <div className="choice-other-field animate-reveal">
+            <label>
+              <span>Descripción de Otro ({title}):</span>
+              <input
+                data-other="true"
+                aria-invalid={!other.other?.trim()}
+                aria-describedby={attempted && !other.other?.trim() ? `${row.id}-${key}-error` : undefined}
+                maxLength={500}
+                placeholder={'Describa el ' + (key === 'resources' ? 'recurso' : 'medio de verificación') + ' específico…'}
+                value={other.other ?? ''}
+                onChange={e => update(row.id, { [key]: row[key].map(c => c.catalogId === null ? { ...c, other: e.target.value, label: null } : c) })}
+              />
+            </label>
+            {attempted && !other.other?.trim() && (
+              <span className="error" id={`${row.id}-${key}-error`}>Escriba una descripción.</span>
+            )}
+          </div>
+        )}
+      </fieldset>
+    )
   }
-  return <section><button className="secondary" disabled={busy} onClick={back}>Volver al Plan</button><span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span><h1>Actividades y matriz T1</h1><p role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
-    {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
-    <p>Elaborado por: {saved.elaboratedBy}</p>
-    <form ref={formRef} onSubmit={save}><fieldset disabled={busy || !saved.editable}><label>Fuente de la matriz<input maxLength={500} value={draft.source} onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }} /></label>
-      <ActionForm label="Agregar actividad" disabled={busy || !saved.editable} dirty={!!catalogId || !!otherTitle} onCancel={() => { setCatalogId(''); setOtherTitle('') }}><div className="card"><h2>Seleccionar actividades</h2><label>Actividad del catálogo<select value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Otra actividad</option>{saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => <option key={d.id} value={d.id}>{categoryLabels[d.category]} · {d.title}</option>)}</select></label>
-        {!catalogId && <label>Título de Otra actividad<input maxLength={500} value={otherTitle} onChange={e => setOtherTitle(e.target.value)} /></label>}<button type="button" disabled={draft.activities.length >= 100} onClick={add}>Agregar actividad</button></div></ActionForm>
-      {draft.activities.length === 0 && <p>No hay actividades seleccionadas.</p>}
-      {draft.activities.map((row, index) => <section className="card activity-card" key={row.id} aria-label={`Actividad ${index + 1}`}>
-        <div className="activity-card-header">
-          <div className="activity-header-meta">
-            <span className="activity-index-pill">#{index + 1}</span>
-            <div>
-              <h2>{index + 1}. {row.title}</h2>
-              <div className="activity-tags">
-                <span className="status-badge doc-type-pill">{categoryLabels[row.category]}</span>
-                {row.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+
+  return (
+    <section className="matrix-workspace">
+      <div className="matrix-topbar">
+        <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
+          <Icon name="arrow" size={14} style={{ transform: 'rotate(180deg)' }} />
+          <span>Volver al Plan</span>
+        </button>
+        <div className="matrix-topbar-meta">
+          <span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span>
+          <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
+            {dirty ? '• Tiene cambios sin guardar.' : '• Sin cambios pendientes.'}
+          </span>
+        </div>
+      </div>
+
+      <header className="matrix-main-header">
+        <div className="matrix-title-group">
+          <h1>Actividades y matriz T1</h1>
+          <p className="matrix-subtitle">
+            Planificación operativa y articulación institucional: configure actividades, cronograma, integrantes responsables, recursos y medios de verificación.
+          </p>
+        </div>
+        <div className="matrix-summary-pill">
+          <Icon name="document" size={15} />
+          <span><strong>{draft.activities.length}</strong> {draft.activities.length === 1 ? 'actividad' : 'actividades'}</span>
+          <span className="dot-sep">·</span>
+          <span className="matrix-author-pill">Elaborador: <strong>{saved.elaboratedBy}</strong></span>
+        </div>
+      </header>
+
+      {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
+
+      <form ref={formRef} onSubmit={save}>
+        <fieldset disabled={busy || !saved.editable}>
+          <div className="matrix-source-card">
+            <div className="matrix-source-header">
+              <label htmlFor="matrix-source">
+                <span className="matrix-field-label">Fuente de la matriz</span>
+                <span className="matrix-field-desc">Especifique el marco de referencia u origen normativo institucional (ej: Plan Operativo Anual 2026, Comisión de Vinculación, etc.)</span>
+              </label>
+            </div>
+            <input
+              id="matrix-source"
+              className="matrix-source-input"
+              maxLength={500}
+              placeholder="Escriba la fuente o marco normativo institucional…"
+              value={draft.source}
+              onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }}
+            />
+          </div>
+
+          <div className="matrix-add-section">
+            <ActionForm
+              label="Agregar actividad"
+              disabled={busy || !saved.editable}
+              dirty={!!catalogId || !!otherTitle}
+              onCancel={() => { setCatalogId(''); setOtherTitle('') }}
+            >
+              <div className="card matrix-add-card">
+                <div className="section-heading">
+                  <span className="section-icon"><Icon name="plus" /></span>
+                  <div>
+                    <span className="section-kicker">CATÁLOGO INSTITUCIONAL</span>
+                    <h2>Seleccionar actividades</h2>
+                  </div>
+                </div>
+                <label>
+                  Actividad del catálogo
+                  <select value={catalogId} onChange={e => setCatalogId(e.target.value)}>
+                    <option value="">Otra actividad</option>
+                    {saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => (
+                      <option key={d.id} value={d.id}>
+                        {categoryLabels[d.category]} · {d.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!catalogId && (
+                  <label>
+                    Título de Otra actividad
+                    <input
+                      maxLength={500}
+                      placeholder="Ingrese la denominación de la actividad…"
+                      value={otherTitle}
+                      onChange={e => setOtherTitle(e.target.value)}
+                    />
+                  </label>
+                )}
+                <button type="button" disabled={draft.activities.length >= 100} onClick={add}>
+                  <Icon name="plus" size={15} />
+                  <span>Agregar actividad</span>
+                </button>
               </div>
+            </ActionForm>
+          </div>
+
+          {draft.activities.length === 0 && (
+            <div className="empty-state-notice">
+              <Icon name="document" size={24} />
+              <p>No hay actividades seleccionadas. Use el botón «Agregar actividad» para incorporar actividades al Plan.</p>
+            </div>
+          )}
+
+          {draft.activities.map((row, index) => (
+            <section className="card activity-card" key={row.id} aria-label={`Actividad ${index + 1}`}>
+              <header className="activity-card-header">
+                <div className="activity-header-meta">
+                  <span className="activity-index-pill">#{index + 1}</span>
+                  <div>
+                    <h2>{index + 1}. {row.title}</h2>
+                    <div className="activity-tags">
+                      <span className="status-badge doc-type-pill">{categoryLabels[row.category]}</span>
+                      {row.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+                    </div>
+                  </div>
+                </div>
+                {!row.mandatory && (
+                  <button
+                    type="button"
+                    className="secondary danger-btn"
+                    title="Quitar actividad"
+                    aria-label={'Quitar ' + row.title}
+                    onClick={() => {
+                      setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== row.id) })
+                      setNotice('')
+                    }}
+                  >
+                    <Icon name="trash" size={14} />
+                    <span>Quitar actividad</span>
+                  </button>
+                )}
+              </header>
+
+              {!row.catalogId && (
+                <div className="activity-custom-title-field">
+                  <label>
+                    Título de la actividad
+                    <input required maxLength={500} value={row.title} onChange={e => update(row.id, { title: e.target.value })} />
+                  </label>
+                </div>
+              )}
+
+              <div className="activity-dates-block">
+                <div className="activity-block-title">
+                  <Icon name="calendar" size={15} />
+                  <span>Plazo de ejecución</span>
+                  <small>(Período académico: {saved.periodStartsOn?.split('-').reverse().join('/')} — {saved.periodEndsOn?.split('-').reverse().join('/')})</small>
+                </div>
+                <div className="activity-dates-inputs">
+                  <label>
+                    <span>Desde</span>
+                    <input
+                      type="date"
+                      required
+                      min={saved.periodStartsOn}
+                      max={saved.periodEndsOn}
+                      value={row.startsOn ?? ''}
+                      onChange={e => update(row.id, { startsOn: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    <span>Hasta</span>
+                    <input
+                      type="date"
+                      required
+                      min={row.startsOn || saved.periodStartsOn}
+                      max={saved.periodEndsOn}
+                      value={row.endsOn ?? ''}
+                      onChange={e => update(row.id, { endsOn: e.target.value })}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <fieldset className="choice-group" aria-label="Responsables">
+                <div className="choice-group-header">
+                  <span className="choice-group-title">Responsables</span>
+                  <div className="choice-group-header-right">
+                    <span className="choice-count-badge">
+                      {row.responsibleIds.length} {row.responsibleIds.length === 1 ? 'responsable' : 'responsables'} seleccionados
+                    </span>
+                    <button
+                      type="button"
+                      className="secondary select-all-btn"
+                      onClick={() => update(row.id, { responsibleIds: saved.members.map(m => m.id), collective: false })}
+                    >
+                      <Icon name="users" size={13} />
+                      <span>Seleccionar todos</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="choice-chip-grid">
+                  {saved.members.map(member => (
+                    <label className={'choice-chip' + (row.responsibleIds.includes(member.id) ? ' is-selected' : '')} key={member.id}>
+                      <input
+                        type="checkbox"
+                        checked={row.responsibleIds.includes(member.id)}
+                        onChange={e => update(row.id, {
+                          responsibleIds: e.target.checked
+                            ? [...row.responsibleIds, member.id]
+                            : row.responsibleIds.filter(id => id !== member.id),
+                          collective: false
+                        })}
+                      />
+                      <span className="chip-label">{member.name}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {row.responsibleIds.some(id => !saved.members.some(m => m.id === id)) && (
+                  <p className="error">Hay responsables que ya no están disponibles. Vuelva a seleccionarlos.</p>
+                )}
+
+                <div className="collective-toggle-card">
+                  <label className="check collective-toggle">
+                    <input
+                      type="checkbox"
+                      disabled={!saved.collectiveLabel || row.responsibleIds.length !== saved.members.length || !saved.members.length}
+                      checked={row.collective}
+                      onChange={e => update(row.id, { collective: e.target.checked })}
+                    />
+                    <span>Usar denominación colectiva{saved.collectiveLabel ? ': ' + saved.collectiveLabel : ' (sin configurar)'}</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div className="activity-catalogs-grid">
+                {choices(row, 'resources', 'Recursos')}
+                {choices(row, 'means', 'Medios de verificación')}
+              </div>
+            </section>
+          ))}
+
+          <div className="matrix-footer-actions">
+            <div className="matrix-footer-status">
+              <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
+                {dirty ? '• Hay cambios sin guardar en la matriz' : '• Matriz sincronizada con el servidor'}
+              </span>
+            </div>
+            <div className="matrix-footer-buttons">
+              <button
+                disabled={conflict}
+                className={dirty ? 'primary-save-btn' : 'secondary'}
+              >
+                <Icon name="check" size={15} />
+                <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
+              </button>
             </div>
           </div>
-          {!row.mandatory && <button type="button" className="secondary danger-btn" title="Quitar actividad" aria-label={'Quitar ' + row.title} onClick={() => { setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== row.id) }); setNotice('') }}><Icon name="trash" size={15} />Quitar actividad</button>}
-        </div>
-        {!row.catalogId && <label>Título de la actividad<input required maxLength={500} value={row.title} onChange={e => update(row.id, { title: e.target.value })} /></label>}
-        <div className="grid"><label>Desde<input type="date" required min={saved.periodStartsOn} max={saved.periodEndsOn} value={row.startsOn ?? ''} onChange={e => update(row.id, { startsOn: e.target.value })} /></label><label>Hasta<input type="date" required min={row.startsOn || saved.periodStartsOn} max={saved.periodEndsOn} value={row.endsOn ?? ''} onChange={e => update(row.id, { endsOn: e.target.value })} /></label></div>
-        <fieldset className="choice-group"><legend>Responsables</legend>
-          <div className="choice-toolbar">
-            <button type="button" className="secondary" onClick={() => update(row.id, { responsibleIds: saved.members.map(m => m.id), collective: false })}>
-              <Icon name="users" size={14} /> Seleccionar todos
-            </button>
-          </div>
-          <div className="choice-chip-grid">
-            {saved.members.map(member => <label className={'choice-chip' + (row.responsibleIds.includes(member.id) ? ' is-selected' : '')} key={member.id}><input type="checkbox" checked={row.responsibleIds.includes(member.id)} onChange={e => update(row.id, { responsibleIds: e.target.checked ? [...row.responsibleIds, member.id] : row.responsibleIds.filter(id => id !== member.id), collective: false })} />{member.name}</label>)}
-          </div>
-          {row.responsibleIds.some(id => !saved.members.some(m => m.id === id)) && <p className="error">Hay responsables que ya no están disponibles. Vuelva a seleccionarlos.</p>}
-          <label className="check collective-toggle"><input type="checkbox" disabled={!saved.collectiveLabel || row.responsibleIds.length !== saved.members.length || !saved.members.length} checked={row.collective} onChange={e => update(row.id, { collective: e.target.checked })} />Usar denominación colectiva{saved.collectiveLabel ? ': ' + saved.collectiveLabel : ' (sin configurar)'}</label>
-          <p className="choice-count">{row.responsibleIds.length} responsables seleccionados</p>
         </fieldset>
-        <div className="grid">{choices(row, 'resources', 'Recursos')}{choices(row, 'means', 'Medios de verificación')}</div>
-      </section>)}
-      <button disabled={conflict}>{busy ? 'Guardando…' : 'Guardar matriz'}</button></fieldset></form>
+      </form>
     {!!draft.activities.length && <section className="card matrix-summary-card">
       <div className="section-heading">
         <span className="section-icon"><Icon name="document" /></span>
@@ -156,4 +425,5 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>
+  )
 }

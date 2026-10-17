@@ -14,6 +14,7 @@ import { CertificateAdministration } from './CertificateAdministration'
 import { adminPages, type AdminPage } from './adminNavigation'
 import { Icon } from '../shared/Icon'
 import { OrganizationAdministration } from './OrganizationAdministration'
+import { TemplateAdministration } from './TemplateAdministration'
 
 export function Administration({ page, periods, initialGroupId, onChange, onDirtyChange }: { page: AdminPage; periods: import('../shared/api').Period[]; initialGroupId?: string; onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -24,11 +25,11 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
   const createDirty = dirtyCreates.length > 0
   function markCreate(key: string) { setDirtyCreates(current => current.includes(key) ? current : [...current, key]) }
   const [importDirty, setImportDirty] = useState(false)
-  const [flowDirty, setFlowDirty] = useState(false); const [profileDirty, setProfileDirty] = useState(false)
+  const [flowDirty, setFlowDirty] = useState(false); const [profileDirty, setProfileDirty] = useState(false); const [templateDirty, setTemplateDirty] = useState(false)
   const [reload, setReload] = useState(0); const [directoryQuery, setDirectoryQuery] = useState('')
   const [memberSearch, setMemberSearch] = useState(''); const [memberOptions, setMemberOptions] = useState<User[]>([])
   useEffect(() => { let active = true; api<{ items: User[] }>('/admin/users/directory?' + new URLSearchParams({ query: memberSearch, active: 'true', size: '100' })).then(data => { if (active) setMemberOptions(data.items) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [memberSearch, reload])
-  useEffect(() => { onDirtyChange(createDirty || flowDirty || profileDirty || importDirty); return () => onDirtyChange(false) }, [createDirty, flowDirty, profileDirty, importDirty, onDirtyChange])
+  useEffect(() => { onDirtyChange(createDirty || flowDirty || profileDirty || importDirty || templateDirty); return () => onDirtyChange(false) }, [createDirty, flowDirty, profileDirty, importDirty, templateDirty, onDirtyChange])
   useEffect(() => {
     let cancelled = false
     if (memberGroup) api<Member[]>('/groups/' + memberGroup + '/members').then(data => { if (!cancelled) { setMembers(data); setLoadedMemberGroup(memberGroup) } }).catch(e => { if (!cancelled) setError(e.message) })
@@ -126,6 +127,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     </section>
 
     </>}
+    {page === 'templates' && <TemplateAdministration onDirtyChange={setTemplateDirty} />}
     {(page === 'resources' || page === 'activities' || page === 'holidays') && <PlanningAdministration groups={groups} section={page} onDirtyChange={setProfileDirty} />}
     {page === 'workflows' && <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />}
     {page === 'audit' && <AuditViewer />}

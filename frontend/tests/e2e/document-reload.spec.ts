@@ -151,6 +151,7 @@ test('page reload preserves active document editor and step without resetting to
   // A browser history transition must not silently discard an editor draft.
   await page.getByRole('button', { name: 'Editar Plan de Trabajo: Grupo Reload ' + suffix + ' · Versión 1.0', exact: true }).click()
   await page.getByRole('button', { name: /2\s*Contenido/ }).click()
+  const savedJustification = await page.getByRole('textbox', { name: 'Justificación', exact: true }).inputValue()
   await page.getByRole('textbox', { name: 'Justificación', exact: true }).fill('Texto local que debe conservarse')
   await page.evaluate(() => {
     const current = location.href
@@ -160,7 +161,7 @@ test('page reload preserves active document editor and step without resetting to
   await withConfirmation(page, false, async () => { await page.goBack() })
   await expect(page.getByRole('textbox', { name: 'Justificación', exact: true })).toHaveValue('Texto local que debe conservarse')
   await expect(page).toHaveURL(/step=content/)
-  await page.getByRole('textbox', { name: 'Justificación', exact: true }).fill('')
+  await page.getByRole('textbox', { name: 'Justificación', exact: true }).fill(savedJustification)
   await page.getByRole('button', { name: 'Volver a documentos', exact: true }).click()
 
   // 11. Navigate to Inicio

@@ -52,15 +52,86 @@ export function DraftPreview({ targetDocId, rowVersion, title, institutionalUnit
   const stale = result?.fingerprint !== fingerprint
   const image = result ? 'data:image/png;base64,' + result.value.image : undefined
   return <aside className="draft-preview-panel" aria-label="Previsualización simultánea del Plan">
-    <header className="draft-preview-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">DOCUMENTO A4 · T1</span><h3>Así queda tu Plan</h3></div><span className="status-badge">Borrador</span></header>
-    <p className="draft-preview-explanation">Vista de edición con tus textos actuales. Guardar borrador conserva los cambios; la firma se realiza en el paso 6.</p>
-    <div className="draft-preview-toolbar"><span role="status">{busy ? 'Actualizando vista…' : stale ? 'Cambios pendientes de previsualizar' : dirty ? 'Vista actualizada · cambios sin guardar' : 'Vista del contenido guardado'}</span><button type="button" className="secondary" onClick={() => setRetry(n => n + 1)} disabled={busy}>Actualizar vista</button><button type="button" className="secondary" disabled={!result || busy || stale} onClick={() => dialog.current?.showModal()} title="Ampliar página" aria-label="Ampliar página"><Icon name="eye" size={18} /></button></div>
+    <header className="draft-preview-heading">
+      <div className="preview-heading-title">
+        <span className="section-icon"><Icon name="document" size={18} /></span>
+        <div>
+          <span className="section-kicker">DOCUMENTO A4 · T1</span>
+          <h3>Vista simultánea</h3>
+        </div>
+      </div>
+      <div className="draft-preview-actions">
+        <button type="button" className="secondary" onClick={() => setRetry(n => n + 1)} disabled={busy} title="Actualizar vista">
+          <Icon name="refresh" size={14} />
+          <span>Actualizar vista</span>
+        </button>
+        <button
+          type="button"
+          className="secondary icon-only"
+          disabled={!result || busy || stale}
+          onClick={() => dialog.current?.showModal()}
+          title="Ampliar página"
+          aria-label="Ampliar página"
+        >
+          <Icon name="maximize" size={16} />
+        </button>
+      </div>
+    </header>
+
+    <div className="draft-preview-toolbar">
+      <span role="status" className="preview-status-pill">
+        <span className={`status-dot ${busy ? 'is-busy' : stale ? 'is-stale' : 'is-synced'}`} aria-hidden="true" />
+        {busy ? 'Actualizando vista…' : stale ? 'Cambios pendientes de previsualizar' : dirty ? 'Vista actualizada · cambios sin guardar' : 'Vista del contenido guardado'}
+      </span>
+      <span className="preview-paper-spec">A4 Oficial · FISEI</span>
+    </div>
+
     {error && <><Toast message={error} onDismiss={() => setError('')} /><p className="field-help">La vista no se actualizó. Tus textos permanecen en el formulario. Pulsa Actualizar vista para reintentar.</p></>}
+
     {result ? <>
-      <DocumentPageNavigator page={result.value.pageIndex} pageCount={result.value.pages.length} disabled={busy || stale} onChange={setRequestedPage} references={[{ page: result.value.sections.JUSTIFICATION, label: 'Justificación' }, { page: result.value.sections.OBJECTIVE, label: 'Objetivo' }]} />
-      <div className={'draft-preview-desk' + (stale ? ' is-stale' : '')} aria-busy={busy}><img src={image} alt={'Página ' + (result.value.pageIndex + 1) + ' del borrador A4 del Plan'} /></div>
-      <dialog ref={dialog} className="draft-preview-dialog" aria-labelledby="draft-preview-expanded-title"><header><h2 id="draft-preview-expanded-title">Borrador A4 · Página {result.value.pageIndex + 1}</h2><button type="button" className="secondary" onClick={() => dialog.current?.close()}>Cerrar vista ampliada</button></header><img src={image} alt={'Página ampliada ' + (result.value.pageIndex + 1) + ' del borrador'} /></dialog>
+      <DocumentPageNavigator
+        page={result.value.pageIndex}
+        pageCount={result.value.pages.length}
+        disabled={busy || stale}
+        onChange={setRequestedPage}
+        references={[
+          { page: result.value.sections.JUSTIFICATION, label: 'Justificación' },
+          { page: result.value.sections.OBJECTIVE, label: 'Objetivo' }
+        ]}
+        compact
+      />
+      <div className={'draft-preview-desk' + (stale ? ' is-stale' : '')} aria-busy={busy}>
+        <div
+          className="draft-preview-paper-wrapper"
+          onClick={() => { if (!busy && !stale) dialog.current?.showModal() }}
+          title="Clic para ampliar documento"
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => { if (!busy && !stale && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); dialog.current?.showModal() } }}
+        >
+          <img src={image} alt={'Página ' + (result.value.pageIndex + 1) + ' del borrador A4 del Plan'} />
+          <div className="paper-zoom-hint" aria-hidden="true">
+            <Icon name="maximize" size={14} />
+            <span>Clic para ampliar</span>
+          </div>
+        </div>
+      </div>
+      <dialog ref={dialog} className="draft-preview-dialog" aria-labelledby="draft-preview-expanded-title">
+        <header>
+          <div className="dialog-header-title">
+            <span className="section-icon"><Icon name="document" size={18} /></span>
+            <div>
+              <span className="section-kicker">VISTA AMPLIADA DE INSPECCIÓN</span>
+              <h2 id="draft-preview-expanded-title">Borrador A4 · Página {result.value.pageIndex + 1} de {result.value.pages.length}</h2>
+            </div>
+          </div>
+          <button type="button" className="secondary" onClick={() => dialog.current?.close()}>Cerrar vista ampliada</button>
+        </header>
+        <div className="dialog-scroll-area">
+          <img src={image} alt={'Página ampliada ' + (result.value.pageIndex + 1) + ' del borrador'} />
+        </div>
+      </dialog>
     </> : <div className="draft-preview-empty"><Icon name="document" size={40} /><strong>Tu documento, a la vista</strong><p>La previsualización aparecerá aquí. Puedes seguir escribiendo mientras se prepara.</p></div>}
-    <p className="field-help">Las secciones incompletas pueden quedar vacías. La preparación final comprobará los requisitos antes de firmar.</p>
+    <p className="field-help">Vista previa dinámica. Las secciones incompletas se completan al avanzar en los siguientes pasos.</p>
   </aside>
 }
