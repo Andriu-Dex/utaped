@@ -5,6 +5,7 @@ export const adminPages = [
   { id: 'groups', label: 'Grupos y pertenencias', title: 'Grupos y pertenencias', icon: 'users' },
   { id: 'organization', label: 'Carreras y ámbitos', title: 'Organización institucional', icon: 'users' },
   { id: 'periods', label: 'Períodos académicos', title: 'Períodos académicos', icon: 'calendar' },
+  { id: 'templates', label: 'Plantillas', title: 'Plantillas institucionales', icon: 'document' },
   { id: 'activities', label: 'Catálogo de actividades', title: 'Catálogo de actividades', icon: 'document' },
   { id: 'resources', label: 'Recursos y medios', title: 'Recursos y medios', icon: 'document' },
   { id: 'holidays', label: 'Feriados y restricciones', title: 'Feriados y restricciones', icon: 'calendar' },

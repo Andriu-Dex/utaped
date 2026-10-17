@@ -98,6 +98,7 @@ export function WorkPlans({
       <WorkPlanEditor
         key={selected.id}
         initial={selected}
+        defaultJustification={options?.defaultJustification}
         initialSection={initialStep}
         onSectionChange={sec => onStepChange?.(sec)}
         onDirtyChange={onDirtyChange}

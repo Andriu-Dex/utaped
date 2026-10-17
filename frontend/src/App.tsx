@@ -84,6 +84,16 @@ export default function App() {
   const canUseDocuments = account?.systemRole !== 'ADMIN' || documentGroups.length > 0
   const administrative = account?.systemRole === 'ADMIN' && (workspace === 'administration' || !canUseDocuments)
   const selectDocument = useCallback((docId: string | null, step?: string | null) => { setDocumentTarget(docId); setDocumentStep(step ?? null) }, [])
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('utaped-sidebar-collapsed') === 'true' } catch { return false }
+  })
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem('utaped-sidebar-collapsed', String(next)) } catch {}
+      return next
+    })
+  }, [])
 
   async function switchWorkspace(next: 'administration' | 'documents') {
     if (next === 'documents' && !canUseDocuments) return
@@ -200,10 +210,24 @@ export default function App() {
   if (loading) return <main className="connecting"><Brand /><p role="status">Conectando con UTAPED…</p></main>
   if (!account) return <>{error && <Toast message={error} />}<Access onLogin={a => {setError('');setAccount(a)}} /></>
 
-  function navButton(target: View, label: string, icon: IconName) { return <button key={target} aria-current={view === target ? 'page' : undefined} onClick={() => navigate(target)}><Icon name={icon} /><span>{label}</span>{view === target && <span className="nav-active-dot" />}</button> }
+  function navButton(target: View, label: string, icon: IconName) { return <button key={target} title={label} aria-current={view === target ? 'page' : undefined} onClick={() => navigate(target)}><Icon name={icon} /><span>{label}</span>{view === target && <span className="nav-active-dot" />}</button> }
 
-  return <div className="shell"><a className="skip-link" href="#main-content">Ir al contenido</a>
-    <aside className="sidebar"><Brand /><p className="sidebar-section-label">ESPACIO INSTITUCIONAL</p>
+  return <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}><a className="skip-link" href="#main-content">Ir al contenido</a>
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <Brand compact={sidebarCollapsed} />
+        <button
+          type="button"
+          className="sidebar-toggle-btn"
+          onClick={toggleSidebar}
+          title={sidebarCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
+          aria-label={sidebarCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
+          aria-expanded={!sidebarCollapsed}
+        >
+          <Icon name="sidebar" size={18} />
+        </button>
+      </div>
+      {!sidebarCollapsed && <p className="sidebar-section-label">ESPACIO INSTITUCIONAL</p>}
       {!account.mustChangePassword && <nav className="primary-nav" aria-label="Navegación principal">
         {administrative ? <>{navButton('home','Panel general','home')}{adminPages.map(page => navButton(page.id,page.label,page.icon))}</> : <>{navButton('home','Inicio','home')}{navButton('documents','Documentos','document')}{navButton('reviews','Revisión documental','eye')}{navButton('my-organization','Mi organización','users')}{navButton('reporting','Reportes de gestión','document')}</>}
         {navButton('password','Mi contraseña','lock')}
@@ -211,9 +235,29 @@ export default function App() {
       {!account.mustChangePassword && account.systemRole === 'ADMIN' && canUseDocuments && <label className="workspace-context">Espacio de trabajo<select aria-label="Espacio de trabajo" value={administrative ? 'administration' : 'documents'} onChange={event => switchWorkspace(event.target.value as 'administration' | 'documents')}><option value="administration">Administración</option><option value="documents">Espacio documental</option></select></label>}
       <div className="sidebar-institution"><span className="institution-mark">UTA</span><div><strong>FISEI</strong><small>Universidad Técnica de Ambato</small></div></div>
       <div className="sidebar-account"><span className="avatar">{account.displayName.trim().split(/\s+/).slice(0,2).map(word => word[0]).join('')}</span><div><strong>{account.displayName}</strong><small>{account.systemRole === 'ADMIN' ? 'Administrador' : 'Usuario institucional'}</small></div></div>
-      <button className="logout-button" onClick={logout}><Icon name="logout" />Cerrar sesión</button>
+      <button className="logout-button" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={logout}><Icon name="logout" /><span>Cerrar sesión</span></button>
     </aside>
-    <div className="workspace"><header className="topbar"><div><span className="breadcrumb">UTAPED <span>/</span> {account.mustChangePassword ? 'Primer acceso' : view === 'home' && administrative ? 'Panel general administrativo' : titles[view]}</span><span className="workspace-caption">Gestión Documental Académica</span></div><div className="topbar-actions"><span className="institution-pill">FISEI · UTA</span>{!account.mustChangePassword && <NotificationIndicator onOpenTarget={openNotification} />}</div></header>
+    <div className="workspace">
+      <header className="topbar">
+        <div className="topbar-branding">
+          {sidebarCollapsed && (
+            <button
+              type="button"
+              className="sidebar-toggle-btn topbar-toggle-btn"
+              onClick={toggleSidebar}
+              title="Expandir menú lateral"
+              aria-label="Expandir menú lateral"
+            >
+              <Icon name="sidebar" size={18} />
+            </button>
+          )}
+          <div>
+            <span className="breadcrumb">UTAPED <span>/</span> {account.mustChangePassword ? 'Primer acceso' : view === 'home' && administrative ? 'Panel general administrativo' : titles[view]}</span>
+            <span className="workspace-caption">Gestión Documental Académica</span>
+          </div>
+        </div>
+        <div className="topbar-actions"><span className="institution-pill">FISEI · UTA</span>{!account.mustChangePassword && <NotificationIndicator onOpenTarget={openNotification} />}</div>
+      </header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
         {view === 'my-organization' && !administrative ? <ContextualOrganization onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard administrative={administrative} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={page => navigate(page)} /> : <>

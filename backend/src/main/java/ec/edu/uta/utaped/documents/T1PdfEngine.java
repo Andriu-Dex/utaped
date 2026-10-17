@@ -44,6 +44,11 @@ public class T1PdfEngine {
         }
         if(found<0) throw new IOException("No se encontró la sección generada: "+section);return found;
     }
+    public Map<String,Integer> contentSections(byte[] bytes) {
+        try(var pdf=Loader.loadPDF(bytes)) {
+            return Map.of("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"),"OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
+        } catch(IOException error) { throw new IllegalStateException("No se localizaron las secciones del borrador.",error); }
+    }
     public Generated generate(Snapshot snapshot) {
         try {
             Map<String,Integer> numbers=new LinkedHashMap<>();byte[] nativeBytes=null;

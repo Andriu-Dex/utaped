@@ -37,12 +37,13 @@ public class WorkPlanService {
         JOIN app_user u ON u.id=COALESCE(s.principal_user_id,w.teacher_id)
         WHERE
         """+ACCESS;
-    public WorkPlanService(JdbcTemplate jdbc,Accounts accounts,AuditService audit,
+    private final DocumentTemplateService templateService;
+    public WorkPlanService(JdbcTemplate jdbc,Accounts accounts,AuditService audit,DocumentTemplateService templateService,
         @Value("${app.planning.single-plan-per-scope:false}") boolean singlePlan,
         @Value("${app.planning.enforce-preparation-window:true}") boolean enforceWindow,
         @Value("${app.planning.time-zone:America/Guayaquil}") String zone,
         @Value("${app.planning.allow-legacy-creation:false}") boolean legacyCreation) {
-        this.jdbc=jdbc;this.accounts=accounts;this.audit=audit;this.singlePlan=singlePlan;this.enforceWindow=enforceWindow;this.zone=ZoneId.of(zone);this.legacyCreation=legacyCreation;
+        this.jdbc=jdbc;this.accounts=accounts;this.audit=audit;this.templateService=templateService;this.singlePlan=singlePlan;this.enforceWindow=enforceWindow;this.zone=ZoneId.of(zone);this.legacyCreation=legacyCreation;
     }
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
@@ -72,7 +73,7 @@ public class WorkPlanService {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
             return new PeriodOption(rs.getObject("id",UUID.class),rs.getString("name"),start,end,rs.getString("status").equals("ACTIVE")&&(!enforceWindow||within(start,end)),rs.getString("status"));
         });
-        return new Options(groups,periods,true,enforceWindow,scopes);
+        return new Options(groups,periods,true,enforceWindow,scopes,templateService.getJustificationOrDefault("T1"));
     }
     public Plan get(UUID targetDocId,String email) {
         return jdbc.query(SELECT+" AND w.id=?",this::map,accounts.current(email).id(),targetDocId).stream().findFirst()
@@ -126,7 +127,7 @@ public class WorkPlanService {
         requireWindow(data.periodId());UUID id=UUID.randomUUID();
         if(data.scopeId()==null && requestedTitle.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Indique un título para el documento anterior.");
         String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career);
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career,templateService.getJustificationOrDefault("T1"));
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
         audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
     }

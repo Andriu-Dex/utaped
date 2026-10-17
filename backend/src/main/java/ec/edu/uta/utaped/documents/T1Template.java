@@ -103,6 +103,13 @@ public class T1Template {
             List<String> values=List.of(a.title(),date(a.startsOn()),date(a.endsOn()),a.responsibleDisplay(),String.join("\n",a.resources()),String.join("\n",a.means()));
             for(int i=0;i<6;i++) cell(cells.get(i),values.get(i));table.appendChild(row);
         }
+        // An unfinished draft still needs a body row beneath the merged institutional headers.
+        // Completed documents keep the exact existing matrix composition.
+        if(s.activities().isEmpty()) {
+            var row=(Element)rowTemplate.cloneNode(true);removeAll(row,"trHeight");removeAll(row,"cantSplit");
+            for(var blank:children(row,"tc")) cell(blank,"");
+            table.appendChild(row);
+        }
         result.add(table);text(source.get(43),"Fuente: "+s.matrixSource());text(source.get(44),"Elaborado por: "+s.elaboratedBy());result.add(source.get(43));result.add(source.get(44));
         if(s.privacyNoticeEnabled()) result.add(paragraph(source.get(47),"Nota: Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales."));
         result.add(source.get(48));
