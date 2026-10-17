@@ -28,9 +28,9 @@ docker compose -f compose.test.yml run --rm tests mvn -B -q test
 python -m unittest discover -s scripts/tests -v
 ```
 
-Desde frontend: `npm run lint`, `npm run build`, `npx playwright test --config=playwright.config.ts` y `npx playwright test --config=playwright.sample.config.ts`, con sus entornos aislados levantados y variables de Mailpit según las guías. Las pruebas no reinician la DB principal.
+Desde frontend: `npm run lint` y `npm run build`. Desde la raíz: `./scripts/test-e2e.ps1` y `./scripts/test-acceptance.ps1`. Los lanzadores crean bases independientes nuevas, esperan la API y limpian sus recursos al terminar; `-KeepOnFailure` conserva únicamente el entorno fallido para diagnóstico. No ejecutar la configuración sample directamente ni contra utaped-sample. Comprobar los guardas con `node --test scripts/tests/test-acceptance-isolation.mjs`. [Guía](../development/sample-environment.md).
 
-La suite sample controla la disponibilidad/respuesta de redacción para evitar llamadas facturables incluso si `.env.sample` tiene un proveedor real activado. No convierte el runtime productivo en una simulación. La protección de CAPTCHA solo se sustituye en fixtures identificadas por el nombre exacto de DB/proyecto.
+La suite sample controla la disponibilidad/respuesta de redacción para evitar llamadas facturables sin cargar las variables privadas del entorno manual. No convierte el runtime productivo en una simulación. La protección de CAPTCHA solo se sustituye en fixtures identificadas por el nombre exacto de DB/proyecto.
 
 ## Aceptación institucional y operación
 

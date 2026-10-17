@@ -38,3 +38,4 @@ services:
 volumes:
   maven-cache:
     name: utaped-maven-cache
+    external: true

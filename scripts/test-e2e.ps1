@@ -1,4 +1,6 @@
+﻿param([switch]$KeepOnFailure)
 $ErrorActionPreference = 'Stop'
+$failed = $true
 $root = Split-Path $PSScriptRoot -Parent
 Push-Location $root
 try {
@@ -29,10 +31,18 @@ MAIL_SMTP_PORT=21025
     $mailPort = ($entries | Where-Object { $_ -match '^MAIL_UI_PORT=' }) -replace '^MAIL_UI_PORT=', ''
     $env:E2E_API_URL = "http://127.0.0.1:$apiPort"
     $env:E2E_MAIL_URL = "http://127.0.0.1:$mailPort"
+    docker compose -p utaped-e2e --env-file .env.e2e --profile web down --volumes
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo limpiar el entorno E2E anterior.' }
     docker compose -p utaped-e2e --env-file .env.e2e up --build -d
     if ($LASTEXITCODE -ne 0) { throw 'E2E stack did not start' }
-    # Only the dedicated test project's throttle rows are cleared for repeatable validation.
-    docker compose -p utaped-e2e --env-file .env.e2e exec -T db psql -U utaped -d utaped -c 'DELETE FROM auth_throttle'
+    $ready = $false
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
+        try {
+            $response = Invoke-WebRequest -UseBasicParsing "$env:E2E_API_URL/api/auth/csrf" -TimeoutSec 3
+            if ($response.StatusCode -eq 200) { $ready = $true; break }
+        } catch { Start-Sleep -Seconds 2 }
+    }
+    if (-not $ready) { throw 'El backend E2E no estuvo disponible a tiempo.' }
     Push-Location frontend
     try {
         npm ci
@@ -42,8 +52,14 @@ MAIL_SMTP_PORT=21025
         npm run test:e2e
         $result = $LASTEXITCODE
     } finally { Pop-Location }
-    exit $result
+    $failed = $result -ne 0
 } finally {
-    docker compose -p utaped-e2e --env-file .env.e2e --profile web down
+    if ($failed -and $KeepOnFailure) { Write-Warning 'Se conserva utaped-e2e para diagnóstico.' }
+    else {
+        docker compose -p utaped-e2e --env-file .env.e2e --profile web down --volumes
+        if ($LASTEXITCODE -ne 0) { throw 'No se pudo limpiar utaped-e2e.' }
+    }
     Pop-Location
 }
+
+exit $result

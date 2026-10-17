@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:e2e:sample": "playwright test --config playwright.sample.config.ts",
+    "test:e2e:sample": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/test-acceptance.ps1",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {

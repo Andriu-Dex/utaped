@@ -1,3 +1,4 @@
+import { acceptanceBaseURL } from './tests/sample/acceptance-environment'
 import { defineConfig } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/sample',
@@ -5,7 +6,7 @@ export default defineConfig({
   workers: 1,
   timeout: 240000,
   use: {
-    baseURL: process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431',
+    baseURL: acceptanceBaseURL,
     viewport: { width: 1440, height: 1000 },
     actionTimeout: 15000,
     navigationTimeout: 15000,

@@ -35,19 +35,11 @@ La suite exige `current_database() = utaped_test` antes de limpiar sus fixtures.
 Resultados JSON locales ignorados por Git: `backend/target/load-qa/long-documents-http.json` y `evidence-and-signing.json`. Capturas ignoradas: `frontend/test-results/captcha-audio-desktop.png` y `captcha-audio-tablet-dark.png`.
 
 ```powershell
-cd frontend
-npm run lint
-npm run build
-$env:E2E_MAIL_URL="http://127.0.0.1:28025"
-npx playwright test --config=playwright.config.ts
-npx playwright test --config=playwright.sample.config.ts
-# Audio con build/Nginx del entorno ficticio:
-$env:E2E_BASE_URL="http://127.0.0.1:64431"
-npx playwright test --config=playwright.config.ts captcha-audio.spec.ts
-Remove-Item Env:E2E_BASE_URL
+./scripts/test-e2e.ps1
+./scripts/test-acceptance.ps1
 ```
 
-Arrancar previamente los entornos aislados de [desarrollo](../development/sample-environment.md). Requiere Docker, dependencias npm/Chromium instaladas y configuración privada de fixtures; no copiar credenciales en reportes.
+Los lanzadores preparan sus entornos aislados y los limpian al terminar. La aceptación recorre el build/Nginx en 24431; el acceso/audio general usa Vite E2E en 15173. No apuntar las pruebas a la URL manual 64431. Se requiere Docker y dependencias npm/Chromium instaladas; no copiar credenciales en reportes. Para integración completa usar `./scripts/test-backend.ps1`, que prepara la caché Maven externa y limpia contenedores/volúmenes desechables. Los comandos Maven específicos anteriores requieren preparar esa caché con `docker volume create utaped-maven-cache` y finalizar con `docker compose -f compose.test.yml down --volumes`.
 
 ## Aceptación pendiente
 

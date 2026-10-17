@@ -22,15 +22,17 @@ jobs:
         working-directory: frontend
       - run: npm run lint && npm run build
         working-directory: frontend
+      - run: node --test scripts/tests/test-acceptance-isolation.mjs
   backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+      - run: docker volume create utaped-maven-cache
       - run: docker compose -f compose.test.yml up --abort-on-container-exit --exit-code-from tests --attach tests
       - if: always()
-        run: docker compose -f compose.test.yml down
+        run: docker compose -f compose.test.yml down --volumes
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -47,4 +49,4 @@ jobs:
       - run: npm ci && npx playwright install --with-deps chromium && npm run test:e2e
         working-directory: frontend
       - if: always()
-        run: docker compose -p utaped-e2e --env-file .env.e2e down
+        run: docker compose -p utaped-e2e --env-file .env.e2e down --volumes

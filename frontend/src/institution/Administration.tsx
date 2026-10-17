@@ -1,3 +1,5 @@
+import { confirmAction } from '../shared/confirm-action'
+import { ActionForm } from '../shared/ActionForm'
 import { UserImportWorkspace } from './UserImportWorkspace'
 import { DeadlineNotices } from './DeadlineNotices'
 import { PeriodControl } from './PeriodControl'
@@ -58,7 +60,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     {page === 'organization' && <OrganizationAdministration groups={groups} periods={periods} onDirtyChange={setProfileDirty} onChange={onChange} />}
     {page === 'users' && <>
     {!showCreateUser ? <div style={{ margin: '20px 0' }}><button onClick={() => setShowCreateUser(true)}>+ Agregar Usuario</button></div> :
-    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" disabled={busy} onClick={() => { if (!dirtyCreates.includes('/admin/users') || window.confirm('Hay cambios sin guardar. ¿Cancelar la creación?')) { setShowCreateUser(false); setVisible(false); setDirtyCreates(keys => keys.filter(key => key !== '/admin/users')) } }}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => void submit(e, '/admin/users')}>
+    <section className="card animate-reveal"><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}><h3 style={{ margin: 0 }}>Crear usuario</h3><button type="button" className="secondary" disabled={busy} onClick={async () => { if (!dirtyCreates.includes('/admin/users') || (await confirmAction('Hay cambios sin guardar. ¿Cancelar la creación?'))) { setShowCreateUser(false); setVisible(false); setDirtyCreates(keys => keys.filter(key => key !== '/admin/users')) } }}>Cancelar</button></div><form onChange={() => markCreate('/admin/users')} onSubmit={e => void submit(e, '/admin/users')}>
       <div className="grid"><label>Nombres<input name="firstNames" required maxLength={80} /></label><label>Apellidos<input name="lastNames" required maxLength={80} /></label></div><label>Correo<input type="email" name="email" required maxLength={254} /></label>
       <label>Identificador de acceso<input name="username" aria-label="Identificador de acceso" maxLength={100} pattern="[a-zA-Z0-9][a-zA-Z0-9._\-]{0,99}" autoCapitalize="none" autoComplete="off" /><small className="field-help">Opcional. Si se deja vacío se deriva del correo; debe ser único.</small></label>
       <label>Permiso del sistema<select name="systemRole"><option value="USER">Usuario</option><option value="ADMIN">Administrador</option></select></label>
@@ -70,15 +72,15 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     {page === 'groups' && <>
     <section className="card animate-reveal">
       <div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">GESTIÓN DE GRUPOS</span><h2>Crear grupo</h2></div></div>
-      <form onChange={() => markCreate('/admin/groups')} onSubmit={e => submit(e, '/admin/groups')} style={{ marginTop: 16 }}>
+      <ActionForm label="Crear grupo" dirty={dirtyCreates.includes('/admin/groups')} disabled={busy} onCancel={() => setDirtyCreates(keys => keys.filter(key => key !== '/admin/groups'))}><form onChange={() => markCreate('/admin/groups')} onSubmit={e => submit(e, '/admin/groups')} style={{ marginTop: 16 }}>
         <div className="grid"><label>Nombre del grupo<input name="name" required maxLength={160} placeholder="Ej: Comisión de Vinculación con la Sociedad" /></label><label>Tipo<select name="groupType"><option value="COMMISSION">Comisión</option><option value="UNIT">Unidad</option><option value="CLUB">Club</option><option value="OTHER">Otro</option></select></label></div>
         <button disabled={busy}><Icon name="users" size={16} />Crear grupo</button>
-      </form>
+      </form></ActionForm>
     </section>
 
     <section className="card">
       <div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">ASIGNACIÓN DE PERTENENCIAS</span><h2>Asignar integrante</h2></div></div>
-      <form onChange={() => markCreate('membership')} onSubmit={e => submit(e, 'membership')} style={{ marginTop: 16 }}>
+      <ActionForm label="Asignar integrante" dirty={dirtyCreates.includes('membership')} disabled={busy} onCancel={() => setDirtyCreates(keys => keys.filter(key => key !== 'membership'))}><form onChange={() => markCreate('membership')} onSubmit={e => submit(e, 'membership')} style={{ marginTop: 16 }}>
         <div className="grid">
           <label>Grupo<select aria-label="Grupo" required name="groupId"><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
           <label>Buscar usuario para asignar<input maxLength={200} placeholder="Buscar por nombre o correo…" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} /></label>
@@ -89,7 +91,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
           <label>Rol de pertenencia<select name="membershipRole"><option value="MEMBER">Miembro</option><option value="COORDINATOR">Coordinador</option></select></label>
         </div>
         <button disabled={busy}><Icon name="check" size={16} />Asignar integrante</button>
-      </form>
+      </form></ActionForm>
     </section>
 
     <section className="card">
@@ -108,7 +110,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     <DeadlineNotices /><PeriodControl periods={periods} onChange={onChange} onDirtyChange={setProfileDirty} />
     <section id="admin-periods" className="card admin-block animate-reveal">
       <div className="section-heading"><span className="section-icon"><Icon name="calendar" /></span><div><span className="section-kicker">ORGANIZACIÓN ACADÉMICA</span><h2>Crear período</h2></div></div>
-      <form onChange={() => markCreate('/admin/periods')} onSubmit={e => submit(e, '/admin/periods')} style={{ marginTop: 16 }}>
+      <ActionForm label="Crear período" dirty={dirtyCreates.includes('/admin/periods')} disabled={busy} onCancel={() => setDirtyCreates(keys => keys.filter(key => key !== '/admin/periods'))}><form onChange={() => markCreate('/admin/periods')} onSubmit={e => submit(e, '/admin/periods')} style={{ marginTop: 16 }}>
         <label>Nombre del período<input name="name" required maxLength={120} placeholder="Ej: Octubre 2026 - Febrero 2027" /></label>
         <div style={{ margin: '20px 0', padding: '16px', background: 'var(--blue-100)', borderRadius: '10px', border: '1px solid var(--border)' }}>
           <span className="eyebrow" style={{ display: 'block', marginBottom: 8, color: 'var(--teal-700)', fontWeight: 700 }}>FECHAS DEL CICLO ACADÉMICO</span>
@@ -120,7 +122,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
           {([['preparationStartsOn','Inicio de elaboración'],['preparationEndsOn','Fin de elaboración'],['reviewStartsOn','Inicio de revisión'],['reviewEndsOn','Fin de revisión']] as const).map(([name,label]) => <label key={name}>{label}<input required type="date" name={name} /></label>)}
         </div>
         <button disabled={busy}><Icon name="calendar" size={16} />Crear período</button>
-      </form>
+      </form></ActionForm>
     </section>
 
     </>}

@@ -1,5 +1,15 @@
 # Requisitos de UTAPED
 
+## Fuentes oficiales y datos de desarrollo — 2026-10-17
+
+El propietario confirma que los archivos de docs/templates contienen información institucional oficial. Deben guiar carreras, unidades/comisiones, actividades y estructura documental; la excepción expresa es el tamaño Carta de una referencia: la salida T1/T2 utiliza A4. Las cuentas y asignaciones de desarrollo siguen siendo ficticias. Los registros actuales son ejemplos reemplazables y se autoriza limpiar/reconstruir el entorno de desarrollo, con respaldo previo para operaciones masivas. Esta aclaración actualiza la conservación de los antiguos escenarios de pruebas; no autoriza borrar una futura base institucional.
+
+
+## Entorno diario y aislamiento de pruebas — 2026-10-16
+
+UT-DEV-110, CONFIRMADO-PROYECTO: un entorno manual persistente (utaped-sample existente), PostgreSQL/backend/Mailpit con Vite o frontend Docker opcional sobre los mismos datos. Conservar volúmenes y credenciales; no fusionar bases ni borrar históricos de revisión. Aceptación automatizada exclusivamente en utaped-acceptance desechable, sin fallback manual; E2E/integración bajo demanda con limpieza y opción KeepOnFailure. Vite sigue el puerto diario y permite API_TARGET explícito. Puerto institucional 64430 sin cambios. [Guía](docs/development/sample-environment.md).
+
+
 Estado: línea base inicial para revisión; no constituye aprobación institucional nueva.
 
 ## Fuente vigente desde el 2026-10-06
@@ -32,6 +42,10 @@ La autorización de la tanda amplia implementa las reglas del Plan Maestro con d
 Las prórrogas son individuales y auditadas. Se implementa como configuración técnica inicial un máximo de tres días calendario dentro del período; cómputo institucional definitivo pendiente. T2 usa inicialmente la ventana del período académico completo y exige explicar la falta de evidencia. La descarga final depende de aprobación. Los agregados se limitan a estados/cobertura; no se inventa una fórmula institucional de avance físico.
 
 La firma/envío antes bloqueada ahora se habilita en documentos por ámbito con ejecutores individuales explícitos. Una etapa colegiada sin representante sigue bloqueada. Los PDFs históricos no se regeneran ni se convierten automáticamente al nuevo flujo. Cierre de períodos, ZIP, agentes, redacción asistida, evidencias externas y capacidades restantes siguen registrados en [estado actual](implementation-status.md).
+
+## Creación documental — decisión del propietario del 2026-10-14
+
+UT-UI-100 / UT-DOC-100, CONFIRMADO-PROYECTO, P1: recuperar el selector Plan de Trabajo / Informe y proponer nombre institucional automático según grupo/unidad. El Informe exige selección de Plan aprobado del responsable principal y conserva la familia existente. Permitir ajustar el título del Plan; no renombrar históricos ni inventar códigos individuales. Fuente: corrección autorizada por el propietario tras revisar Plan Maestro §42 y prototipos. Aceptación: nombres sin entrada manual, búsqueda/paginación autorizada, descarte confirmado, conservación al filtrar, rechazo de Plan no aprobado y reapertura sin duplicado. [Contrato](docs/api/document-circuit.md), [reporte](docs/reports/2026-10-14-01-document-creation-options.md).
 
 ## Fuentes y alcance
 
@@ -88,6 +102,18 @@ Entrega 2026-10-12: asistencia de redacción para JUSTIFICATION/OBJECTIVE de T1 
 - [Decisiones pendientes](docs/decisions/open-questions.md).
 - [Catálogo trazable de 122 registros fuente](docs/requirements/catalog.md), con [datos estructurados](docs/requirements/catalog.json).
 - [Reconciliación con el mockup](docs/validation/reconciliation.md), [permisos](docs/validation/permission-matrix.md) y [plan de validación](docs/validation/validation-plan.md).
+
+## Formularios mediante acciones explícitas — 2026-10-14
+
+| ID | Descripción y fuente | Estado / prioridad / aceptación |
+|---|---|---|
+| UT-UI-110 | El propietario exige que creación, edición y acciones comiencen cerradas y se abran con un botón. Aclaración expresa: acceso y filtros visibles. | CONFIRMADO-PROYECTO, P1. Entrar al módulo no abre formularios mutadores; Crear/Editar/Adjuntar/Firmar/Observar los abre expresamente. Cancelar o Escape confirma cambios pendientes, conserva datos si se rechaza y devuelve el foco al cerrar. Los errores conservan los datos. Los editores abiertos por Editar o pasos del asistente ya cumplen. PC/tabletas, ambos temas. |
+| UT-UI-111 | El propietario confirma modal para Crear documento; editores extensos en pantalla. | CONFIRMADO-PROYECTO, P1. Modal nombrado, fondo sin interacción, foco contenido, Tab/Shift+Tab, Escape/cancelación protegidos, foco restaurado y desplazamiento interno en PC/tabletas; conserva selector T1/T2 y permisos. |
+| UT-DEV-111 | El propietario fija Julio–Diciembre 2026 y solicita datos de templates para los ejemplos. | CONFIRMADO-PROYECTO, P1. Catálogo trazable de carreras/grupos/actividades/recursos/medios, semillas idempotentes en utaped_dev, cuentas ficticias y sin importar firmas/aprobaciones. Fechas del semestre fijas; ventanas de prueba diferenciadas de calendario oficial. |
+| UT-UI-112 | El propietario exige toasts o modales de confirmación, sin alertas simples. | CONFIRMADO-PROYECTO, P1. Sin llamadas alert/confirm/prompt en el frontend productivo; decisiones asíncronas antes de modificar/descartar, cancelación conserva datos, teclado/foco y superposición en ambos temas. Toasts accesibles sobre el modal activo. La protección de recarga/cierre pertenece al navegador, independiente de las acciones internas. |
+| UT-UI-113 | Persistencia de pantalla/documento/paso incorporada en el staged del propietario, revisada el 2026-10-16. | CONFIRMADO-PROYECTO, P1. Recarga restaura último contenido guardado y paso autorizado T1/T2; URL sin credenciales, permisos de servidor conservados y limpieza al cerrar sesión. Atrás/Adelante confirma cambios antes de salir; nueva versión/Informe actualiza identidad en URL. No implica autosalvado de cambios sin guardar. |
+
+Dependencias: permisos, validaciones y protección de navegación existentes; no cambia el contrato backend. Verificación: Playwright general y sample, incluidas apertura, ausencia de campos al entrar, cancelación rechazada/aceptada, teclado, filtros y circuito T1/T2. [Reporte](docs/reports/2026-10-14-02-explicit-form-actions.md).
 
 ## Estados
 

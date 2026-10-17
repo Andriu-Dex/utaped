@@ -1,10 +1,12 @@
+import { acceptanceBaseURL } from './acceptance-environment'
+import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { api, login } from './sample-fixtures'
 
 test('seven roles preserve scope permissions, immutable access and revocation in active sessions', async ({ browser }) => {
   const roles = ['admin', 'principal', 'coordinator', 'member', 'reviewer', 'approver', 'outsider']
-  const contexts = await Promise.all(roles.map(() => browser.newContext({ baseURL: process.env.SAMPLE_BASE_URL || 'http://127.0.0.1:64431', viewport: { width: 1440, height: 1000 } })))
+  const contexts = await Promise.all(roles.map(() => browser.newContext({ baseURL: acceptanceBaseURL, viewport: { width: 1440, height: 1000 } })))
   const pages = await Promise.all(contexts.map(context => context.newPage()))
   const [admin, principal, coordinator, member, reviewer, approver, outsider] = pages
   try {
@@ -17,7 +19,7 @@ test('seven roles preserve scope permissions, immutable access and revocation in
     const scope = await api(admin, '/admin/organization/scopes', 'POST', { groupId: group.id, periodId: period.id, careerId: null })
     for (const index of [1, 2, 3]) await api(admin, '/admin/organization/scopes/' + scope.id + '/members', 'PUT', { userId: actors[index].id, membershipRole: index === 2 ? 'COORDINATOR' : 'MEMBER', positionLabel: '', active: true, rowVersion: 0 })
     await api(admin, '/admin/organization/scopes/' + scope.id + '/principal', 'PUT', { userId: actors[1].id, rowVersion: 0 })
-    await principal.reload(); await principal.getByRole('button', { name: 'Documentos', exact: true }).click(); await principal.getByLabel('Título del nuevo Plan').fill(title); await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id); await principal.getByRole('button', { name: 'Crear borrador', exact: true }).click()
+    await principal.reload(); await principal.getByRole('button', { name: 'Documentos', exact: true }).click(); await openAction(principal, 'Crear documento');await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id); await principal.getByLabel('Título del nuevo Plan').fill(title); await principal.getByRole('button', { name: 'Crear borrador', exact: true }).click()
     await expect(principal.getByRole('heading', { name: title, exact: true })).toBeVisible()
     const doc = (await api(principal, '/work-plans?query=' + encodeURIComponent(title))).items[0]
     await expect(admin.getByRole('button', { name: 'Usuarios', exact: true })).toBeVisible(); await expect(principal.getByRole('button', { name: 'Usuarios', exact: true })).toHaveCount(0)

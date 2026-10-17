@@ -1,5 +1,21 @@
 # Reportes
 
+- [2026-10-17 — PR hacia develop y limpieza de ramas](2026-10-17-02-develop-pr-and-branch-cleanup.md).
+
+- [2026-10-17 — Limpieza de ejemplos y fuentes oficiales](2026-10-17-01-clean-development-examples.md).
+
+- [2026-10-16 — Entorno diario único y pruebas aisladas](2026-10-16-02-single-development-and-isolated-tests.md).
+
+- [2026-10-16 — Revisión visual del staged y propuesta Docker](2026-10-16-01-staged-ui-review-and-docker-plan.md).
+
+- [2026-10-14 — Confirmaciones propias y revisión del staged](2026-10-14-04-custom-confirmations-and-staged-review.md).
+
+- [2026-10-14 — Modal documental y ejemplos institucionales](2026-10-14-03-document-modal-and-reference-seeds.md).
+
+- [2026-10-14 — Formularios mediante acciones explícitas](2026-10-14-02-explicit-form-actions.md).
+
+- [2026-10-14 — Selector documental y nombres automáticos](2026-10-14-01-document-creation-options.md).
+
 - [2026-10-13 — Publicación y PR hacia develop](2026-10-13-02-develop-pull-request-publication.md).
 
 - [2026-10-13 — CAPTCHA accesible y carga documental](2026-10-13-01-accessible-captcha-and-document-load.md).

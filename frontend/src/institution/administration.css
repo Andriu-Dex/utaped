@@ -13,3 +13,42 @@
 .workspace-context { margin: 4px 9px 12px; padding-bottom: 12px; border-bottom: 1px solid #ffffff20; }
 .workspace-context { color: #c6d8e6; font-size: .72rem; }
 .workspace-context select { font-size: .75rem; padding: 8px; }
+
+.user-avatar-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue-100);
+  color: var(--blue-800);
+  font-weight: 700;
+  font-size: 0.78rem;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.role-admin {
+  background: rgba(23, 95, 148, 0.12);
+  color: var(--blue-700);
+  border-color: rgba(23, 95, 148, 0.3);
+  font-weight: 700;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+:root[data-theme='dark'] .user-avatar-badge {
+  background: #1c3852;
+  color: #8ec3ea;
+}
+
+:root[data-theme='dark'] .role-admin {
+  background: rgba(46, 148, 218, 0.2);
+  color: #8ec3ea;
+  border-color: #3b7bb0;
+}

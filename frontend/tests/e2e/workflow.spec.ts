@@ -1,3 +1,5 @@
+import { withConfirmation } from '../confirmation'
+import { openAction } from '../open-action'
 import { solveCaptcha } from './login'
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
@@ -29,22 +31,22 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await page.getByRole('button', { name: 'Crear usuario', exact: true }).click()
   await expect(page.getByRole('cell', { name: person, exact: true })).toBeVisible()
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Grupos y pertenencias', exact: true }).click()
-  await page.getByLabel('Nombre del grupo').fill(group)
+  await openAction(page, 'Crear grupo');await page.getByLabel('Nombre del grupo').fill(group)
   await page.getByRole('button', { name: 'Crear grupo', exact: true }).click()
   const identity = await (await page.request.get('/api/auth/me')).json()
-  await page.getByLabel('Grupo', { exact: true }).selectOption({ label: group })
+  await openAction(page, 'Asignar integrante');await page.getByLabel('Grupo', { exact: true }).selectOption({ label: group })
   await page.getByLabel('Buscar usuario para asignar').fill(environment.BOOTSTRAP_ADMIN_EMAIL)
   await expect(page.getByLabel('Usuario', { exact: true }).locator('option[value="' + identity.id + '"]')).toHaveCount(1)
   await page.getByLabel('Usuario', { exact: true }).selectOption(identity.id)
   await page.getByRole('button', { name: 'Asignar integrante', exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Cambios guardados.' })).toBeVisible()
-  await page.getByLabel('Nombre del grupo').fill('Grupo pendiente sin guardar')
-  page.once('dialog', dialog => dialog.dismiss())
-  await page.getByLabel('Espacio de trabajo', { exact: true }).selectOption('documents')
+  await openAction(page, 'Crear grupo');await page.getByLabel('Nombre del grupo').fill('Grupo pendiente sin guardar')
+
+  await withConfirmation(page, false, async () => { await page.getByLabel('Espacio de trabajo', { exact: true }).selectOption('documents') });
   await expect(page.getByLabel('Nombre del grupo')).toHaveValue('Grupo pendiente sin guardar')
   await expect(page.getByLabel('Espacio de trabajo', { exact: true })).toHaveValue('administration')
-  page.once('dialog', dialog => dialog.accept())
-  await page.getByLabel('Espacio de trabajo', { exact: true }).selectOption('documents')
+
+  await withConfirmation(page, true, async () => { await page.getByLabel('Espacio de trabajo', { exact: true }).selectOption('documents') });
   await expect(page.getByRole('button', { name: 'Documentos', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Usuarios', exact: true })).toHaveCount(0)
   await expect(page.getByLabel('Contexto de grupo')).toContainText(group)
@@ -58,12 +60,12 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await expect(page.getByLabel('Grupo del flujo')).toContainText(group)
   await page.getByLabel('Grupo del flujo').selectOption({ label: group })
   await page.getByLabel('Buscar participantes del flujo').fill('flow-' + suffix + '@example.invalid')
-  await page.getByLabel('Nombre del flujo').fill('Flujo original ' + suffix)
+  await openAction(page, 'Editar flujo');await page.getByLabel('Nombre del flujo').fill('Flujo original ' + suffix)
   await page.getByRole('button', { name: 'Agregar etapa', exact: true }).click()
   const first = page.getByRole('region', { name: 'Etapa 1', exact: true })
   await first.getByLabel('Nombre de la etapa').fill('Revisión técnica')
-  page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Panel general', exact: true }).click()
+
+  await withConfirmation(page, false, async () => { await page.getByRole('button', { name: 'Panel general', exact: true }).click() });
   await expect(first.getByLabel('Nombre de la etapa')).toHaveValue('Revisión técnica')
   await page.getByRole('button', { name: 'Guardar borrador del flujo', exact: true }).click()
   await expect(page.getByText('Revisión técnica: seleccione personas, sin rol ni órgano colegiado.', { exact: true })).toBeVisible()
@@ -79,7 +81,7 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await page.getByRole('button', { name: 'Guardar borrador del flujo', exact: true }).click()
   await page.getByRole('button', { name: 'Guardar como configuración vigente', exact: true }).click()
   await expect(page.getByText('Revisión de configuración vigente: 1', { exact: true })).toBeVisible()
-  await page.getByLabel('Nombre del flujo').fill('Flujo cambiado ' + suffix)
+  await openAction(page, 'Editar flujo');await page.getByLabel('Nombre del flujo').fill('Flujo cambiado ' + suffix)
   await page.getByRole('button', { name: 'Subir etapa 2', exact: true }).click()
   await page.getByRole('button', { name: 'Guardar borrador del flujo', exact: true }).click()
   await page.getByRole('button', { name: 'Guardar como configuración vigente', exact: true }).click()
@@ -90,18 +92,18 @@ test('versioned workflows preserve history and require explicit recipients', asy
   await page.getByRole('heading', { name: 'Plantillas de flujo por grupo', exact: true }).scrollIntoViewIfNeeded()
   await page.screenshot({ path: 'test-results/workflow-tablet.png', fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
-  page.once('dialog', dialog => dialog.accept())
-  await page.getByRole('button', { name: 'Deshabilitar configuración', exact: true }).click()
+
+  await withConfirmation(page, true, async () => { await page.getByRole('button', { name: 'Deshabilitar configuración', exact: true }).click() });
   await expect(page.getByText('Sin configuración vigente.', { exact: true })).toBeVisible()
   await page.getByLabel('Tipo documental del flujo').selectOption('T2')
-  await expect(page.getByLabel('Nombre del flujo')).toHaveValue('')
+  await openAction(page, 'Editar flujo'); await expect(page.getByLabel('Nombre del flujo')).toHaveValue('')
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Usuarios', exact: true }).click()
   await page.getByLabel('Buscar usuarios', { exact: true }).fill('flow-' + suffix + '@example.invalid')
   await page.getByRole('button', { name: 'Buscar usuarios', exact: true }).click()
   await page.getByRole('button', { name: 'Editar perfil de ' + person, exact: true }).click()
   await page.getByLabel('Apellidos del usuario').fill(String(suffix) + ' actualizado')
-  page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Panel general', exact: true }).click()
+
+  await withConfirmation(page, false, async () => { await page.getByRole('button', { name: 'Panel general', exact: true }).click() });
   await expect(page.getByLabel('Apellidos del usuario')).toHaveValue(String(suffix) + ' actualizado')
   await page.getByRole('button', { name: 'Guardar perfil', exact: true }).click()
   await expect(page.getByRole('cell', { name: person + ' actualizado', exact: true })).toBeVisible()
