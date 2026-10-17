@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-17 — Previsualización simultánea T1](2026-10-17-03-simultaneous-t1-preview.md).
+
 - [2026-10-17 — PR hacia develop y limpieza de ramas](2026-10-17-02-develop-pr-and-branch-cleanup.md).
 
 - [2026-10-17 — Limpieza de ejemplos y fuentes oficiales](2026-10-17-01-clean-development-examples.md).

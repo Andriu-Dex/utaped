@@ -31,6 +31,40 @@ public class ArtifactService {
     private final ec.edu.uta.utaped.planning.EvidenceService evidence;
     private final JsonMapper json=JsonMapper.builder().build();
     private final Semaphore generation=new Semaphore(1),rendering=new Semaphore(2);
+    private record PreviewCache(Generated document,Map<String,Integer> sections,long expiresAt) {}
+    // Small process-local cache only: no editable previews in storage, artifacts or signing history.
+    private final Map<String,PreviewCache> draftPreviews=new LinkedHashMap<>();
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public DraftView draftPreview(UUID id,String email,DraftPreview input) {
+        var saved=snapshot(id,email);var plan=saved.plan();
+        if(!plan.editable() || !plan.documentState().equals("DRAFT") || !plan.documentType().equals("T1"))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
+        if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences());
+        String key=email+":"+id+":"+hash(draft);PreviewCache cached;
+        synchronized(draftPreviews) {
+            draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
+            cached=draftPreviews.get(key);
+        }
+        if(cached==null) {
+            if(!generation.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra generación en curso. Vuelva a actualizar la vista en unos momentos.");
+            try {
+                if(draft.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum()>450)
+                    throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Los anexos superan el límite de 450 páginas.");
+                var generated=engine.generate(draft);
+                if(generated.pdf().length>12*1024*1024) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El borrador es demasiado grande para la vista simultánea. Use Preparación y previsualización.");
+                cached=new PreviewCache(generated,engine.contentSections(generated.pdf()),System.currentTimeMillis()+120000);
+                synchronized(draftPreviews) {
+                    if(draftPreviews.size()>=2) draftPreviews.remove(draftPreviews.keySet().iterator().next());
+                    draftPreviews.put(key,cached);
+                }
+            } catch(IllegalStateException error) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo actualizar la vista. Sus datos siguen en el formulario; intente nuevamente.",error); }
+            finally { generation.release(); }
+        }
+        int page=input.pageIndex()<0?cached.sections().get(input.section()):input.pageIndex();
+        if(page>=cached.document().pages().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
+        return new DraftView(plan.rowVersion(),cached.document().pages(),cached.sections(),page,Base64.getEncoder().encodeToString(renderPage(cached.document().pdf(),page)));
+    }
     public ArtifactService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
         StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence) {
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.files=files;

@@ -1,6 +1,7 @@
+import { DraftPreview } from './DraftPreview'
 import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import type { WorkPlan } from './types'
 import { MatrixEditor } from './MatrixEditor'
@@ -35,6 +36,9 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
     setSectionState(next)
     onSectionChange?.(next)
   }
+  const [previewFocus, setPreviewFocus] = useState<'JUSTIFICATION' | 'OBJECTIVE'>('JUSTIFICATION')
+  const [previewPane, setPreviewPane] = useState<'edit' | 'preview'>('edit')
+  const [editorWidth, setEditorWidth] = useState(46)
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
@@ -50,7 +54,7 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
     window.addEventListener('beforeunload', preventClose)
     return () => window.removeEventListener('beforeunload', preventClose)
   }, [])
-  function change(name: keyof DraftFields, value: string) { setDraft(current => ({ ...current, [name]: value })); setNotice('') }
+  function change(name: keyof DraftFields, value: string) { if (name === 'justification') setPreviewFocus('JUSTIFICATION'); if (name === 'objective') setPreviewFocus('OBJECTIVE'); setDraft(current => ({ ...current, [name]: value })); setNotice('') }
   async function save(event: FormEvent) {
     event.preventDefault(); setError(''); setNotice(''); setBusy(true)
     try {
@@ -112,15 +116,17 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
+      {section === 'content' && plan.editable && <div className="live-preview-controls"><div className="live-preview-tabs" role="group" aria-label="Vista del contenido"><button type="button" className="secondary" aria-pressed={previewPane === 'edit'} onClick={() => setPreviewPane('edit')}>Editar contenido</button><button type="button" className="secondary" aria-pressed={previewPane === 'preview'} onClick={() => setPreviewPane('preview')}>Previsualizar documento</button></div><label className="live-preview-width">Ancho del formulario<input type="range" min="38" max="58" value={editorWidth} onChange={e => setEditorWidth(Number(e.target.value))} /></label></div>}
+      <div className={section === 'content' && plan.editable ? 'live-preview-layout' : undefined} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}><div className="live-preview-editor">
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
           <label>Unidad institucional<input maxLength={200} readOnly={!!plan.scopeId} value={draft.institutionalUnit} onChange={e => change('institutionalUnit', e.target.value)} /></label>
           <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
         </> : <>
-          <label>Justificación<textarea rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} /></label>
+          <label htmlFor={'justification-' + plan.id}>Justificación</label><textarea id={'justification-' + plan.id} onFocus={() => setPreviewFocus('JUSTIFICATION')} rows={9} maxLength={50000} value={draft.justification} onChange={e => change('justification', e.target.value)} />
           <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="JUSTIFICATION" label="Justificación" value={draft.justification} disabled={busy || !plan.editable || conflict} onApply={text => change('justification', text)} />
-          <label>Objetivo<textarea rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} /></label>
+          <label htmlFor={'objective-' + plan.id}>Objetivo</label><textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
           <WritingAssistant documentId={plan.id} rowVersion={plan.rowVersion} field="OBJECTIVE" label="Objetivo" value={draft.objective} disabled={busy || !plan.editable || conflict} onApply={text => change('objective', text)} />
           <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
         </>}
@@ -130,7 +136,8 @@ export function WorkPlanEditor({ initial, initialSection, onSectionChange, onBac
           {section === 'general' && <button type="button" className="secondary" disabled={busy} onClick={() => setSection('content')}>Siguiente: Contenido →</button>}
           {section === 'content' && <button type="button" className="secondary" disabled={dirty || busy} onClick={() => setSection('matrix')}>Siguiente: Actividades y matriz →</button>}
         </div>
-      </fieldset></form>
+      </fieldset></form></div>
+      {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>
       {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}

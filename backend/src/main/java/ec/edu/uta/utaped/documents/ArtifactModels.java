@@ -20,6 +20,13 @@ public final class ArtifactModels {
     public record Artifact(UUID id,long sourceRowVersion,String sourceHash,String templateVersion,int pageCount,List<Page> pages,List<SignatureSlot> signatureSlots,OffsetDateTime createdAt,boolean current) {}
     public record Blocker(String section,String message) {}
     public record Readiness(long rowVersion,boolean ready,List<Blocker> blockers) {}
+    public record DraftPreview(@NotNull @PositiveOrZero Long rowVersion,
+        @NotNull @Size(max=50000) String justification,@NotNull @Size(max=50000) String objective,
+        @Min(-1) @Max(499) int pageIndex,@NotNull @Pattern(regexp="JUSTIFICATION|OBJECTIVE") String section,
+        @Size(max=200) String title,@Size(max=200) String institutionalUnit,@Size(max=200) String career) {
+        public DraftPreview(Long version,String justification,String objective,int page,String section) { this(version,justification,objective,page,section,null,null,null); }
+    }
+    public record DraftView(long sourceRowVersion,List<Page> pages,java.util.Map<String,Integer> sections,int pageIndex,String image) {}
     public record Generate(@NotNull @PositiveOrZero Long rowVersion) {}
     public record Generated(byte[] pdf,List<Page> pages,List<SignatureSlot> signatureSlots) {}
     public record SignaturePreparation(UUID targetDocId,UUID artifactId,long rowVersion,String pdfHash,boolean artifactCurrent,

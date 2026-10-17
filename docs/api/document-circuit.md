@@ -76,3 +76,8 @@ La selección llama al endpoint existente `POST /api/work-plans/{id}/report`, qu
 La interfaz mantiene seleccionadas las entradas al filtrar la bandeja; al cambiar de tipo u abrir otro documento solicita confirmación si se descartan datos. Carga/error/vacío y navegación de candidatos son explícitos. Se conserva el acceso «Crear o abrir Informe T2» dentro del Plan aprobado.
 
 Los códigos mostrados son de formato `UTA-SGC-A-2-1-P7-T1/T2`. No se genera un consecutivo o código institucional individual sin definición confirmada. No hay migraciones ni variables nuevas; reconstruir backend y frontend para esta entrega.
+
+
+## Vista simultánea de edición T1 — 2026-10-17
+
+POST /api/work-plans/{targetDocId}/artifacts/draft-preview permite visualizar el borrador incompleto y textos locales sin guardarlos. Solo para editor de T1 DRAFT habilitado, con sesión/CSRF y rowVersion vigente. No crea archivos, artefactos ni firmas y no altera la preparación final. Imagen PNG y páginas/secciones reales provienen del motor institucional. [Campos, límites, caché de proceso y UI](../design/simultaneous-preview.md).

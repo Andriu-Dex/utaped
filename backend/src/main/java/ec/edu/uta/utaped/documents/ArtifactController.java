@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 public class ArtifactController {
     private final ArtifactService service;
     public ArtifactController(ArtifactService service) { this.service=service; }
+    @PostMapping("/draft-preview") public ResponseEntity<DraftView> draftPreview(@PathVariable UUID targetDocId,@Valid @RequestBody DraftPreview input,Principal p) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.draftPreview(targetDocId,p.getName(),input));
+    }
     @GetMapping("/readiness") public Readiness readiness(@PathVariable UUID targetDocId,Principal p) { return service.readiness(targetDocId,p.getName()); }
     @GetMapping public List<Artifact> list(@PathVariable UUID targetDocId,Principal p) { return service.list(targetDocId,p.getName()); }
     @PostMapping public Artifact generate(@PathVariable UUID targetDocId,@Valid @RequestBody Generate input,Principal p) { return service.generate(targetDocId,p.getName(),input); }

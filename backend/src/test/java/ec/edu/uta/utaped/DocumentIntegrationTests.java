@@ -43,6 +43,37 @@ class DocumentIntegrationTests {
         jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período de prueba',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
         id=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan de Trabajo de prueba")).id();
     }
+    @Test void editingPreviewAllowsIncompleteUnsavedContentWithoutPersistingArtifacts() throws Exception {
+        var before=plans.get(id,email);
+        var input=new ArtifactModels.DraftPreview(version(),"Justificación local sin guardar. ".repeat(1200),"Objetivo local",-1,"OBJECTIVE");
+        var preview=artifacts.draftPreview(id,email,input);
+        assertTrue(preview.pages().size()>3);
+        assertEquals(preview.sections().get("OBJECTIVE"),preview.pageIndex());
+        assertTrue(preview.sections().get("OBJECTIVE")>preview.sections().get("JUSTIFICATION"));
+        assertNotNull(javax.imageio.ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(preview.image()))));
+        assertEquals(before,plans.get(id,email));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact WHERE work_plan_id=?",Integer.class,id));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM stored_file",Integer.class));
+        assertFalse(artifacts.readiness(id,email).ready());
+        var first=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),0,"JUSTIFICATION"));
+        assertEquals(preview.pages(),first.pages());assertEquals(0,first.pageIndex());
+        assertTrue(Math.abs(first.pages().getFirst().width()-595.3)<2);
+        assertTrue(Math.abs(first.pages().getFirst().height()-841.9)<2);
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(id,email,
+            new ArtifactModels.DraftPreview(version()+1,"","",-1,"JUSTIFICATION"))).getStatusCode().value());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(UUID.randomUUID(),email,input)).getStatusCode().value());
+        jdbc.update("UPDATE work_plan SET document_state='IN_REVIEW' WHERE id=?",id);
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(id,email,input)).getStatusCode().value());
+    }
+    @Test void editingPreviewRendersBlankSectionsAndRejectsOtherReaders() {
+        var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"","",-1,"JUSTIFICATION"));
+        assertFalse(preview.pages().isEmpty());
+        var other=UUID.randomUUID();String otherEmail="preview-outsider@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,?,'USER',false)",other,otherEmail,"Other",encoder.encode("Test-only-password-2026"));
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(id,otherEmail,
+            new ArtifactModels.DraftPreview(version(),"","",0,"JUSTIFICATION"))).getStatusCode().value());
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact",Integer.class));
+    }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
         plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
