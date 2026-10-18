@@ -15,5 +15,5 @@ export const auditActionLabels: Record<string, string> = {
   WORKFLOW_DRAFT_SAVED: 'Borrador de flujo guardado', WORKFLOW_REVISION_CONFIGURED: 'Revisión de flujo configurada', WORKFLOW_CONFIGURATION_DISABLED: 'Configuración de flujo deshabilitada',
   LOGIN_SUCCEEDED: 'Sesión iniciada', LOGOUT_SUCCEEDED: 'Sesión cerrada', ADMIN_BOOTSTRAPPED: 'Administrador inicial creado', PASSWORD_CHANGED: 'Contraseña cambiada', PASSWORD_RESET: 'Contraseña restablecida', PASSWORD_RESET_DELIVERY_FAILED: 'Correo de recuperación no entregado',
   PLANNING_CATALOG_SAVED: 'Catálogo guardado', ACTIVITY_CATALOG_SAVED: 'Actividad de catálogo guardada', GROUP_COLLECTIVE_LABEL_SAVED: 'Denominación colectiva guardada', HOLIDAY_SAVED: 'Feriado guardado', HOLIDAY_REMOVED: 'Feriado retirado', PERIOD_HOLIDAY_POLICY_SAVED: 'Restricción de feriados guardada',
-  INSTITUTIONAL_TEMPLATE_UPDATED: 'Plantilla institucional actualizada', INSTITUTIONAL_TEMPLATE_RESET: 'Plantilla institucional restablecida',
+  AUTHOR_SIGNATURE_REQUESTED: 'Firma de coautor solicitada', DOCUMENT_AUTHORS_UPDATED: 'Elaboradores actualizados', INSTITUTIONAL_TEMPLATE_UPDATED: 'Plantilla institucional actualizada', INSTITUTIONAL_TEMPLATE_RESET: 'Plantilla institucional restablecida',
 }

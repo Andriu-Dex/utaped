@@ -87,6 +87,12 @@ public class T1PdfEngine {
                     var location=signatureBounds(composed,namePage);
                     var slots=new ArrayList<SignatureSlot>();
                     slots.add(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",snapshot.plan().teacherId(),namePage,namePage+1,location));
+                    for(int authorIndex=1;authorIndex<snapshot.resolvedAuthors().size();authorIndex++) {
+                        var author=snapshot.resolvedAuthors().get(authorIndex);String suffix="A"+authorIndex;int found=-1;
+                        for(int p=signaturePage;p<composed.getNumberOfPages();p++) { stripper.setStartPage(p+1);stripper.setEndPage(p+1);if(stripper.getText(composed).contains("@@SIGTOP"+suffix+"@@")) { found=p;break; } }
+                        if(found<0) throw new IOException("No se encontró la ubicación del coautor.");
+                        slots.add(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",author.id(),found,found+1,signatureBounds(composed,found,suffix)));
+                    }
                     if(snapshot.workflow()!=null) {
                         int slotNumber=1;
                         for(var stage:snapshot.workflow().stages()) if(stage.requiresSignature()) for(var person:stage.participants()) {
@@ -157,6 +163,6 @@ public class T1PdfEngine {
     }
     private static void clearMarker(COSString value) {
         byte[] bytes=value.getBytes();String text=new String(bytes,java.nio.charset.StandardCharsets.ISO_8859_1);
-        if(text.contains("@@")) value.setValue(text.replace("@@PN@@","").replaceAll("@@SIG(?:TOP|BOTTOM)[0-9]*@@","").getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
+        if(text.contains("@@")) value.setValue(text.replace("@@PN@@","").replaceAll("@@SIG(?:TOP|BOTTOM)[A0-9]*@@","").getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
     }
 }

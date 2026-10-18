@@ -151,7 +151,11 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertArrayEquals(signedBytes,reviews.content(review,email));assertArrayEquals(original,reviews.content(baseReview,email));assertEquals(plan.rowVersion(),plans.get(id,email).rowVersion());
         probe.save("evidence-and-signing");
     }
-    SigningFixture authorFixture;
+    @Autowired ec.edu.uta.utaped.planning.DocumentAuthors authors;
+    boolean multipleAuthors,collegiate;
+    UUID coauthor;
+    String coauthorEmail="coauthor@example.invalid";
+    SigningFixture authorFixture,coauthorFixture;
     UUID reviewer,approver; String reviewerEmail="reviewer@example.invalid",approverEmail="approver@example.invalid";
     UUID submit(boolean signatureRequired) throws Exception { return submit(signatureRequired,false); }
     UUID submit(boolean signatureRequired,boolean external) throws Exception {
@@ -169,7 +173,15 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         UUID scope=organization.createScope(email,new OrganizationService.ScopeInput(group,period,null));
         organization.member(scope,email,new OrganizationService.MemberInput(user,"MEMBER","Elaborador",true,0L));organization.principal(scope,email,new OrganizationService.PrincipalInput(user,0L));
         jdbc.update("UPDATE work_plan SET scope_id=? WHERE id=?",scope,id);jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?)",id,user,user);
-        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW","PERSON",List.of(reviewer),null,"",signatureRequired),new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(approver),null,"",false)));
+        if(multipleAuthors) {
+            coauthor=UUID.randomUUID();jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','USER',false)",coauthor,coauthorEmail,"Coautora académica");
+            organization.member(scope,email,new OrganizationService.MemberInput(coauthor,"MEMBER","Docente integrante",true,0L));
+            assertEquals(404,assertThrows(ResponseStatusException.class,()->authors.save(id,coauthorEmail,new ec.edu.uta.utaped.planning.DocumentAuthors.Save(version(),List.of()))).getStatusCode().value());
+            authors.save(id,email,new ec.edu.uta.utaped.planning.DocumentAuthors.Save(version(),List.of(coauthor)));
+            var matrix=activities.get(id,email);var a=matrix.activities().getFirst();
+            activities.save(id,email,new ec.edu.uta.utaped.planning.ActivityModels.Save(version(),matrix.source(),List.of(new ec.edu.uta.utaped.planning.ActivityModels.Activity(a.id(),a.catalogId(),a.title(),a.category(),a.mandatory(),a.startsOn(),a.endsOn(),a.responsibleIds(),false,a.resources(),a.means()))));
+        }
+        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW",collegiate?"COLLEGIATE":"PERSON",List.of(reviewer),null,collegiate?"Consejo Directivo":"",signatureRequired,"Responsable de revisión"),new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(approver),null,"",false)));
         workflows.save(group,"T1",email,new Save(0L,definition));workflows.configure(group,"T1",email,new Version(1L));
         workflows.save(group,"T2",email,new Save(0L,definition));workflows.configure(group,"T2",email,new Version(1L));
         for(String type:List.of("T1","T2")) periodWorkflows.assign(scope,type,email,new PeriodWorkflowService.Assign(workflows.get(group,type,email).current().id(),0L));
@@ -177,8 +189,59 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var artifact=artifacts.generate(id,email,new Generate(version()));var fixture=signingFixture();authorFixture=fixture;bindings.register(user,email,new CertificateBindings.Register(fingerprint(fixture),true,"Identidad pública de prueba",null));
         var state=signatures.state(id,artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
         signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        if(multipleAuthors) {
+            assertEquals("DRAFT",plans.get(id,email).documentState());assertFalse(plans.get(id,email).editable());
+            assertTrue(reviews.inbox(reviewerEmail).isEmpty());
+            assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM personal_notification WHERE recipient_id=? AND kind='AUTHOR_SIGNATURE_REQUESTED'",Integer.class,coauthor));
+            assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new ec.edu.uta.utaped.planning.WorkPlanModels.Update(version(),"Cambio prohibido","FISEI","","Alterar","Alterar"))).getStatusCode().value());
+            var first=signatures.list(id,artifact.id(),email).getFirst();byte[] signedBefore=signatures.content(id,first.id(),email);
+            var coauthorCert=signingFixture();coauthorFixture=coauthorCert;bindings.register(coauthor,email,new CertificateBindings.Register(fingerprint(coauthorCert),true,"Identidad de coautor de prueba",null));
+            var next=signatures.state(id,artifact.id(),coauthorEmail,true);assertTrue(next.signingEnabled(),next.signingBlockers().toString());
+            var signed=signatures.sign(id,artifact.id(),coauthorEmail,version(),next.preparation().pdfHash(),UUID.randomUUID(),signingBody(coauthorCert,"Test-only-signing-password"),true);
+            byte[] cumulative=signatures.content(id,signed.id(),email);assertArrayEquals(signedBefore,Arrays.copyOf(cumulative,signedBefore.length));
+            try(var parsed=org.apache.pdfbox.Loader.loadPDF(cumulative)) { assertEquals(2,parsed.getSignatureDictionaries().size()); }
+        }
         assertEquals("IN_REVIEW",plans.get(id,email).documentState());assertFalse(plans.get(id,email).editable());
         return reviews.inbox(reviewerEmail).getFirst().reviewId();
+    }
+    @Test void coauthorsSignSequentiallyAndOnlyTheLastSignatureStartsReview() throws Exception {
+        multipleAuthors=true;UUID review=submit(false);
+        assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact WHERE work_plan_id=?",Integer.class,id));
+        var saved=reviews.state(review,email);assertTrue(saved.pdfHash()!=null);
+        var artifact=artifacts.list(id,email).getFirst();assertEquals(2,artifact.signatureSlots().stream().filter(slot->slot.action().equals("ELABORADO_POR")).count());
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM document_review WHERE work_plan_id=?",Integer.class,id));
+        approve(review);byte[] planBytes=reviews.content(review,email);
+        var report=reports.create(id,email);authors.save(report.id(),email,new ec.edu.uta.utaped.planning.DocumentAuthors.Save(report.rowVersion(),List.of(coauthor)));
+        var data=reports.get(report.id(),email);
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(data.document().rowVersion(),data.document().title(),"Antecedentes del informe académico","Conclusiones de ejecución","Mejorar el seguimiento",data.data().results().stream().map(result->new ec.edu.uta.utaped.planning.ReportService.Result(result.activityId(),java.math.BigDecimal.valueOf(100),"Resultado declarado; medios pendientes explicados.")).toList(),List.of()));
+        var updated=plans.get(report.id(),email);attachments.settings(report.id(),email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(updated.rowVersion(),false,false));
+        var t2=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));
+        assertEquals(2,t2.signatureSlots().stream().filter(slot->slot.action().equals("ELABORADO_POR")).count());
+        for(var author:List.of(email,coauthorEmail)) {
+            var next=signatures.state(report.id(),t2.id(),author,true);assertTrue(next.signingEnabled(),next.signingBlockers().toString());
+            signatures.sign(report.id(),t2.id(),author,next.preparation().rowVersion(),next.preparation().pdfHash(),UUID.randomUUID(),signingBody(author.equals(email)?authorFixture:coauthorFixture,"Test-only-signing-password"),true);
+        }
+        assertEquals("IN_REVIEW",plans.get(report.id(),email).documentState());assertEquals("APPROVED",plans.get(id,email).documentState());
+        assertArrayEquals(planBytes,reviews.content(review,email));
+    }
+    @Test void collegiateRecorderActsWithoutAppearingAsPersonalSignatory() throws Exception {
+        collegiate=true;UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();assertFalse(task.requiresSignature());
+        byte[] bytes=files.read((UUID)reviews.state(review,email).review().get("current_file_id"));
+        try(var parsed=org.apache.pdfbox.Loader.loadPDF(bytes)) {
+            String text=new org.apache.pdfbox.text.PDFTextStripper().getText(parsed);assertTrue(text.contains("Consejo Directivo"));assertFalse(text.contains(reviewerEmail));
+        }
+        reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()));
+        assertFalse(reviews.inbox(approverEmail).isEmpty());
+    }
+    @Test void savedObservationPreventsCompletionWithOrWithoutSignature() throws Exception {
+        UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();
+        reviews.observe(task.id(),reviewerEmail,new ReviewService.Observation(task.rowVersion(),"Corregir antes de aprobar",0,.1,.1,.3,.1));
+        var current=reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->reviews.decide(current.id(),reviewerEmail,new ReviewService.Decision(current.rowVersion(),"COMPLETE","",UUID.randomUUID()))).getStatusCode().value());
+        jdbc.update("UPDATE review_task SET requires_signature=true WHERE id=?",task.id());
+        byte[] body=signingBody(signingFixture(),"Test-only-signing-password");
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->reviews.sign(current.id(),reviewerEmail,current.rowVersion(),reviews.state(review,reviewerEmail).pdfHash(),UUID.randomUUID(),body,true)).getStatusCode().value());
+        assertArrayEquals(new byte[body.length],body);assertEquals("IN_REVIEW",plans.get(id,email).documentState());
     }
     @Test void closedPeriodSuspendsReviewWithoutInventingApprovalOrLosingPdf() throws Exception {
         UUID review=submit(false);var task=reviews.inbox(reviewerEmail).getFirst();var before=reviews.state(review,reviewerEmail);

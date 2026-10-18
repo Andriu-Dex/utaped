@@ -30,7 +30,8 @@ public class WorkPlanService {
     private static final String SELECT="""
         SELECT w.*,COALESCE(s.principal_user_id,w.teacher_id) AS responsible_id,u.display_name AS teacher_name,
           g.name AS group_name,p.name AS period_name,p.status AS period_status,p.preparation_starts_on,p.preparation_ends_on,p.starts_on,p.ends_on,
-          (actor.id=COALESCE(s.principal_user_id,w.teacher_id)) AS is_editor
+          (actor.id=COALESCE(s.principal_user_id,w.teacher_id)) AS is_editor,
+          EXISTS(SELECT 1 FROM signed_document_artifact sig JOIN document_artifact a ON a.id=sig.artifact_id WHERE sig.work_plan_id=w.id AND a.source_row_version=w.row_version) AS authors_locked
         FROM work_plan w JOIN app_user actor ON actor.id=?
         JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id
         LEFT JOIN organizational_scope s ON s.id=w.scope_id
@@ -47,14 +48,14 @@ public class WorkPlanService {
     }
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
-        return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
+        return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
             &&(!enforceWindow||within(rs.getObject(rs.getString("document_type").equals("T2")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(rs.getString("document_type").equals("T2")?"ends_on":"preparation_ends_on",LocalDate.class)));
     }
     private Plan map(ResultSet rs,int index) throws SQLException {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
             rs.getObject("period_id",UUID.class),rs.getString("period_name"),rs.getString("title"),rs.getString("institutional_unit"),rs.getString("career"),rs.getString("justification"),rs.getString("objective"),
             rs.getString("document_state"),rs.getString("formal_version"),rs.getLong("row_version"),rs.getObject("preparation_date",LocalDate.class),
-            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&rs.getString("period_status").equals("ACTIVE"));
+            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE"));
     }
     public Options options(String email) {
         var actor=accounts.current(email);
@@ -130,6 +131,12 @@ public class WorkPlanService {
         jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career,templateService.getJustificationOrDefault("T1"));
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
         audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
+    }
+    public boolean signatureWindowOpen(UUID doc,String email) {
+        var plan=get(doc,email);
+        var dates=jdbc.queryForMap("SELECT status,starts_on,ends_on,preparation_starts_on,preparation_ends_on FROM academic_period WHERE id=?",plan.periodId());
+        String from=plan.documentType().equals("T2")?"starts_on":"preparation_starts_on",to=plan.documentType().equals("T2")?"ends_on":"preparation_ends_on";
+        return "ACTIVE".equals(dates.get("status")) && plan.archivedAt()==null && plan.documentState().equals("DRAFT") && (!enforceWindow||within(((java.sql.Date)dates.get(from)).toLocalDate(),((java.sql.Date)dates.get(to)).toLocalDate()));
     }
     private void requireWindow(UUID periodId) {
         var dates=jdbc.query("SELECT preparation_starts_on,preparation_ends_on FROM academic_period WHERE id=?",(rs,n)->new LocalDate[]{rs.getObject(1,LocalDate.class),rs.getObject(2,LocalDate.class)},periodId);

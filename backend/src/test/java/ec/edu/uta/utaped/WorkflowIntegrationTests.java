@@ -43,12 +43,12 @@ class WorkflowIntegrationTests {
     Stage person() { return new Stage(UUID.randomUUID(),"Revisión técnica","REVIEW","PERSON",List.of(user),null,"",true); }
     @Test void orderedConfigurationImmutableRevisionsAndDocumentIsolation() throws Exception {
         var b=new Browser();b.login("admin@example.invalid");String path=path(group,"T1");
-        var first=List.of(person(),new Stage(UUID.randomUUID(),"Decisión colegiada","APPROVE","COLLEGIATE",List.of(),null,"Órgano configurado",false));
+        var first=List.of(person(),new Stage(UUID.randomUUID(),"Decisión colegiada","APPROVE","COLLEGIATE",List.of(admin),null,"Órgano configurado",false));
         assertEquals(200,b.request("PUT",path,new Save(0L,new Definition("Flujo inicial",first)),true).statusCode());
         var configured=b.request("POST",path+"/revisions",new Version(1L),true);assertEquals(200,configured.statusCode(),configured.body());
         assertEquals(1,JsonPath.<Integer>read(configured.body(),"$.current.revisionNumber"));
         assertEquals(false,JsonPath.read(configured.body(),"$.current.definition.stages[1].requiresSignature"));
-        assertEquals(0,JsonPath.<Integer>read(configured.body(),"$.current.definition.stages[1].assigneeIds.length()"));
+        assertEquals(1,JsonPath.<Integer>read(configured.body(),"$.current.definition.stages[1].assigneeIds.length()"));
         var reversed=List.of(first.get(1),first.get(0));
         assertEquals(200,b.request("PUT",path,new Save(2L,new Definition("Flujo cambiado",reversed)),true).statusCode());
         assertEquals("Flujo inicial",JsonPath.read(b.request("GET",path,null,false).body(),"$.current.definition.name"));

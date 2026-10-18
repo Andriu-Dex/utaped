@@ -1,3 +1,4 @@
+import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
 import { DraftPreview } from './DraftPreview'
 import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
@@ -69,7 +70,8 @@ export function WorkPlanEditor({
   const [latest, setLatest] = useState<WorkPlan | null>(null)
   const [lifecycleDirty, setLifecycleDirty] = useState(false)
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
-  const dirty = contentDirty || lifecycleDirty
+  const [authorsDirty, setAuthorsDirty] = useState(false)
+  const dirty = contentDirty || lifecycleDirty || authorsDirty
 
   async function restoreJustification() {
     const template = defaultJustification?.trim() || INSTITUTIONAL_JUSTIFICATION
@@ -131,12 +133,12 @@ export function WorkPlanEditor({
     <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
     <span className="section-kicker review-kicker">PLAN DE TRABAJO · T1</span>
     <h1>{plan.title}</h1><div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span></div>
-    <DocumentLifecycle plan={plan} disabled={busy || contentDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
+    <DocumentLifecycle plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
     <p role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
     <nav className="document-steps" aria-label="Pasos del Plan"><button className="secondary" type="button" aria-current={section === 'general' ? 'step' : undefined} onClick={() => setSection('general')}><span>1</span>Información general</button><button className="secondary" type="button" aria-current={section === 'content' ? 'step' : undefined} onClick={() => setSection('content')}><span>2</span>Contenido</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}><span>3</span>Actividades y matriz</button>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('attachments')}><span>4</span>Anexos y opciones</button>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('preparation')}><span>5</span>Preparación y previsualización</button>
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('signing')}><span>6</span>Firma y envío</button></nav>
+    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('signing')}><span>6</span>Firma y Finalización</button></nav>
     <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button></div>
     {dirty && <p>Guarde los cambios del Plan antes de abrir otra sección.</p>}
@@ -290,6 +292,7 @@ export function WorkPlanEditor({
         </div>
       </fieldset></form></div>
       {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>
+      {section === 'general' && <DocumentAuthorsEditor targetDocId={plan.id} version={plan.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { const current = await api<WorkPlan>('/work-plans/' + plan.id); setPlan(current); setDraft(fields(current)) }} />}
       {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}

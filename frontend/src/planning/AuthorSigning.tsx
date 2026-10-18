@@ -6,7 +6,7 @@ import { Icon } from '../shared/Icon'
 
 interface Signed { id: string; signerName: string; signedAt: string; pageCount: number; signaturePageIndex: number }
 interface SigningState {
-  automaticSubmission: boolean; documentState: string
+  automaticSubmission: boolean; documentState: string; actorSigned: boolean; pendingAuthors: { id: string; name: string; position: string }[]
   signingEnabled: boolean; signingBlockers: { section: string; message: string }[]; signed: Signed[]
   preparation: { rowVersion: number; pdfHash: string }
 }
@@ -41,11 +41,13 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDoc
         <h2>Firmar PDF</h2>
       </div>
     </div>
-    <p>{state?.automaticSubmission ? 'Al firmar se conserva el artefacto y se activa automáticamente la primera etapa del flujo configurado.' : 'La firma se aplica al artefacto conservado. Este documento anterior necesita reconciliación con un ámbito para iniciar el flujo.'}</p>
+    <p>{state?.automaticSubmission ? 'Cada elaborador firma el mismo artefacto. Al completarse la última firma se activa automáticamente la revisión.' : 'La firma se aplica al artefacto conservado. Este documento anterior necesita reconciliación con un ámbito para iniciar el flujo.'}</p>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
-      {state.signingBlockers.length > 0 && !signed && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
-      {!signed && <ActionForm label="Preparar firma" disabled={busy || !state.signingEnabled}><form onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
+      {signed && state.pendingAuthors.length > 0 && <p className="field-help">Recopilando firmas de elaboradores. El contenido está bloqueado; la revisión empezará al completar todas las firmas.</p>}
+      {state.pendingAuthors.length > 0 && <p role="status">Pendientes de firma: {state.pendingAuthors.map(person => person.name).join(' → ')}.</p>}
+      {state.signingBlockers.length > 0 && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
+      {!state.actorSigned && <ActionForm label="Preparar firma" disabled={busy || !state.signingEnabled}><form onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
         <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? 'Firmando…' : 'Firmar'}</button>
@@ -58,6 +60,7 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned }: { targetDoc
             <span>Identidad vinculada, integridad y vigencia comprobadas.</span>
           </div>
         </div>
+        <h3>Firmas de elaboración registradas</h3><ol className="scope-timeline">{[...state.signed].reverse().map(signature => <li key={signature.id}><strong>{signature.signerName}</strong> · {new Date(signature.signedAt).toLocaleString('es-EC')}</li>)}</ol>
         <p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
         <p className="field-help">Firma e identidad vinculada comprobadas. La cadena de la entidad emisora y la revocación no fueron comprobadas.</p>
         {!state.automaticSubmission && <a href={'/api/work-plans/' + targetDocId + '/signed-artifacts/' + signed.id + '/content'}>Descargar PDF firmado</a>}

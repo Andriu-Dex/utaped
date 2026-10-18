@@ -259,8 +259,8 @@ class DocumentIntegrationTests {
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
         UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
-        plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"));
-        assertArrayEquals(bytes,signatures.content(id,signed.id(),email));assertFalse(artifacts.list(id,email).getFirst().current());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
+        assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(id,signed.id(),email)).getStatusCode().value());

@@ -37,7 +37,7 @@ public class WorkflowService {
                 case "COLLEGIATE" -> {
                     if(stage.recipientLabel().isBlank() || stage.groupRole()!=null) result.add(stage.label()+": indique el órgano colegiado, sin rol de pertenencia.");
                     if(stage.requiresSignature() && recipients.isEmpty()) result.add(stage.label()+": una firma personal requiere identificar representantes.");
-                    if(!stage.requiresSignature() && !recipients.isEmpty()) result.add(stage.label()+": un órgano sin firma personal no requiere representantes individuales.");
+                    if(!stage.requiresSignature() && recipients.size()!=1) result.add(stage.label()+": designe exactamente una persona para registrar la decisión del órgano, sin firma personal.");
                 }
                 default -> result.add("Tipo de destinatario no disponible.");
             }
