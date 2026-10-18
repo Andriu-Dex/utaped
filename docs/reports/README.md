@@ -1,5 +1,9 @@
 # Reportes
 
+- [2026-10-18 — Elaboradores, revisión y encabezados T1/T2](2026-10-18-01-document-authorship-review-and-headers.md).
+
+- [2026-10-17 — Auditoría de reuniones y brechas funcionales](2026-10-17-06-meeting-transcripts-gap-audit.md).
+
 - [2026-10-17 — Personas ficticias realistas](2026-10-17-05-realistic-development-identities.md).
 
 - [2026-10-17 — Revisión del staged: plantillas e interfaz](2026-10-17-04-staged-templates-and-ui-review.md).

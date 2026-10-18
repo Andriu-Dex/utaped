@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-17
+## Estado vigente al 2026-10-18
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
@@ -8,7 +8,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 |---|---|
 | Organización | Edición/desactivación de carreras con concurrencia, historial visible de cargos/principales, recuperación delegada explícitamente a coordinadores; catálogo de carreras, ámbitos grupo/carrera/período, integrantes/cargos y responsable principal. Titularidad y unicidad de nuevos T1 por ámbito; acceso explícito, transferencia y concurrencia. |
 | Creación documental | Modal de creación Plan/Informe, título propuesto por grupo/unidad y backend automático, búsqueda/paginación de Planes aprobados autorizados; crear o abrir Informe existente. Foco contenido, Escape/cancelación protegidos, selección conservada al filtrar. Históricos intactos; código individual pendiente de definición. |
-| T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firma real del elaborador y envío a revisión atómico en documentos por ámbito. |
+| T1 | Editor con matriz y anexos, artefactos A4 de plantilla institucional, firmas reales sucesivas de los elaboradores y envío a revisión atómico tras la última firma en documentos por ámbito. |
 | Plantillas de texto T1 | ADMIN configura/restaura la justificación inicial con versión, auditoría y formulario por acción. Se copia solo en Planes nuevos; históricos y blancos intencionales permanecen intactos. V23; [contrato](docs/api/document-templates.md). |
 | Vista simultánea T1 | Paso Contenido con formulario y página real A4 en PC, ancho ajustable, alternancia en tablet, ampliación y reintento. Textos locales sin autosalvado ni artefacto firmable; mismo motor, contenido incompleto permitido y matriz vacía sin actividad ficticia. Endpoint privado con control de versión/estado/permisos y caché acotada en memoria. [Reporte](docs/reports/2026-10-17-03-simultaneous-t1-preview.md). Matriz como editor simultáneo y T2 pendientes de extensión. |
 | Revisión | Bandeja propia paginada con búsqueda/filtros/indicadores personales, tareas secuenciales, observaciones generales y resaltados, devolución y rondas independientes de versión formal, aprobación y descarga final autorizada. |
@@ -36,7 +36,7 @@ La tanda amplia incorpora un circuito documental de desarrollo integrado. No equ
 | Documentos extensos | Navegación directa por página, firmas/anexos/observaciones y estado de carga. Aceptación T1 extenso y T2 de 18 páginas con evidencia/índice/slots/firmas e integridad del Plan base. |
 | Operación | Override HTTPS 64430 con servicios internos sin publicar, SMTP externo configurable y preflight. Respaldo conjunto DB/volumen/imágenes, validación y restauración en proyectos nuevos; ensayo completo con datos ficticios. No desplegado institucionalmente. |
 
-Persistencia: Flyway V13–V23 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
+Persistencia: Flyway V13–V24 y almacenamiento privado real. Los borradores individuales anteriores conservan sus IDs; se prohíbe crear nuevos por esa ruta fuera de fixtures de prueba. API: [circuito documental](docs/api/document-circuit.md) y [períodos/archivo](docs/api/period-control.md). Escenario: [entorno de ejemplo](docs/development/sample-environment.md). Evidencia: [circuito](docs/reports/2026-10-12-01-large-document-circuit.md) y [cierre y flujos](docs/reports/2026-10-12-02-period-closure-and-workflows.md). Administración/alertas: [contrato](docs/api/contextual-administration.md) y [reporte](docs/reports/2026-10-12-03-contextual-administration-and-notices.md).
 
 Importaciones/enlaces: [contrato](docs/api/user-imports-and-external-evidence.md) y [reporte](docs/reports/2026-10-12-04-user-imports-and-external-evidence.md). Validación de esta tanda: 116 ejecuciones de pruebas de backend sin fallos, ocho escenarios E2E, lint/build y revisión visual de interfaces/T2.
 
@@ -206,3 +206,11 @@ Modernización del propietario conservada: menú plegable, editor/matriz T1, cam
 ## Personas ficticias realistas — 2026-10-17
 
 Semillas con siete nombres completos y cargos legibles; actualización acotada de etiquetas originales, sin sobrescribir perfiles personalizados. Credenciales, permisos, documentos y artefactos conservados. Aplicado en utaped-sample con respaldo previo y comprobación de integridad; nuevas instalaciones usan la misma presentación. [Reporte](docs/reports/2026-10-17-05-realistic-development-identities.md).
+
+## Auditoría de reuniones — 2026-10-17
+
+La transcripción completa de reuniones hasta el 06-10-2026 confirma faltantes del producto: estructura versionada de plantillas, múltiples elaboradores/cargos y administración contextual, entre otros. Se localizaron diferencias concretas en aprobación con observaciones registradas, órganos colegiados sin personas y acceso a borradores descartados. Son hallazgos de inspección estática, no correcciones entregadas ni pruebas nuevas. Quipux, retención y cómputos de plazos requieren reconciliación; la transcripción no sustituye automáticamente el Plan Maestro ni demuestra aceptación del producto. [Matriz, fuentes y prioridades](docs/reports/2026-10-17-06-meeting-transcripts-gap-audit.md).
+
+## Tanda de autoría y revisión — 2026-10-18
+
+Entregado: selección independiente de elaboradores T1/T2, principal único editor, cargos congelados, firmas sucesivas previas a revisión, aviso al siguiente coautor y congelación tras la primera firma. Decisión colegiada con registrador designado sin firma personal, bloqueo de completar/firmar con observaciones de la ronda y encabezado institucional compartido corregido. V24; [contrato](docs/api/document-authorship-and-review.md). Verificados 150 backend durante la tanda y 4 escenarios finales focales, 15 de aceptación más 2 finales sobre código actual, 8 E2E, lint/build y revisión visual. [Reporte de entrega](docs/reports/2026-10-18-01-document-authorship-review-and-headers.md). No incluye todavía catálogo completo de cargos, Quipux, retención ni delegaciones administrativas avanzadas.

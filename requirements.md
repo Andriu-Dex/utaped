@@ -1,5 +1,9 @@
 # Requisitos de UTAPED
 
+## Autoría y revisión — 2026-10-17
+
+El propietario autoriza corregir observaciones/órganos colegiados y completar varios elaboradores con un único editor, firmas sucesivas y cargos. Confirma que Administración designa por período a la persona que registra una decisión colegiada sin figurar como firmante personal. Una observación de la ronda exige devolución antes de aprobación. La primera firma congela el contenido y la última firma de elaboración inicia revisión. Se corrigen los encabezados T1/T2 usando Prototipos como referencia visual y conservando plantillas institucionales A4. [Contrato](docs/api/document-authorship-and-review.md).
+
 ## Ejemplos con presentación realista — 2026-10-17
 
 Decisión del propietario: utilizar personas ficticias con nombres completos y cargos legibles en el entorno de desarrollo, en lugar de etiquetas técnicas como «Desarrollo principal». Conservar credenciales, permisos e identidades técnicas; no atribuir cargos ni firmas a personas reales. Las carreras, grupos, período y catálogos siguen las fuentes oficiales de docs/templates. La actualización respeta nombres/cargos personalizados y documentos previamente creados o firmados. [Cuentas del escenario](docs/development/sample-environment.md).
