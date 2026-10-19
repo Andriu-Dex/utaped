@@ -36,6 +36,26 @@ final class InstitutionalHeader {
             for(String local:List.of("extent","ext")) { var sizes=cell.getElementsByTagNameNS("*",local);for(int i=0;i<sizes.getLength();i++) { var size=(Element)sizes.item(i);if(size.hasAttribute("cx")&&size.hasAttribute("cy")) { size.setAttribute("cx",String.valueOf(Math.round(Long.parseLong(size.getAttribute("cx"))*ratio)));size.setAttribute("cy",String.valueOf(Math.round(Long.parseLong(size.getAttribute("cy"))*ratio))); } } }
         }
     }
+    private static void borders(Element table,List<Element> rows) {
+        var tableProperties=prop(table,"tblPr");
+        for(var spacing:children(tableProperties,"tblCellSpacing")) tableProperties.removeChild(spacing);
+        var outer=prop(tableProperties,"tblBorders");
+        for(var child:children(outer,"top")) outer.removeChild(child);
+        for(String side:List.of("top","left","bottom","right","insideH","insideV")) border(prop(outer,side),true);
+        for(int row=0;row<rows.size();row++) {
+            var cells=children(rows.get(row),"tc");
+            for(int column=0;column<cells.size();column++) {
+                var cellBorders=prop(prop(cells.get(column),"tcPr"),"tcBorders");
+                for(String side:List.of("top","left","bottom","right")) {
+                    boolean visible=column!=0 || !side.equals("top")&&!side.equals("bottom") || side.equals("top")&&row==0 || side.equals("bottom")&&row==rows.size()-1;
+                    border(prop(cellBorders,side),visible);
+                }
+            }
+        }
+    }
+    private static void border(Element edge,boolean visible) {
+        attr(edge,"val",visible?"single":"nil");attr(edge,"sz","8");attr(edge,"space","0");attr(edge,"color","475569");
+    }
     static void apply(Document doc,ArtifactModels.Snapshot snapshot) {
         for(var table:elements(doc.getDocumentElement(),"tbl")) {
             var rows=children(table,"tr");if(rows.size()!=4 || children(rows.getFirst(),"tc").size()!=2) continue;
@@ -61,6 +81,7 @@ final class InstitutionalHeader {
             var last=children(rows.get(3),"tc");setText(last.get(1),"Fecha de elaboración: "+snapshot.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),18,false,"1F4E79");
             // Keep date on one full-width cell, instead of an empty grey column beside it.
             if(last.size()==3) { rows.get(3).removeChild(last.get(2));var cp=prop(last.get(1),"tcPr");attr(prop(cp,"gridSpan"),"val","2");attr(prop(cp,"tcW"),"w","7004"); }
+            borders(table,rows);
         }
     }
 }

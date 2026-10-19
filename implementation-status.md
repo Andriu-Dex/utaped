@@ -214,3 +214,7 @@ La transcripción completa de reuniones hasta el 06-10-2026 confirma faltantes d
 ## Tanda de autoría y revisión — 2026-10-18
 
 Entregado: selección independiente de elaboradores T1/T2, principal único editor, cargos congelados, firmas sucesivas previas a revisión, aviso al siguiente coautor y congelación tras la primera firma. Decisión colegiada con registrador designado sin firma personal, bloqueo de completar/firmar con observaciones de la ronda y encabezado institucional compartido corregido. V24; [contrato](docs/api/document-authorship-and-review.md). Verificados 150 backend durante la tanda y 4 escenarios finales focales, 15 de aceptación más 2 finales sobre código actual, 8 E2E, lint/build y revisión visual. [Reporte de entrega](docs/reports/2026-10-18-01-document-authorship-review-and-headers.md). No incluye todavía catálogo completo de cargos, Quipux, retención ni delegaciones administrativas avanzadas.
+
+## Bordes del encabezado institucional — 2026-10-18
+
+Bordes exteriores e interiores explícitos y continuos para T1/T2, con logo combinado y separación de unidad/carrera. engine6 evita reutilizar nuevas preparaciones del motor anterior; artefactos firmados conservados. [Reporte](docs/reports/2026-10-18-02-institutional-header-borders.md).

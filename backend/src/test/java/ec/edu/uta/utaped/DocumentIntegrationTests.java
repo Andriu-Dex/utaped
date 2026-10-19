@@ -74,6 +74,23 @@ class DocumentIntegrationTests {
             new ArtifactModels.DraftPreview(version(),"","",0,"JUSTIFICATION"))).getStatusCode().value());
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact",Integer.class));
     }
+    @Test void previewHeaderKeepsAllHorizontalCellBordersVisible() throws Exception {
+        var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"Justificación de prueba.","Objetivo de prueba.",-1,"JUSTIFICATION"));
+        byte[] bytes=Base64.getDecoder().decode(preview.image());
+        var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(bytes));
+        int lines=0;boolean previous=false;
+        for(int y=0;y<image.getHeight()/5;y++) {
+            int dark=0;
+            for(int x=0;x<image.getWidth();x++) {
+                int color=image.getRGB(x,y);
+                if(((color>>16)&255)<190 && ((color>>8)&255)<190 && (color&255)<190) dark++;
+            }
+            boolean line=dark>image.getWidth()/2;
+            if(line&&!previous) lines++;previous=line;
+        }
+        assertTrue(lines>=5,"El encabezado debe conservar borde superior, divisiones de filas y borde inferior: "+lines);
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/header-borders-preview.png"),bytes);
+    }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
         plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));

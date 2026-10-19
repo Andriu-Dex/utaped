@@ -20,7 +20,7 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine5"; }
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine6"; }
     private static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
     private static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
     private static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }

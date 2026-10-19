@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-18 — Bordes completos del encabezado T1/T2](2026-10-18-02-institutional-header-borders.md).
+
 - [2026-10-18 — Elaboradores, revisión y encabezados T1/T2](2026-10-18-01-document-authorship-review-and-headers.md).
 
 - [2026-10-17 — Auditoría de reuniones y brechas funcionales](2026-10-17-06-meeting-transcripts-gap-audit.md).

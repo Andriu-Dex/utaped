@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine5"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine6"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
