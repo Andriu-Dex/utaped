@@ -1,5 +1,18 @@
 # Decisiones pendientes y contradicciones
 
+## Precisiones de implementación — 2026-10-21
+
+- La copia local de custodia debe verificarse realmente por SHA-256; una respuesta HTTP de descarga no prueba su conservación. Sigue siendo necesaria la custodia fuera del servidor, antes de cualquier purga manual.
+- Fecha de elaboración = preparación del PDF para firma, no fecha de la última firma. No se puede cambiar después sin invalidar firmas; fecha/hora de cada firmante se conserva por separado.
+- El QR contiene metadatos; se elimina la referencia no contratada a un validador público. No afirma confianza institucional, TSA ni validación de revocación.
+- Historia cerrada: ADMIN habilita permiso sobre un cargo y lo asigna en un período activo, por carrera o facultad. Decano/Subdecano se precargan únicamente como ejemplos de desarrollo. Ser ADMIN técnico no concede lectura de aprobados históricos. Descartados manuales son distintos del archivo automático al cerrar.
+- Quipux se representa mediante constancia PDF opcional por flujo congelado, registrada por coordinación. Se bloquea avance a ejecución/informes derivados y cierre si falta; el aprobado se puede descargar para efectuar el trámite externo.
+- La estructura adicional se publica para documentos nuevos y se congela por documento. Las secciones institucionales se conservan; validar con el cliente cualquier reordenamiento antes de usarlo institucionalmente.
+- `Informe_ejecucion.pdf` muestra cuatro entradas de índice; el DOCX incorpora además acciones de mejora, firmas/control y FODA. Se usa el DOCX más completo como fuente de composición y el PDF como referencia visual. No se modifica ningún original de templates.
+- La ventana inicial de cinco días hábiles se calcula cuando el fin de elaboración se deja vacío; una fecha final explícita configura otra ventana. La reapertura individual se aplica al ámbito del T1; T2/T3 disponen del período vigente. No se reabren períodos cerrados.
+
+El corte/periodicidad definitiva del Informe de ejecución, las tablas reales de cargos/firmas, la reasignación de tareas ya activadas y las políticas institucionales de custodia/retención/operación requieren validación. [Contrato](../api/institutional-rules-and-execution.md).
+
 ## Decisiones provisionales del equipo — 2026-10-20
 
 El propietario autoriza resolver provisionalmente las contradicciones de reuniones mientras el cliente no entregue información oficial. Son reglas configurables, no normativa institucional ratificada. [Plan de implementación](../planning/institutional-rules-and-execution-report.md).
