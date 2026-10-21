@@ -1051,3 +1051,5 @@ Orador 1
 (11:58) Entendido. (11:58) O sea, al principio estábamos intentando... (12:03) O sea, creando las interfaces en base a lo que es diseños profesionales, simples como tal.
 (12:10) Pero si se puede hacerlo más moderno, más llamativo en este caso... (12:14) Más moderno. (12:15) No hay problema.
 (12:16) Porque era más o menos un estilo clásico. (12:18) Sí, algo estándar. (12:20) Sí, algo más moderno.
+
+Informe de ejecución (24:53) ¿Estos informes se generan en qué momento, Ingeniero? (24:56) Por ejemplo, el informe de ejecución es cuando, de acuerdo a las actividades que estaban planificadas, ejecutan una actividad (25:04) Y es el informe de ejecución (25:06) El informe final es cuándo, y termina lo que es la planificación (25:10) Termina la planificación (25:11) Ok, ya, hoy mismo le integro ese Ingeniero

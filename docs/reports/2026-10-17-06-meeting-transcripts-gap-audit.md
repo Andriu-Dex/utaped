@@ -20,7 +20,7 @@ Las referencias Lx indican líneas del TXT; los enlaces de código señalan el p
 
 ### A01. Plantillas: estructura y tipos documentales — P1, faltante ya previsto
 
-- Fuente: [L17–18](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L17>), L38, L476–480, L794; Plan Maestro §22.
+- Fuente: [L17–18](<../decisions/Todas las reuniones.txt#L17>), L38, L476–480, L794; Plan Maestro §22.
 - Se solicita poder configurar secciones, orden, obligatoriedad y contenido opcional; también se presentó la posibilidad de añadir tipos documentales.
 - Actual: [DocumentTemplateModels.java:27](../../backend/src/main/java/ec/edu/uta/utaped/planning/DocumentTemplateModels.java#L27) solo acepta versión y justificación; el administrador cambia el texto inicial T1. T1Template/T2Template mantienen composición específica y no existe un editor de estructura ni alta genérica de formatos.
 - Falta versionar una estructura permitida, conservar su snapshot por documento y adaptar formulario/renderizado sin cambiar históricos. Añadir otros tipos requiere sus plantillas reales: no se deben inventar formularios por la mera mención de «eventos».
@@ -28,79 +28,79 @@ Las referencias Lx indican líneas del TXT; los enlaces de código señalan el p
 
 ### A02. Varios elaboradores, un único editor — P1, faltante ya documentado
 
-- Fuente: [L603–611](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L603>), L700–701; Plan Maestro §§8.3 y 20.
+- Fuente: [L603–611](<../decisions/Todas las reuniones.txt#L603>), L700–701; Plan Maestro §§8.3 y 20.
 - Actual: [T1PdfEngine.java:89](../../backend/src/main/java/ec/edu/uta/utaped/documents/T1PdfEngine.java#L89) crea un único slot ELABORADO_POR asociado al principal. T1Template:122 y T2Template:89 muestran una sola persona elaboradora; AuthorSignatureService trabaja con ella y después inicia revisión.
 - Falta registrar el conjunto de elaboradores, distinguirlo de responsables de actividades, permitir sus firmas sucesivas y comenzar revisión una vez cumplidas las firmas requeridas, conservando un solo editor principal. Seleccionar tres responsables de una actividad no cubre este requisito.
 
 ### A03. Aprobar con observaciones de la ronda — P0 funcional, diferencia localizada
 
-- Fuente: [L8](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L8>) y L422–428: si existen observaciones para corregir, devolver; aprobar cuando no las haya.
+- Fuente: [L8](<../decisions/Todas las reuniones.txt#L8>) y L422–428: si existen observaciones para corregir, devolver; aprobar cuando no las haya.
 - Actual: [ReviewService.java:140](../../backend/src/main/java/ec/edu/uta/utaped/workflow/ReviewService.java#L140) exige observación al devolver, pero COMPLETE no comprueba las registradas. El método sign tampoco lo hace antes de advance. ReviewWorkspace:80 bloquea la decisión por texto local sin guardar, pero después de guardar la observación ese texto queda vacío y no utiliza las observaciones persistidas para impedir aprobación.
 - Falta una política explícita de observaciones pendientes/resueltas y validación en servidor antes de completar o firmar. No se debe bloquear por observaciones de rondas anteriores que ya se corrigieron. Probar ambas rutas: con firma y sin firma.
 
 ### A04. Órgano colegiado sin nombre ni firma personal — P0 para esos flujos, incompatibilidad interna
 
-- Fuente: [L251–268](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L251>): hay destinos como Consejo Directivo sin firmante individual; el detalle por comisión se entregaría posteriormente.
+- Fuente: [L251–268](<../decisions/Todas las reuniones.txt#L251>): hay destinos como Consejo Directivo sin firmante individual; el detalle por comisión se entregaría posteriormente.
 - Actual: WorkflowModels/WorkflowService permiten COLLEGIATE sin firma y sin assigneeIds. Sin embargo, [ReviewService.java:48](../../backend/src/main/java/ec/edu/uta/utaped/workflow/ReviewService.java#L48) bloquea cualquier etapa sin participantes. Además, T1Template:135 dibuja filas por participante y no representa por sí sola un destino colegiado vacío.
 - Falta definir y soportar cómo se registra la decisión colegiada: constancia, actor habilitado para registrar, o destino externo según la política aprobada. No resolverlo inventando una persona firmante ni contando una aprobación automática. La configuración visible hoy no garantiza que ese caso sea ejecutable.
 
 ### A05. Cargos institucionales y matriz de firmas — P1, capacidad parcial
 
-- Fuente: [L244](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L244>), L615–626; Plan Maestro §24.
+- Fuente: [L244](<../decisions/Todas las reuniones.txt#L244>), L615–626; Plan Maestro §24.
 - Actual: [WorkflowModels.java:15](../../backend/src/main/java/ec/edu/uta/utaped/workflow/WorkflowModels.java#L15) resuelve PERSON o GROUP_ROLE limitado a MEMBER/COORDINATOR. DocumentWorkflowSnapshot.Participant conserva nombre/estado, no cargo. T1Template:122 y :137 dejan vacía la celda de cargo; T2Template tampoco recibe una asignación de cargo por firmante.
 - Falta catálogo/asignación de funciones institucionales por período/carrera, resolver sus personas y congelar cargos en la matriz documental. Etiquetar una etapa «Decano» y elegir manualmente una persona no equivale a disponer de esa relación funcional.
 
 ### A06. Borrador descartado visible solo a administración autorizada — P1, diferencia con requisito vigente
 
-- Fuente: [L591–601](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L591>); Plan Maestro §15.
+- Fuente: [L591–601](<../decisions/Todas las reuniones.txt#L591>); Plan Maestro §15.
 - Actual: DocumentLifecycleService archiva sin borrar y permite crear otro borrador, pero [WorkPlanService.java:20](../../backend/src/main/java/ec/edu/uta/utaped/planning/WorkPlanService.java#L20) no restringe el acceso por archived_at; su list tampoco excluye estos descartados. Ser ADMIN no concede por sí mismo lectura documental.
 - Falta una política específica para borradores descartados y su bandeja administrativa autorizada. No mezclarla con versiones aprobadas archivadas, que sí deben conservar el historial de su familia. Una corrección no debe abrir todos los documentos privados a todo administrador.
 
 ### A07. Coordinador: altas, comisiones y reasignaciones — P1, faltante conocido
 
-- Fuente: [L195–202](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L195>), L658–663, L867–874; Plan Maestro §§28 y roles.
+- Fuente: [L195–202](<../decisions/Todas las reuniones.txt#L195>), L658–663, L867–874; Plan Maestro §§28 y roles.
 - Actual: [SecurityConfig.java:63](../../backend/src/main/java/ec/edu/uta/utaped/identity/SecurityConfig.java#L63) reserva /api/admin a ADMIN; OrganizationService exige ADMIN para membresías/principal. El coordinador dispone de recuperación delegada y prórrogas de evidencia, pero no de alta/importación ni de toda la administración de su comisión. Tampoco hay sustitución completa de un revisor ya congelado tras una baja.
 - Falta delegación acotada por ámbito/período con auditoría, catálogo de permisos y reasignación sin reescribir acciones previas. No convertir al coordinador en administrador global. Debe confirmarse quién concede cada permiso y qué pasa con tareas ya activas.
 
 ### A08. Plazo de elaboración y reapertura individual — P1, parcial
 
-- Fuente: [L728](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L728>): normalmente cinco días para elaborar, bloqueo posterior y habilitación autorizada.
+- Fuente: [L728](<../decisions/Todas las reuniones.txt#L728>): normalmente cinco días para elaborar, bloqueo posterior y habilitación autorizada.
 - Actual: [WorkPlanService.java:50](../../backend/src/main/java/ec/edu/uta/utaped/planning/WorkPlanService.java#L50) aplica una ventana de elaboración común configurada por período. Puede configurarse a cinco días; no falta el bloqueo básico. EvidenceService:88 implementa prórrogas por actividad/persona, no por elaboración de un Plan. Las semillas usan todo el semestre, deliberadamente para pruebas.
 - Falta excepción individual para elaboración, con motivo, plazo anterior/nuevo y autorización. Confirmar si los cinco días son calendario o laborables, desde qué fecha se cuentan y quién autoriza; no trasladar automáticamente los tres días de evidencia a esta regla.
 
 ### A09. Historial de autoridades y límites para otros usuarios — P1, parcial/política por completar
 
-- Fuente: [L876–887](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L876>); Plan Maestro §52.
+- Fuente: [L876–887](<../decisions/Todas las reuniones.txt#L876>); Plan Maestro §52.
 - Actual: no existe un alcance de autoridad Decano/Subdecano para consultar el historial institucional. WorkPlanService.ACCESS también conserva acceso por tareas propias ACTIVE/COMPLETED/RETURNED, sin un filtro explícito de «solo período actual». La transferencia de principal concede acceso a los documentos del ámbito.
 - Falta resolver cargos/authority_scope y conciliar continuidad del responsable, historial de quienes actuaron y restricción del cliente por período. No se comprobó una exposición arbitraria: existe autorización por documento/tarea; lo pendiente es si coincide con la política institucional esperada.
 
 ### A10. Firma visible con QR y texto — P2, diferencia de presentación; contrato pendiente
 
-- Fuente: [L756–792](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L756>): la conversación termina pidiendo texto junto a la representación de firma.
+- Fuente: [L756–792](<../decisions/Todas las reuniones.txt#L756>): la conversación termina pidiendo texto junto a la representación de firma.
 - Actual: [Pkcs12PdfSigner.java:179](../../backend/src/main/java/ec/edu/uta/utaped/signing/Pkcs12PdfSigner.java#L179) genera firma criptográfica y apariencia de texto con nombre/fecha; no dibuja QR. No significa que falte la firma real.
 - Falta acordar el contenido/propósito del QR y la apariencia esperada. No generar un QR institucional falso ni afirmar validación oficial por mostrar un cuadrado escaneable. No hace falta almacenar certificados para resolverlo.
 
 ### A11. Porcentaje de ejecución del Plan — P2, indicador parcial
 
-- Fuente: [L930–936](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L930>).
+- Fuente: [L930–936](<../decisions/Todas las reuniones.txt#L930>).
 - Actual: [ReportingService.java:13](../../backend/src/main/java/ec/edu/uta/utaped/planning/ReportingService.java#L13) compara número de actividades por grupo y porcentaje de actividades con evidencia completa. ReportService recoge porcentaje declarado por actividad en el T2. No hay agregado institucional definido de ese porcentaje físico por Plan en el reporte general.
 - Falta diferenciar y, si procede, mostrar avance físico del Plan frente a cobertura documental. Confirmar fórmula y ponderaciones; no sustituir uno por otro ni inventar una media como fórmula aprobada. El conteo/comparación de actividades y exportación CSV sí están presentes.
 
 ### A12. Unidad académica/administrativa elegible — P2, alcance por precisar
 
-- Fuente: [L51–68](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L51>) y L120–128: hay cambios de criterio sobre ubicación y tipo de unidad; se menciona selección desde catálogo.
+- Fuente: [L51–68](<../decisions/Todas las reuniones.txt#L51>) y L120–128: hay cambios de criterio sobre ubicación y tipo de unidad; se menciona selección desde catálogo.
 - Actual: WorkPlanService:130 fija FISEI al crear; WorkPlanEditor:213 muestra unidad en solo lectura para ámbitos. T1Template:83 conserva el rótulo combinado académica/administrativa. Sí existe carrera por ámbito, incluidas varias carreras para la misma persona.
 - Falta, si se mantienen unidades administrativas en el alcance, un modelo/catálogo y selección explícita del tipo de unidad y su representación por plantilla. Validar contra el formato oficial vigente y el alcance FISEI; no declarar incorrecto todo el encabezado por una frase aislada anterior.
 
 ### A13. Firma requerida por cada persona — P1, configuración y reglas parciales
 
-- Fuente: [L698–701](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L698>); Plan Maestro §20, considerando la excepción colegiada.
+- Fuente: [L698–701](<../decisions/Todas las reuniones.txt#L698>); Plan Maestro §20, considerando la excepción colegiada.
 - Actual: el motor firma revisores cuando requiresSignature=true, pero permite etapas de personas sin firma. Las semillas crean etapas sin firma obligatoria y WorkflowAdministration permite elegirlo libremente.
 - Falta traducir la tabla oficial de flujos a políticas obligatorias y controlar excepciones autorizadas. No afirmar que «no hay firmas de revisores»: sí están implementadas. Lo que no está garantizado es la obligatoriedad institucional, además de los coautores de A02.
 
 ### A14. Término «Firma y Finalización» — P2, ajuste de interfaz pendiente
 
-- Fuente: [L338–345](<../decisions/Todas las reuniones hasta la del 6-10-2026.txt#L338>) y L534–541; Plan Maestro §10.
+- Fuente: [L338–345](<../decisions/Todas las reuniones.txt#L338>) y L534–541; Plan Maestro §10.
 - Actual: WorkPlanEditor:139 muestra «Firma y envío». La firma del principal sí inicia revisión atómicamente (AuthorSignatureService:96), por lo que la conducta principal está cubierta.
 - Falta armonizar los textos con la denominación acordada sin volver a separar firma/envío ni introducir otro clic obligatorio.
 

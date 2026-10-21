@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-20 — Preparación de develop hacia main](2026-10-20-03-develop-main-handoff.md).
+
 - [2026-10-20 — Revisión del staged y preparación del PR](2026-10-20-02-staged-review-and-develop-pr.md).
 
 - [2026-10-20 — Matriz, catálogos y responsables colectivos](2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).
