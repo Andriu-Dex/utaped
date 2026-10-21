@@ -79,6 +79,7 @@ app:
   public-url: ${APP_PUBLIC_URL:http://localhost:64430}
   mail-from: ${MAIL_FROM:no-reply@utaped.invalid}
   planning:
+    # Business days (weekends and registered holidays excluded) for evidence extensions and elaboration reopening.
     max-extension-days: ${PLANNING_MAX_EXTENSION_DAYS:3}
     allow-legacy-creation: false
     single-plan-per-scope: ${PLANNING_SINGLE_PLAN_PER_SCOPE:false}

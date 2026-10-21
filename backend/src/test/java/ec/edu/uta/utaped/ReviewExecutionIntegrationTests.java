@@ -21,6 +21,8 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ReportService reports;
     @Autowired ec.edu.uta.utaped.planning.DocumentLifecycleService lifecycle;
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
+    @Autowired ec.edu.uta.utaped.planning.BusinessCalendar calendar;
+    @Autowired ec.edu.uta.utaped.planning.PreparationExtensionService extensions;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
     @Test void reportCreationOptionsRequireApprovedAccessiblePlansAndPreserveExistingNames() throws Exception {
         UUID review=submit(false);assertEquals(0,reports.options(email,"",0,20).total());approve(review);
@@ -390,6 +392,31 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM deadline_extension_history WHERE work_plan_id=? AND user_id=?",Integer.class,id,user));
         assertEquals(409,assertThrows(ResponseStatusException.class,()->evidence.extend(id,activity.id(),reviewerEmail,grant)).getStatusCode().value());
         assertEquals(400,assertThrows(ResponseStatusException.class,()->evidence.extend(id,activity.id(),reviewerEmail,new ec.edu.uta.utaped.planning.EvidenceService.Extension(0L,approver,activity.endsOn().plusDays(1),"No es responsable"))).getStatusCode().value());
+    }
+    @Test void businessDaysSkipWeekendsAndRegisteredHolidays() {
+        jdbc.update("INSERT INTO planning_holiday(holiday_date,label) VALUES ('2026-10-12','Feriado de prueba')");
+        assertEquals(java.time.LocalDate.of(2026,10,15),calendar.addBusinessDays(java.time.LocalDate.of(2026,10,9),3));
+        assertEquals(java.time.LocalDate.of(2026,10,9),calendar.addBusinessDays(java.time.LocalDate.of(2026,10,8),1));
+    }
+    @Test void preparationReopeningIsCoordinatorOnlyBoundedByBusinessDaysAndReopensEditing() {
+        signingAdmin();
+        UUID scope=organization.createScope(email,new OrganizationService.ScopeInput(group,period,null));
+        organization.member(scope,email,new OrganizationService.MemberInput(user,"MEMBER","Elaborador",true,0L));organization.principal(scope,email,new OrganizationService.PrincipalInput(user,0L));
+        jdbc.update("UPDATE work_plan SET scope_id=? WHERE id=?",scope,id);jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?)",id,user,user);
+        UUID coordinator=UUID.randomUUID();String coordinatorEmail="coordinator-window@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Coordinación de prueba','unused','USER',false)",coordinator,coordinatorEmail);
+        organization.member(scope,email,new OrganizationService.MemberInput(coordinator,"COORDINATOR","Coordinación",true,0L));
+        var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",today.minusDays(1),period);
+        assertFalse(plans.get(id,email).editable());
+        var max=calendar.addBusinessDays(today.minusDays(1),3);var state=extensions.get(scope,coordinatorEmail);
+        assertEquals(max,state.maxEndsOn());assertTrue(state.canGrant());assertFalse(extensions.get(scope,email).canGrant());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->extensions.grant(scope,email,new ec.edu.uta.utaped.planning.PreparationExtensionService.Grant(0L,max,"Sin autorización"))).getStatusCode().value());
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->extensions.grant(scope,coordinatorEmail,new ec.edu.uta.utaped.planning.PreparationExtensionService.Grant(0L,max.plusDays(1),"Excede el máximo"))).getStatusCode().value());
+        var granted=extensions.grant(scope,coordinatorEmail,new ec.edu.uta.utaped.planning.PreparationExtensionService.Grant(0L,max,"Reapertura individual de prueba"));
+        assertEquals(max,granted.effectiveEndsOn());assertEquals(1,granted.history().size());assertTrue(plans.get(id,email).editable());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->extensions.grant(scope,coordinatorEmail,new ec.edu.uta.utaped.planning.PreparationExtensionService.Grant(0L,max,"Versión vencida"))).getStatusCode().value());
+        assertEquals(today.minusDays(1),jdbc.queryForObject("SELECT preparation_ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,period));
     }
     @Test void externalReferencesRespectMediumPermissionsVersionsAndFrozenT2() throws Exception {
         UUID review=submit(false,true);approve(review);assertFalse(jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE work_plan_id=?",String.class,id).contains("externalReferences"));var activity=activities.get(id,email).activities().getFirst();

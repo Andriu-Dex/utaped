@@ -30,6 +30,7 @@ public class WorkPlanService {
     private static final String SELECT="""
         SELECT w.*,COALESCE(s.principal_user_id,w.teacher_id) AS responsible_id,u.display_name AS teacher_name,
           g.name AS group_name,p.name AS period_name,p.status AS period_status,p.preparation_starts_on,p.preparation_ends_on,p.starts_on,p.ends_on,
+          GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_effective_ends_on,
           (actor.id=COALESCE(s.principal_user_id,w.teacher_id)) AS is_editor,
           EXISTS(SELECT 1 FROM signed_document_artifact sig JOIN document_artifact a ON a.id=sig.artifact_id WHERE sig.work_plan_id=w.id AND a.source_row_version=w.row_version) AS authors_locked
         FROM work_plan w JOIN app_user actor ON actor.id=?
@@ -49,7 +50,7 @@ public class WorkPlanService {
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
         return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
-            &&(!enforceWindow||within(rs.getObject(rs.getString("document_type").equals("T2")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(rs.getString("document_type").equals("T2")?"ends_on":"preparation_ends_on",LocalDate.class)));
+            &&(!enforceWindow||within(rs.getObject(rs.getString("document_type").equals("T2")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(rs.getString("document_type").equals("T2")?"ends_on":"preparation_effective_ends_on",LocalDate.class)));
     }
     private Plan map(ResultSet rs,int index) throws SQLException {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
@@ -61,7 +62,7 @@ public class WorkPlanService {
         var actor=accounts.current(email);
         var scopes=jdbc.query("""
             SELECT s.id,s.group_id,s.period_id,g.name AS group_name,p.name AS period_name,c.name AS career_name,
-              (s.principal_user_id=? AND p.status='ACTIVE') AS is_principal,p.preparation_starts_on,p.preparation_ends_on,
+              (s.principal_user_id=? AND p.status='ACTIVE') AS is_principal,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on,
               NOT EXISTS (SELECT 1 FROM work_plan w WHERE w.scope_id=s.id AND (w.archived_at IS NULL OR w.document_state='APPROVED') AND w.document_type='T1') AS available
             FROM organizational_scope s JOIN scope_member m ON m.scope_id=s.id AND m.user_id=? AND m.active
             JOIN institutional_group g ON g.id=s.group_id AND g.active JOIN academic_period p ON p.id=s.period_id
@@ -125,7 +126,7 @@ public class WorkPlanService {
             if(jdbc.queryForObject("SELECT count(*) FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND m.group_id=? AND g.active",Integer.class,actor.id(),data.groupId())==0) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo puede crear un Plan en sus grupos activos.");
             if(singlePlan&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE teacher_id=? AND group_id=? AND period_id=? AND archived_at IS NULL",Integer.class,actor.id(),data.groupId(),data.periodId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan para este ámbito anterior.");
         }
-        requireWindow(data.periodId());UUID id=UUID.randomUUID();
+        requireWindow(data.periodId(),data.scopeId());UUID id=UUID.randomUUID();
         if(data.scopeId()==null && requestedTitle.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Indique un título para el documento anterior.");
         String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
         jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career,templateService.getJustificationOrDefault("T1"));
@@ -134,12 +135,12 @@ public class WorkPlanService {
     }
     public boolean signatureWindowOpen(UUID doc,String email) {
         var plan=get(doc,email);
-        var dates=jdbc.queryForMap("SELECT status,starts_on,ends_on,preparation_starts_on,preparation_ends_on FROM academic_period WHERE id=?",plan.periodId());
+        var dates=jdbc.queryForMap("SELECT p.status,p.starts_on,p.ends_on,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on FROM academic_period p LEFT JOIN organizational_scope s ON s.id=? WHERE p.id=?",plan.scopeId(),plan.periodId());
         String from=plan.documentType().equals("T2")?"starts_on":"preparation_starts_on",to=plan.documentType().equals("T2")?"ends_on":"preparation_ends_on";
         return "ACTIVE".equals(dates.get("status")) && plan.archivedAt()==null && plan.documentState().equals("DRAFT") && (!enforceWindow||within(((java.sql.Date)dates.get(from)).toLocalDate(),((java.sql.Date)dates.get(to)).toLocalDate()));
     }
-    private void requireWindow(UUID periodId) {
-        var dates=jdbc.query("SELECT preparation_starts_on,preparation_ends_on FROM academic_period WHERE id=?",(rs,n)->new LocalDate[]{rs.getObject(1,LocalDate.class),rs.getObject(2,LocalDate.class)},periodId);
+    private void requireWindow(UUID periodId,UUID scopeId) {
+        var dates=jdbc.query("SELECT p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) FROM academic_period p LEFT JOIN organizational_scope s ON s.id=? WHERE p.id=?",(rs,n)->new LocalDate[]{rs.getObject(1,LocalDate.class),rs.getObject(2,LocalDate.class)},scopeId,periodId);
         if(dates.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un período válido.");
         if(enforceWindow&&!within(dates.getFirst()[0],dates.getFirst()[1])) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La ventana de elaboración del período está cerrada.");
     }

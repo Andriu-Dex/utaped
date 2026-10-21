@@ -33,7 +33,7 @@ public class DocumentLifecycleService {
     @Transactional public WorkPlanModels.Plan nextVersion(UUID doc,String email,Change data) {
         var plan=plans.lock(doc,email);check(plan,data);
         if(plan.scopeId()==null||!plan.documentState().equals("APPROVED")) throw new ResponseStatusException(HttpStatus.CONFLICT,"Una nueva versión formal requiere un documento aprobado con ámbito institucional.");
-        var dates=jdbc.queryForMap("SELECT starts_on,ends_on,preparation_starts_on,preparation_ends_on FROM academic_period WHERE id=?",plan.periodId());
+        var dates=jdbc.queryForMap("SELECT p.starts_on,p.ends_on,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on FROM academic_period p LEFT JOIN organizational_scope s ON s.id=? WHERE p.id=?",plan.scopeId(),plan.periodId());
         var start=((java.sql.Date)dates.get(plan.documentType().equals("T2")?"starts_on":"preparation_starts_on")).toLocalDate();var end=((java.sql.Date)dates.get(plan.documentType().equals("T2")?"ends_on":"preparation_ends_on")).toLocalDate();var today=LocalDate.now(zone);
         if(enforce&&(today.isBefore(start)||today.isAfter(end))) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La ventana de elaboración está cerrada; una reapertura requiere autorización institucional.");
         if(plan.documentType().equals("T1")&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE base_plan_id=? AND document_state<>'APPROVED' AND archived_at IS NULL",Integer.class,doc)>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Finalice o archive el Informe en elaboración antes de actualizar su Plan fuente.");
