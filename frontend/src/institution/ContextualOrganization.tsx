@@ -1,0 +1,28 @@
+import { confirmAction } from '../shared/confirm-action'
+import { ActionForm } from '../shared/ActionForm'
+import { useEffect, useState, type FormEvent } from 'react'
+import { api } from '../shared/api'
+import { Toast } from '../shared/Toast'
+import { Icon } from '../shared/Icon'
+import { ScopeHistory } from './ScopeHistory'
+import './organization.css'
+
+type Scope = { id: string; group_name: string; career_name: string | null; period_name: string; period_status: string; principal_name: string | null }
+type Recoverable = { id: string; display_name: string; username: string | null; row_version: number }
+export function ContextualOrganization({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+  const [scopes, setScopes] = useState<Scope[]>([]), [selected, setSelected] = useState(''), [users, setUsers] = useState<Recoverable[]>([])
+  const [busy, setBusy] = useState(false), [dirty, setDirty] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(''), [reload, setReload] = useState(0)
+  const [loading, setLoading] = useState(true), [accountsLoading, setAccountsLoading] = useState(false)
+  const scope = scopes.find(s => s.id === selected)
+  useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { let active = true; api<Scope[]>('/organization/scopes').then(s => { if (active) setScopes(s) }).catch(e => { if (active) setError(e.message) }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [])
+  useEffect(() => { let active = true; if (selected) api<Recoverable[]>('/organization/scopes/' + selected + '/accounts').then(u => { if (active) setUsers(u) }).catch(e => { if (active) setError(e.message) }).finally(() => { if (active) setAccountsLoading(false) }); return () => { active = false } }, [selected, reload])
+  async function reset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); const form = event.currentTarget, data = Object.fromEntries(new FormData(form)), user = users.find(u => u.id === data.userId)
+    if (!user || !(await confirmAction('¿Restablecer el acceso de ' + user.display_name + '? Se cerrarán sus sesiones y deberá cambiar la contraseña temporal.'))) return
+    setBusy(true); setError(''); setNotice('')
+    try { await api('/organization/scopes/' + selected + '/accounts/' + user.id + '/temporary-password', 'POST', { rowVersion: user.row_version, temporaryPassword: data.temporaryPassword }); form.reset(); setDirty(false); setReload(r => r + 1); setNotice('Acceso restablecido. Entregue la contraseña temporal por un canal privado.'); window.dispatchEvent(new Event('notifications-changed')) }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo restablecer el acceso.') } finally { setBusy(false) }
+  }
+  return <section className="organization-workspace"><div className="welcome-banner"><div><span className="eyebrow">PERSONAS Y RESPONSABILIDADES</span><h1>Mi organización</h1><p>Consulta tus ámbitos e historial. La recuperación de cuentas requiere autorización expresa de administración.</p></div><Icon name="users" size={64} /></div>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}<section className="card"><label>Mi ámbito institucional<select aria-label="Mi ámbito institucional" value={selected} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if (dirty && !(await confirmAction('Hay cambios sin guardar. ¿Cambiar de ámbito?'))) return; setDirty(false); setSelected(nextValue); setUsers([]); setAccountsLoading(!!nextValue) }}><option value="">Seleccione un ámbito</option>{scopes.map(s => <option key={s.id} value={s.id}>{s.group_name} · {s.career_name ?? 'Facultad'} · {s.period_name}</option>)}</select></label>{loading && <p role="status">Cargando ámbitos…</p>}{!loading && !scopes.length && <p className="muted">No tiene ámbitos asignados.</p>}{scope && <div key={scope.id}><div className="organization-scope-summary"><span><strong>{scope.group_name}</strong><small>Responsable principal: {scope.principal_name ?? 'Sin asignar'}</small></span><span className="status-badge">{scope.period_status === 'CLOSED' ? 'Período cerrado' : 'Período activo'}</span></div><ScopeHistory scopeId={scope.id} /><section className="contextual-recovery"><div className="section-heading"><span className="section-icon"><Icon name="lock" /></span><div><span className="section-kicker">ACCESO SEGURO</span><h2>Recuperar cuenta de un integrante</h2></div></div>{accountsLoading ? <p role="status">Comprobando autorización…</p> : !users.length ? <p className="muted">No hay cuentas que pueda restablecer en este ámbito. Se requiere ser coordinador autorizado en un período activo.</p> : <ActionForm label="Restablecer cuenta de integrante" dirty={dirty} disabled={busy} onCancel={() => setDirty(false)}><form onChange={() => setDirty(true)} onSubmit={reset}><fieldset disabled={busy}><label>Cuenta del integrante<select name="userId" required><option value="">Seleccione una cuenta</option>{users.map(u => <option key={u.id} value={u.id}>{u.display_name} · {u.username ?? 'Sin identificador'}</option>)}</select></label><label>Contraseña temporal<input type="password" name="temporaryPassword" required minLength={12} maxLength={72} autoComplete="new-password" /></label><p className="field-help">La acción cambia el acceso global de esa cuenta, cierra sus sesiones y obliga un cambio al ingresar. Nunca incluya la contraseña en comentarios ni documentos.</p><button><Icon name="lock" size={16} />Restablecer acceso</button></fieldset></form></ActionForm>}</section></div>}</section></section>
+}

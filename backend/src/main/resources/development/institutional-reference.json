@@ -1,0 +1,654 @@
+{
+  "sources": [
+    "comisiones.xlsx",
+    "UNIDADES Y COMISIONES JULIO_DICIEMBRE_2026_(SISTEMAS-SOFTWARE-TI).pdf",
+    "TI-JD2026-UTIT-PLAN-V01-signed.pdf",
+    "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx"
+  ],
+  "periodName": "Julio–Diciembre 2026",
+  "startsOn": "2026-07-01",
+  "endsOn": "2026-12-31",
+  "careers": [
+    {
+      "key": "career",
+      "code": "TI",
+      "name": "Tecnologías de la Información"
+    },
+    {
+      "key": "career-sw",
+      "code": "SW",
+      "name": "Ingeniería de Software"
+    },
+    {
+      "key": "career-sis",
+      "code": "SIS",
+      "name": "Ingeniería en Sistemas Computacionales e Informáticos"
+    }
+  ],
+  "groups": [
+    {
+      "key": "club-telecom",
+      "name": "Club Académico de Telecomunicaciones",
+      "type": "CLUB",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "club-industrial",
+      "name": "Club Académico de Ingeniería Industrial",
+      "type": "CLUB",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "club-ti",
+      "name": "Club Académico de Tecnologías de la Información",
+      "type": "CLUB",
+      "careers": [
+        "TI"
+      ],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "club-software",
+      "name": "Club Académico de Software",
+      "type": "CLUB",
+      "careers": [
+        "SW"
+      ],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "club-robotica",
+      "name": "Club de Robótica",
+      "type": "CLUB",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "virtual",
+      "name": "Comisión de Gestión de Plataformas Virtuales",
+      "type": "COMMISSION",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "eventos",
+      "name": "Comisión de Organización de Eventos Académicos Nacionales e Internacionales",
+      "type": "COMMISSION",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "cau",
+      "name": "Comisión del Consejo Académico Universitario (CAU)",
+      "type": "COMMISSION",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "sustancias",
+      "name": "Comisión Custodio de Sustancias Catalogadas",
+      "type": "COMMISSION",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "calidad",
+      "name": "Comisión Sistema de Gestión de la Calidad",
+      "type": "COMMISSION",
+      "careers": [],
+      "source": "comisiones.xlsx"
+    },
+    {
+      "key": "ctt",
+      "name": "Comisión de CTT y Talleres Tecnológicos",
+      "type": "COMMISSION",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "diseno",
+      "name": "Comisión de Diseño de Proyectos de Carrera",
+      "type": "COMMISSION",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "redes",
+      "name": "Comisión de Redes y Laboratorios",
+      "type": "COMMISSION",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "revista",
+      "name": "Comisión Revista Científica de Facultad",
+      "type": "COMMISSION",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "contingencia",
+      "name": "Comisión Plan de Contingencia",
+      "type": "COMMISSION",
+      "careers": [
+        "SIS"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "practicas",
+      "name": "Prácticas Preprofesionales / Prácticas Laborales",
+      "type": "OTHER",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "graduados",
+      "name": "Seguimiento a Graduados e Inserción Laboral",
+      "type": "OTHER",
+      "careers": [
+        "SIS",
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "tutor",
+      "name": "Tutor de Seguimiento al Desempeño Estudiantil",
+      "type": "OTHER",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "upe",
+      "name": "Unidad de Planificación y Evaluación (UPE)",
+      "type": "UNIT",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "group",
+      "name": "Unidad de Titulación",
+      "type": "UNIT",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "vinculacion",
+      "name": "Unidad de Vinculación con la Sociedad",
+      "type": "UNIT",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "investigacion",
+      "name": "Unidad Operativa de Investigación FISEI",
+      "type": "UNIT",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    },
+    {
+      "key": "uoc",
+      "name": "Unidad de Organización Curricular (UOC)",
+      "type": "UNIT",
+      "careers": [
+        "TI",
+        "SW"
+      ],
+      "source": "comisiones.xlsx / unidades-comisiones PDF"
+    }
+  ],
+  "resources": [
+    "Reglamento, instructivo y procedimientos del proceso de titulación",
+    "Plataformas de comunicación (Página web de la facultad)",
+    "Canales electrónicos de recepción de trámites (correo electrónico, Quipux)",
+    "Propuestas del trabajo de titulación",
+    "Reuniones de la Unidad de Titulación",
+    "Matriz de seguimiento de titulación",
+    "Almacenamiento en la nube (carpetas de los estudiantes)",
+    "Reactivos para examen complexivo",
+    "Calendario académico",
+    "Plataforma para la ejecución del examen",
+    "Espacios físicos destinados a la ejecución de la evaluación",
+    "Malla curricular, sílabo",
+    "Plataforma virtual",
+    "Informes mensuales de los trabajos de titulación",
+    "Correos institucionales"
+  ],
+  "means": [
+    "Oficios, actas de la Unidad de Titulación",
+    "Resoluciones de aprobación",
+    "Oficios, actas, acuerdos de la Unidad de Titulación",
+    "Informe de aplicación del proceso de titulación de grado aprobado",
+    "Banco consolidado de reactivos",
+    "Planificación del proceso de examen complexivo",
+    "Informe de resultados del examen complexivo",
+    "Guías académicas",
+    "Actas y oficios de socialización",
+    "Reporte de seguimiento periódico del trabajo de titulación",
+    "Registros de comunicaciones institucionales"
+  ],
+  "activities": [
+    {
+      "key": "titulacion-0",
+      "groupKey": "group",
+      "title": "Difusión de la normativa interna de titulación a docentes y estudiantes.",
+      "category": "IMPROVEMENT_PLAN",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-1",
+      "groupKey": "group",
+      "title": "Recepción, análisis, gestión y validación de la documentación relacionada con el proceso de titulación de acuerdo con lo establecido en el reglamento.",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-2",
+      "groupKey": "group",
+      "title": "Análisis de la pertinencia de los temas propuestos para las diferentes modalidades de titulación y sugerir su aprobación.",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-3",
+      "groupKey": "group",
+      "title": "Seguimiento al avance de los trabajos de titulación y envío del informe final de cada ciclo académico a Consejo Directivo.",
+      "category": "POA",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-4",
+      "groupKey": "group",
+      "title": "Consolidación del banco de reactivos para los exámenes de grado de carácter complexivo.",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-5",
+      "groupKey": "group",
+      "title": "Planificación, ejecución y evaluación de los exámenes de grado de carácter complexivo bajo estrictas normas éticas y legales. (En caso de existir estudiantes en la modalidad)",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-6",
+      "groupKey": "group",
+      "title": "Elaboración y difusión de las guías académicas para la preparación de los estudiantes que se van a presentar a los exámenes de grado de carácter complexivo. (En caso de existir estudiantes en la modalidad)",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-7",
+      "groupKey": "group",
+      "title": "Planificación y organización de la preparación para los estudiantes que se van a presentar a los exámenes de grado de carácter complexivo. (En caso de existir estudiantes en la modalidad)",
+      "category": "OTHER",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "titulacion-8",
+      "groupKey": "group",
+      "title": "Fortalecimiento del seguimiento periódico de los trabajos de titulación mediante la coordinación entre la Unidad de Titulación, los docentes tutores y los estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5"
+    },
+    {
+      "key": "proposal-9",
+      "groupKey": "redes",
+      "title": "Implementar un sistema tipo ServiceDesk para centralizar el registro de incidencias, requerimientos de soporte, mantenimientos, solicitudes técnicas y atención a usuarios mediante tickets, permitiendo mejorar la trazabilidad, el control y la gestión documental de las actividades realizadas.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES"
+    },
+    {
+      "key": "proposal-10",
+      "groupKey": "redes",
+      "title": "Utilizar el módulo administrativo del ServiceDesk para generar estadísticas, indicadores y reportes por fecha, estado, prioridad, área, servicio y técnico responsable, con el fin de fortalecer la toma de decisiones basada en datos y priorizar acciones correctivas o preventivas.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES"
+    },
+    {
+      "key": "proposal-11",
+      "groupKey": "redes",
+      "title": "Habilitar el registro de tickets por parte de los usuarios solicitantes, permitiendo adjuntar evidencias, consultar el estado de sus requerimientos, revisar el historial de atención e imprimir el seguimiento cuando sea necesario, garantizando mayor transparencia en el proceso de soporte.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES"
+    },
+    {
+      "key": "proposal-12",
+      "groupKey": "redes",
+      "title": "Consolidar una base de conocimiento institucional dentro del ServiceDesk, donde los técnicos registren soluciones aplicadas, aportaciones técnicas y procedimientos de atención, favoreciendo la estandarización de respuestas, la reducción de tiempos de solución y la transferencia de conocimiento entre el personal técnico.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES"
+    },
+    {
+      "key": "proposal-13",
+      "groupKey": "ctt",
+      "title": "Fortalecer la imagen del CTT-FISEI mediante la actualización permanente del sitio web y su articulación con campañas digitales de difusión.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CTT"
+    },
+    {
+      "key": "proposal-14",
+      "groupKey": "club-ti",
+      "title": "Implementar un proceso de transición y mentoría entre la directiva saliente y entrante, documentado en un manual de inducción del club.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO"
+    },
+    {
+      "key": "proposal-15",
+      "groupKey": "club-ti",
+      "title": "Diversificar el formato de actividades (charlas cortas, retos técnicos, proyectos colaborativos) y coordinar horarios con los docentes para minimizar conflictos con la carga académica.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO"
+    },
+    {
+      "key": "proposal-16",
+      "groupKey": "club-ti",
+      "title": "Crear y mantener activo un plan de contenidos en redes sociales (Instagram/Facebook) del club, con publicaciones periódicas sobre actividades y logros.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO"
+    },
+    {
+      "key": "proposal-17",
+      "groupKey": "eventos",
+      "title": "Talleres de Lógica de Programación Sin Código: Utiliza dinámicas de gamificación (juegos de lógica, diagramas de flujo interactivos o herramientas como Scratch) para despertar el pensamiento computacional sin abrumarlos con la sintaxis de un lenguaje de programación complejo.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / EVENTOS ACADÉMICOS"
+    },
+    {
+      "key": "proposal-18",
+      "groupKey": "eventos",
+      "title": "Atracción de Empresas y Networking: Invita a empresas tecnológicas de la región. Muéstrales que en la universidad se promueven tecnologías que ahorran miles de dólares en licenciamiento corporativo. Esto abrirá plazas de prácticas pre-profesionales para los asistentes.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / EVENTOS ACADÉMICOS"
+    },
+    {
+      "key": "proposal-19",
+      "groupKey": "diseno",
+      "title": "Crear un repositorio institucional único de evidencias de la comisión, organizado por actividad, fecha, responsable, producto y medio de verificación.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-20",
+      "groupKey": "diseno",
+      "title": "Consolidar una matriz maestra de trazabilidad curricular que vincule competencias, resultados de aprendizaje, asignaturas, unidades temáticas, APE, instrumentos de evaluación y evidencias.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-21",
+      "groupKey": "diseno",
+      "title": "Socializar las matrices de movilidad, contenidos mínimos y pre/correquisitos en Consejo Académico de Carrera y Facultad, dejando actas, observaciones y versión final aprobada.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-22",
+      "groupKey": "diseno",
+      "title": "Actualizar contenidos mínimos y sílabos para incorporar prácticas verificables en calidad de software, seguridad, ingeniería de datos, cloud, APIs, DevOps básico, gobierno TI y comunicación profesional.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-23",
+      "groupKey": "diseno",
+      "title": "Definir rúbricas y productos prácticos mínimos por asignatura para verificar implementación real: proyectos integradores, repositorios, informes técnicos, despliegues, pruebas y documentación.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-24",
+      "groupKey": "diseno",
+      "title": "Institucionalizar una consulta anual al sector profesional, con agenda, registro de participantes, matriz de necesidades, brechas, recomendaciones y acta de cierre.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-25",
+      "groupKey": "diseno",
+      "title": "Elaborar un plan de recursos mínimos por eje formativo: repositorios Git, laboratorios cloud, herramientas de BI, ambientes de seguridad, servidores, APIs y plataformas de automatización.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-26",
+      "groupKey": "diseno",
+      "title": "Diseñar itinerarios o microcredenciales internas en QA, ciberseguridad, datos, cloud, redes, frontend, backend, DevOps e integración de sistemas.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-27",
+      "groupKey": "diseno",
+      "title": "Definir una matriz de transición académica que identifique equivalencias, restricciones, pre/correquisitos, casos especiales y responsables de seguimiento por cohorte.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-28",
+      "groupKey": "diseno",
+      "title": "Establecer indicadores semestrales de seguimiento: porcentaje de sílabos actualizados, evidencias APE ejecutadas, participación externa, avance de validaciones y cumplimiento de acciones correctivas.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA"
+    },
+    {
+      "key": "proposal-29",
+      "groupKey": "contingencia",
+      "title": "Contactar nuevamente a los integrantes de este mecanismo: Estudiantes que tienen pendiente el trabajo de titulación.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PLAN DE CONTINGENCIA"
+    },
+    {
+      "key": "proposal-30",
+      "groupKey": "virtual",
+      "title": "Implementar una lista de verificación previa al cierre del parcial para confirmar syllabus, plan analítico y foro de socialización. (Plan de Mejora 1)",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES"
+    },
+    {
+      "key": "proposal-31",
+      "groupKey": "virtual",
+      "title": "Socializar criterios mínimos y buenas prácticas para el uso de recursos, IA, REA y simuladores en Moodle. (Plan de Mejora 21",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES"
+    },
+    {
+      "key": "proposal-32",
+      "groupKey": "virtual",
+      "title": "Mantener matrices consolidadas por parcial y generar alertas tempranas para aulas con indicadores incompletos. (Plan de Mejora 3-41",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES"
+    },
+    {
+      "key": "proposal-33",
+      "groupKey": "group",
+      "title": "Fortalecer el seguimiento periódico de los trabajos de titulación mediante la coordinación entre la Unidad de Titulación, los docentes tutores y los estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / TITULACIÓN"
+    },
+    {
+      "key": "proposal-34",
+      "groupKey": "uoc",
+      "title": "Gestionar ante Subdecanato la unificación de los criterios y procedimientos para la solicitud de evidencias, garantizando su aplicación uniforme en todas las coordinaciones de carrera de la facultad",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / UOC"
+    },
+    {
+      "key": "proposal-35",
+      "groupKey": "vinculacion",
+      "title": "Agilizar la coordinación para su emisión.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN"
+    },
+    {
+      "key": "proposal-36",
+      "groupKey": "vinculacion",
+      "title": "Implementar herramientas digitales.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN"
+    },
+    {
+      "key": "proposal-37",
+      "groupKey": "vinculacion",
+      "title": "Establecer cronogramas y controles.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN"
+    },
+    {
+      "key": "proposal-38",
+      "groupKey": "vinculacion",
+      "title": "Mantener capacitación y evaluación periódica.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN"
+    },
+    {
+      "key": "proposal-39",
+      "groupKey": "upe",
+      "title": "Crear un registro de seguimiento de actividades condicionadas por órganos externos, con fecha de remisión, instancia responsable y estado actual.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / UPE"
+    },
+    {
+      "key": "proposal-40",
+      "groupKey": "practicas",
+      "title": "Gestionar la ampliación y actualización permanente del banco de empresas e instituciones receptoras, priorizando entidades públicas y privadas alineadas al perfil profesional de cada carrera.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-41",
+      "groupKey": "practicas",
+      "title": "Fortalecer la socialización de las diferentes modalidades disponibles para el cumplimiento de prácticas laborales, explicando requisitos, beneficios, procedimientos y documentación necesaria para cada caso.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-42",
+      "groupKey": "practicas",
+      "title": "Establecer un procedimiento estandarizado para la gestión de prácticas laborales, definiendo actividades, responsables, plazos, documentos requeridos y medios de verificación en cada etapa del proceso.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-43",
+      "groupKey": "practicas",
+      "title": "Mejorar el sistema informático de gestión de prácticas laborales, incorporando mecanismos de validación, alertas y reportes sobre documentos pendientes, fechas de vencimiento, horas registradas y prácticas próximas a finalizar.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-44",
+      "groupKey": "practicas",
+      "title": "Impulsar la suscripción de nuevos convenios institucionales con empresas y organizaciones recurrentes, a fin de garantizar espacios permanentes y sostenibles para futuras cohortes de estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-45",
+      "groupKey": "practicas",
+      "title": "Implementar mecanismos de retroalimentación con tutores institucionales, docentes tutores y estudiantes, mediante encuestas, informes o reuniones de cierre que permitan identificar oportunidades de mejora.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-46",
+      "groupKey": "practicas",
+      "title": "Generar reportes consolidados por carrera, modalidad, empresa, tutor y estado del proceso, que permitan analizar resultados, identificar necesidades y proyectar la planificación de prácticas laborales.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-47",
+      "groupKey": "practicas",
+      "title": "Coordinar con las empresas receptoras la asignación de actividades acordes al área de formación de los estudiantes, procurando que las tareas contribuyan al desarrollo de competencias técnicas y profesionales.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES"
+    },
+    {
+      "key": "proposal-48",
+      "groupKey": "graduados",
+      "title": "Incorporar en los procesos de actualización curricular contenidos relacionados con inteligencia artificial, computación en la nube, ciberseguridad, arquitectura de microservicios, automatización de procesos, diseño de APIs y demás tecnologías emergentes identificadas por los graduados.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-49",
+      "groupKey": "graduados",
+      "title": "Promover el fortalecimiento de habilidades blandas, liderazgo, comunicación efectiva, gestión de proyectos, resolución de problemas y trabajo en equipo mediante actividades académicas y de vinculación con el sector productivo",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-50",
+      "groupKey": "graduados",
+      "title": "Implementar mecanismos permanentes de comunicación con los graduados mediante bases de datos actualizadas, redes profesionales, boletines informativos y encuentros periódicos que faciliten su participación en actividades institucionales.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-51",
+      "groupKey": "graduados",
+      "title": "Fortalecer la articulación con empresas e instituciones públicas y privadas para promover prácticas preprofesionales, proyectos conjuntos, conferencias y procesos de retroalimentación que contribuyan a la mejora continua de las carreras.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-52",
+      "groupKey": "graduados",
+      "title": "Planificar y ejecutar programas permanentes de educación continua (cursos, talleres, seminarios y webinars) orientados a la actualización de competencias técnicas y profesionales de los graduados.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-53",
+      "groupKey": "graduados",
+      "title": "Fomentar la participación activa de los graduados en procesos de seguimiento, evaluación y actualización curricular mediante encuestas, grupos focales, encuentros académicos y espacios de consulta institucional.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS"
+    },
+    {
+      "key": "proposal-54",
+      "groupKey": "eventos",
+      "title": "Se propone buscar más opciones de ponentes y personal para el congreso mediante contacto directo por parte de los miembros de la comisión, reduciendo considerablemente la dependencia de la disponibilidad de voluntarios.",
+      "category": "IMPROVEMENT_ACTION",
+      "source": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CONGRESO CSEI"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Catálogo trazable de requisitos
 
+Actualización productiva: ver [estado de entrega](../../implementation-status.md).
+
 Extracción de la línea base; no es ratificación institucional ni catálogo atómico terminado. IDs FR-* preservados; UT-SEC-* identifican bloques antes sin ID. Declaraciones compuestas requieren desglosarse antes de implementar.
 
 [Datos estructurados](catalog.json) · [Fuente íntegra](../reference/baseline-requirements.md) · [Aceptación por módulo](functional.md) · [Plan de validación](../validation/validation-plan.md).
@@ -108,31 +110,31 @@ Puede gestionar:
 
 ## FR-AUTH-001
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El sistema debe permitir autenticación mediante credenciales.
 
 ## FR-AUTH-002
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: PARCIAL.
 
 Usuarios importados pueden recibir contraseña temporal.
 
 ## FR-AUTH-003
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 En el primer ingreso con contraseña temporal debe solicitar cambio obligatorio.
 
 ## FR-AUTH-004
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe existir recuperación de contraseña.
 
 ## FR-AUTH-005
 
-Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §3 — AUTENTICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El usuario autenticado debe conservar identidad única durante la sesión.
 
@@ -140,7 +142,7 @@ Cambiar contexto o rol no cambia la persona autenticada.
 
 ## FR-GRP-001
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El sistema debe manejar una entidad configurable:
 
@@ -148,7 +150,7 @@ El sistema debe manejar una entidad configurable:
 
 ## FR-GRP-002
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Tipos posibles:
 
@@ -159,7 +161,7 @@ Tipos posibles:
 
 ## FR-GRP-003
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Un docente puede pertenecer a varios grupos.
 
@@ -179,7 +181,7 @@ No permitir duplicado de esa combinación cuando corresponda.
 
 ## FR-GRP-006
 
-Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §4 — GRUPOS INSTITUCIONALES. Estado: HEREDADO. Producción: PARCIAL.
 
 Los roles de pertenencia pueden incluir:
 
@@ -191,7 +193,7 @@ No utilizar “Responsable” como rol permanente del grupo porque ese concepto 
 
 ## FR-PER-001
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El administrador define períodos académicos.
 
@@ -201,7 +203,7 @@ Ejemplo actual:
 
 ## FR-PER-002
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El período debe disponer de:
 
@@ -212,7 +214,7 @@ El período debe disponer de:
 
 ## FR-PER-003
 
-Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §5 — PERÍODOS. Estado: HEREDADO. Producción: PARCIAL.
 
 Estas fechas deben ser configurables.
 
@@ -242,7 +244,7 @@ No alterar este orden sin nueva validación institucional.
 
 ## FR-T1-001
 
-Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: PARCIAL: identidad, grupo y periodo; datos institucionales manuales.
 
 Debe obtener automáticamente:
 
@@ -265,7 +267,7 @@ La carrera debe aparecer correctamente vinculada.
 
 ## FR-T1-004
 
-Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §8 — INFORMACIÓN GENERAL DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: fecha civil al crear borrador.
 
 La fecha de elaboración debe registrarse.
 
@@ -279,13 +281,13 @@ No debe cambiar posteriormente porque otro usuario revise o firme.
 
 ## FR-T1-CONT-001
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador.
 
 Debe existir exactamente una Justificación.
 
 ## FR-T1-CONT-002
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador.
 
 Debe existir exactamente un Objetivo.
 
@@ -303,7 +305,9 @@ El docente puede:
 
 ## FR-T1-CONT-004
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 Puede existir asistente IA de redacción.
 
@@ -316,7 +320,9 @@ La IA puede sugerir:
 
 ## FR-T1-CONT-005
 
-Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §9 — CONTENIDO DEL PLAN. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 La IA nunca reemplaza automáticamente el contenido.
 
@@ -332,13 +338,13 @@ El usuario decide:
 
 ## FR-ACT-001
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 El administrador puede configurar catálogo de actividades.
 
 ## FR-ACT-002
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las actividades pueden clasificarse como:
 
@@ -349,13 +355,13 @@ Las actividades pueden clasificarse como:
 
 ## FR-ACT-003
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede haber actividades obligatorias por grupo.
 
 ## FR-ACT-004
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las obligatorias:
 
@@ -364,13 +370,13 @@ Las obligatorias:
 
 ## FR-ACT-005
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede haber actividades opcionales.
 
 ## FR-ACT-006
 
-Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §10 — ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 El docente puede crear libremente una actividad `Otra`.
 
@@ -378,7 +384,7 @@ No debe obligarse a clasificar toda actividad como POA/Plan/Acción.
 
 ## UT-SEC-011
 
-Fuente: §11 — MATRIZ DE ACTIVIDADES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §11 — MATRIZ DE ACTIVIDADES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Cada actividad debe poder definir:
 
@@ -390,7 +396,7 @@ Cada actividad debe poder definir:
 
 ## FR-DATE-001
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Usar fecha completa:
 
@@ -398,37 +404,37 @@ Usar fecha completa:
 
 ## FR-DATE-002
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Las fechas deben estar dentro del período cuando corresponda.
 
 ## FR-DATE-003
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Una actividad puede atravesar un feriado.
 
 ## FR-DATE-004
 
-Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §12 — FECHAS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Una actividad no debe iniciar o finalizar en un feriado cuando esa restricción esté configurada.
 
 ## FR-RESP-001
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe seleccionarse mínimo un responsable.
 
 ## FR-RESP-002
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Puede seleccionarse más de uno.
 
 ## FR-RESP-003
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir:
 
@@ -436,13 +442,13 @@ Debe existir:
 
 ## FR-RESP-004
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 La lista seleccionable debe corresponder a integrantes aplicables del grupo.
 
 ## FR-RESP-005
 
-Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §13 — RESPONSABLES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Cuando todos los miembros aplicables sean seleccionados, el documento puede representar el conjunto mediante denominación colectiva.
 
@@ -456,7 +462,7 @@ Internamente deben conservarse las identidades individuales para trazabilidad.
 
 ## FR-REC-001
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Los recursos se seleccionan de catálogo.
 
@@ -471,31 +477,31 @@ Ejemplos:
 
 ## FR-REC-002
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir `Otro`.
 
 ## FR-REC-003
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Al seleccionar `Otro` debe requerirse descripción.
 
 ## FR-REC-004
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 No permitir guardar `Otro` vacío.
 
 ## FR-REC-005
 
-Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §14 — RECURSOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Los catálogos deben ser administrables.
 
 ## FR-MED-001
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Seleccionar desde catálogo.
 
@@ -512,19 +518,19 @@ Ejemplos:
 
 ## FR-MED-002
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Debe existir `Otro`.
 
 ## FR-MED-003
 
-Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §15 — MEDIOS DE VERIFICACIÓN. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 Otro requiere descripción obligatoria.
 
 ## FR-MAT-001
 
-Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 La matriz debe permitir registrar:
 
@@ -541,13 +547,13 @@ Debe ser editable cuando corresponda.
 
 ## FR-MAT-002
 
-Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §16 — FUENTE Y ELABORACIÓN DE MATRIZ. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES.
 
 `Elaborado por` debe derivarse automáticamente del grupo/comisión responsable.
 
 ## UT-SEC-017
 
-Fuente: §17 — NOTA DE DATOS PERSONALES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §17 — NOTA DE DATOS PERSONALES. Estado: HEREDADO. Producción: PARCIAL: CONDICIÓN EXPLÍCITA EN BORRADOR.
 
 La plantilla institucional contempla una nota de protección de datos personales.
 
@@ -559,7 +565,7 @@ La condición debe ser explícita/configurable.
 
 ## FR-ANX-001
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El docente selecciona:
 
@@ -568,7 +574,7 @@ El docente selecciona:
 
 ## FR-ANX-002
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Si selecciona Sí:
 
@@ -579,7 +585,7 @@ Si selecciona Sí:
 
 ## FR-ANX-003
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 La numeración será automática:
 
@@ -589,25 +595,25 @@ La numeración será automática:
 
 ## FR-ANX-004
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Eliminar un anexo reordena la secuencia.
 
 ## FR-ANX-005
 
-Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §18 — ANEXOS. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Anexos del documento no son evidencias de actividades.
 
 ## UT-SEC-019
 
-Fuente: §19 — PREVISUALIZACIÓN T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §19 — PREVISUALIZACIÓN T1. Estado: HEREDADO. Producción: PARCIAL: PREVISUALIZACIÓN T1; ACEPTACIÓN INSTITUCIONAL PENDIENTE.
 
 El documento debe representar fielmente el formato oficial.
 
 ## UT-SEC-020
 
-Fuente: §20 — ENCABEZADO T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §20 — ENCABEZADO T1. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe contener:
 
@@ -622,7 +628,7 @@ La estructura exacta debe seguir el formato institucional de referencia.
 
 ## UT-SEC-021
 
-Fuente: §21 — PORTADA T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §21 — PORTADA T1. Estado: HEREDADO. Producción: PARCIAL: PORTADA T1; CAMPOS INSTITUCIONALES MANUALES.
 
 La composición central debe respetar el formato institucional real.
 
@@ -642,7 +648,7 @@ El bloque principal debe quedar aproximadamente en la zona media vertical del A4
 
 ## UT-SEC-022
 
-Fuente: §22 — PIE DE PÁGINA T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §22 — PIE DE PÁGINA T1. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Debe mostrarse en una única fila visual.
 
@@ -658,7 +664,7 @@ No agregar doble línea superior si el formato original utiliza una.
 
 ## UT-SEC-023
 
-Fuente: §23 — ÍNDICES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §23 — ÍNDICES. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 El T1 debe generar automáticamente:
 
@@ -671,7 +677,7 @@ La numeración debe derivarse de las páginas reales.
 
 ## UT-SEC-024
 
-Fuente: §24 — FIRMAS T1. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §24 — FIRMAS T1. Estado: HEREDADO. Producción: PARCIAL: ELABORADOR; FLUJO Y FIRMA PENDIENTES.
 
 Sección:
 
@@ -695,7 +701,7 @@ Debe derivarse del flujo real configurado.
 
 ## UT-SEC-025
 
-Fuente: §25 — HISTORIAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §25 — HISTORIAL. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 Título exacto:
 
@@ -741,7 +747,9 @@ Al finalizar:
 
 ## FR-SIGN-001
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 Firmante usa archivo:
 
@@ -752,25 +760,33 @@ y contraseña.
 
 ## FR-SIGN-002
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 Certificado y contraseña son temporales.
 
 ## FR-SIGN-003
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 No almacenarlos permanentemente.
 
 ## FR-SIGN-004
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 La firma debe aplicarse al artefacto exacto.
 
 ## FR-SIGN-005
 
-Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §27 — FIRMA ELECTRÓNICA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance: Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.
 
 La metadata de ubicación debe formar parte del artefacto.
 
@@ -1160,7 +1176,9 @@ Importación:
 
 ## UT-SEC-051
 
-Fuente: §51 — NOTIFICACIONES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §51 — NOTIFICACIONES. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Bandeja interna privada, lectura y navegación; avisos de pertenencias y previsualización. Revisión, evidencias, vencimientos y canales externos pendientes.
 
 Notificaciones por usuario.
 
@@ -1176,7 +1194,9 @@ Cada notificación debe navegar al objeto correcto.
 
 ## UT-SEC-052
 
-Fuente: §52 — AUDITORÍA. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §52 — AUDITORÍA. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Auditoría existente, visor e historial con permisos y exportación CSV; acciones de firma/revisión/evidencias y retención institucional pendientes.
 
 Registrar eventos relevantes:
 
@@ -1194,7 +1214,9 @@ No mostrar IDs técnicos innecesarios al usuario.
 
 ## UT-SEC-053
 
-Fuente: §53 — REPORTES. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §53 — REPORTES. Estado: HEREDADO. Producción: PARCIAL.
+
+Alcance productivo: Seguimiento personal de borradores y exportación administrativa inicial; reportes institucionales completos pendientes.
 
 Los reportes tienen carácter:
 
@@ -1327,12 +1349,14 @@ Cada documento nuevo conserva un snapshot con plantilla, versión, orden y visib
 
 ## FR-ARCH-AI-001
 
-Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: IMPLEMENTADO CON HABILITACIÓN OPERATIVA PENDIENTE.
+
+Entrega: [redacción T1/T2 y límites](../api/writing-and-review-inbox.md). Texto heredado conservado a continuación.
 
 La integración futura de asistencia de redacción usa una abstracción de proveedor en backend: GroqCloud para desarrollo y OpenAI API para producción. El mockup mantiene un proveedor simulado y no expone claves en React.
 
 ## FR-ARCH-DB-001
 
-Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: NO IMPLEMENTADO.
+Fuente: §61 — DECISIONES CONFIRMADAS DE LA MICRO-PASADA FINAL. Estado: HEREDADO. Producción: IMPLEMENTADO EN ALCANCE INICIAL.
 
 La base de datos productiva objetivo es PostgreSQL local o institucional on-premise, gratuita y relacional. El mockup no incorpora todavía backend ni sustituye `localStorage`.

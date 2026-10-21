@@ -1,0 +1,662 @@
+/* Header and inline field toolbar layout */
+.field-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.field-header-row label {
+  margin: 0 !important;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.field-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Compact Writing Assistant Trigger (Header Toolbar Button) */
+.writing-assistant {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.writing-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--blue-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.writing-trigger-btn:hover:not(:disabled) {
+  background: rgba(23, 95, 148, 0.08);
+  border-color: var(--blue-700);
+  color: var(--blue-800);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(23, 95, 148, 0.12);
+}
+
+.writing-trigger-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.writing-trigger-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+:root[data-theme='dark'] .writing-trigger-btn {
+  color: #8ec3ea;
+  border-color: #244360;
+  background: #102436;
+}
+
+:root[data-theme='dark'] .writing-trigger-btn:hover:not(:disabled) {
+  background: #173752;
+  border-color: #4386b8;
+  color: #bce0fc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Overlay Backdrop */
+.writing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(7, 28, 50, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: writingFadeIn 0.2s ease-out;
+  overflow-y: auto;
+}
+
+@keyframes writingFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes writingCardPop {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Modal Card Dialog */
+.writing-modal-card.writing-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: min(1080px, 94vw);
+  max-height: min(92vh, 880px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  animation: writingCardPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  padding: 0;
+  border-top: none;
+}
+
+/* Modal Header */
+.writing-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--primary) 7%, var(--surface)), var(--surface));
+}
+
+.writing-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.writing-modal-badge-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.writing-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.writing-modal-header .section-kicker {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+
+.writing-modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+/* Modal Content Area */
+.writing-modal-content-area {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Setup Grid (Initial State Before Proposal) */
+.writing-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.writing-col-preview,
+.writing-col-setup {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.writing-col-preview {
+  background: color-mix(in srgb, var(--primary) 2%, var(--surface));
+}
+
+.writing-source-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 420px;
+  overflow-y: auto;
+  line-height: 1.7;
+  font-size: 0.94rem;
+  color: var(--text);
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.writing-empty-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  height: 100%;
+}
+
+.writing-empty-notice p {
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+  font-size: 0.88rem;
+}
+
+.writing-status-pill {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+}
+
+.writing-setup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.writing-field-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.writing-tone-field {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px;
+  margin: 0 !important;
+}
+
+.writing-tone-field select {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.writing-tone-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.writing-tone-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+  padding-left: 2px;
+}
+
+.writing-privacy-card {
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.writing-privacy-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.writing-privacy-card .writing-disclaimer {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Checkbox Consent Card: Strictly horizontal, left-aligned, interactive */
+.writing-consent {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 4px 0 0 0 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.writing-consent:hover:not(:has(input:disabled)) {
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.writing-consent.is-active {
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.writing-consent input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0 !important;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.writing-consent-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.writing-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.writing-suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-weight: 600;
+}
+
+.writing-busy-text {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.writing-ready-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Results Zone Top Toolbar */
+.writing-results-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.writing-results-tone {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.writing-results-tone select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.writing-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+/* Comparison Side-by-Side */
+.writing-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.writing-col-original,
+.writing-col-suggested {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.writing-col-suggested {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+}
+
+.writing-column-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.writing-column-heading > span {
+  display: inline-block;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.writing-column-heading h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  margin-left: 6px;
+}
+
+.writing-column-heading small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.writing-proposal-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.writing-editable-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
+.writing-text-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.writing-col-original p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 380px;
+  overflow-y: auto;
+  line-height: 1.7;
+  font-size: 0.94rem;
+  color: var(--text);
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+.writing-live-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.94rem;
+  line-height: 1.7;
+  resize: vertical;
+  min-height: 200px;
+  max-height: 380px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.writing-live-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.writing-changed-alert {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: rgba(220, 53, 69, 0.08);
+  border-radius: 8px;
+  color: #c92a2a;
+  font-weight: 500;
+}
+
+/* Modal Actions Footer */
+.writing-modal-actions-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.writing-modal-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.writing-save-reminder {
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
+.primary-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+}
+
+/* Dark Theme Overrides */
+:root[data-theme='dark'] .writing-symbol,
+:root[data-theme='dark'] .writing-modal-badge-icon,
+:root[data-theme='dark'] .writing-column-heading > span,
+:root[data-theme='dark'] .writing-editable-tag {
+  color: #a6d4f8;
+}
+
+:root[data-theme='dark'] .writing-col-preview {
+  background: rgba(16, 36, 54, 0.4);
+}
+
+:root[data-theme='dark'] .writing-source-text {
+  background: #112233;
+  border-color: #244462;
+}
+
+:root[data-theme='dark'] .writing-privacy-card {
+  background: rgba(23, 95, 148, 0.12);
+  border-color: #244462;
+}
+
+:root[data-theme='dark'] .writing-consent {
+  background: #112233;
+  border-color: #244462;
+}
+
+:root[data-theme='dark'] .writing-consent:hover:not(:has(input:disabled)) {
+  background: #17324c;
+  border-color: #3b749f;
+}
+
+:root[data-theme='dark'] .writing-consent.is-active {
+  background: #173a5a;
+  border-color: #4ea3dd;
+  box-shadow: 0 0 0 1px #4ea3dd;
+}
+
+:root[data-theme='dark'] .writing-col-original p {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='dark'] .writing-modal-backdrop {
+  background: rgba(4, 14, 25, 0.75);
+}
+
+:root[data-theme='dark'] .writing-changed-alert {
+  background: rgba(255, 107, 107, 0.12);
+  color: #ff8787;
+}
+
+@media (max-width: 860px) {
+  .writing-comparison,
+  .writing-setup-grid {
+    grid-template-columns: 1fr;
+  }
+  .writing-modal-header {
+    flex-wrap: wrap;
+  }
+  .writing-modal-actions-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .writing-modal-right-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Native top-layer modal keeps keyboard focus and nested confirmations above the editor. */
+dialog.writing-modal-backdrop { width:100vw; height:100dvh; max-width:none; max-height:none; margin:0; border:0; color:var(--text); }
+dialog.writing-modal-backdrop:not([open]) { display:none; }

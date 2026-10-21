@@ -18,9 +18,11 @@ Estado HEREDADO salvo indicación contraria. Las referencias § remiten a [basel
 | Notificaciones P1 | §51 | Bandeja por usuario y navegación al objeto correcto bajo permisos. Canales y entrega pendientes. |
 | Auditoría e histórico P0 | §52–55 | Eventos atribuibles; documentos, versiones, actividades, firmas y evidencias preservados. Histórico cerrado solo lectura. Reportes documentales/de estado, sin ranking ni sanciones. Cierre pendiente. |
 | Interfaz P1 | §56–59; instruction.md | Español y azul institucional; cargando/vacío/error/éxito/permiso. Iconos con nombre accesible y tooltip, teclado, resoluciones medianas y legibilidad A4. Login como referencia; CAPTCHA DEMO no acredita seguridad. |
-| Asistencia IA P2 | §9 FR-T1-CONT-*, §61 FR-ARCH-AI-001 | Mostrar original/sugerencia, aplicar/descartar explícito; fallo no bloquea edición. Proveedores backend configurables; habilitación y privacidad pendientes. |
+| Asistencia IA P2 | §9 FR-T1-CONT-*, §61 FR-ARCH-AI-001 | T1/T2 con original/sugerencia y aplicar/descartar explícito, sin guardado automático. Proveedores backend Groq/OpenAI configurables, límites y consentimiento por envío. Entregado; habilitación de cuenta/modelo/clave y aceptación de privacidad/calidad pendientes. |
 
 ## Escenarios mínimos
+
+Actualización 2026-10-12: UT-ORG-050, UT-AUTH-050, UT-NOT-050 y UT-EXE-050 incorporan edición de carreras, historial de cargos/principales/prórrogas, reset por coordinador explícitamente autorizado y avisos internos configurables. Las menciones heredadas a acceso/notificaciones pendientes se interpretan según [requisitos vigentes](../../requirements.md) y [contrato](../api/contextual-administration.md); no se atribuye alta/importación delegada todavía.
 
 1. T1: crear, finalizar, revisar, devolver, corregir y aprobar con personas distintas.
 2. T2: derivar y firmar sin modificar Plan o artefactos anteriores.
@@ -30,3 +32,5 @@ Estado HEREDADO salvo indicación contraria. Las referencias § remiten a [basel
 6. Consultar histórico/auditoría bajo permisos y comprobar revocación de sesión/pertenencia.
 
 Antes de cada módulo, desglosar requisitos atómicos y permisos. No convertir pendientes en pruebas de una normativa inventada.
+
+Actualización 2026-10-12: UT-AUTH-060 y UT-EXE-060 incorporan CSV administrativo y medios URL según el Plan Maestro. El requisito heredado de un PDF por medio aplica a medios PDF; los medios URL conservan una referencia vigente versionada y representación textual en T2. [Contrato](../api/user-imports-and-external-evidence.md).

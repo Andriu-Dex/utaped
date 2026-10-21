@@ -1,5 +1,7 @@
 # Modelo conceptual de datos
 
+Entrega 2026-10-03: V6 implementa StoredFile (clave privada/hash/tamaño/páginas), DocumentAttachment (Plan/orden/requestKey/baja lógica) y DocumentArtifact (Plan/actor/snapshot/hash/plantilla/páginas/slots). Los binarios se conservan en volumen local privado. Los artefactos actuales son previsualizaciones sin firma; no implementan SignatureRecord ni ReviewRound. [ADR-0002](../architecture/adr/0002-t1-document-preparation.md).
+
 Propuesta inicial; no contiene DDL ni esquema físico definitivo.
 
 | Entidad | Relaciones e integridad |

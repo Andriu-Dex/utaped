@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.*.example
+credenciales-importadas*.csv
 *.p12
 *.pfx
 *.key
@@ -21,7 +22,20 @@ Thumbs.db
 *.log
 # Runtime data
 /runtime-data/
+runtime-data/
 /uploads/
 /backups/
 # Frozen prototype stays outside this repository
 /Prototipos/
+instruction.md
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Private key stores and Python caches
+*.pem
+*.p8
+*.jks
+*.keystore
+__pycache__/
+*.py[cod]

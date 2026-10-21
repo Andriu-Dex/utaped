@@ -31,7 +31,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-002",
@@ -41,7 +42,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-003",
@@ -51,7 +53,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-004",
@@ -61,7 +64,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-AUTH-005",
@@ -71,7 +75,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-001",
@@ -81,7 +86,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-002",
@@ -91,7 +97,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-003",
@@ -101,7 +108,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-GRP-004",
@@ -131,7 +139,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-001",
@@ -141,7 +150,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-002",
@@ -151,7 +161,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "FR-PER-003",
@@ -161,7 +172,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     },
     {
       "id": "UT-SEC-006",
@@ -191,7 +203,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: identidad, grupo y periodo; datos institucionales manuales",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-002",
@@ -221,7 +234,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: fecha civil al crear borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-005",
@@ -241,7 +255,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-CONT-002",
@@ -251,7 +266,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL: un campo persistido por borrador",
+      "delivery_evidence": "../reports/2026-10-03-03-work-plan-drafts.md"
     },
     {
       "id": "FR-T1-CONT-003",
@@ -271,7 +287,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-T1-CONT-005",
@@ -281,7 +298,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-ACT-001",
@@ -291,7 +309,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-002",
@@ -301,7 +320,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-003",
@@ -311,7 +331,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-004",
@@ -321,7 +342,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-005",
@@ -331,7 +353,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-ACT-006",
@@ -341,7 +364,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "UT-SEC-011",
@@ -351,7 +375,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-001",
@@ -361,7 +386,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-002",
@@ -371,7 +397,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-003",
@@ -381,7 +408,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-DATE-004",
@@ -391,7 +419,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-001",
@@ -401,7 +430,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-002",
@@ -411,7 +441,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-003",
@@ -421,7 +452,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-004",
@@ -431,7 +463,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-RESP-005",
@@ -441,7 +474,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-001",
@@ -451,7 +485,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-002",
@@ -461,7 +496,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-003",
@@ -471,7 +507,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-004",
@@ -481,7 +518,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-REC-005",
@@ -491,7 +529,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-001",
@@ -501,7 +540,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-002",
@@ -511,7 +551,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MED-003",
@@ -521,7 +562,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MAT-001",
@@ -531,7 +573,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "FR-MAT-002",
@@ -541,7 +584,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL DE BORRADORES",
+      "delivery_evidence": "../reports/2026-10-03-05-work-plan-activities.md"
     },
     {
       "id": "UT-SEC-017",
@@ -551,7 +595,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: CONDICIÓN EXPLÍCITA EN BORRADOR",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-001",
@@ -561,7 +606,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-002",
@@ -571,7 +617,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-003",
@@ -581,7 +628,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-004",
@@ -591,7 +639,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-ANX-005",
@@ -601,7 +650,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-019",
@@ -611,7 +661,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: PREVISUALIZACIÓN T1; ACEPTACIÓN INSTITUCIONAL PENDIENTE",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-020",
@@ -621,7 +672,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-021",
@@ -631,7 +683,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: PORTADA T1; CAMPOS INSTITUCIONALES MANUALES",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-022",
@@ -641,7 +694,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-023",
@@ -651,7 +705,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-024",
@@ -661,7 +716,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL: ELABORADOR; FLUJO Y FIRMA PENDIENTES",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-025",
@@ -671,7 +727,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "UT-SEC-026",
@@ -691,7 +748,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-002",
@@ -701,7 +760,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-003",
@@ -711,7 +772,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-004",
@@ -721,7 +784,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-SIGN-005",
@@ -731,7 +796,9 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Firma visible del elaborador T1 desde archivo .p12/.pfx y contraseña, huella pública vinculada por administración, procesamiento temporal en memoria, PDF incremental inmutable y ubicación derivada del artefacto. Cadena/revocación no comprobadas; múltiples firmantes, revisión y aceptación institucional pendientes.",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/DocumentIntegrationTests.java"
     },
     {
       "id": "FR-REV-001",
@@ -1081,7 +1148,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Bandeja interna privada, lectura y navegación; avisos de pertenencias y previsualización. Revisión, evidencias, vencimientos y canales externos pendientes."
     },
     {
       "id": "UT-SEC-052",
@@ -1091,7 +1159,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Auditoría existente, visor e historial con permisos y exportación CSV; acciones de firma/revisión/evidencias y retención institucional pendientes."
     },
     {
       "id": "UT-SEC-053",
@@ -1101,7 +1170,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "PARCIAL",
+      "production_scope": "Seguimiento personal de borradores y exportación administrativa inicial; reportes institucionales completos pendientes."
     },
     {
       "id": "UT-SEC-054",
@@ -1211,7 +1281,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO CON HABILITACION OPERATIVA PENDIENTE",
+      "delivery_evidence": "../api/writing-and-review-inbox.md"
     },
     {
       "id": "FR-ARCH-DB-001",
@@ -1221,7 +1292,8 @@
       "status": "HEREDADO",
       "priority": "POR PRIORIZAR",
       "acceptance_status": "POR DESGLOSAR Y VALIDAR",
-      "production_status": "NO IMPLEMENTADO"
+      "production_status": "IMPLEMENTADO EN ALCANCE INICIAL",
+      "delivery_evidence": "../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java"
     }
   ]
 }

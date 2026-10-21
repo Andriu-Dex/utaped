@@ -1,0 +1,51 @@
+# Used only by scripts/operations.py in a new project named utaped-restore-*.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: utaped_restore
+      POSTGRES_USER: utaped
+      POSTGRES_PASSWORD: ${RESTORE_DB_PASSWORD:?Private restore password required}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U utaped -d utaped_restore"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  mail:
+    profiles: [web]
+    image: axllent/mailpit:v1.31.1
+  backend:
+    profiles: [web]
+    image: ${RESTORE_BACKEND_IMAGE:?Original backend image required}
+    pull_policy: never
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/utaped_restore
+      DB_PASSWORD: ${RESTORE_DB_PASSWORD}
+      DOCUMENT_STORAGE_ROOT: /app/runtime-data/${RESTORE_STORAGE_PREFIX:-documents}
+      COOKIE_SECURE: "false"
+      SIGNING_ALLOW_HTTP: "false"
+      AI_WRITING_ENABLED: "false"
+      DEADLINE_NOTICES_ENABLED: "false"
+      SMTP_HOST: mail
+      BOOTSTRAP_ADMIN_EMAIL: ""
+      BOOTSTRAP_ADMIN_PASSWORD: ""
+      APP_PUBLIC_URL: http://127.0.0.1:${RESTORE_WEB_PORT:-64432}
+    volumes:
+      - document-data:/app/runtime-data
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+  frontend:
+    profiles: [web]
+    image: ${RESTORE_FRONTEND_IMAGE:?Original frontend image required}
+    pull_policy: never
+    ports:
+      - "127.0.0.1:${RESTORE_WEB_PORT:-64432}:80"
+    depends_on: [backend]
+volumes:
+  postgres-data:
+  document-data:

@@ -1,0 +1,229 @@
+package ec.edu.uta.utaped.documents;
+
+import static ec.edu.uta.utaped.documents.ArtifactModels.*;
+import ec.edu.uta.utaped.planning.ActivityService;
+import ec.edu.uta.utaped.planning.WorkPlanService;
+import ec.edu.uta.utaped.audit.AuditService;
+import ec.edu.uta.utaped.identity.Accounts;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.util.*;
+import java.util.concurrent.Semaphore;
+import javax.imageio.ImageIO;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.json.JsonMapper;
+
+@Service
+public class ArtifactService {
+    private final JdbcTemplate jdbc;private final WorkPlanService plans;private final ActivityService activities;
+    private final AttachmentService attachments;private final StoredFiles files;private final T1Template template;
+    private final T1PdfEngine engine;private final AuditService audit;private final Accounts accounts;
+    private final DocumentWorkflowSnapshot workflows;
+    private final ec.edu.uta.utaped.planning.ReportService reports;
+    private final ec.edu.uta.utaped.planning.DocumentAuthors authors;
+    private final ec.edu.uta.utaped.planning.EvidenceService evidence;
+    private final JsonMapper json=JsonMapper.builder().build();
+    private final Semaphore generation=new Semaphore(1),rendering=new Semaphore(2);
+    private record PreviewCache(Generated document,Map<String,Integer> sections,long expiresAt) {}
+    // Small process-local cache only: no editable previews in storage, artifacts or signing history.
+    private final Map<String,PreviewCache> draftPreviews=new LinkedHashMap<>();
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public DraftView draftPreview(UUID id,String email,DraftPreview input) {
+        var saved=snapshot(id,email);var plan=saved.plan();
+        if(!plan.editable() || !plan.documentState().equals("DRAFT") || !plan.documentType().equals("T1"))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
+        if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors());
+        String key=email+":"+id+":"+hash(draft);PreviewCache cached;
+        synchronized(draftPreviews) {
+            draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
+            cached=draftPreviews.get(key);
+        }
+        if(cached==null) {
+            if(!generation.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra generación en curso. Vuelva a actualizar la vista en unos momentos.");
+            try {
+                if(draft.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum()>450)
+                    throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Los anexos superan el límite de 450 páginas.");
+                var generated=engine.generate(draft);
+                if(generated.pdf().length>12*1024*1024) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El borrador es demasiado grande para la vista simultánea. Use Preparación y previsualización.");
+                cached=new PreviewCache(generated,engine.contentSections(generated.pdf()),System.currentTimeMillis()+120000);
+                synchronized(draftPreviews) {
+                    if(draftPreviews.size()>=2) draftPreviews.remove(draftPreviews.keySet().iterator().next());
+                    draftPreviews.put(key,cached);
+                }
+            } catch(IllegalStateException error) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo actualizar la vista. Sus datos siguen en el formulario; intente nuevamente.",error); }
+            finally { generation.release(); }
+        }
+        int page=input.pageIndex()<0?cached.sections().get(input.section()):input.pageIndex();
+        if(page>=cached.document().pages().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
+        return new DraftView(plan.rowVersion(),cached.document().pages(),cached.sections(),page,Base64.getEncoder().encodeToString(renderPage(cached.document().pdf(),page)));
+    }
+    public ArtifactService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
+        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence,ec.edu.uta.utaped.planning.DocumentAuthors authors) {
+        this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.files=files;
+        this.template=template;this.engine=engine;this.audit=audit;this.accounts=accounts;
+        this.workflows=workflows;
+        this.reports=reports;this.authors=authors;this.evidence=evidence;
+    }
+    public Readiness readiness(UUID id,String email) {
+        var plan=plans.get(id,email);var matrix=activities.get(id,email);var annexes=attachments.get(id,email);
+        var blockers=new ArrayList<Blocker>();
+        if(plan.documentType().equals("T2")) {
+            blockers.addAll(reports.blockers(id,email));
+            if(annexes.enabled()&&annexes.items().isEmpty()) blockers.add(new Blocker("Anexos","Agregue un PDF o seleccione No en anexos adicionales."));
+            return new Readiness(plan.rowVersion(),blockers.isEmpty(),List.copyOf(blockers));
+        }
+        if(plan.institutionalUnit().isBlank()) blockers.add(new Blocker("Información general","Indique la unidad institucional."));
+        if(plan.justification().isBlank()) blockers.add(new Blocker("Contenido","Complete la justificación."));
+        if(plan.objective().isBlank()) blockers.add(new Blocker("Contenido","Complete el objetivo."));
+        if(jdbc.queryForObject("SELECT count(*) FROM work_plan_matrix WHERE work_plan_id=?",Integer.class,id)==0 || matrix.activities().isEmpty())
+            blockers.add(new Blocker("Actividades y matriz","Guarde al menos una actividad completa."));
+        var members=new HashSet<UUID>();matrix.members().forEach(m->members.add(m.id()));
+        for(var a:matrix.activities()) {
+            boolean invalid=a.startsOn()==null || a.endsOn()==null || a.responsibleIds().isEmpty() || a.resources().isEmpty() || a.means().isEmpty();
+            invalid|=!members.containsAll(a.responsibleIds());
+            invalid|=a.collective() && (matrix.collectiveLabel().isBlank() || !new HashSet<>(a.responsibleIds()).equals(members));
+            if(a.startsOn()!=null && a.endsOn()!=null) {
+                invalid|=a.startsOn().isAfter(a.endsOn()) || a.startsOn().isBefore(matrix.periodStartsOn()) || a.endsOn().isAfter(matrix.periodEndsOn());
+                invalid|=matrix.restrictHolidayEndpoints() && matrix.holidays().stream().anyMatch(h->h.date().equals(a.startsOn()) || h.date().equals(a.endsOn()));
+            }
+            invalid|=java.util.stream.Stream.concat(a.resources().stream(),a.means().stream()).anyMatch(c->c.label()==null || c.label().isBlank());
+            if(invalid) blockers.add(new Blocker("Actividades y matriz","Revise fechas, responsables y selecciones de: "+a.title()));
+        }
+        // Mandatory catalog changes also apply when a draft is temporarily read-only.
+        for(var d:matrix.definitions()) if(d.active() && d.mandatory() && matrix.activities().stream().noneMatch(a->d.id().equals(a.catalogId())))
+            blockers.add(new Blocker("Actividades y matriz","Falta la actividad obligatoria: "+d.title()));
+        if(annexes.enabled() && annexes.items().isEmpty()) blockers.add(new Blocker("Anexos","Agregue un PDF o seleccione No en anexos."));
+        return new Readiness(plan.rowVersion(),blockers.isEmpty(),List.copyOf(blockers));
+    }
+    private Snapshot snapshot(UUID id,String email) {
+        var plan=plans.get(id,email);var matrix=activities.get(id,email);var annexes=attachments.get(id,email);
+        var names=new HashMap<UUID,String>();matrix.members().forEach(m->names.put(m.id(),m.name()));
+        List<Activity> rows=matrix.activities().stream().map(a->new Activity(a.title(),a.category(),a.startsOn()==null?null:a.startsOn().toString(),a.endsOn()==null?null:a.endsOn().toString(),
+            a.collective()?matrix.collectiveLabel():String.join("\n",a.responsibleIds().stream().map(m->names.getOrDefault(m,"Responsable no disponible")).toList()),
+            a.responsibleIds(),a.resources().stream().map(c->c.label()).toList(),a.means().stream().map(c->c.label()).toList())).toList();
+        var annexList=new ArrayList<>(annexes.items());
+        var references=new ArrayList<ExternalReference>();
+        var report=plan.documentType().equals("T2")?reports.data(id,email):null;
+        if(report!=null) {
+            // T2 keeps the approved Plan's labels and responsible identities, even after directory changes.
+            var source=jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE id=? AND work_plan_id=?",String.class,report.baseArtifactId(),report.basePlanId());
+            rows=json.readValue(source,Snapshot.class).activities();
+            var execution=evidence.get(report.basePlanId(),email);var linked=new ArrayList<Activity>();int annexIndex=annexList.size();
+            for(int i=0;i<rows.size();i++) {
+                var a=rows.get(i);var means=new ArrayList<String>();
+                for(var medium:execution.activities().get(i).media()) {
+                    if(medium.evidenceKind().equals("URL")&&!medium.versions().isEmpty()) {
+                        var reference=medium.versions().getFirst();
+                        means.add(medium.label()+" — "+reference.referenceTitle()+": "+reference.externalUrl());
+                        references.add(new ExternalReference(reference.id(),reference.version(),a.title(),medium.label(),reference.referenceTitle(),reference.externalUrl()));
+                    } else means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
+                }
+                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means)));
+            }
+            rows=List.copyOf(linked);annexList.addAll(evidence.annexes(report.basePlanId(),email));
+        }
+        // Labels are derived once for the complete sequence, including evidence PDFs.
+        var labelled=new ArrayList<AttachmentModels.Attachment>();
+        for(var a:annexList) labelled.add(new AttachmentModels.Attachment(a.id(),a.fileId(),AttachmentService.label(labelled.size()),a.title(),a.description(),a.originalName(),a.sizeBytes(),a.pageCount(),a.sha256()));
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email));
+    }
+    private String hash(Snapshot snapshot) {
+        // Permissions belong to the requesting account, not to the document content.
+        var tree=(tools.jackson.databind.node.ObjectNode)json.valueToTree(snapshot);
+        ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("editable");
+        ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("canManage");
+        return StoredFiles.hash(json.writeValueAsString(tree).getBytes(StandardCharsets.UTF_8));
+    }
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public List<Artifact> list(UUID id,String email) {
+        String current=hash(snapshot(id,email));
+        return jdbc.query("SELECT * FROM document_artifact WHERE work_plan_id=? ORDER BY created_at DESC,id",(rs,n)->{
+            var pages=List.of(json.readValue(rs.getString("pages"),Page[].class));
+            return new Artifact(rs.getObject("id",UUID.class),rs.getLong("source_row_version"),rs.getString("source_hash"),rs.getString("template_version"),pages.size(),pages,
+                List.of(json.readValue(rs.getString("signature_slots"),SignatureSlot[].class)),rs.getObject("created_at",OffsetDateTime.class),
+                current.equals(rs.getString("source_hash")) && engine.version(plans.get(id,email).documentType()).equals(rs.getString("template_version")));
+        },id);
+    }
+    @Transactional(isolation=Isolation.REPEATABLE_READ) public Artifact generate(UUID id,String email,Generate input) {
+        var state=attachments.lock(id,email);
+        if(!state.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo el responsable principal puede preparar un borrador habilitado.");
+        if(!plans.get(id,email).documentState().equals("DRAFT")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo los borradores permiten generar una nueva previsualización.");
+        if(state.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió. Recargue antes de generar la previsualización.");
+        var ready=readiness(id,email);
+        if(!ready.ready()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete los requisitos de preparación antes de generar el PDF.");
+        var snapshot=snapshot(id,email);String sha=hash(snapshot);
+        var existing=list(id,email).stream().filter(a->a.sourceHash().equals(sha) && a.templateVersion().equals(engine.version(snapshot.plan().documentType()))).findFirst();
+        if(existing.isPresent()) return existing.get();
+        if(!generation.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra generación en curso. Intente nuevamente en unos momentos.");
+        try {
+            if(snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum()>450) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Los anexos superan el límite técnico de 450 páginas por previsualización.");
+            Generated generated;
+            try { generated=engine.generate(snapshot); }
+            catch(IllegalStateException error) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo generar el PDF. Revise el contenido o intente nuevamente.",error); }
+            var file=files.put(generated.pdf(),snapshot.plan().documentType().equals("T2")?"informe-t2.pdf":"plan-trabajo-t1.pdf",generated.pages().size());UUID artifactId=UUID.randomUUID();
+            jdbc.update("INSERT INTO document_artifact(id,work_plan_id,actor_id,source_row_version,source_hash,template_version,file_id,snapshot,pages,signature_slots) VALUES (?,?,?,?,?,?,?,?::jsonb,?::jsonb,?::jsonb)",
+                artifactId,id,accounts.current(email).id(),state.rowVersion(),sha,engine.version(snapshot.plan().documentType()),file.id(),json.writeValueAsString(snapshot),json.writeValueAsString(generated.pages()),json.writeValueAsString(generated.signatureSlots()));
+            audit.record(accounts.current(email).id(),snapshot.plan().documentType()+"_PREVIEW_GENERATED",id);
+            return list(id,email).stream().filter(a->a.id().equals(artifactId)).findFirst().orElseThrow();
+        } finally { generation.release(); }
+    }
+    private UUID fileId(UUID id,UUID artifactId,String email) {
+        plans.get(id,email);
+        return jdbc.query("SELECT file_id FROM document_artifact WHERE id=? AND work_plan_id=?",(rs,n)->rs.getObject(1,UUID.class),artifactId,id).stream().findFirst()
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Previsualización no disponible."));
+    }
+    public byte[] content(UUID id,UUID artifactId,String email) { return files.read(fileId(id,artifactId,email)); }
+    public byte[] export(UUID id,UUID artifactId,String email) {
+        if(plans.get(id,email).scopeId()!=null) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Use la descarga del documento aprobado en su revisión; esta ruta es una previsualización.");
+        return content(id,artifactId,email);
+    }
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public SignaturePreparation signaturePreparation(UUID id,UUID artifactId,String email) {
+        var plan=plans.get(id,email);
+        var artifact=list(id,email).stream().filter(a->a.id().equals(artifactId)).findFirst()
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Previsualización no disponible."));
+        var stored=jdbc.queryForMap("SELECT snapshot::text FROM document_artifact WHERE id=? AND work_plan_id=?",artifactId,id);
+        var frozen=json.readValue((String)stored.get("snapshot"),Snapshot.class);
+        var blockers=new ArrayList<Blocker>();
+        if(!artifact.current()) blockers.add(new Blocker("Artefacto","El contenido, la plantilla o la configuración del flujo cambió. Genere una nueva previsualización."));
+        if(!plan.editable()) blockers.add(new Blocker("Período","El Plan no está habilitado para elaboración en este momento."));
+        if(plan.scopeId()!=null&&jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=? AND workflow_locked_at IS NOT NULL",Integer.class,plan.periodId())==0)
+            blockers.add(new Blocker("Flujo","Administración debe activar y bloquear los flujos del período antes de firmar."));
+        blockers.addAll(readiness(id,email).blockers());
+        if(frozen.workflow()==null) blockers.add(new Blocker("Flujo","Esta previsualización no contiene una revisión de flujo configurada."));
+        else for(var stage:frozen.workflow().stages()) {
+            if((!stage.recipientKind().equals("COLLEGIATE") || stage.requiresSignature()) && stage.participants().isEmpty())
+                blockers.add(new Blocker("Flujo",stage.label()+": no hay participantes resueltos."));
+            if(stage.participants().stream().anyMatch(p->!p.active())) blockers.add(new Blocker("Flujo",stage.label()+": contiene participantes inactivos."));
+        }
+        if(plan.scopeId()==null) {
+            blockers.add(new Blocker("Validación institucional","El documento anterior no tiene ámbito ni asignaciones ejecutables. Su configuración se conserva como referencia."));
+        }
+        // Reading checks the stored hash. No secret upload or state transition is exposed.
+        String pdfHash=StoredFiles.hash(content(id,artifactId,email));
+        return new SignaturePreparation(id,artifactId,plan.rowVersion(),pdfHash,artifact.current(),frozen.workflow(),"PKCS12",plan.scopeId()!=null&&blockers.isEmpty(),List.copyOf(blockers));
+    }
+    public byte[] page(UUID id,UUID artifactId,int pageIndex,String email) {
+        byte[] bytes=content(id,artifactId,email);
+        return renderPage(bytes,pageIndex);
+    }
+    public byte[] renderPage(byte[] bytes,int pageIndex) {
+        if(!rendering.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización ocupada. Intente nuevamente.");
+        try(var pdf=Loader.loadPDF(bytes)) {
+            if(pageIndex<0 || pageIndex>=pdf.getNumberOfPages()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
+            // Bound raster dimensions independently of uploaded PDF media boxes.
+            var box=pdf.getPage(pageIndex).getCropBox();float scale=Math.min(1.5f,1800f/Math.max(box.getWidth(),box.getHeight()));
+            var out=new ByteArrayOutputStream();ImageIO.write(new PDFRenderer(pdf).renderImage(pageIndex,scale),"png",out);return out.toByteArray();
+        } catch(IOException e) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo visualizar la página."); }
+        finally { rendering.release(); }
+    }
+}

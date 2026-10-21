@@ -1,0 +1,79 @@
+name: utaped
+services:
+  frontend:
+    profiles: [web]
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${WEB_PORT:-64430}:80"
+    depends_on:
+      - backend
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: utaped
+      POSTGRES_USER: utaped
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U utaped -d utaped"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  mail:
+    image: axllent/mailpit:v1.31.1
+    ports:
+      - "127.0.0.1:${MAIL_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${MAIL_SMTP_PORT:-1025}:1025"
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/utaped
+      DB_PASSWORD: ${DB_PASSWORD}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:64430}
+      SMTP_HOST: mail
+      AI_WRITING_ENABLED: ${AI_WRITING_ENABLED:-false}
+      AI_WRITING_PROVIDER: ${AI_WRITING_PROVIDER:-GROQ}
+      AI_WRITING_MODEL: ${AI_WRITING_MODEL:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_WRITING_TIMEOUT_SECONDS: ${AI_WRITING_TIMEOUT_SECONDS:-30}
+      AI_WRITING_MAX_INPUT_CHARACTERS: ${AI_WRITING_MAX_INPUT_CHARACTERS:-8000}
+      AI_WRITING_MAX_OUTPUT_TOKENS: ${AI_WRITING_MAX_OUTPUT_TOKENS:-2000}
+      AI_WRITING_USER_LIMIT: ${AI_WRITING_USER_LIMIT:-15}
+      AI_WRITING_CONCURRENCY: ${AI_WRITING_CONCURRENCY:-2}
+      DOCUMENT_STORAGE_ROOT: /app/runtime-data/documents
+      DOCUMENT_MAX_FILE_BYTES: ${DOCUMENT_MAX_FILE_BYTES:-10485760}
+      DOCUMENT_MAX_REQUEST_BYTES: ${DOCUMENT_MAX_REQUEST_BYTES:-12582912}
+      DOCUMENT_MAX_TOTAL_BYTES: ${DOCUMENT_MAX_TOTAL_BYTES:-52428800}
+      DOCUMENT_MAX_ATTACHMENTS: ${DOCUMENT_MAX_ATTACHMENTS:-20}
+      DOCUMENT_MAX_ATTACHMENT_PAGES: ${DOCUMENT_MAX_ATTACHMENT_PAGES:-100}
+      DOCUMENT_PAGE_FORMAT: ${DOCUMENT_PAGE_FORMAT:-A4}
+      PERIOD_ARCHIVE_MAX_BYTES: ${PERIOD_ARCHIVE_MAX_BYTES:-134217728}
+      AUDIT_EXPORT_MAX_ROWS: ${AUDIT_EXPORT_MAX_ROWS:-10000}
+      SIGNING_ALLOW_HTTP: ${SIGNING_ALLOW_HTTP:-false}
+      PLANNING_SINGLE_PLAN_PER_SCOPE: ${PLANNING_SINGLE_PLAN_PER_SCOPE:-false}
+      PLANNING_ENFORCE_PREPARATION_WINDOW: ${PLANNING_ENFORCE_PREPARATION_WINDOW:-true}
+      PLANNING_MAX_EXTENSION_DAYS: ${PLANNING_MAX_EXTENSION_DAYS:-3}
+      DEADLINE_NOTICES_ENABLED: ${DEADLINE_NOTICES_ENABLED:-true}
+      DEADLINE_NOTICE_NEAR_DAYS: ${DEADLINE_NOTICE_NEAR_DAYS:-3}
+      DEADLINE_NOTICE_REPEAT_DAYS: ${DEADLINE_NOTICE_REPEAT_DAYS:-1}
+      DEADLINE_NOTICE_SCAN_MS: ${DEADLINE_NOTICE_SCAN_MS:-3600000}
+      PLANNING_TIME_ZONE: ${PLANNING_TIME_ZONE:-America/Guayaquil}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - document-data:/app/runtime-data
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+volumes:
+  postgres-data:
+  document-data:

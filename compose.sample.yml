@@ -1,0 +1,15 @@
+# Must be used with compose.yml and project name utaped-sample (manual) or utaped-acceptance (disposable tests).
+# Separate data and credentials; the default application never enables this profile.
+services:
+  db:
+    environment:
+      POSTGRES_DB: utaped_dev
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U utaped -d utaped_dev"]
+  backend:
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/utaped_dev
+      SPRING_PROFILES_ACTIVE: development-seed
+      UTAPED_SEED_PASSWORD: ${UTAPED_SEED_PASSWORD:?Generate .env.sample with start-development-sample.ps1}
+      BOOTSTRAP_ADMIN_EMAIL: ""
+      BOOTSTRAP_ADMIN_PASSWORD: ""

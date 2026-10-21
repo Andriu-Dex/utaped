@@ -1,6 +1,6 @@
 # Estrategia de pruebas
 
-Propuesta productiva. Las pruebas del mockup sirven como referencia; no prueban backend/persistencia nuevos.
+Estrategia productiva con pruebas ejecutables. Las pruebas del mockup sirven como referencia; no prueban backend/persistencia nuevos. [Aceptación por roles y documentos largos](role-and-document-acceptance.md) y [preparación operativa](../operations/production-readiness.md).
 
 - Unitarias: fechas, responsables, Otro, transiciones, rondas/versiones y paginación.
 - Integración: PostgreSQL de pruebas, transacciones/concurrencia, permisos por objeto, migraciones, archivos y contratos externos mediante dobles.
@@ -12,4 +12,4 @@ Propuesta productiva. Las pruebas del mockup sirven como referencia; no prueban 
 
 Cada requisito entregado requiere evidencia reproducible y estado actualizado. Build exitoso no acredita flujo correcto. Datos de prueba ficticios y aislados.
 
-Sin frameworks ni comandos seleccionados aún. Tras stack: registrar lint/tipos/unitarias/integración/E2E. Evitar sleeps arbitrarios y pruebas que reflejen detalles internos.
+Stack de pruebas vigente: JUnit/Spring Boot/PostgreSQL 18 aislado, lint/TypeScript/build y Playwright para navegador. Operación: unittest de Python y ensayos reales de backup/restore/HTTPS sobre recuperaciones ficticias. Evitar sleeps arbitrarios y pruebas que reflejen detalles internos. La espera de salud de servicios tiene límites explícitos y termina al estar disponible, sin pausas fijas para sustituir condiciones.

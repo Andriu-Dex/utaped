@@ -1,0 +1,36 @@
+.admin-catalog-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.admin-catalog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
+}
+
+.admin-catalog-item:last-child {
+  border-bottom: none;
+}
+
+.admin-catalog-item:hover {
+  background: rgba(23, 95, 148, 0.03);
+}
+
+.admin-catalog-item strong {
+  color: var(--text);
+  font-size: 0.94rem;
+}
+
+:root[data-theme='dark'] .admin-catalog-item:hover {
+  background: rgba(46, 148, 218, 0.06);
+}
