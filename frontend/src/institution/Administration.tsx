@@ -15,6 +15,7 @@ import { adminPages, type AdminPage } from './adminNavigation'
 import { Icon } from '../shared/Icon'
 import { OrganizationAdministration } from './OrganizationAdministration'
 import { TemplateAdministration } from './TemplateAdministration'
+import { PositionAdministration } from './PositionAdministration'
 
 export function Administration({ page, periods, initialGroupId, onChange, onDirtyChange }: { page: AdminPage; periods: import('../shared/api').Period[]; initialGroupId?: string; onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -129,6 +130,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
     </>}
     {page === 'templates' && <TemplateAdministration onDirtyChange={setTemplateDirty} />}
     {(page === 'resources' || page === 'activities' || page === 'holidays') && <PlanningAdministration groups={groups} section={page} onDirtyChange={setProfileDirty} />}
+    {page === 'positions' && <PositionAdministration periods={periods} onDirtyChange={setProfileDirty} />}
     {page === 'workflows' && <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />}
     {page === 'audit' && <AuditViewer />}
     {page === 'certificates' && <CertificateAdministration onDirtyChange={setProfileDirty} />}

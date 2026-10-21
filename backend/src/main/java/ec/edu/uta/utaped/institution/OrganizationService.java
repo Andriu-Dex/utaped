@@ -74,8 +74,24 @@ public class OrganizationService {
         if(!periods.isEmpty()) new PeriodGuard(jdbc).writable(periods.getFirst());
         return jdbc.queryForList("SELECT * FROM organizational_scope WHERE id=? FOR UPDATE",scope).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Ámbito no disponible."));
     }
+    private boolean coordinates(UUID scope,UUID user) {
+        return jdbc.queryForObject("SELECT count(*) FROM scope_member m JOIN app_user u ON u.id=m.user_id AND u.active WHERE m.scope_id=? AND m.user_id=? AND m.active AND m.membership_role='COORDINATOR'",Integer.class,scope,user)>0;
+    }
+    /** Active accounts a coordinator may add to their own scope; only identifiers needed to choose a person. */
+    public List<Map<String,Object>> candidates(UUID scope,String email) {
+        var actor=accounts.current(email);
+        if(!actor.systemRole().equals("ADMIN")&&!coordinates(scope,actor.id())) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo la coordinación del ámbito puede gestionar integrantes.");
+        return jdbc.queryForList("SELECT id,display_name,username FROM app_user WHERE active AND system_role='USER' ORDER BY display_name,id");
+    }
     @Transactional public void member(UUID scope,String email,MemberInput input) {
-        admin(email);var current=lock(scope);
+        var actor=accounts.current(email);
+        if(!actor.systemRole().equals("ADMIN")) {
+            // Delegation is limited to ordinary members: coordinators cannot grant coordination, recovery rights or change themselves.
+            boolean existingCoordinator=jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND membership_role='COORDINATOR'",Integer.class,scope,input.userId())>0;
+            if(!coordinates(scope,actor.id())||!input.membershipRole().equals("MEMBER")||input.passwordResetAuthorized()!=null||input.userId().equals(actor.id())||existingCoordinator)
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La coordinación del ámbito solo puede agregar o retirar integrantes.");
+        }
+        var current=lock(scope);
         if(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active",Integer.class,input.userId())==0) throw invalid("Seleccione un usuario activo.");
         if(!input.active() && input.userId().equals(current.get("principal_user_id"))) throw invalid("Designe otro responsable principal antes de retirar esta pertenencia.");
         var previous=jdbc.queryForList("SELECT row_version FROM scope_member WHERE scope_id=? AND user_id=?",scope,input.userId());

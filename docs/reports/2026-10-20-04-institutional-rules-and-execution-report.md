@@ -26,6 +26,16 @@ Rama: `feature/institutional-rules-and-execution-report` desde `develop`. Plan: 
 - Tras la eliminación, la descarga histórica responde 410 indicando que se solicite la copia de custodia.
 - Migración V26.
 
+## F4. Flujos por cargo institucional y delegación al coordinador
+
+- Catálogo administrable de cargos (código, nombre, alcance por carrera o de facultad, activo) y asignación de una persona por cargo, período y carrera. Importación CSV `cargo,carrera,usuario` todo o nada. Migración V27.
+- Nuevo destinatario de etapa «Cargo institucional»: se resuelve con la persona asignada al cargo en el período y la carrera del ámbito (la asignación por carrera prevalece sobre la de facultad) y su nombre de cargo aparece en la matriz de firmas. Sin titular asignado, la activación del período se bloquea. Los flujos ya activados conservan sus participantes.
+- El coordinador del ámbito agrega o retira integrantes ordinarios desde «Mi organización». No puede designar coordinación, responsable principal ni permisos de recuperación, ni modificarse a sí mismo.
+- Semilla de desarrollo: cargos de ejemplo (Responsable UPE, Coordinación de carrera, Subdecanato, Decanato) y asignaciones a las cuentas ficticias; los flujos de ejemplo existentes no cambian. La tabla oficial de comisiones sigue pendiente y se cargará por administración o CSV.
+- Fuera de alcance: reasignar tareas de revisión ya activas cuando cambia el titular de un cargo.
+
 ## Verificación
 
 F1–F3: `scripts/test-backend.ps1` con PostgreSQL aislado, 157 pruebas sin fallos ni errores. Incluye cómputo de días hábiles con feriado, reapertura (permisos, máximo, concurrencia, edición reabierta), fecha fijada al generar el artefacto, decodificación del QR del sello firmado (nombre con tildes, razón y hora de Ecuador) y eliminación del período (sin copia, antes de la gracia, borrado de filas y bytes, otro período intacto, inventario, auditoría, 410 posterior). Frontend: `npm run lint` y `npm run build` sin errores. No se ejecutaron E2E ni aceptación para estas fases ni revisión visual en navegador.
+
+F4: `scripts/test-backend.ps1`, 159 pruebas sin fallos ni errores, con resolución por cargo y carrera, bloqueo de activación sin titular, importación CSV válida e inválida, congelación tras activar y límites de la delegación al coordinador. Frontend: lint, verificación de tipos y build sin errores. Sin E2E ni revisión visual.

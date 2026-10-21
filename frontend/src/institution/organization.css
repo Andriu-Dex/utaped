@@ -107,3 +107,6 @@
   background: #0c1a27;
   border-color: #4092d6;
 }
+.scope-member-list { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
+.scope-member-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.scope-member-list small { display: block; color: var(--muted); margin-top: 3px; }

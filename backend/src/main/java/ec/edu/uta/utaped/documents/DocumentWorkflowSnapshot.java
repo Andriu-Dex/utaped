@@ -41,8 +41,15 @@ public class DocumentWorkflowSnapshot {
         if(revisions.isEmpty()) return null;
         var revision=revisions.getFirst();var definition=json.readValue((String)revision.get("definition"),Definition.class);
         var stages=definition.stages().stream().map(stage->{
-            List<Participant> people;
-            if(stage.recipientKind().equals("GROUP_ROLE")) {
+            List<Participant> people;String position=stage.positionLabel();
+            if(stage.recipientKind().equals("POSITION")) {
+                // Resolved per period and career; the career-specific holder wins over a faculty-wide one.
+                people=scopeId==null?List.of():jdbc.query("""
+                    SELECT u.id,u.display_name,u.active FROM organizational_scope s JOIN position_assignment a ON a.period_id=s.period_id AND a.position_id=? AND (a.career_id=s.career_id OR a.career_id IS NULL)
+                    JOIN app_user u ON u.id=a.user_id WHERE s.id=? ORDER BY a.career_id NULLS LAST LIMIT 1
+                    """,(rs,n)->new Participant(rs.getObject(1,UUID.class),rs.getString(2),rs.getBoolean(3)),stage.positionId(),scopeId);
+                if(position==null||position.isBlank()) position=jdbc.queryForList("SELECT name FROM institutional_position WHERE id=?",String.class,stage.positionId()).stream().findFirst().orElse(null);
+            } else if(stage.recipientKind().equals("GROUP_ROLE")) {
                 people=scopeId==null?jdbc.query("SELECT u.id,u.display_name,u.active FROM membership m JOIN app_user u ON u.id=m.user_id WHERE m.group_id=? AND m.membership_role=? AND u.active ORDER BY u.id",
                     (rs,n)->new Participant(rs.getObject(1,UUID.class),rs.getString(2),rs.getBoolean(3)),groupId,stage.groupRole())
                     :jdbc.query("SELECT u.id,u.display_name,u.active FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.active AND m.membership_role=? AND u.active ORDER BY u.id",
@@ -52,7 +59,7 @@ public class DocumentWorkflowSnapshot {
                     (rs,n)->new Participant(rs.getObject(1,UUID.class),rs.getString(2),rs.getBoolean(3)),id).stream().findFirst()
                     .orElse(new Participant(id,"Participante no disponible",false))).toList();
             }
-            people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),stage.positionLabel())).toList();
+            String label=position;people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),label)).toList();
             return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),stage.requiresSignature(),people);
         }).toList();
         return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages);

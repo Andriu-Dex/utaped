@@ -20,6 +20,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
     @Autowired WorkflowService workflows;
     @Autowired PeriodWorkflowService assignments;
     @Autowired PeriodArchiveService archives;
+    @Autowired PositionService positions;
     @Autowired ec.edu.uta.utaped.documents.DocumentWorkflowSnapshot snapshots;
     UUID scope,reviewer;
     void configuredScope() {
@@ -109,6 +110,45 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='PERIOD_DOCUMENTS_PURGED' AND target_id=?",Integer.class,period));
         assertEquals(410,assertThrows(ResponseStatusException.class,()->archives.download(period,email)).getStatusCode().value());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+    }
+    @Test void positionStagesResolvePerCareerAndBlockActivationWithoutHolder() {
+        signingAdmin();jdbc.execute("TRUNCATE institutional_position CASCADE");String code="P"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
+        UUID career=organization.createCareer(email,new OrganizationService.CareerInput(code,"Carrera "+code));
+        reviewer=UUID.randomUUID();UUID facultyHolder=UUID.randomUUID();
+        jdbc.update("INSERT INTO app_user(id,email,username,display_name,password_hash,system_role,must_change_password) VALUES (?,'upe@example.invalid','upe.ti','Responsable UPE','unused','USER',false)",reviewer);
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'faculty-upe@example.invalid','UPE de facultad','unused','USER',false)",facultyHolder);
+        scope=organization.createScope(email,new OrganizationService.ScopeInput(group,period,career));
+        organization.member(scope,email,new OrganizationService.MemberInput(user,"MEMBER","Principal",true,0L));organization.principal(scope,email,new OrganizationService.PrincipalInput(user,0L));
+        UUID upe=positions.create(email,new PositionService.PositionInput("UPE_RESPONSIBLE","Responsable UPE",true));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->positions.assign(period,email,new PositionService.AssignmentInput(upe,null,facultyHolder))).getStatusCode().value());
+        for(String type:List.of("T1","T2")) {
+            var definition=new Definition("Flujo por cargo "+type,List.of(new Stage(UUID.randomUUID(),"Revisión UPE","REVIEW","POSITION",List.of(),null,"",false,null,upe)));
+            workflows.save(group,type,email,new Save(0L,definition));workflows.configure(group,type,email,new Version(1L));
+            assignments.assign(scope,type,email,new PeriodWorkflowService.Assign(workflows.get(group,type,email).current().id(),0L));
+        }
+        assertTrue(snapshots.capture(group,scope,"T1").stages().getFirst().participants().isEmpty());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->assignments.activate(period,email,new PeriodWorkflowService.Version(0L))).getStatusCode().value());
+        var imported=positions.importCsv(period,email,"cargo,carrera,usuario\nUPE_RESPONSIBLE,"+code+",upe.ti\n");
+        assertEquals(1,imported.assigned());assertTrue(imported.errors().isEmpty());
+        assertFalse(positions.importCsv(period,email,"cargo,carrera,usuario\nNO_EXISTE,"+code+",upe.ti\n").errors().isEmpty());
+        var participant=snapshots.capture(group,scope,"T1").stages().getFirst().participants().getFirst();
+        assertEquals(reviewer,participant.id());assertEquals("Responsable UPE",participant.position());
+        assignments.activate(period,email,new PeriodWorkflowService.Version(0L));
+        positions.assign(period,email,new PositionService.AssignmentInput(upe,career,facultyHolder));
+        assertEquals(reviewer,snapshots.capture(group,scope,"T1").stages().getFirst().participants().getFirst().id());
+    }
+    @Test void coordinatorAddsOrdinaryMembersOnlyInOwnScope() {
+        configuredScope();UUID coordinator=UUID.randomUUID(),candidate=UUID.randomUUID();String coordinatorEmail="scope-coordinator@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Coordinación','unused','USER',false)",coordinator,coordinatorEmail);
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'candidate@example.invalid','Docente nuevo','unused','USER',false)",candidate);
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L))).getStatusCode().value());
+        organization.member(scope,email,new OrganizationService.MemberInput(coordinator,"COORDINATOR","Coordinación",true,0L));
+        assertTrue(organization.candidates(scope,coordinatorEmail).stream().anyMatch(c->candidate.equals(c.get("id"))));
+        organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active",Integer.class,scope,candidate));
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(reviewer,"COORDINATOR","Otra coordinación",true,0L))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(coordinator,"MEMBER","Autocambio",true,1L))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.candidates(scope,"candidate@example.invalid")).getStatusCode().value());
     }
     @Test void historicDownloadNeverAddsAdminOrNewMemberAccess() throws Exception {
         configuredScope();UUID other=UUID.randomUUID(),pureAdmin=UUID.randomUUID();

@@ -54,6 +54,13 @@ public class DevelopmentSeed implements ApplicationRunner {
                 if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM organizational_scope WHERE id=?)",Boolean.class,scope))) seedScope(scope,groupId,period);
             }
         }
+        // Example positions until the official table of reviewers/approvers per commission is delivered.
+        for(var position:List.of(List.of("UPE_RESPONSIBLE","Responsable de la Unidad de Planificación (UPE)","true"),List.of("CAREER_COORDINATOR","Coordinador/a de carrera","true"),
+                List.of("SUBDEAN","Subdecano/a","false"),List.of("DEAN","Decano/a","false")))
+            jdbc.update("INSERT INTO institutional_position(id,code,name,career_specific) VALUES (?,?,?,?) ON CONFLICT DO NOTHING",id("position-"+position.get(0)),position.get(0),position.get(1),Boolean.parseBoolean(position.get(2)));
+        for(var career:reference.careers())
+            jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING",id("assignment-UPE-"+career.code()),period,id("position-UPE_RESPONSIBLE"),id(career.key()),id("reviewer"),id("admin"));
+        jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,NULL,?,?) ON CONFLICT DO NOTHING",id("assignment-SUBDEAN"),period,id("position-SUBDEAN"),id("approver"),id("admin"));
         for(String kind:List.of("RESOURCE","MEANS")) for (String label : kind.equals("RESOURCE") ? reference.resources() : reference.means())
             jdbc.update("INSERT INTO planning_catalog(id,kind,label,active) VALUES (?,?,?,true) ON CONFLICT DO NOTHING",id("catalog-"+kind+"-"+label),kind,label);
         for (var activity : reference.activities()) jdbc.update("INSERT INTO activity_catalog(id,group_id,title,category,mandatory,active) VALUES (?,?,?,?,false,true) ON CONFLICT(id) DO NOTHING",id(activity.key()),id(activity.groupKey()),activity.title(),activity.category());

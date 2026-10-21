@@ -29,6 +29,10 @@ public class WorkflowService {
             if(recipients.size()!=stage.assigneeIds().size()) result.add(stage.label()+": no repita participantes.");
             for(var user:recipients) if(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active",Integer.class,user)==0) result.add(stage.label()+": seleccione participantes activos.");
             switch(stage.recipientKind()) {
+                case "POSITION" -> {
+                    if(stage.positionId()==null || !recipients.isEmpty() || stage.groupRole()!=null || !stage.recipientLabel().isBlank()) result.add(stage.label()+": seleccione un cargo institucional, sin personas, rol ni órgano colegiado.");
+                    else if(jdbc.queryForObject("SELECT count(*) FROM institutional_position WHERE id=? AND active",Integer.class,stage.positionId())==0) result.add(stage.label()+": el cargo seleccionado no está activo.");
+                }
                 case "PERSON" -> { if(recipients.isEmpty() || stage.groupRole()!=null || !stage.recipientLabel().isBlank()) result.add(stage.label()+": seleccione personas, sin rol ni órgano colegiado."); }
                 case "GROUP_ROLE" -> {
                     if(stage.groupRole()==null || !recipients.isEmpty() || !stage.recipientLabel().isBlank()) result.add(stage.label()+": seleccione un rol de pertenencia, sin personas ni órgano colegiado.");
