@@ -1,3 +1,4 @@
+import { DocumentStructures } from './DocumentStructures'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 import { confirmAction } from '../shared/confirm-action'
@@ -25,8 +26,10 @@ export function TemplateAdministration({ onDirtyChange }: { onDirtyChange: (dirt
   const [notice, setNotice] = useState('')
 
   const activeTemplate = templates.find(t => t.documentType === editingType)
-  const dirty = editingType !== null && activeTemplate !== undefined && draftJustification !== activeTemplate.justification
+  const [structureDirty, setStructureDirty] = useState(false)
+  const textDirty = editingType !== null && activeTemplate !== undefined && draftJustification !== activeTemplate.justification
 
+  const dirty = textDirty || structureDirty
   useEffect(() => {
     onDirtyChange(dirty)
     const prevent = (event: BeforeUnloadEvent) => {
@@ -259,6 +262,7 @@ export function TemplateAdministration({ onDirtyChange }: { onDirtyChange: (dirt
           )
         })}
       </div>
+      <DocumentStructures onDirtyChange={setStructureDirty} />
     </section>
   )
 }

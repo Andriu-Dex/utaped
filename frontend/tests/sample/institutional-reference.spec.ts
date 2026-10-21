@@ -33,7 +33,7 @@ test('fictional people have realistic names in the profile and activity responsi
   await login(page, 'dev.principal')
   await expect(page.locator('.sidebar-account')).toContainText('Andrés Sebastián Molina Vera')
   const options = await api(page, '/work-plans/options')
-  const scope = options.scopes.find((item: { canCreate: boolean }) => item.canCreate)
+  const scope = options.scopes.find((item: { canCreate: boolean; groupName: string }) => item.canCreate && item.groupName === 'Unidad de Titulación')
   expect(scope).toBeTruthy()
   const plan = await api(page, '/work-plans', 'POST', { scopeId: scope.id, groupId: scope.groupId, periodId: scope.periodId, requestKey: randomUUID() })
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()

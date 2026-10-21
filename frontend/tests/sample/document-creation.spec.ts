@@ -23,7 +23,7 @@ test('document type chooser proposes the institutional name and excludes draft P
     await principal.getByLabel('Buscar por título').fill(suffix)
     await principal.getByRole('button', { name: 'Buscar', exact: true }).click()
     await openAction(principal, 'Crear documento')
-    const planChoice = principal.getByRole('radio', { name: /^Plan de Trabajo/ }), reportChoice = principal.getByRole('radio', { name: /^Informe/ })
+    const planChoice = principal.getByRole('radio', { name: /^Plan de Trabajo/ }), reportChoice = principal.getByRole('radio', { name: /^Informe final/ })
     await expect(planChoice).toBeChecked()
     await expect(principal.getByLabel('Título del nuevo Plan')).toBeDisabled()
     await openAction(principal, 'Crear documento');await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)

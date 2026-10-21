@@ -2,6 +2,7 @@ import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { EvidenceMedium, type Medium } from './EvidenceMedium'
 import './execution.css'
+import { FormalSubmission } from './FormalSubmission'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 import { Icon } from '../shared/Icon'
@@ -13,9 +14,10 @@ type State = { documentState: string; coordinator: boolean; requiredMedia: numbe
 
 export function ExecutionWorkspace({ targetDocId, onBack, onDirtyChange }: { targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [state, setState] = useState<State | null>(null); const [reload, setReload] = useState(0); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [dirty, setDirty] = useState<string[]>([])
+  const [formalDirty, setFormalDirty] = useState(false)
   const [history, setHistory] = useState<ExtensionChange[]>([])
   const path = '/work-plans/' + targetDocId + '/execution'
-  useEffect(() => { onDirtyChange(dirty.length > 0); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { onDirtyChange(dirty.length > 0 || formalDirty); return () => onDirtyChange(false) }, [dirty, formalDirty, onDirtyChange])
   useEffect(() => {
     const prevent = (event: BeforeUnloadEvent) => { if (dirty.length > 0) { event.preventDefault(); event.returnValue = '' } }
     window.addEventListener('beforeunload', prevent); return () => window.removeEventListener('beforeunload', prevent)
@@ -27,7 +29,8 @@ export function ExecutionWorkspace({ targetDocId, onBack, onDirtyChange }: { tar
     try { await api(path + '/activities/' + activity.id + '/extension', 'PUT', { ...data, rowVersion: activity.responsible.find(r => r.id === data.userId)?.extensionVersion ?? -1 }); form.reset(); setDirty(d => d.filter(k => k !== 'extension:' + activity.id)); setNotice('Extensión registrada.'); setReload(r => r + 1) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo registrar.') } finally { setBusy(false) }
   }
-  return <section className="execution-workspace"><button type="button" className="secondary" disabled={busy} onClick={async () => { if (!dirty.length || (await confirmAction('Hay cambios sin guardar. ¿Salir?'))) onBack() }}>Volver al Plan</button><div className="execution-intro"><span className="section-icon"><Icon name="document" size={30} /></span><div><span className="section-kicker review-kicker">SEGUIMIENTO DE EJECUCIÓN</span><h1>Actividades y evidencias</h1><p className="muted">Una evidencia vigente por medio: PDF privado o enlace HTTPS, según la matriz del Plan. La cobertura documental no representa por sí sola el porcentaje de ejecución física.</p></div></div>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
+  return <section className="execution-workspace"><button type="button" className="secondary" disabled={busy} onClick={async () => { if ((!dirty.length && !formalDirty) || (await confirmAction('Hay cambios sin guardar. ¿Salir?'))) onBack() }}>Volver al Plan</button><div className="execution-intro"><span className="section-icon"><Icon name="document" size={30} /></span><div><span className="section-kicker review-kicker">SEGUIMIENTO DE EJECUCIÓN</span><h1>Actividades y evidencias</h1><p className="muted">Una evidencia vigente por medio: PDF privado o enlace HTTPS, según la matriz del Plan. La cobertura documental no representa por sí sola el porcentaje de ejecución física.</p></div></div>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
+    <FormalSubmission targetDocId={targetDocId} onDirtyChange={setFormalDirty} onRegistered={() => setReload(value => value + 1)} />
     {!state ? <p role="status">Cargando ejecución…</p> : <><div className="organization-metrics"><div><strong>{state.coveredMedia}/{state.requiredMedia}</strong><span>Medios con evidencia vigente</span></div><div><strong>{state.completedActivities}/{state.activities.length}</strong><span>Actividades con evidencias completas</span></div><div><strong>{Math.round(state.maxFileBytes / 1048576)} MB</strong><span>Límite técnico por PDF</span></div></div>{state.documentState !== 'APPROVED' && <p className="field-help">La carga de evidencias se habilita cuando el Plan está aprobado.</p>}
     {state.activities.map(a => <section className="card execution-activity" key={a.id}><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">ACTIVIDAD PLANIFICADA</span><h2>{a.title}</h2></div></div><div className="review-summary"><span className={'status-badge ' + (a.complete ? 'active' : '')}>{a.complete ? 'Evidencias completas' : 'Evidencias pendientes'}</span><span className="muted">Plazo de carga: {a.deadline} · 23:59, hora institucional</span></div>
       <div className="evidence-grid">{a.media.map(m => <EvidenceMedium key={m.index} path={path} activityId={a.id} medium={m} canUpload={a.canUpload} onDirty={value => { if (value) mark(a.id + ':' + m.index); else setDirty(d => d.filter(k => k !== a.id + ':' + m.index)) }} onSaved={() => { setNotice('Evidencia guardada. Las versiones anteriores se conservan.'); setReload(r => r + 1) }} onError={setError} />)}</div>

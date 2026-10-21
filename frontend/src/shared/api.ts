@@ -65,3 +65,10 @@ export interface Group { id: string; name: string; group_type: string; membershi
 export interface Member { id: string; display_name: string; membership_role: string }
 export interface Period { id: string; name: string; starts_on: string; ends_on: string; restrict_holiday_endpoints: boolean; status: 'ACTIVE' | 'CLOSED'; row_version: number; workflow_locked_at: string | null; closed_at: string | null; is_current: boolean }
 export interface User { id: string; email: string; username: string | null; first_names: string | null; last_names: string | null; display_name: string; system_role: string; active: boolean; row_version: number }
+
+export async function uploadBinary<T>(path: string, file: File): Promise<T> {
+  if (!csrf) await refreshCsrf()
+  const response = await fetch('/api' + path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', [csrf!.headerName]: csrf!.token }, body: file })
+  if (!response.ok) { if (response.status === 401) window.dispatchEvent(new Event('session-expired')); const error = await response.json().catch(() => ({ message: 'No se pudo verificar el archivo.' })); throw new ApiError(error.message, response.status) }
+  return response.json() as Promise<T>
+}

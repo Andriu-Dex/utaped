@@ -6,7 +6,7 @@ import { api, type Group, type User } from '../shared/api'
 import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
 interface Stage { positionLabel?: string; positionId?: string | null; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
-interface Definition { name: string; stages: Stage[] }
+interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
 export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyChange }: { groups: Group[]; users: User[]; suggestedQuery: string; onDirtyChange: (dirty: boolean) => void }) {
@@ -44,7 +44,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
       <div className="grid">
         <label>Grupo del flujo<select value={group} disabled={busy} onChange={e => choose(e.target.value, type)}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
-        <label>Tipo documental del flujo<select value={type} disabled={busy} onChange={e => choose(group, e.target.value)}><option value="T1">Plan T1</option><option value="T2">Informe T2</option></select></label>
+        <label>Tipo documental del flujo<select value={type} disabled={busy} onChange={e => choose(group, e.target.value)}><option value="T1">Plan T1</option><option value="T2">Informe T2</option><option value="T3">Informe de ejecución</option></select></label>
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
@@ -65,7 +65,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       <ActionForm label="Editar flujo" dirty={dirty} disabled={busy || !state.groupActive} onCancel={() => setDraft(state.draft)}>
         <form onSubmit={e => { e.preventDefault(); void operation('', 'PUT', { rowVersion: state.rowVersion, definition: draft }) }}>
           <fieldset disabled={busy || !state.groupActive}>
-            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label>
+            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label><label className="check"><input type="checkbox" checked={draft.requiresQuipux ?? false} onChange={e => setDraft(d => ({ ...d, requiresQuipux: e.target.checked }))} />Requerir constancia de Quipux después de aprobar</label><p className="field-help">El PDF aprobado se descarga para el trámite externo. La coordinación registra la constancia antes de iniciar ejecución o informes derivados. No hay conexión automática con Quipux.</p>
             {draft.stages.map((s, index) => <section className="card workflow-stage-card" key={s.id} aria-label={'Etapa ' + (index + 1)}>
               <div className="activity-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -1,0 +1,61 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { api } from '../shared/api'
+import { Toast } from '../shared/Toast'
+import { Icon } from '../shared/Icon'
+import { confirmAction } from '../shared/confirm-action'
+import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
+import { AttachmentEditor } from './AttachmentEditor'
+import { DocumentPreparation } from './DocumentPreparation'
+import { ReviewHistory } from '../workflow/ReviewHistory'
+import { AuditViewer } from '../audit/AuditViewer'
+import type { WorkPlan } from './types'
+import './document-workspace.css'
+
+type Result = { activityId: string; percentage: number | null; observations: string }
+type Action = { situation: string; action: string }
+type Data = { basePlanId: string; baseFormalVersion: string; sequenceNumber: number; activityIds: string[]; results: Result[]; analysis: string; strengths: string; weaknesses: string; opportunities: string; threats: string; conclusions: string; recommendations: string; improvementActions: Action[]; evidenceLink: string }
+type State = { document: WorkPlan; data: Data; activities: { id: string; title: string }[]; evidence: { coveredMedia: number; requiredMedia: number } | null }
+const steps = ['Información general', 'Actividades y resultados', 'Análisis FODA', 'Conclusiones y recomendaciones', 'Acciones de mejora', 'Anexos', 'Firma y finalización']
+const narratives = ['analysis', 'strengths', 'weaknesses', 'opportunities', 'threats', 'conclusions', 'recommendations'] as const
+export function ExecutionReportEditor({ initial, initialStep, onStepChange, onBack, onDirtyChange }: { initial: WorkPlan; initialStep?: string | null; onStepChange?: (step: string) => void; onBack: () => void; onDirtyChange: (value: boolean) => void }) {
+  const [state, setState] = useState<State | null>(null), [draft, setDraft] = useState<Data | null>(null), [title, setTitle] = useState(initial.title)
+  const [step, setStepState] = useState(initialStep && /^[0-6]$/.test(initialStep) ? Number(initialStep) : 0), [panel, setPanel] = useState(initialStep === '5' ? 'attachments' : initialStep === '6' ? 'preparation' : 'edit'), [reload, setReload] = useState(0), [authorsDirty, setAuthorsDirty] = useState(false)
+  const [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
+  const [previousStep, setPreviousStep] = useState(initialStep)
+  if (previousStep !== initialStep) { const next = initialStep && /^[0-6]$/.test(initialStep) ? Number(initialStep) : 0;setPreviousStep(initialStep);setStepState(next);setPanel(next === 5 ? 'attachments' : next === 6 ? 'preparation' : 'edit') }
+  const contentDirty = !!state && (JSON.stringify(state.data) !== JSON.stringify(draft) || state.document.title !== title), dirty = contentDirty || authorsDirty
+  useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { const leave = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = '' } }; window.addEventListener('beforeunload', leave); return () => window.removeEventListener('beforeunload', leave) }, [dirty])
+  useEffect(() => { let active = true; api<State>('/execution-reports/' + initial.id).then(value => { if (active) { setState(value); setDraft(value.data); setTitle(value.document.title) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [initial.id, reload])
+  function setStep(index: number) { setStepState(index); onStepChange?.(String(index)) }
+  function choose(index: number) { if (dirty && index >= 5) { setError('Guarde los cambios antes de continuar a anexos o firma.'); return }; setStep(index); setPanel(index === 5 ? 'attachments' : index === 6 ? 'preparation' : 'edit') }
+  async function save(event: FormEvent) {
+    event.preventDefault(); if (!state || !draft || busy) return; setBusy(true); setError('')
+    try { const value = await api<State>('/execution-reports/' + initial.id, 'PUT', { ...draft, results: draft.results.filter(r => draft.activityIds.includes(r.activityId)), title, rowVersion: state.document.rowVersion }); setState(value); setDraft(value.data);setTitle(value.document.title); setNotice('Informe de ejecución guardado. El Plan aprobado se conserva.') }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar; sus cambios se conservan.') } finally { setBusy(false) }
+  }
+  const back = () => { setPanel('edit'); setStep(0); setReload(n => n + 1) }
+  if (panel === 'attachments') return <AttachmentEditor targetDocId={initial.id} onDirtyChange={onDirtyChange} onBack={back} />
+  if (panel === 'preparation') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={initial.id} documentType="T3" onBack={back} />
+  if (panel === 'rounds') return <ReviewHistory documentId={initial.id} title={title} onBack={back} onDirtyChange={onDirtyChange} />
+  if (panel === 'history') return <AuditViewer targetDocId={initial.id} onBack={back} />
+  function result(id: string, patch: Partial<Result>) { setDraft(current => current && ({ ...current, results: current.results.some(r => r.activityId === id) ? current.results.map(r => r.activityId === id ? { ...r, ...patch } : r) : [...current.results, { activityId: id, percentage: null, observations: '', ...patch }] })) }
+  return <section><button type="button" className="secondary" disabled={busy} onClick={async () => { if (!dirty || await confirmAction('Hay cambios sin guardar. ¿Salir del Informe?')) onBack() }}>Volver a documentos</button>
+    <span className="section-kicker review-kicker">INFORME DE EJECUCIÓN · CORTE DEL PLAN</span><h1>{title}</h1><p className="muted">Documente avances, analice resultados y proponga mejoras. Este corte conserva el Plan aprobado y no reemplaza al Informe final.</p>
+    {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
+    {!state || !draft ? <p role="status">Cargando Informe de ejecución…</p> : <>
+      <div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Ronda {state.document.reviewRound} · Corte {draft.sequenceNumber}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div>
+      <nav className="document-steps" aria-label="Pasos del Informe de ejecución">{steps.map((label, i) => <button type="button" className="secondary" key={label} disabled={busy} aria-current={step === i ? 'step' : undefined} onClick={() => choose(i)}><span>{i + 1}</span>{label}</button>)}</nav>
+      <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PASO {step + 1} DE {steps.length}</span><h2>{steps[step]}</h2></div></div>
+        {!state.document.editable && <p className="field-help">Solo lectura según su permiso, firmas y estado del período.</p>}
+        <form onSubmit={save}><fieldset disabled={busy || authorsDirty || !state.document.editable}>
+          {step === 0 && <><label>Título del Informe de ejecución<input value={title} maxLength={200} required onChange={e => setTitle(e.target.value)} /></label><dl className="plan-metadata"><div><dt>Plan base</dt><dd>Versión {draft.baseFormalVersion}</dd></div><div><dt>Ámbito</dt><dd>{state.document.groupName} · {state.document.career}</dd></div><div><dt>Período</dt><dd>{state.document.periodName}</dd></div><div><dt>Responsable principal</dt><dd>{state.document.teacherName}</dd></div></dl></>}
+          {step === 1 && <><p className="field-help">Seleccione las actividades de este corte. El porcentaje es declarado; la cobertura de evidencias ({state.evidence ? state.evidence.coveredMedia + '/' + state.evidence.requiredMedia : 'sin acceso a las evidencias del Plan base'}) es un indicador distinto.</p>{state.activities.map((activity, index) => { const selected = draft.activityIds.includes(activity.id), value = draft.results.find(r => r.activityId === activity.id); return <section key={activity.id} className="report-result"><label className="check"><input type="checkbox" checked={selected} onChange={e => setDraft({ ...draft, activityIds: e.target.checked ? [...draft.activityIds, activity.id] : draft.activityIds.filter(id => id !== activity.id), results: e.target.checked && !value ? [...draft.results, { activityId: activity.id, percentage: null, observations: '' }] : draft.results })} />{activity.title}</label>{selected && <div className="grid"><label>Porcentaje de ejecución<input aria-label={'Porcentaje de ejecución de actividad ' + (index + 1)} type="number" min={0} max={100} step="0.01" value={value?.percentage ?? ''} onChange={e => result(activity.id, { percentage: e.target.value === '' ? null : Number(e.target.value) })} /></label><label>Observaciones del resultado<textarea aria-label={'Observaciones del resultado de actividad ' + (index + 1)} rows={3} maxLength={4000} value={value?.observations ?? ''} onChange={e => result(activity.id, { observations: e.target.value })} /></label></div>}</section> })}</>}
+          {(step === 2 || step === 3) && <div className="grid">{narratives.filter(key => step === 2 ? !['conclusions', 'recommendations'].includes(key) : ['conclusions', 'recommendations'].includes(key)).map(key => <label key={key}>{({ analysis: 'Análisis de resultados', strengths: 'Fortalezas', weaknesses: 'Debilidades', opportunities: 'Oportunidades', threats: 'Amenazas', conclusions: 'Conclusiones', recommendations: 'Recomendaciones' })[key]}<textarea rows={key === 'analysis' ? 8 : 5} maxLength={['strengths', 'weaknesses', 'opportunities', 'threats'].includes(key) ? 20000 : 50000} value={draft[key]} onChange={e => setDraft({ ...draft, [key]: e.target.value })} /></label>)}</div>}
+          {step === 4 && <><p className="field-help">Relacione cada situación identificada con una acción de mejora. Puede dejar este apartado vacío si no aplica.</p>{draft.improvementActions.map((action, index) => <div className="card" key={index}><div className="grid"><label>Situación identificada<textarea maxLength={2000} value={action.situation} required onChange={e => setDraft({ ...draft, improvementActions: draft.improvementActions.map((a, i) => i === index ? { ...a, situation: e.target.value } : a) })} /></label><label>Acción de mejora<textarea maxLength={2000} value={action.action} required onChange={e => setDraft({ ...draft, improvementActions: draft.improvementActions.map((a, i) => i === index ? { ...a, action: e.target.value } : a) })} /></label></div><button type="button" className="secondary" onClick={async () => { if (await confirmAction('¿Quitar esta acción de mejora?')) setDraft(current => current && ({ ...current, improvementActions: current.improvementActions.filter((_, i) => i !== index) })) }}>Quitar acción</button></div>)}<button type="button" disabled={draft.improvementActions.length >= 50} onClick={() => setDraft({ ...draft, improvementActions: [...draft.improvementActions, { situation: '', action: '' }] })}>Agregar acción de mejora</button><label>Enlace de evidencias<input type="url" placeholder="https://" maxLength={2000} value={draft.evidenceLink} onChange={e => setDraft({ ...draft, evidenceLink: e.target.value })} /></label></>}
+          <div className="document-step-actions"><button disabled={!contentDirty || authorsDirty}>Guardar Informe de ejecución</button><div className="review-actions">{step > 0 && <button type="button" className="secondary" onClick={() => choose(step - 1)}>Anterior</button>}<button type="button" className="secondary" onClick={() => choose(step + 1)}>Siguiente</button></div></div>
+        </fieldset></form></section>
+      {step === 0 && <DocumentAuthorsEditor targetDocId={initial.id} version={state.document.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { setReload(n => n + 1) }} />}
+    </>}
+  </section>
+}
