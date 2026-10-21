@@ -20,7 +20,7 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine4"; }
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine6"; }
     private static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
     private static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
     private static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
@@ -86,8 +86,11 @@ public class T2Template {
         if(!s.attachments().isEmpty()||(s.externalReferences()!=null&&!s.externalReferences().isEmpty())) { heading(result,sectionNodes,source.get(58),"ANEXOS");for(var a:s.attachments()) { result.add(paragraph(source.get(34),a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(source.get(34),a.description())); } }
         if(s.externalReferences()!=null&&!s.externalReferences().isEmpty()) { for(var reference:s.externalReferences()) { result.add(paragraph(source.get(34),"Referencia externa · "+reference.activity()+" · "+reference.medium()+" · v"+reference.version()+".0")); result.add(paragraph(source.get(34),reference.title()+": "+reference.url())); } }
         heading(result,sectionNodes,source.get(63),"FIRMAS DE RESPONSABILIDAD");property(sectionNodes.get("FIRMAS DE RESPONSABILIDAD"),"pageBreakBefore");var signatures=source.get(65);var signatureRows=children(signatures,"tr");var signaturePrototype=(Element)signatureRows.get(1).cloneNode(true);for(int i=1;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
-        signature(signatures,signaturePrototype,"Elaborado por:",s.plan().teacherName(),"");int slot=1;
-        if(s.workflow()!=null) for(var stage:s.workflow().stages()) for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),stage.requiresSignature()?String.valueOf(slot++):null);
+        for(int i=0;i<s.resolvedAuthors().size();i++) { var author=s.resolvedAuthors().get(i);signature(signatures,signaturePrototype,"Elaborado por:",author.name(),author.position(),i==0?"":"A"+i); }int slot=1;
+        if(s.workflow()!=null) for(var stage:s.workflow().stages()) {
+            if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null);
+            else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null);
+        }
         result.add(signatures);heading(result,sectionNodes,source.get(67),"CONTROL DE HISTORIAL DE CAMBIOS");var history=source.get(69);var historyRows=children(history,"tr");for(int i=1;i<historyRows.size();i++) history.removeChild(historyRows.get(i));var entry=(Element)historyRows.getFirst().cloneNode(true);removeAll(entry,"b");var cells=children(entry,"tc");cell(cells.get(0),s.plan().formalVersion());cell(cells.get(1),"Elaboración del Informe");cell(cells.get(2),s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));history.appendChild(entry);result.add(history);
         result.add(source.get(76));for(var node:children(body,null)) body.removeChild(node);for(var node:result) body.appendChild(node);removeAll(body,"bookmarkStart");removeAll(body,"bookmarkEnd");
         int bookmark=1000;for(var entryNode:sectionNodes.entrySet()) {
@@ -98,13 +101,15 @@ public class T2Template {
         for(var t:all(body,"tbl")) fit(t,9026);
     }
     private static void heading(List<Element> result,Map<String,Element> nodes,Element source,String label) { var p=paragraph(source,label);property(p,"keepNext");result.add(p);nodes.put(label,p); }
-    private static void signature(Element table,Element prototype,String label,String name,String suffix) {
-        var row=(Element)prototype.cloneNode(true);removeAll(row,"trHeight");var cells=children(row,"tc");cell(cells.get(0),label);cell(cells.get(1),name);cell(cells.get(2),"");cell(cells.get(3),suffix==null?"":"@@SIGTOP"+suffix+"@@\n@@SIGBOTTOM"+suffix+"@@");
+    private static void signature(Element table,Element prototype,String label,String name,String position,String suffix) {
+        var row=(Element)prototype.cloneNode(true);removeAll(row,"trHeight");var cells=children(row,"tc");cell(cells.get(0),label);cell(cells.get(1),name);cell(cells.get(2),position);cell(cells.get(3),suffix==null?"":"@@SIGTOP"+suffix+"@@\n@@SIGBOTTOM"+suffix+"@@");
         if(suffix!=null) { var markers=children(cells.get(3),"p");for(int i=0;i<markers.size();i++) { var p=markers.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");var spacing=property(p,"spacing");spacing.setAttributeNS(W,"w:before","0");spacing.setAttributeNS(W,"w:after",i==0?"1000":"0");spacing.setAttributeNS(W,"w:line","40");spacing.setAttributeNS(W,"w:lineRule","exact");for(var r:children(p,"r")) { var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"rPr");r.insertBefore(e,r.getFirstChild());return e;});var size=element(p.getOwnerDocument(),"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size); } } }
+        var pr=children(row,"trPr").stream().findFirst().orElseGet(()->{var e=element(row.getOwnerDocument(),"trPr");row.insertBefore(e,row.getFirstChild());return e;});if(children(pr,"cantSplit").isEmpty()) pr.appendChild(element(row.getOwnerDocument(),"cantSplit"));
         table.appendChild(row);
     }
     private void furniture(Document doc,Snapshot s) {
         var root=doc.getDocumentElement();
+        if(root.getLocalName().equals("hdr")) { InstitutionalHeader.apply(doc,s);return; }
         for(var p:all(root,"p")) {
             String value=String.join("",all(p,"t").stream().map(Element::getTextContent).toList());
             if(value.startsWith("INFORME DE:")) text(p,"INFORME DE: "+s.plan().title());

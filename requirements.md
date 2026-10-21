@@ -1,5 +1,17 @@
 # Requisitos de UTAPED
 
+## Matriz y selección de catálogos — 2026-10-20
+
+El propietario confirma conservar el flujo actual, aclarar que la fuente editable puede ser la comisión o un documento y automatizar la denominación colectiva al seleccionar todos los integrantes. Priorizar opciones de catálogo donde las reuniones solicitan listas; mantener Otro cuando corresponde. Se autorizan opciones de ejemplo precargadas para catálogos aún no entregados, sin convertirlas en datos o reglas institucionales oficiales. [Reporte](docs/reports/2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).
+
+## Autoría y revisión — 2026-10-17
+
+El propietario autoriza corregir observaciones/órganos colegiados y completar varios elaboradores con un único editor, firmas sucesivas y cargos. Confirma que Administración designa por período a la persona que registra una decisión colegiada sin figurar como firmante personal. Una observación de la ronda exige devolución antes de aprobación. La primera firma congela el contenido y la última firma de elaboración inicia revisión. Se corrigen los encabezados T1/T2 usando Prototipos como referencia visual y conservando plantillas institucionales A4. [Contrato](docs/api/document-authorship-and-review.md).
+
+## Ejemplos con presentación realista — 2026-10-17
+
+Decisión del propietario: utilizar personas ficticias con nombres completos y cargos legibles en el entorno de desarrollo, en lugar de etiquetas técnicas como «Desarrollo principal». Conservar credenciales, permisos e identidades técnicas; no atribuir cargos ni firmas a personas reales. Las carreras, grupos, período y catálogos siguen las fuentes oficiales de docs/templates. La actualización respeta nombres/cargos personalizados y documentos previamente creados o firmados. [Cuentas del escenario](docs/development/sample-environment.md).
+
 ## Justificación inicial administrable — 2026-10-17
 
 La revisión del staged del propietario incorpora una configuración ADMIN para el texto inicial de Justificación del T1, con control de versión y auditoría. Se copia al crear un Plan nuevo; editar o restaurar la configuración no reescribe documentos existentes, campos vaciados intencionalmente ni artefactos firmados. El autor puede modificar su texto o restaurarlo explícitamente desde el editor. Esta configuración no sustituye las plantillas oficiales DOCX ni modifica su formato A4. El texto inicial aportado en el staged es editable y no constituye ratificación institucional de las referencias normativas que menciona. [Contrato](docs/api/document-templates.md).

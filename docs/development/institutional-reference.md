@@ -40,3 +40,11 @@ No modifica la base principal ni configura el calendario productivo. Una vez ter
 El propietario permite reemplazar los datos de desarrollo actuales. Para retirar las pruebas acumuladas se reconstruyen los catálogos y ámbitos a partir del JSON trazable a templates, conservando los siete usuarios dev y sus hashes de contraseña. Se eliminan de la DB los documentos, cuentas extra, grupos/períodos/carreras y demás registros operativos de ejemplo; las sesiones se invalidan. Las referencias se regeneran con sus mismos identificadores estables y los nombres oficiales. No es un cambio de reglas de producción ni una migración Flyway.
 
 La herramienta scripts/clean-development-data.py requiere el proyecto exacto utaped-sample, la DB utaped_dev, el perfil development-seed y un respaldo emparejado verificado de esa misma base. Sin --apply solo muestra el alcance. La operación no elimina archivos del volumen: los antiguos archivos sin referencias quedan fuera de la UI y permanecen también en el respaldo; no se presenta como purga física de almacenamiento.
+
+## Presentación realista de personas — 2026-10-17
+
+El propietario solicita nombres y datos verosímiles en la demostración. Las siete cuentas semilla usan nombres completos ficticios documentados en sample-environment.md y cargos legibles, manteniendo credenciales y autorizaciones. No se toman nombres de autoridades de las fuentes como usuarios ni se precargan firmas. La actualización solo reconoce los valores genéricos originales; no sobrescribe personalizaciones administrativas. Las referencias académicas oficiales y el formato A4 permanecen sin cambios.
+
+## Ejemplos complementarios — 2026-10-20
+
+Por autorización del propietario se añaden dos actividades opcionales genéricas en cada grupo sin actividades derivadas de fuentes ni catálogo activo personalizado: coordinar planificación/seguimiento y elaborar informe de resultados. En la referencia inicial son 20 opciones para diez grupos, además de las 55 oficiales. Se crean desde DevelopmentSeed, fuera del JSON de procedencia oficial, solo en utaped_dev; no se presentan como obligaciones ni como actividades extraídas de templates. Son editables/desactivables en Administración y no sobrescriben cambios existentes.

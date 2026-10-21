@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine4"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine6"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -119,7 +119,7 @@ public class T1Template {
         }
         property(source.get(54),"pageBreakBefore");keepWithNext(source.get(54));result.add(source.get(54));result.add(source.get(55));
         var signatures=source.get(56);var signatureRows=children(signatures,"tr");for(int i=2;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
-        var signatureCells=children(signatureRows.get(1),"tc");cell(signatureCells.get(0),"Elaborado por:");cell(signatureCells.get(1),s.plan().teacherName());cell(signatureCells.get(2),"");
+        var signatureCells=children(signatureRows.get(1),"tc");cell(signatureCells.get(0),"Elaborado por:");cell(signatureCells.get(1),s.plan().teacherName());cell(signatureCells.get(2),s.resolvedAuthors().getFirst().position());
         cell(signatureCells.get(3),"@@SIGTOP@@\n@@SIGBOTTOM@@");
         var markers=children(signatureCells.get(3),"p");
         for(int i=0;i<markers.size();i++) {
@@ -130,19 +130,31 @@ public class T1Template {
                 var size=element(doc,"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size);
             }
         }
+        for(int authorIndex=1;authorIndex<s.resolvedAuthors().size();authorIndex++) {
+            var author=s.resolvedAuthors().get(authorIndex);var row=(Element)signatureRows.get(1).cloneNode(true);var cells=children(row,"tc");
+            cell(cells.get(1),author.name());cell(cells.get(2),author.position());
+            for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace("@@SIGTOP@@","@@SIGTOPA"+authorIndex+"@@").replace("@@SIGBOTTOM@@","@@SIGBOTTOMA"+authorIndex+"@@"));
+            signatures.appendChild(row);
+        }
         if(s.workflow()!=null) {
             int slot=1;
-            for(var stage:s.workflow().stages()) for(var person:stage.participants()) {
+            for(var stage:s.workflow().stages()) {
+              if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) {
+                var row=(Element)signatureRows.get(1).cloneNode(true);var cells=children(row,"tc");cell(cells.get(0),stage.label()+":");cell(cells.get(1),stage.recipientLabel());cell(cells.get(2),"");cell(cells.get(3),"");signatures.appendChild(row);continue;
+              }
+              for(var person:stage.participants()) {
                 var row=(Element)signatureRows.get(1).cloneNode(true);var cells=children(row,"tc");
-                cell(cells.get(0),stage.label()+":");cell(cells.get(1),person.name());cell(cells.get(2),"");
+                cell(cells.get(0),stage.label()+":");cell(cells.get(1),person.name());cell(cells.get(2),person.position()==null?"":person.position());
                 if(stage.requiresSignature()) {
                     // Preserve marker layout while making each slot independently discoverable.
                     for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace("@@SIGTOP@@","@@SIGTOP"+slot+"@@").replace("@@SIGBOTTOM@@","@@SIGBOTTOM"+slot+"@@"));
                     slot++;
                 } else cell(cells.get(3),"");
                 signatures.appendChild(row);
+              }
             }
         }
+        for(var row:children(signatures,"tr")) { var pr=children(row,"trPr").stream().findFirst().orElseGet(()->{var e=element(doc,"trPr");row.insertBefore(e,row.getFirstChild());return e;});if(children(pr,"cantSplit").isEmpty()) pr.appendChild(element(doc,"cantSplit")); }
         result.add(signatures);
         result.add(source.get(57));result.add(source.get(58));keepWithNext(source.get(59));result.add(source.get(59));
         var history=source.get(60);var historyRows=children(history,"tr");
@@ -168,21 +180,9 @@ public class T1Template {
     }
     public static String anchor(String section) { return "UTAPED_"+java.text.Normalizer.normalize(section,java.text.Normalizer.Form.NFD).replaceAll("\\p{M}","").replace(' ','_'); }
     private void header(Document doc,Snapshot s) {
-        var root=doc.getDocumentElement();for(var p:all(root,"p")) {
-            String value=String.join("",all(p,"t").stream().map(Element::getTextContent).toList());
-            if(value.startsWith("PLAN DE TRABAJO:")) text(p,"PLAN DE TRABAJO: "+s.plan().title());
-            else if(value.startsWith("Unidad académica/ administrativa:")) text(p,"Unidad académica/ administrativa: "+s.plan().institutionalUnit());
-            else if(value.startsWith("Fecha de elaboración:")) text(p,"Fecha de elaboración: "+s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        }
-        if(!s.plan().career().isBlank()) for(var row:all(root,"tr")) {
-            var cells=children(row,"tc");
-            if(cells.size()==3 && all(cells.get(1),"t").stream().anyMatch(t->t.getTextContent().startsWith("Unidad académica/ administrativa:"))) {
-                for(var p:children(cells.get(2),"p")) cells.get(2).removeChild(p);
-                var p=(Element)children(cells.get(1),"p").getFirst().cloneNode(true);text(p,"Carrera: "+s.plan().career());cells.get(2).appendChild(p);
-            }
-        }
-        if(format.equals("A4")) for(var table:all(root,"tbl")) fitTable(table,8504);
+        InstitutionalHeader.apply(doc,s);
     }
+
     private void footer(Document doc) {
         var root=doc.getDocumentElement();for(var p:all(root,"p")) if(all(p,"instrText").stream().anyMatch(n->n.getTextContent().contains("PAGE"))) {
             boolean field=false;var remove=new ArrayList<Element>();

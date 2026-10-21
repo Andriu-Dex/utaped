@@ -184,7 +184,7 @@ public final class Pkcs12PdfSigner {
         if(page.getRotation()!=0 || !Float.isFinite(b.x()+b.y()+b.width()+b.height()) || b.x()<0 || b.y()<0 || b.width()<60 || b.height()<30
             || b.x()+b.width()>box.getWidth() || b.y()+b.height()>box.getHeight()) fail("Ubicación de firma fuera de la página.");
         var field=pdf.getDocumentCatalog().getAcroForm().getFields().stream().filter(f->f instanceof PDSignatureField sf && sf.getSignature()!=null && signature.getCOSObject().equals(sf.getSignature().getCOSObject())).findFirst().orElseThrow();
-        field.setPartialName(slot.action().equals("ELABORADO_POR")?"UTAPED_AUTHOR":"UTAPED_"+slot.action()+"_"+slot.actorId());var widget=field.getWidgets().getFirst();widget.setRectangle(new PDRectangle(b.x(),b.y(),b.width(),b.height()));widget.setPage(page);widget.setPrinted(true);
+        field.setPartialName(slot.action().equals("ELABORADO_POR")&&pdf.getDocumentCatalog().getAcroForm().getField("UTAPED_AUTHOR")==null?"UTAPED_AUTHOR":"UTAPED_"+slot.action()+"_"+slot.actorId());var widget=field.getWidgets().getFirst();widget.setRectangle(new PDRectangle(b.x(),b.y(),b.width(),b.height()));widget.setPage(page);widget.setPrinted(true);
         for(var p:pdf.getPages()) { var annotations=p.getAnnotations();annotations.removeIf(a->a.getCOSObject().equals(widget.getCOSObject()));p.setAnnotations(annotations); }page.getAnnotations().add(widget);
         var appearance=new PDAppearanceStream(pdf);appearance.setResources(new PDResources());appearance.setBBox(new PDRectangle(b.width(),b.height()));
         var font=new PDType1Font(Standard14Fonts.FontName.HELVETICA);

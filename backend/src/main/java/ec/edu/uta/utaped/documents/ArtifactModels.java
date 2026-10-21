@@ -11,7 +11,12 @@ public final class ArtifactModels {
     public record Activity(String title,String category,String startsOn,String endsOn,String responsibleDisplay,List<UUID> responsibleIds,List<String> resources,List<String> means) {}
     public record ExternalReference(UUID evidenceId,int version,String activity,String medium,String title,String url) {}
     public record Snapshot(Plan plan,String matrixSource,String elaboratedBy,boolean privacyNoticeEnabled,List<Activity> activities,List<AttachmentModels.Attachment> attachments,DocumentWorkflowSnapshot.Workflow workflow,ec.edu.uta.utaped.planning.ReportService.Data report,
-        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) List<ExternalReference> externalReferences) {
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) List<ExternalReference> externalReferences,
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) List<ec.edu.uta.utaped.planning.DocumentAuthors.Author> authors) {
+        public Snapshot(Plan plan,String source,String elaboratedBy,boolean notice,List<Activity> activities,List<AttachmentModels.Attachment> attachments,DocumentWorkflowSnapshot.Workflow workflow,ec.edu.uta.utaped.planning.ReportService.Data report,List<ExternalReference> references) { this(plan,source,elaboratedBy,notice,activities,attachments,workflow,report,references,List.of()); }
+        public List<ec.edu.uta.utaped.planning.DocumentAuthors.Author> resolvedAuthors() {
+            return authors==null||authors.isEmpty()?List.of(new ec.edu.uta.utaped.planning.DocumentAuthors.Author(plan.teacherId(),plan.teacherName(),"")):authors;
+        }
         public Snapshot(Plan plan,String source,String elaboratedBy,boolean notice,List<Activity> activities,List<AttachmentModels.Attachment> attachments,DocumentWorkflowSnapshot.Workflow workflow,ec.edu.uta.utaped.planning.ReportService.Data report) { this(plan,source,elaboratedBy,notice,activities,attachments,workflow,report,List.of()); }
     }
     public record Page(int index,int number,float width,float height,String kind,UUID attachmentId) {}

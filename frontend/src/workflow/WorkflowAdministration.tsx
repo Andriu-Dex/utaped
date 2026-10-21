@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
-interface Stage { id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
+interface Stage { positionLabel?: string; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
 interface Definition { name: string; stages: Stage[] }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
@@ -86,10 +86,11 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
                 {s.recipientKind === 'COLLEGIATE' && <label>Nombre del órgano colegiado<input required maxLength={160} value={s.recipientLabel} onChange={e => change(s.id, { recipientLabel: e.target.value })} /></label>}
                 {s.recipientKind === 'GROUP_ROLE' && <label>Rol destinatario<select value={s.groupRole ?? ''} onChange={e => change(s.id, { groupRole: e.target.value })}><option value="MEMBER">Miembros</option><option value="COORDINATOR">Coordinadores</option></select></label>}
               </div>
-              <label className="check"><input type="checkbox" checked={s.requiresSignature} onChange={e => change(s.id, { requiresSignature: e.target.checked, assigneeIds: s.recipientKind === 'COLLEGIATE' ? [] : s.assigneeIds })} />Requiere firma personal</label>
-              {(s.recipientKind === 'PERSON' || s.recipientKind === 'COLLEGIATE' && s.requiresSignature) && <fieldset className="choice-group">
-                <legend>Participantes de la etapa</legend>
-                <p>Seleccione personas; varias personas representan participantes de la misma etapa. El avance efectivo depende del flujo institucional.</p>
+              <label>Cargo institucional de esta etapa<input maxLength={160} value={s.positionLabel ?? ''} onChange={event => change(s.id, { positionLabel: event.target.value })} placeholder="Cargo que aparecerá en la matriz de firmas" /></label>
+              <label className="check"><input type="checkbox" checked={s.requiresSignature} onChange={e => change(s.id, { requiresSignature: e.target.checked, assigneeIds: s.assigneeIds })} />Requiere firma personal</label>
+              {(s.recipientKind === 'PERSON' || s.recipientKind === 'COLLEGIATE') && <fieldset className="choice-group">
+                <legend>{s.recipientKind === 'COLLEGIATE' && !s.requiresSignature ? 'Persona que registra la decisión del órgano' : 'Participantes de la etapa'}</legend>
+                <p>{s.recipientKind === 'COLLEGIATE' && !s.requiresSignature ? 'Designe una sola persona. Se registrará en auditoría, sin figurar como firmante del órgano.' : 'Seleccione las personas que intervienen secuencialmente en esta etapa.'}</p>
                 <div className="choice-chip-grid">
                   {options.items.map(u => <label className="check choice-chip" key={u.id}><input type="checkbox" checked={s.assigneeIds.includes(u.id)} onChange={e => change(s.id, { assigneeIds: e.target.checked ? [...s.assigneeIds, u.id] : s.assigneeIds.filter(id => id !== u.id) })} />{u.display_name}</label>)}
                   {s.assigneeIds.filter(id => !options.items.some(u => u.id === id)).map(id => <label className="check choice-chip" key={id}><input type="checkbox" checked onChange={() => change(s.id, { assigneeIds: s.assigneeIds.filter(value => value !== id) })} />{known[id]?.display_name ?? id}{known[id]?.active === false && ' · Inactivo'}</label>)}

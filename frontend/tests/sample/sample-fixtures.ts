@@ -17,7 +17,12 @@ export async function login(page: Page, username: string, password = environment
   await page.getByRole('button', { name: 'Cambiar código de verificación', exact: true }).click()
   const response = await pending, id = response.headers()['x-captcha-id']; expect(id).toMatch(/^[a-f0-9-]{36}$/)
   const answer = 'ABC234', hash = createHash('sha256').update(id + ':' + answer).digest('hex')
-  const sql = `UPDATE login_captcha SET answer_hash='${hash}' WHERE id='${id}' AND current_database()='utaped_dev' RETURNING id;`
+  // Positive fixture logins must not accumulate the account limit across unrelated scenarios.
+  // This helper is guarded to the disposable acceptance DB; production throttling stays unchanged.
+  const escapedUsername = username.replaceAll("'", "''")
+  const sql = `UPDATE login_captcha SET answer_hash='${hash}' WHERE id='${id}' AND current_database()='utaped_dev' RETURNING id;
+    DELETE FROM auth_throttle WHERE current_database()='utaped_dev' AND key_hash IN
+      (SELECT encode(sha256(convert_to('login:' || email,'UTF8')),'hex') FROM app_user WHERE username='${escapedUsername}');`
   const result = execFileSync('docker', ['compose','--env-file',acceptanceEnvironmentFile,'-p',acceptanceProject,'-f','../compose.yml','-f','../compose.sample.yml','exec','-T','db','psql','-v','ON_ERROR_STOP=1','-U','utaped','-d','utaped_dev','-c',sql], { encoding: 'utf8' }); expect(result).toContain(id)
   await page.getByLabel('Código de verificación', { exact: true }).fill(answer); await page.getByRole('button', { name: 'Ingresar', exact: true }).click(); await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
   return api(page, '/auth/me')

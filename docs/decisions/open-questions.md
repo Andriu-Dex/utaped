@@ -1,5 +1,20 @@
 # Decisiones pendientes y contradicciones
 
+## Decisión colegiada y autoría confirmadas — 2026-10-17
+
+El propietario confirma un registrador designado por Administración para cada período, identificado en auditoría y sin firma personal en nombre del órgano. Esta decisión resuelve quién registra; no inventa la tabla de órganos/casos institucionales. Autoriza completar coautores/cargos y corregir observaciones de la ronda y encabezados. [Contrato de la tanda](../api/document-authorship-and-review.md). Siguen pendientes el catálogo completo de funciones y asignaciones oficiales, Quipux, retención y excepciones no incluidas en esta entrega.
+
+## Evidencia de reuniones auditada — 2026-10-17
+
+Se incorpora análisis del TXT «Todas las reuniones hasta la del 6-10-2026», sin convertir demostraciones de Prototipos en aceptación del software actual. [Auditoría completa](../reports/2026-10-17-06-meeting-transcripts-gap-audit.md).
+
+El procedimiento QIPOC/QIPUX se describe en L451–472 con constancia obligatoria y registro por coordinador; esta evidencia merece confirmación expresa, pero el Plan Maestro §34 continúa siendo la regla vigente que lo mantiene pendiente. Aclarar también cualquier descarga previa requerida para ese trámite. No implementar una integración externa por deducción.
+
+La designación del ejecutor colegiado se resuelve en la decisión anterior. Siguen abiertas la tabla oficial de cargos/firmas por ámbito, las delegaciones de coordinador, la excepción individual del plazo de elaboración y el cálculo de ejecución del Plan. Hay evidencia de cinco días de elaboración y tres días de evidencia, pero no debe confundirse su alcance ni dar por ratificado el cómputo laborable/calendario. El QR y la interpretación de «firma local» necesitan contrato concreto. La conservación del historial y la eliminación semestral se contradicen; no habilitar purga automática.
+
+La tanda de autoría resuelve coautores y el bloqueo de aprobación con observaciones. Continúan pendientes las plantillas estructurales y el archivo restringido de descartados identificados en la auditoría. Las secciones históricas siguientes conservan su fecha y no son un inventario actualizado completo.
+
+
 ## Selector y denominación — 2026-10-14
 
 El propietario autorizó recuperar Plan/Informe en creación y proponer nombres institucionales automáticamente. Se mantiene Informe Final derivado de Plan aprobado y único. El patrón de identificador individual (por ejemplo el nombre `TI-JD2026-UTIT-PLAN-V01-signed.pdf`) aún no tiene regla completa confirmada: los códigos de plantilla T1/T2 no sustituyen un consecutivo documental. No generar ni presentar códigos individuales como oficiales por deducción. [Contrato actualizado](../api/document-circuit.md).

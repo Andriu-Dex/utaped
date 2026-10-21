@@ -40,7 +40,7 @@ public class ReviewService {
     }
     public List<Blocker> submissionBlockers(UUID doc,UUID artifact,String email) {
         var plan=plans.get(doc,email);if(plan.scopeId()==null) return List.of();
-        var workflow=frozen(doc,artifact).workflow();var blockers=new ArrayList<Blocker>();var actors=new HashSet<UUID>();actors.add(plan.teacherId());
+        var workflow=frozen(doc,artifact).workflow();var blockers=new ArrayList<Blocker>();var actors=new HashSet<UUID>();frozen(doc,artifact).resolvedAuthors().forEach(author->actors.add(author.id()));
         if(workflow==null||workflow.stages().isEmpty()) return List.of(new Blocker("Flujo","Configure y publique un flujo con participantes antes de firmar el Plan."));
         var slots=artifacts.list(doc,email).stream().filter(a->a.id().equals(artifact)).findFirst().orElseThrow().signatureSlots();
         int count=0;
@@ -150,6 +150,7 @@ public class ReviewService {
             audit.record(accounts.current(email).id(),"DOCUMENT_RETURNED",(UUID)record.get("work_plan_id"),owner);return;
         }
         if((boolean)record.get("requires_signature")) throw conflict("Esta etapa requiere firma electrónica. Use la acción de firma.");
+        requireNoObservations(record);
         advance(record,task,email,data.requestKey(),null,null);
     }
     private boolean idempotent(UUID task,String email,UUID key,String action) {
@@ -157,6 +158,10 @@ public class ReviewService {
         if(records.isEmpty()) return false;
         var previous=records.getFirst();if(!task.equals(previous.get("id"))||!previous.get("status").equals(action.equals("RETURN")?"RETURNED":"COMPLETED")) throw conflict("La solicitud corresponde a otra decisión.");
         authorized((UUID)previous.get("review_id"),email);return true;
+    }
+    private void requireNoObservations(Map<String,Object> record) {
+        if(jdbc.queryForObject("SELECT count(*) FROM review_observation WHERE review_id=?",Integer.class,record.get("review_id"))>0)
+            throw conflict("Hay observaciones en esta ronda. Devuelva el documento para corregirlas antes de aprobar.");
     }
     private void advance(Map<String,Object> record,UUID task,String email,UUID key,UUID output,UUID binding) {
         jdbc.update("UPDATE review_task SET status='COMPLETED',row_version=row_version+1,acted_at=now(),request_key=?,output_file_id=?,binding_id=? WHERE id=?",key,output,binding,task);
@@ -176,6 +181,7 @@ public class ReviewService {
             if(idempotent(task,email,key,"COMPLETE")) return;
             var record=lockTask(task,email,rowVersion);
             if(!(boolean)record.get("requires_signature")) throw conflict("Esta etapa no requiere firma.");
+            requireNoObservations(record);
             var meta=files.metadata((UUID)record.get("current_file_id"));if(!meta.sha256().equals(inputHash)) throw conflict("El PDF cambió. Recargue antes de firmar.");
             var binding=bindings.current(accounts.current(email).id());if(binding==null) throw conflict("Administración debe vincular su certificado público.");
             var source=jdbc.queryForObject("SELECT signature_slots::text FROM document_artifact WHERE id=?",String.class,record.get("artifact_id"));

@@ -1,0 +1,12 @@
+CREATE TABLE document_author (
+    work_plan_id UUID NOT NULL REFERENCES work_plan(id),
+    user_id UUID NOT NULL REFERENCES app_user(id),
+    sort_order INTEGER NOT NULL CHECK (sort_order >= 0),
+    PRIMARY KEY (work_plan_id,user_id),
+    UNIQUE (work_plan_id,sort_order)
+);
+ALTER TABLE signed_document_artifact ADD COLUMN signature_order INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE personal_notification DROP CONSTRAINT personal_notification_kind_check;
+ALTER TABLE personal_notification ADD CONSTRAINT personal_notification_kind_check CHECK(kind IN
+ ('MEMBERSHIP_ASSIGNED','MEMBERSHIP_REMOVED','T1_PREVIEW_GENERATED','T2_PREVIEW_GENERATED','REVIEW_TASK_ASSIGNED','DOCUMENT_RETURNED','DOCUMENT_APPROVED','ACTIVITY_EXTENSION_GRANTED','DOCUMENT_ARCHIVED','ACTIVITY_DEADLINE_NEAR','EVIDENCE_MISSING','ADMIN_PASSWORD_RESET','COORDINATOR_PASSWORD_RESET','AUTHOR_SIGNATURE_REQUESTED'));

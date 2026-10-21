@@ -1,0 +1,1053 @@
+(0:29) Cuando se inicia por primera vez (0:31) Con la contraseña asignada (0:33) En este caso va a ser este (0:36) Pide cambiar la contraseña (0:37) Ya, entonces cambiamos la contraseña (0:44) Y ahí se ingresa a lo que es el sistema como tal (0:47) Este vendría a ser el home (0:48) Ya (0:51) Entonces, en esta pestaña se organizan lo que son los planes como tal (0:57) Aquí es donde se crean los planes de los cuales nos había comentado (0:59) Tenemos lo que son los grupos institucionales al que pertenece (1:05) Eso se puede gestionar desde administración (1:07) Cuántos existen o cuáles existen (1:11) Tenemos... (1:11) Este sería el apartado de información general (1:14) Lo que se carga por defecto al iniciar (1:16) El siguiente es el apartado de las actividades (1:20) Igualmente hay actividades que se consideran obligatorias (1:23) Y actividades que se pueden desmarcar como obligatorias (1:28) Todas las actividades, por ejemplo, lo que es POA, plan de mejoras, asignas de mejoras (1:33) No son obligatorias (1:34) Porque algunas comisiones no tienen (1:37) Otras sí tienen (1:38) Sí, entonces eso se le puede marcar y desmarcar a libre voluntad (1:42) Bueno, esta es la matriz de actividades que nos ha comentado el ingeniero (1:48) Ahí se le marca con los distintos estados (1:50) La fecha desde hasta (1:52) El número de responsables (1:54) Los recursos, los medios (1:57) ¿Tiene parte del número de responsables de las personas?
+(2:00) ¿Aparecen las personas que son? (2:01) Sí, sí aparecen las personas Ya, pero de acuerdo a la comisión va a aparecer un cómbo donde se puede elegir, ¿no es cierto? (2:07) Sí, justo aquí ya pasamos a eso, ingeniero Por ejemplo Bueno, aquí está en la opción de editar En los responsables, justamente aquí está marcado dos Pero se puede marcar solo uno O todos Ya, pero obligado debe existir un...
+(2:28) Sí, mínimo uno (2:29) Mínimo uno, si no, no deja pasar (2:33) Asimismo, lo que son, ya los recursos (2:35) Bueno, en esto las matrices de asignamiento como tal (2:38) O lo que se desee activar (2:39) Los medios de verificación que también nos había comentado el ingeniero (2:42) Entonces guardamos y ahí están las claves de actividad (2:46) Ya, pero (2:47) Sí, sí (2:48) Regresa en el directo (2:49) Si tengo el caso, tú dices aquí el editar (2:52) Y te va a aparecer después (2:54) Sería bueno que tú pones (2:55) Te das un clic aquí, fecha desde hasta (2:58) Y te aparezca lo que es un tipo así como el que me mostraste (3:01) Justo aquí en recursos (3:03) Ok, ingeniero (3:04) Entonces (3:06) Bueno, aquí lo que pasa es que estas tareas están (3:10) Marcadas ya como completadas (3:11) Entonces es por eso que recién me da la opción para editar
+Orador 2
+(3:14) Ah, para cambiar las personas
+Orador 1
+(3:15) Pero de ahí, como se genera desde el principio (3:17) Ahí sí viene por defecto esto (3:19) En cada uno de los apartados (3:20) Sí, en cada uno de los apartados, ingeniero (3:23) Bien, entonces, claro (3:24) Están marcados como completados (3:27) Y esta es la matriz de actividades desde la sala documental (3:32) Bueno, aquí están cargados algunos ejemplos (3:38) Bueno, el contenido de las diferentes secciones (3:43) Como usted nos había comentado (3:44) Y cada uno con las guías de lo que es la guía (3:47) Tiene la capacidad para mejorar la redacción (3:48) Corregir ortografía o gramática (3:50) Y hacer más claro el mensaje o un tono más formal (3:53) Una vez que se sugiere ese tono (3:55) Se le muestra la sugerencia como tal (3:58) Y ahí decide si aplicar o no aplicar la sugerencia (4:03) Bueno, ahí están las diferentes secciones que habíamos hablado, ingeniero (4:07) Aquí tenemos los anexos (4:08) Aquí se decide si se van a incluir o no los anexos (4:11) Si es que sí se incluyen (4:12) Entonces, bueno, aquí se le agregan los diferentes anexos (4:15) El archivo, etc (4:16) Si es que no se le incluye, se selecciona (4:19) Debe quedar escrito, no aplica (4:20) Claro, queda como que no aplica (4:24) Bueno, aquí una vez terminados los anexos (4:26) Viene la previsualización de lo que es el documento como tal (4:29) De cómo quedaría (4:32) El formato debe ser igualito al que les envié (4:35) Exactamente (4:35) O sea, como el tamaño de letra, todo eso (4:37) Sí (4:38) No sé si te envía aquí un boludo (4:39) Sí, me envió los archivos (4:42) Bueno, que estaba en blanco (4:44) Bueno, en blanco (4:46) Perdón, ingeniero, perdón (4:59) Esto (4:59) Aquí está (5:00) Esto me mandó ingeniero (5:01) Bueno, yo le mando un puntito (5:03) Muy bien, porque yo le envié estos archivos (5:05) Ok, ingeniero (5:08) Listo, yo le mando un puntito (5:11) Trabajé con los datos (5:12) Ya (5:13) Esos dos archivos que me has enviado son otros formatos que estaban vacíos (5:16) En cambio, el otro estaba en general (5:17) Ya, entonces exactamente con esos formatos para (5:20) Sí, tiene que ser con el tamaño de letra (5:21) Ábrele, verás (5:22) Ya, claro que sí, ingeniero (5:24) Son bolitos (5:25) Ok (5:25) Lo único que cambia de acuerdo al tipo de archivo, cambia unos y otros (5:30) Listo (5:30) Ya, debe ser el otro lado de esa manera (5:32) Tan como está así (5:33) Sí, con la tablita, por ejemplo, acá estaba me parece el otro lado de esta forma (5:37) Entonces mejor la armo con la tablita tal cual como está aquí (5:40) Tal cual (5:40) Tal cual, listo (5:41) Lo mismo que me ayude el letra de aquí del título debe estar de ese tamaño mismo (5:45) Ok (5:46) Esa es para la parte de la carácter (5:47) Aquí debe estar unidad académica (5:50) Aquí carreras (5:50) Solo falta carreras más poner antes de informe (5:55) Ya (5:55) Ok, informe, carrera (5:58) Con mayor costo (5:59) Todo mismo (6:01) Carrera (6:01) Y como va a estar en un combo de acuerdo al que va a elaborar (6:05) Tiene que aparecer la carrera, ¿no es cierto? (6:07) Sí, ingeniero (6:07) El problema es que a veces algunos pertenecen a dos carreras (6:10) Claro, ahí va a estar complicado (6:11) Acá va a quedar previsto (6:12) Ya (6:13) Eso (6:14) Bueno, ya una vez finalizada lo que es la previsualización (6:18) Continuamos a lo que es la firma (6:19) Las secciones para las firmas (6:21) Aquí se sube justamente el archivo de firma (6:24) Aunque eso también le quería consultar, ingeniero (6:26) ¿Con qué trabajan para firmar los documentos? (6:29) Porque si hay opciones para subir lo que es del archivo como tal de una firma (6:32) Pero si es que los profesores trabajan con otro tipo de sistema (6:35) Como archivo (6:36) Como archivo, entonces bueno aquí se genera (6:38) Se sube la firma (6:39) Se sube una contraseña para el certificado como seguridad (6:42) Y aquí se confirma que se ha revisado el contenido (6:45) Y se firma el documento como tal (6:47) Ya, pero si tiene que aparecer dónde va a firmar (6:50) La posición como tal ya va (6:53) Ya tienes tú predefinido qué es el espacio (6:54) Sí, en tal espacio se debe firmar (6:57) Entonces (6:58) ¿El archivo se guarda temporalmente o se guarda en la base de datos para firmar?
+(7:02) El archivo no se guarda, sólo temporalmente Eso no le guardamos, sí Es por temas de seguridad, sí Entonces una vez ya está firmado se le envía a revisión Salen los datos, el plan de trabajo, la unidad de titulación, la versión que es Y se confirma el envío Y sale para lo que es ya la espera de revisión Ya, eso está como el que elaboró el documento, ¿cierto no? (7:26) Sí, sí (7:27) Ya, entonces aquí hay datos como tal para los planes (7:30) Bueno, siguiendo el apartado de docente (7:33) Tenemos la vista de actividades (7:36) Que aquí ya se registran todo lo que (7:38) Lo que planificó para dar seguimiento (7:40) Exacto (7:40) Ya, bueno aquí ya vendrían a ser lo que son (7:42) Un apartado de las evidencias subidas (7:45) Los reportes, reportería (7:48) Reportes de actividades que están completadas (7:50) Y las que están próximas a completarse (7:51) Próximas a completarse, sí (7:53) Bueno, lo que viene a ser la sección de las notificaciones (7:56) Que igualmente ya sale en la campanita de acá (7:59) Y bueno, un perfil para el docente como tal (8:03) Ya, eso es como docente (8:05) Sí, esto es como docente (8:07) Ahora en cambio viene a activarse como revisor (8:10) Ya, para lo que es el estado de revisor (8:14) Aquí está, planes de trabajo (8:18) Aquí están, por ejemplo el anterior que se había subido (8:21) Del plan de trabajo, aquí está para revisar (8:24) Se observa lo que es como tal el plan de trabajo (8:28) Y se decide si es que agregar observaciones (8:32) De, en general del documento (8:34) O de una sección en específica del documento (8:36) De esta sección (8:38) En esta parte de aquí, déle un clic por favor (8:41) Aquí te muestra todo el documento, ¿no es cierto? (8:43) Sí, genial (8:44) Fuera bueno que te permita visualizar por secciones (8:47) Para poder decir, por páginas más dicho, no por secciones (9:01) Sí, para poder ver así, parte por parte, hoja por hoja (9:24) Fuera bueno así poder visualizar (9:27) Ok (9:40) En este no, en este no (9:42) Si le apuntamos un índice ya le pondría aquí (9:58) Ok (10:03) Y entonces aquí sería dos flechas para visualizar hoja por hoja prácticamente (10:08) En vez de que salga toda una sola (10:18) Listo ingeniero, eso ya me encargo de ver (10:22) Listo, listo ingeniero (10:23) Eso, bueno como le dije aquí está para realizar observaciones (10:27) Desde las distintas partes del documento (10:29) Y aquí se decide si devolver con estas observaciones (10:32) Que se ha hecho para otra revisión (10:34) Si le caíste con el mensaje del elaborador (10:37) Se le confirma la devolución y se devuelve (10:39) O se aprueba y se firma (10:42) En esta parte de devolver con observaciones (10:44) Solo devolver nada más (10:46) Solo devolver (10:46) Solo devolver (10:47) Entendido ingeniero (10:48) El otro es aprobar y firmar (10:50) Y el otro es devolver nada más (10:53) Confirma y se devuelve (10:54) Entonces lo mismo aquí pasaría si es que se aprueba y se firma (10:58) Entonces aquí tenemos lo que en el caso de que ya se vaya a aprobar (11:02) Si es que se quiera aprobar con observaciones no se puede (11:05) Entonces eso es una restricción que tiene (11:07) Si tiene observaciones no se puede aprobar (11:09) Se tiene que deleguar y devolver (11:13) Eso, bueno aquí es lo que es los reportes de seguimiento y validación (11:17) ¿Cuántos ya están aprobados? (11:18) Sí Ahí quedaría todo eso Igualmente una parte de notificaciones al igual del docente Que es un ampliado de lo que se muestra aquí como tal Y un perfil del docente Bien, ya ¿Eso era como revisor? (11:33) Sí, este es como revisor Sí, así como ¿Y el revisor?
+(11:37) A ver también, ¿cómo sale el revisor? (11:41) ¿Y ahora cómo o cuál se va a llevar? (11:45) Ya, este es también una pantalla de seguimiento para lo que es el revisor (11:49) De seguimiento de las diferentes actividades (11:51) Cuántas se han completado, cuántas no (11:52) Y para ver los seguimientos de esas actividades (11:54) Ah ya, pero ese es para dar seguimiento (11:56) Si (11:56) Y el otro era para aprobar (11:57) Sí, sí (11:58) Entonces las pestañitas hasta que le cambien (12:00) Por ejemplo aquí que diga (12:12) Es que el lunes es seguimiento (12:14) Lo otro sería revisar (12:17) ¿Revisar y aprobar o...? (12:19) En los planes de trabajo (12:20) Ok (12:21) ¿Qué palabra me puede sugerir el doctor?
+(12:23) ¿Qué palabra me puede sugerir? (12:44) ¿Cuál es la palabra que estamos...? Porque el otro sí debe ser un seguimiento No, es que no hay nada Que me sale como cierta mecánica en algún lugar ¿Cómo sería una palabra?
+Orador 2
+(13:24) ¿Cuál comentaría?
+Orador 1
+(13:26) ¿Cuál te...? Por ejemplo, tú ingresa normalmente como docente Ok, ingeniero Ya Como docente tú tienes inicio y no tienes... (13:37) En la parte que está en mis planes de trabajo Debe ser documentación podría ser o elaborar Es que tú no se va a elaborar solo planes Sino se va a elaborar ¿qué? (13:50) Se va a elaborar eventos, se va a elaborar informes Se va a elaborar...
+(13:55) En este momento es planificaciones e informes (13:58) Ok (13:58) Puede ser inicio, elaboración podría ser (14:03) Ok, entonces cambiarle la palabra de mis planes de trabajo (14:06) A una que represente mejor, de manera más generalizada (14:09) Sí, todas las actividades, cualquier actividad (14:11) Ok, ingeniero (14:12) Entonces eso y bueno, este sí queda como seguimiento (14:14) Sí, seguimiento (14:15) Este del revisor sí queda como seguimiento (14:17) Ya, entonces bueno, esto por parte del revisor como tal (14:21) Y ahora vendría el modo de administrador (14:24) Pero ¿y la parte del que valida? (14:27) ¿Es un revisor el único que está? (14:28) El revisor es aquel que valida los documentos O sea, el que revisa la prueba y también el que valida también el último Como tal ¿El último tiene lo mismo que hace el revisor?
+(14:39) El revisor y el que valida sí, prácticamente Porque al mismo tiempo que revisa, valida el documento ¿Cuál de ellos puede descargarse el documento final? (14:48) ¿Cualquiera o solo el que valida al final? (14:51) Solo el que valida (14:51) Al final (14:52) Sí, solo el que valida puede descargar el documento (14:54) Sí, es que necesitamos el documento para que envíen después por equipo (14:59) Ok, ingeniero (15:00) Ya, entonces eso sí queda unificado, no le separo (15:03) Sí, solo el que valida puede descargar (15:06) Solo el que valida puede descargar (15:10) Ok, ingeniero (15:10) Entonces tenemos lo que viene a ser como parte del administrador (15:14) Tenemos la sección de lo que es el panel principal de administración (15:18) Usuarios activos, cuerpos institucionales, periodos activos, los flujos configurados (15:24) Y bueno, un grid de todo el control total que va a tener el administrador como tal (15:30) La gestión de usuarios que comúnmente tienen los administradores (15:37) Grupos institucionales (15:40) Bueno, aquí es para establecer los periodos académicos existentes (15:43) Aquí puse dos como ejemplo, de Enero, Junio y de Julio, Diciembre (15:47) El catálogo de actividades (15:53) Recursos y medios (15:58) ¿Qué hay en recursos y medios? (16:00) Recursos y medios tenemos lo que es matrices de seguimiento, almacenamiento institucional Reglas de titulación, sistema de gestión académica, sala de reuniones, equipos de cómputo ¿Y para qué equipos de cómputo? (16:14) Bueno, ahí se le metí como ejemplo más que todo porque como no teníamos nada definido quería intentar rellenar un poquito más la tabla ¿El administrador es el que permite cambiar la estructura del documento?
+(16:24) Sí ¿Dónde? (16:26) ¿Qué parece? (16:31) Plantillas documentales, configurar, aquí está Ingeniero ¿Puede añadir más?
+(16:36) Sí, puede añadir más y puede modificar el orden como usted había mencionado Ingeniero (16:41) Bueno, el administrador tiene esa capacidad (16:44) Y bueno, los periodos académicos como mencioné, el catálogo de actividades, recursos y medios (16:50) Bueno, eso ya lo mostré Ingeniero (16:51) Esos recursos y medios, esos equipos de cómputo no tenemos nada, reuniones tampoco, sistema de gestión académica tampoco, reglamentos (16:59) La parte de reglamentos sí podría ser porque a veces según el reglamento tal se hizo la comisión así que no puede cargar (17:06) Claro, tendríamos recursos de apoyo (17:09) Sí, para que pueda insertar cuando lo justifique (17:11) Sí (17:12) Eso sí, almacenamiento institucional, eso es para ver cuánto está despacio utilizado (17:18) Igualmente se pueden crear nuevos o eliminarlos, eso ya es a libre criterio del administrador (17:23) Bueno, los flujos de aprobación que es de tal manera en este caso como está definido (17:28) La elaboración, la revisión, la revisión en coordinación y la validación final (17:33) Por ejemplo, en la parte de revisión tú puedes aumentar más personas que puedan revisar o disminuir el número de personas (17:39) En la parte de revisión sí (17:41) Y en la parte de, por ejemplo, aquí está la etapa 2 y etapa 3, coordinación (17:50) Visto bueno del coordinador después del (17:52) Sí, tú agregas y te sale otra pestaña, como hacer otro bundle (17:58) Con la etapa 4 que puede ser otro revisado (18:01) Sí (18:04) Eso como tal (18:05) Fuera bueno que aquí te aparece etapa 2, revisión (18:08) Y estás igual, etapa 2, revisión, por cuál (18:11) Etapa, y que sigan, se mantenga la etapa 2 (18:14) Y ahora revisión, por quién, por el coordinador (18:16) O sea, por ejemplo, etapa 2, revisión, es la OPE (18:20) Etapa 2, revisión, coordinación (18:23) Etapa 2 nuevamente, que se mantiene la etapa 2, pero ahora que revise otra persona (18:28) Ok (18:29) Y ahí se continúa con la etapa 3, que es validación final (18:33) Ok, ingeniero (18:34) Bueno, entonces, bueno, el flujo como tal, eso ya le voy a agregar lo que me acababa de mencionar (18:38) Ingeniero, y aquí como tal se puede modificar este flujo como le había mencionado (18:42) Bueno, aquí es para integrar lo que son los feriados, como tal (18:46) Aquí se integran (18:46) El calendario (18:47) Sí, el calendario (18:48) Bueno, las plantillas documentales, como le mostré, ingeniero, aquí se configuran (18:54) Bueno, lo que es el apartado de auditorio que nos había mencionado (18:58) Ya, todo el detalle de auditoría se lo manda aquí y se puede ver (19:02) Y la auditoría es para ver fijo cómo fue (19:03) Sí, todo para ver cómo fue, el detalle aquí mismo (19:06) Bueno, principalmente es una vista rápida y en el detalle se especifica todo como tal (19:12) ¿Se puede generar un reporte? (19:13) Bueno Supongo que la planificación de un flujo académico, a ver cómo fue No, ahorita no, pero le puedo...
+Orador 2
+(19:22) Sí, eso me gusta
+Orador 1
+(19:23) Para generar reportes (19:24) Para generar reportes de cómo fue el flujo de programación (19:27) Ingeniero (19:28) Ya, bueno, entonces aquí está como tal la trazabilidad de esas auditorias (19:32) Ya lo voy a poner para generar los reportes como mencionó, ingeniero (19:36) Y bueno, aquí una sección de reportes como tal (19:41) Tenemos esto (19:42) El total de planes, actividades, los que se han cargado, las validadas, las que tienen observaciones y las que están pendientes
+Orador 2
+(19:50) Ya
+Orador 1
+(19:50) Todo eso viene adjuntado en esta tabla y se puede igualmente ver el resumen de cada uno (19:59) Y la pantalla de lo que es el cierre de cada uno de los periodos correspondientes que se han abierto (20:03) Ya (20:04) ¿Y el cierre del periodo qué es? (20:06) Cuando un periodo finaliza como tal, no se lo elimina sino que se lo marca como finalizado y se lo adjunta, se lo archiva Bueno, la parte de notificaciones que tienen todos los roles, cada una de las notificaciones que se va haciendo El perfil del administrador como tal Y eso vendría a ser todo ¿En el panel general qué te muestra? (20:33) Las acciones totales que puede realizar el administrador Fuera bueno que te aparezca que también hay un dashboard o algún lado en el que pongas un dashboard que te dé un resumen de todo lo que está pasando ¿Ok?
+(20:47) Sí ¿Eso lo podría incluir justamente en esta sección? (20:50) Sí, ahí lo podría hacer (20:52) En el panel general un dashboard, ok (20:54) En esta partecita lo que te decía yo, algo parecido (21:03) Por ejemplo, aquí es el sílabo y ahí vale para ingresar (21:07) Entonces debe ser algo que diga documento, ingresar, para poder elegir qué documento vas a elaborar (21:15) Ok (21:16) Y por lo que no tengo la parte de coordinación, ya voy a preguntarle a mis compañeros que me den una captura (21:22) Porque por ejemplo aquí aparece lo que es sílabo, aquí es ingresar, y en cambio aparece nuevamente por acá revisar (21:29) Y aparece ahí qué documento vas a revisar (21:33) Sí, entonces me dirías en la parte de docente para especificar el tipo de documento que se va a elaborar (21:38) Sí, debe ser una palabra general (21:42) Elaboración o documentación tal vez (21:46) Toca ver esa palabra (21:47) Debe ser una captura de esa partecita, de ese extremo (21:51) Con eso yo tendríamos que ver con ella y ver qué me puede sugerir (21:56) Y ahí sí está más o menos, falta cubrir algunas cosas (22:00) Y generarle un poquito más (22:05) La parte de los colores (22:07) O sea, los colores para mí está bien, pero ya vamos a preguntarle después a Fran (22:11) La parte de íconos para que se puedan visualizar sin estar tanto de lectura (22:17) Ah, ya, hacerle meramente por ejemplo íconos, que sean más intuitivos los íconos para no agregar las frases como tal (22:23) Sí (22:24) Ok, ingeniero, listo (22:26) Sí, sí le puedo cambiar eso ya, entonces para hacerle esos cambiositos (22:30) La parte de estructura te dije del documento que debe estar como la que te mostré (22:35) O sea, con ese mismo tamaño de letra, con ese mismo tamaño de letra, despaciado, todo ese tipo de cosas (22:43) Ya, con esa nueva plantilla, sí, porque antes no podía referenciarme muy bien (22:47) Solo el PDF, no más también (22:48) Sí, y entonces con esas ya les copié exactamente el formato que manejan y ya les puedo elaborar aquí (22:53) Y ya le voy a hacer la actualización con los cambios que me acabo de mencionar, ingeniero (22:57) Y como no sería muy demoroso, tal vez le puedo presentar mañana o en tutorial (23:02) Sí, no hay problema, mañana puedes venir tú con esa prueba de cine cuando esté aquí, Fran (23:05) Ajá (23:06) Mañana a la tarde
+Orador 2
+(23:07) Hoy es miércoles
+Orador 1
+(23:08) Hoy es miércoles, ingeniero (23:11) ¿Jueves o viernes o el día que tenga disponible? (23:14) No sé, el jueves está Fran aquí Ah No, jueves, jueves, jueves A las 3 de la tarde puede venir Listo Con esa paréntesis más o menos para ver qué cambios Listo, ya Ya Ya, ya Tengo que comentarles un poco las notas, porque además de lo que mencioné Muchas gracias, ingeniero Gracias Gracias ¿Está bien?
+Orador 2
+(23:59) ¿Está bien?
+Orador 1
+(24:13) Sí Sí, no, no, no O sea, solo nos dio unos comentarios de mejora en la interfaz, por ejemplo Poner sólo íconos y no frases Hacer que haya más opciones para la documentación Pero yo se me voy Nunca te dije que era bien Es más, pruébalo ahorita Ven si es intuitivo amigo
+(2:05) Sí, está la planificación en forma general, o sea, la estructura cómo iría. (2:11) Muy buenas tardes, ingenieros. (2:13) Para presentarles justamente lo que es la propuesta que tenemos de nuestro software para la gestión documental, en este caso.
+(2:20) Este vendría a ser lo que es la vista para el docente en general. (2:25) La pantalla de inicio muestra un resumen de todo lo que viene a ser la documentación o las actas. (2:31) Para la creación de documentos, planificaciones o informes como tal, vendría a ser en este apartado.
+(2:36) En este apartado de esta manera creamos, en este caso lo que tenemos son cargados plan de trabajo e informe y si se desea añadir más tipos de documentos también se los puede añadir desde la parte administrativa. (2:51) Al momento de crear lo que viene a ser un plan de trabajo e informe se divide en ciertas fases. (2:56) La primera fase es la información general que se carga tal cual ya viene predefinido del docente mismo.
+(3:03) La fase 2 se detalla lo que es las actividades, actividades que son obligatorias o las actividades que vienen a ser opcionales. (3:14) En la siguiente fase tenemos lo que es la matriz de actividades como tal. (3:19) Aquí tenemos cargados unos ejemplos de cómo vendría a ser la matriz de actividades.
+(3:24) La matriz de actividades se selecciona en base a las fechas desde la que va a empezar hasta la que va a finalizar. (3:30) Se le asignan los responsables correspondientes, los recursos que van a ser para esa documentación y los medios de verificación que van a tener. (3:39) Se le guarda y la siguiente viene a ser la parte del contenido como tal.
+(3:46) En el contenido se vienen lo que son las diferentes secciones que van a conformar el documento. (3:52) La justificación, los objetivos, matriz de actividades. (3:57) Todos vienen con una opción de mejora tanto de redacción como de ortografía para hacer el mensaje más claro o en un tono más formal.
+(4:07) Esto se va a hacer mediante un pequeño asistente de IA que va a otorgar lo que es la sugerencia del cambio. (4:14) IA se tiene libertad de decidir si es que se acepta esa sugerencia de cambio o se descarta. (4:22) Para lo que es la sección de anexos, se decide si integrar o no los anexos como tal.
+(4:27) En caso de que sí se decida, se adjuntarían los anexos. (4:31) En caso de que no, aparecería que los anexos no aplican en este caso. (4:37) Aquí tenemos lo que es la previsualización del documento que se va a generar como tal.
+(4:44) Dividido en páginas para no tener que hacer un amplio scroll vertical. (4:50) Lo que es el apartado de firmas como tal. (4:54) Este es para firmar, se sube el archivo de la firma electrónica, se lo cifra para que haya menor riesgo como tal y se procede a firmar el documento.
+(5:06) Y se lo envía a revisión. (5:11) Una vez en revisión, ya procede a seguir el flujo como tal para que los diferentes revisores ya lleven a cabo la visualización. (5:21) Esta es la previsualización del documento en el formato que nos había indicado Ingeniero Pablo.
+(5:26) Tenemos aquí el encabezado, la universidad técnica. (5:33) En lo que son especificaciones de la carrera. (5:40) La carrera estaría aquí.
+(5:46) Después de la unidad, integramos lo que es la carrera como tal. (5:50) Eso lo modificaríamos posteriormente. (5:53) Tenemos lo que es el índice que nos había comentado Ingeniero.
+(5:59) Tenemos los antecedentes, el desarrollo de las actividades, conclusiones, oportunidades de mejora. (6:09) Registro de contactos y gestiones de la delegación. (6:12) Los anexos, que en este caso no aplican.
+(6:15) Las firmas de responsabilidad. (6:17) Aquí aparecería el QR de la firma electrónica en cada una de las secciones correspondientes. (6:23) Y por último, que ya viene a ser el control historial de cambios.
+(6:28) En esta pantalla también podemos tener lo que es el estado de los flujos, de cómo están las revisiones de la documentación como tal. (6:36) Las firmas correspondientes, que en este caso ya se marcó como firmado. (6:39) Y el historial de auditoría.
+(6:46) Frank, ¿qué no más podríamos cambiar en esa parte? (6:59) La carrera debe estar debajo de lo que dice Facultad de Ingeniería de Sistemas Electrónicos Industriales. (7:03) Eso tiene que estar aquí abajo.
+(7:07) Esto de aquí, la carrera, debe estar acá abajo.
+Orador 2
+(7:10) Sí, exacto. (7:12) Directamente.
+Orador 1
+(7:13) Y la unidad académica. (7:22) Solo unidad académica. (7:28) Solo unidad académica, nada de administrativa.
+Orador 2
+(7:30) Entendido.
+Orador 1
+(7:34) ¿Y la unidad administrativa cuál es? (7:38) Por ejemplo, investigación.
+Orador 2
+(7:40) La podría hacer para seleccionar.
+Orador 1
+(7:43) Sí, para seleccionar. (7:44) Si es unidad académica, es unidad administrativa. (7:47) Igual una base de datos donde tenga cuáles son las unidades y cuáles son las facultades.
+(7:52) Eso con un combo box podría ser elegible para que apriete justamente en el encabezado de ingeniería. (7:58) Pero yo creo que lo que es el loggear, cambia automáticamente a qué facultad pertenece. (8:04) Por ejemplo, en ese tema del periodo.
+(8:08) ¿Eso se ingresa manualmente o se selecciona? (8:10) El administrador define cuál es el periodo correspondiente en el que están actualmente. (8:20) La revista, por ejemplo, redundando ese tema.
+(8:22) Informe D, Informe D. (8:24) Ahí sería elegible esa parte. (8:28) Igual en la carácter la podría poner, o sea, unidad académica, facultad, o sea, la FISEI.
+(8:32) Y abajo, pues, la carrera que corresponde. (8:35) Entonces, como tal, para... (8:38) El periodo está chévere, julio-diciembre.
+(8:42) Vamos a la siguiente página. (8:57) Va a ser un poquito más.
+Orador 2
+(9:01) La fecha está cogiendo la de elaboración.
+Orador 1
+(9:03) Fecha de elaboración.
+Orador 2
+(9:05) No se va a cambiar cuando entra el usuario a validar la fecha.
+Orador 1
+(9:11) Sí, tiene toda la razón. (9:15) Tiene que almacenarse esa fecha. (9:16) Cuando ya pone finalizar, debe estar ya grabada esa ahí.
+(9:19) La fecha en la finaliza, ok.
+Orador 2
+(9:21) Cuando esa ahí finaliza, ya debe quedar la fecha.
+Orador 1
+(9:25) ¿Cómo mejorar esta parte aquí, para que no sea la doble línea, el pie de página? (9:32) Ah, la parte ahí que pongas tú una sola línea acá. (9:36) Tal como tiene ahí.
+Orador 2
+(9:38) Una sola línea.
+Orador 1
+(9:40) Tal cual el formato.
+Orador 2
+(9:42) Igualito el formato.
+Orador 1
+(9:43) No, no.
+Orador 2
+(9:44) Sí estaba una sola línea. (9:45) El pie de página en una sola línea.
+Orador 1
+(9:47) Una sola línea. (9:48) Eso, y esa línea que está justo sobre esa línea, esa no. (9:52) Ya, le retiramos tal cual.
+(9:54) Ok, genial. (9:57) ¿Siguiente página? (9:58) Ok.
+(10:14) Lo que es la nota. (10:16) La tabla. (10:18) Debajo de la tabla la nota.
+(10:22) ¿Con una nota? (10:23) Sí, la nota. (10:25) ¿Esta de aquí, o moverla abajo?
+(10:27) Acá abajo una nota. (10:28) Listo. (10:29) Ok, la nota abajo de la tabla.
+(10:30) Eso está bien, eso está bien, eso está bien. (10:48) ¿Por qué debe haber un apartado? (10:57) ¿Por qué dice acá arriba, nota?
+(11:01) Sí, porque debería venir a esa. (11:03) La nota en la tabla 1, el pie de página, se debe utilizar en caso de que el informe se derive del plan de trabajo. (11:09) Se debe ver una correspondencia entre lo que planificó y lo que está siendo el informe final.
+(11:14) Es como que se importan las actividades del informe acá para colocar los porcentajes de ejecución. (11:21) ¿Pero ese es el informe? (11:22) ¿Ese es la planificación del informe?
+(11:24) No, ese es el que estamos viendo.
+Orador 2
+(11:25) ¿El plan de trabajo?
+Orador 1
+(11:26) El informe de ejecución. (11:29) ¿El informe de ejecución es este de aquí? (11:30) Sí, sí, ese es el informe.
+(11:32) Entonces ahí dice la nota 1, que justamente la tabla 1, esta tabla, se debe utilizar en caso de que el informe se derive del plan de trabajo. (11:44) Tiene que coger las actividades del plan de trabajo. (11:47) Debe encargarse eso de ahí.
+(11:48) Pero si no, en caso de que el informe no se derive del plan de trabajo eliminada de la tabla 1, este se elaborará en la atención de requerimientos no planificados. (12:02) No, eso no creo. (12:04) Ese debe ser el informe con relación a la planificación.
+(12:07) O sea, debe cargarse ahí automáticamente. (12:10) Esa nota 2, yo creo que habría que borrarla. (12:12) Sí, la nota 2.
+(12:14) ¿Y la nota 1 también?
+Orador 2
+(12:16) Sin notas, claro.
+Orador 1
+(12:17) Sin notas, solo debe cargar nomás la información ahí. (12:20) O sea, esa parte ahí de la nota que tienes tú. (12:23) Eso no, pero deben cargarse todas las actividades que estaban en la parte de la planificación.
+(12:29) ¿Tienes el informe de la planificación?
+Orador 2
+(12:32) Sí.
+Orador 1
+(12:32) Es mejor veamos el informe de la planificación y ahí después nos saltamos al siguiente. (12:37) Este es de la planificación. (12:53) Este sería el plan de trabajo.
+(12:55) Sí. (12:59) Sí, la carrera debe estar acá arriba. (13:05) Sí, les mandé un ejemplo.
+(13:08) En la misma fila. (13:36) Y acá está. (13:39) Bien, de esta manera.
+(13:42) Tiene lo que es el plan, unidad, la facultad y la carrera ahí mismo. (13:46) En la misma lista. (13:47) Sí, aquí creo que es unidad y para qué puede elegir si es académico o es administrativo.
+(13:52) Ok. (13:52) Sí o incómodo. (13:53) Ok.
+(13:54) La fecha de elaboración debe coger la que es cuando se elabora. (14:00) Y esa queda. (14:01) Sí, y esa queda grabada.
+(14:02) Sí. (14:04) Aquí debe estar de esta manera el tamaño de letras. (14:07) ¿Cuál está?
+(14:09) Grande. (14:09) Aquí debe estar lo que es unidad académica y debe estar la facultad de ingeniería y sistemas electrónicos más arriba. (14:15) Más arriba.
+(14:16) Sí. (14:16) Después viene lo que es la carrera y ahí sí, la carrera de la facultad de ingeniería y sistemas electrónicos. (14:21) Y después viene lo que es plan de trabajo de la comisión, plan de unidad de titulación.
+(14:28) Pon este ejemplo. (14:29) Y periodo de junio, diciembre de 1986. (14:32) Lo que toca es reestructurar lo que es la carátula, moverle más las posiciones.
+Orador 2
+(14:36) Ok.
+Orador 1
+(14:40) Sí. (14:42) Ahorita es un solo mock-up, todavía no está desarrollado por si acaso. (14:46) O sea, ya cuando se desarrolle ahí vamos a ver.
+(14:48) Así. (14:48) Funciona. (14:50) Ok.
+(14:51) La siguiente página.
+Orador 2
+(14:53) Esta es la etapa de diseño. (14:56) Ok.
+Orador 1
+(14:58) Bueno, el índice de contenido, justificación, objetivos. (15:10) Y yo creí en Japón que de pronto este texto debe ir por default.
+Orador 2
+(15:17) Exactamente.
+Orador 1
+(15:18) Y que ellos después obviamente luego modifiquen o eliminen todo lo que la mayoría considera los dos y esta ley va editando. (15:26) Ah, ya.
+Orador 2
+(15:29) Sí, precargar la parte de justificación.
+Orador 1
+(15:31) Sí, cuando creen lo que es la parte de justificación, que hablen de ese texto y ahí si quieren modifican o no. (15:36) Justificación. (15:37) Ya.
+(15:38) Objetivos, bueno, la siguiente página. (15:40) La matriz de actividades, igualmente. (15:53) ¿En ese solo le deja seleccionar día, mes y año o solo se puede seleccionar mes, año?
+(16:00) Día, mes y año. (16:01) Día, mes y año. (16:03) Eso.
+(16:05) Podríamos limitarle para el año correspondiente del que se está haciendo.
+Orador 2
+(16:09) ¿El día, mes y año?
+Orador 1
+(16:11) ¿Qué opinan? (16:11) ¿O le dejamos como? (16:12) ¿Para qué?
+Orador 2
+(16:14) ¿Para la panorama?
+Orador 1
+(16:17) ¿O le mandamos fecha?
+Orador 2
+(16:19) Fecha completa puede ser.
+Orador 1
+(16:20) ¿Completa?
+Orador 2
+(16:21) En todas las condiciones si ponen fecha exacta.
+Orador 1
+(16:24) Como nosotros solemos poner en cambio de enero a diciembre. (16:28) Sí. (16:28) Pues solo que pongamos las fechas desde donde termina el semestre.
+Orador 2
+(16:31) ¿Y inicio a final?
+Orador 1
+(16:32) Sí, sí.
+Orador 2
+(16:33) Pues día, mes y año. (16:34) Sí, sí. (16:35) Día, mes y año.
+(16:35) Entonces queda, eso queda.
+Orador 1
+(16:37) ¿Responsables? (16:39) ¿Cómo ingresan esta tablita de los datos de los responsables? (16:43) ¿Ingresan normalmente?
+(16:44) Al momento de crear hay una lista justamente como la que está aquí de checks, que usted selecciona los responsables. (16:51) El administrador gestiona qué responsables existen. (16:53) Porque, por ejemplo, en algunos casos suelen mandar cuando son varias personas.
+(16:58) O sea, si ponemos, por ejemplo, aquí no mandamos ingeniero Pablo Torres, ingeniero Cristian Contreras, sino ponemos responsables de unidad de planificación de las carreras. (17:10) Entonces, ¿para qué no estar detallando todito? (17:12) O le ponemos ahí ahora detallado todito los nombres de los compañeros.
+Orador 2
+(17:17) Al momento.
+Orador 1
+(17:18) ¿Compañero y cargo? (17:19) Y cargo. (17:20) ¿O cómo?
+(17:22) Es que podría ser que tenga ahí la base de datos ya con los nombres, pero solo que le permita que le ponga ahí solo como responsable tal cosa. (17:30) En lugar que le muestre lo que es el nombre, le ponga el cargo nada más.
+Orador 2
+(17:35) ¿Cargo?
+Orador 1
+(17:36) Sí, por ejemplo, ahí puede elegir lo que es suponiendo a esa persona X y al momento de visualizar ya le ponga responsable tal cosa. (17:44) ¿Sí, Marcelo?
+Orador 2
+(17:45) Sí.
+Orador 1
+(17:47) ¿Cómo? (17:48) O sea, elige a esa persona, elige a mi persona, Pablo Torres. (17:52) En lugar que visualice ahí mi nombre, va a aparecer solo el responsable.
+(17:56) ¿No? (17:56) No. (17:59) ¿Se puede seleccionar más de una persona ahí?
+(18:02) Sí. (18:02) Aquí están los responsables. (18:06) Aquí.
+(18:06) Se puede seleccionar más de una persona y mínimo uno. (18:09) O póngale todos. (18:13) Es que eso debería ser todos los docentes de la comisión, por ejemplo.
+(18:19) No. (18:31) No. (18:32) Al ser un local interactivo todavía no trabajamos con una base de datos, entonces no es cual solo se lo guarda en el local store.
+(18:41) No está como tal. (18:43) No, no es bueno. (18:44) Por eso...
+(18:45) Hay que manejarlo para cuando se seleccionen todos los responsables. (18:50) Cuando te coges todos, te pongas responsables de la comisión. (18:53) ¿Responsables de la comisión?
+(18:54) Sí. (18:54) ¿Como una palabra general? (18:55) Sí, por ejemplo, alimentar la base de datos.
+(18:57) Ver una forma de Excel en PC o un archivo CSV.
+Orador 2
+(19:01) Sí, para que le carguen.
+Orador 1
+(19:03) Eso debe ser el administrador, es decir, el coordinador. (19:07) Porque el coordinador es el que va a crear las comisiones. (19:10) Claro, pero le tocaría crear los formatitos o plantillas.
+(19:14) O nos va a tocar a nosotros o a alguien que sea cargo para que cargue de todas las comisiones. (19:19) Ya, pero usted ya va a ser una plantilla.
+Orador 2
+(19:22) De estructuras.
+Orador 1
+(19:22) Para que no me digan cómo lo hago, te lo digo. (19:25) Te vean cómo mato.
+Orador 2
+(19:28) Bueno.
+Orador 1
+(19:30) Dijo que le ponga la opción de poner como opción que diga todos los responsables de la comisión. (19:35) Al seleccionar todos el check, ahí sale automáticamente la palabra de...
+Orador 2
+(19:41) Responsable de la comisión. (19:43) ¿Cómo funcionan los checklists de los filtros en Excel? (19:48) O selecciona uno por todos.
+Orador 1
+(19:50) Ok. (19:51) Y bueno, la página final que viene a ser los anexos y las firmas de responsabilidad. (19:56) ¿Y abajo?
+(19:57) Perdón. (19:59) ¿Abajo? (20:00) Ahí tenemos fuente, elaborado por.
+(20:03) Fuente y elaborado por. (20:07) Fuente y elaborado por. (20:09) Ok.
+(20:11) Fuente y elaborado por. (20:14) Dos firmas. (20:16) Eso son dos datos.
+(20:18) Dos datos. (20:20) La parte de la fuente a veces va a ser la misma comisión y a veces va a ser algún documento que hay. (20:26) Ahí sí podría ser que editen.
+(20:29) Claro.
+Orador 2
+(20:29) Que escriban.
+Orador 1
+(20:31) Elaborado por debe ser por la comisión que está realizando la planificación. (20:36) Y eso debe ser en forma automática. (20:38) Ok.
+(20:38) O sea, sólo la fuente para que puedan escribir lo que es elaborado por, que coja de qué comisión elaboró. (20:43) Automáticamente. (20:43) Ok, ingeniero.
+(20:45) Bueno, en la siguiente página, ¿cómo tal? (20:46) Y esta nota también debe estar igual. (20:48) Ya, en esa sí mantenemos la nota.
+(20:51) Sí, esta debe estar pegada ahí, quemada ahí. (20:54) Ok. (20:55) Y bueno, la sección de anexos y de firmas.
+(21:00) La parte de anexos. (21:09) ¿Puedes ponerle para que aparezca algo revisado? (21:14) En este momento como está precargado, ingeniero, no.
+(21:18) No vale. (21:18) No, porque son informaciones ya precargadas. (21:21) O sea, sí se puede.
+(21:22) El software sí contempla eso. (21:24) Sólo que en los ejemplos que cargue por el momento no tengo para visualizar eso. (21:28) Ya.
+(21:30) Recursos. (21:34) Los recursos igual. (21:37) ¿Eso es para tipear?
+(21:39) Un combo. (21:40) Un combo debe ser. (21:40) Sí, es un combo los recursos.
+(21:42) Eso toca ahí alistar más o menos qué recursos van a ser en forma general. (21:45) Y utilizando las planificaciones para hacerse una vuelta citada. (21:49) Eso, menú de verificación.
+(21:52) Igual también una lista de qué medios podrían ser. (21:55) Menú de informes, actas. (21:58) ¿Qué más puede ser?
+(22:05) Registros, informes, actas, registros. (22:07) Resoluciones. (22:09) Entonces de esa manera debe ser ya para que puedan elegir.
+(22:12) Ahí está. (22:12) Todo lo que es los recursos como tal. (22:16) Habría que tenerlos precargados para seleccionar el check de los que vayan a ser integrados.
+(22:26) Ahí están los medios de verificación. (22:28) También aquí hay informes, un acto, una ficha, una resolución. (22:32) Un registro fotográfico, un certificado.
+(22:36) Ahí tocaría ya cargar una lista completa de todos los recursos y los medios de verificación que se utiliza por lo general. (22:45) Y si no pone la otra opción, te diga otros, especifique, que se ponga a tipear. (22:50) También, sí, eso también.
+(22:54) Porque ya sabe que hay algunos. (22:56) Sí, a veces yo no quiero una de esas cosas. (22:58) Sí, otro.
+Orador 2
+(23:00) Sí, que escriba. (23:02) Quiero que sean obligatorios.
+Orador 1
+(23:06) Este documento tiene que servir como para 70 personas más o menos aquí. (23:10) Porque 70 personas, entonces estamos en diferentes condiciones. (23:12) Entonces, cada uno viene con su forma de pensar diferente.
+(23:15) Y te toca tratar de cubrir la mayor parte de necesidades. (23:20) Entonces, anexos, anexos en caso de que sea necesario. (23:24) Aquí dice anexo A, porque puede estar como nada más allá.
+(23:27) Y la otra es firma de responsabilidad. (23:31) La fe, nombre, cargo, validado, realizado, control de cambio de exclusión. (23:57) Emisión inicial del plan de trabajo.
+(24:01) Elaboración del plan de trabajo. (24:03) Sí, eso también toca ponerle ahí ya predeterminado, sí. (24:08) Lo primero es elaboración del plan de trabajo.
+(24:14) Y la fecha debe ser la misma que fue elaborada, la que está actualizada. (24:21) Ok. (24:22) Ya cuando finalice, se queda ahí grabado y ya lo puede modificar.
+(24:25) Entendido.
+Orador 2
+(24:30) Sí.
+Orador 1
+(24:31) Salvo que alguien quiera imitar y automáticamente vendría a ser la versión 0.2. Pero una vez que ya está aprobado. (24:39) ¿Y aquí en este sistema no se aprobaría? (24:44) Sí, sí está para la parte de revisión.
+(24:49) En la parte de revisiones vendrían a ser estos apartados. (24:56) No, no, sino que, por ejemplo, en las últimas... (25:02) Por ejemplo, las que van directo, por ejemplo, mi comisión va a revisar por su detente.
+(25:10) Y se va al consejo directivo. (25:11) La última era en el POC.
+Orador 2
+(25:13) Ah, sí, sí.
+Orador 1
+(25:13) Después nos pusimos consejo directivo aquí, sin nombres y sin... (25:17) Ahí no tienen que firmar entonces nada. (25:19) Exactamente.
+(25:20) Ahí tengo que considerar qué comisiones van directo a lo que... (25:23) Ajá, porque hay algunos que tienen, por ejemplo, comisión, ordenador de carrera y se rechazan. (25:29) Entonces de esos tenemos que pedir la lucha.
+(25:32) Y, por ejemplo, en mi caso, el aguardamiento de nosotros es que se va a la revisión, aprueba Luis y luego se va al consejo directivo. (25:41) Se va directo al consejo directivo. (25:43) Aquí no va a nombre, ni va a la firma.
+(25:46) Se va directo a nada. (25:48) Entonces tengo que igual definir cuáles son las comisiones que van al consejo directivo. (25:51) ¿Cuál es la más amplia?
+(25:54) Yo, la claridad. (25:56) ¿Qué pernos de las que tenemos coordinación? (25:59) O sea, investigación, vinculación, planificación.
+(26:06) Nada más las tres. (26:09) ¿Y posgrados? (26:11) No sé si en general planificación.
+Orador 2
+(26:16) Toca definir esa parte en la lista de dos.
+Orador 1
+(26:21) ¿La coordinación también tiene que ser entonces? (26:23) ¿Las coordinaciones? (26:24) Sí.
+(26:25) ¿La coordinación de carrera? (26:25) Sí, la planificación. (26:32) Entonces toca definir primero lo que es una lista con todas las comisiones y cuál es el que aprueba.
+(26:38) Si es el consejo académico, directo de salud, no va. (26:45) Eso sí nos va a proporcionar las informaciones. (26:48) Ya nos va a dar práctica con eso.
+(26:49) Ok, genial. (26:53) El formato sí les diría el que estaba desarrollado. (26:56) Guíense ese que esté igualito, que esté en los espacios, el tipo de led, el tamaño.
+(27:02) Sí. (27:03) Sí, solo esos detallitos ya lo organizamos. (27:05) Los colores también de esto de aquí.
+(27:07) Directo en gris. (27:08) Gris, la parte de arriba no sé qué color estaba. (27:11) ¿El cabezal estaba azul?
+(27:13) Sí, es como... (27:15) Y es gris, gris, gris. (27:16) Todo es gris.
+(27:17) Tiene que ser el cabezal. (27:19) Es un gris más o menos.
+Orador 2
+(27:20) Es un más gris.
+Orador 1
+(27:21) Es un gris y la letra es azul. (27:24) Ok. (27:24) Negra, azul, negra, azul.
+(27:27) Azul. (27:29) Ok, increíble. (27:30) Tal cual.
+(27:31) Esto de aquí de fecha de elaboración, que está azul, no estará. (27:35) Aunque está lo mismo ahí. (27:37) No importa, azul, azul.
+(27:38) Ok. (27:38) Tal cual está. (27:46) Fecha de elaboración también dijo azul, ¿verdad?
+(27:48) Sí. (27:48) Sí me pasó el ingeniero el documento y ya le voy a acertar cuál está ahí. (27:54) Las mismas que le utilicé.
+(27:55) No sé bien qué es un formato de A4. (27:58) Ahí con los bordes, todo eso. (27:59) Sí, ingeniero.
+(28:02) Ahí el tamaño de letra, el espaciado, todo. (28:05) Eso mueve un poco más el centro. (28:07) Un poquito, como una señal muy bajita.
+(28:10) Sí, un poquito.
+Orador 2
+(28:11) Lejísimo, ¿verdad?
+Orador 1
+(28:13) Ya me quedé sin internet. (28:15) Ok. (28:17) Vamos a corregir principalmente el formato del documento.
+(28:21) Ahora la etapa de validación, ¿no es cierto? (28:24) A la etapa de validación o de revisión como tal. (28:26) Pero, vale, cuando usted hace los pasos para ingresar, puede ingresar.
+Orador 2
+(28:32) Al inicio.
+Orador 1
+(28:34) ¿En el modo docente está el ingeniero? (28:36) Ya, permíteme un segundito. (28:40) Cuando empiece a ingresar los datos.
+(28:42) Aquí hay un paso que primero usted hace la planificación y luego... (28:48) Ahí está poniendo los datos. (28:56) Aquí crea la planificación.
+(28:59) Sí, la matriz de actividades en este paso como tal. (29:02) ¿Y dónde es el nuevo, por ejemplo? (29:03) ¿Perdón?
+(29:04) Nuevo. (29:06) Para ingresar a una nueva actividad. (29:08) Una nueva actividad como tal.
+(29:14) Si a la matriz se le va a agregar una actividad, si no, tendríamos que agregarlo. (29:19) No, no, no. (29:23) Es que en el mocap no permite crear actividades.
+(29:26) No, ahorita solo lo que permite es visualizarlo. (29:38) ¿Cuándo tiene que ingresar la justificación? (29:45) Aquí, en la cuarta etapa.
+(29:46) ¿No se puede poner eso como que se acerca con las etapas del documento tal como está?
+Orador 2
+(29:50) Sí, la secuencia. (29:54) Sí, porque se va al otro lado.
+Orador 1
+(29:55) No es la secuencia, es el orden mismo. (29:57) Entonces está mal.
+Orador 1
+(0:01) Cuando empieces a ingresar los datos, hay un paso que primero usted hace la planificación y luego... (0:09) Bueno, ahí está poniendo los datos, ya, sigue. (0:12) Mira, ahí hay la aleatoria, con su convención, y ya.
+(0:17) Aquí crea la planificación. (0:19) Sí, la matriz de actividad es en este paso con botánica. (0:22) Ya, ¿y dónde es el nuevo, por ejemplo?
+(0:24) ¿Perdón? (0:24) Nuevo. (0:26) Para ingresar una nueva actividad.
+(0:29) Una nueva actividad, ¿cómo tal? (0:31) O sea, para la matriz agregar una actividad más. (0:34) Eh, si a la matriz le va a agregar una actividad, ¿no?
+(0:38) No, no, no. (0:40) 5T, por ejemplo, quiere ingresar una sexta actividad. (0:44) Es que en el mocap no permite crear actividades.
+(0:47) No, por el momento no. (0:47) No, ahorita solo lo que permite es visualizar, ¿no?
+Orador 2
+(0:49) Podrían haber casos. (0:51) Pero eso sería en las etapas, ¿no? (0:52) Sí.
+Orador 1
+(0:53) A la siguiente etapa. (0:54) Espera, hay que... (0:55) A la siguiente etapa.
+(0:59) ¿Cuándo tiene que ingresar la... (1:04) ...la justificación? (1:05) Ah, aquí, en la cuarta etapa.
+(1:07) ¿Me puedo poner eso como que acerca con etapas del documento tal como está?
+Orador 2
+(1:11) Sí, la secuencia está... (1:12) Sí, la secuencia.
+Orador 1
+(1:14) Sí, porque se va al otro lado, sí. (1:16) No es la secuencia, es el orden mismo. (1:17) Entonces está mal.
+(1:18) Por ejemplo, la información general de tiempo. (1:23) Actividades no debería ir. (1:25) Sí, no debería ir lo que dice de justificación.
+(1:28) O sea, contenido debe ir acá. (1:31) Sí, ¿puedes moverle aquí o acá? (1:32) No, ingeniero.
+(1:33) En este momento no.
+Orador 2
+(1:34) Es una ruta predefinida.
+Orador 1
+(1:36) Y entonces va información general, después debe ir a contenido. (1:39) Contenido directamente.
+Orador 2
+(1:40) Sí, contenido.
+Orador 1
+(1:41) Sí. (1:41) Ingeniero, ¿esto los dos? (1:44) ¿O puede ponerle justificación?
+(1:46) Y después debe ir a actividades. (1:48) Ah, ir haciendo las actividades como tal. (1:50) Sí, ¿no es tal como usted lo conoce?
+Orador 2
+(1:52) Sí, sí.
+Orador 1
+(1:54) Ya, entonces las actividades como tal. (1:57) Y después, anexos. (1:59) Y ahí sí continuamos anexos.
+(2:01) Sí, la secuencia está mal. (2:02) Ya, tengo que redefinir la secuencia para los anexos. (2:06) Y ahí sí prevé visualización y la firma como tal.
+(2:09) Pero ya cuando finalice, digo, firmar y enviar. (2:12) ¿No sería firmar y finalizar? (2:15) Es que como va a revisión, pensamos que era correcto mencionar…
+(2:19) O sea, sí, puede ser firmar y finalizar. (2:21) Porque ya no podría dictar a la persona cómo se va a revisión. (2:24) La persona que revisa es la versión final.
+(2:27) No se puede dictar, ¿no? (2:28) Tiene que ir a firmar y dictar, ni agregar, ni quitar nada.
+Orador 2
+(2:31) Hasta ahí.
+Orador 1
+(2:32) Sí, cuando ya finaliza automáticamente ya se va. (2:34) Ok. (2:34) Sí, entonces la palabra está mal.
+(2:36) Ok, es firmar y finalizar. (2:38) Entendido.
+Orador 2
+(2:39) Bien, tranquilo.
+Orador 1
+(2:45) Firmar y revisar. (2:46) Firmar y enviar. (2:50) Entonces esa etapa ya está finalizada.
+(2:52) Ya hizo el documento, el docente y envió. (2:55) Ahí viene el proceso de revisión como tal. (2:58) Aquí están listadas todos los que están pendientes de revisión.
+(3:03) ¿Y cuál sería el proceso? (3:04) Ahí sí, para revisar, se revisa el documento como tal. (3:10) Todas las páginas del documento.
+(3:14) Ahí viene, si de ser el caso, se añadirían lo que son las observaciones. (3:19) Tanto de una página o de una sección general del documento. (3:24) Se puede hacer la observación por página o de general del documento.
+(3:28) Cualquiera de las dos opciones. (3:31) Entonces se le añade la observación como tal. (3:33) Observación general, no.
+(3:34) Control D, suprimir. (3:39) ¿Y hay cómo resaltar, de pronto, en el último? (3:44) A marcarlo.
+(3:59) No está integrado como tal, pero sí podríamos hacerla para que se resalte. (4:09) ¿Cómo se resalta? (4:11) Cuando la observación dice aquí que está ampliada.
+(4:16) Ok, sí, sí le podemos integrar eso. (4:19) Sí, sí tenemos ese problema, Susanita. (4:22) No nos entendían las páginas que estábamos enviando al corregimiento.
+(4:27) A pesar que eso le ponía la explicación. (4:29) Pero le digo, como en el Moodle, subrayar ahí y decir ahí hay que cambiar.
+Orador 2
+(4:34) ¿Cómo se cambia?
+Orador 1
+(4:38) Subrayar como tal.
+Orador 2
+(4:39) ¿Resaltar? (4:40) Subrayar o resaltar.
+Orador 1
+(4:42) Resaltar o rayar también podríamos hacerle con el mouse. (4:48) Sí podríamos integrar esas dos opciones.
+Orador 2
+(4:49) Estaría bien entonces ponerle, por ejemplo, le subraye de un color y al lado le pone esto. (4:54) De esta parte subrayada, o sea, según color, número o lo que sea. (4:58) Y ahí la observación de justeza.
+Orador 1
+(5:00) Como ya le están poniendo la página, cuando le ponen las observaciones, ahí puede poner la página. (5:06) Porque está en la página 5, ¿no? (5:07) Si está en la página 4, se cargaría en la página 4.
+Orador 2
+(5:10) Más que nada porque digo, por ejemplo, esta parte y esta parte se vienen a corregir en la misma página. (5:14) Entonces, por ejemplo, aquí sería como subrayado 1, observación esta, y subrayado 2, etc. (5:21) No, ya no está.
+
+
+
+
+
+Orador 1
+(0:00) ¿Qué opina?
+Orador 2
+(0:00) ¿Sí?
+Orador 1
+(0:02) ¿Qué opina usted? (0:04) No, sí, está bien. (0:06) Demasiado no, es que ahí está demasiado.
+(0:07) Los compañeros se van a confundir bastante. (0:10) O sea, más o menos como la parte del rebordo y revisión. (0:14) Solo resaltarle.
+(0:15) Una función de resaltado, como tal. (0:20) Un cambio de... (0:23) Un resalte.
+(0:30) ¿Cómo les evitamos tanto eso? (0:32) Que le entrenamos un modelo.
+Orador 2
+(0:34) ¿Qué debe de ser eso?
+Orador 1
+(0:36) No, que si vale hacer eso, entrenar un modelo, que derechan las planificaciones. (0:42) Ya, mucho. (0:44) Si hubo una comisión, pues, que me dice ¿Cómo mismo ponemos los planes de mejora?
+(0:49) Y habían puesto como 5 o 7 actividades del Plan de Mejora. (0:52) O del POA. (0:52) Yo digo, pero sin el POA.
+(0:54) Ninguna. (0:55) Y mandamos el apunto y ni siquiera habían descargado el acuerdo. (0:58) No habían leído nada.
+(1:00) No habían cogido y habían enviado a la IA que genere las actividades. (1:03) Sí, jamás. (1:11) Otro equipo está a decir que entrenen un modelo.
+(1:13) Sí o no.
+Orador 2
+(1:15) Un agente de...
+Orador 1
+(1:16) Un agente de IA, para que...
+Orador 2
+(1:17) Un agente que actúe como...
+Orador 1
+(1:19) Tal profesor. (1:21) Tal se va a elegir.
+Orador 2
+(1:22) En paz y pura.
+Orador 1
+(1:25) ¡Sáquense de aquí!
+Orador 2
+(1:27) ¿Por qué no se vienen y llevan? (1:30) Ah, ya están saliendo. (1:32) ¿Qué hacen?
+(1:32) Me empezaba a cansar de llenar cuando estaba en el molde. (1:34) Entonces yo, ¡ayuda!
+Orador 1
+(1:37) Y esperamos que venga Frank. (1:38) Sí. (1:39) No hay problema.
+(1:40) Eso. (1:41) ¿De ahí? (1:41) Pues de este modo...
+(1:43) No, no.
+Orador 2
+(1:45) Ya, ya, ya.
+Orador 1
+(1:47) La próxima vez que no nos vengan aquí a querer dar el curso de...
+Orador 2
+(1:51) IA. (1:52) Sí, sí.
+Orador 1
+(1:53) Que nos deben hacer agentes. (1:57) No, es que por qué preguntar. (1:58) Es que si pagamos una IA, es como que contratar un aprender de televisión.
+(2:02) Sí, no. (2:04) La IA es para la gente. (2:06) Ok.
+(2:07) Ya. (2:08) Bueno, entonces, tras las observaciones, como tal, existen las opciones de devolver. (2:13) Con las observaciones correspondientes, se le devuelve.
+(2:16) O, en caso de que no tenga ninguna observación, se la aprueba y se firma correspondientemente. (2:24) La siguiente persona, en este caso el revisor, firma y lo aprueba. (2:29) ¿Cómo es el documento?
+(2:30) No se descarga, sino firma en línea mismo. (2:32) Sí, sí. (2:33) Y al final, la última persona que aprueba...
+Orador 2
+(2:36) Es la única que puede descargar.
+Orador 1
+(2:38) Sí. (2:39) ¿Qué opina, Pamela? (2:42) Sí, estaría bien.
+(2:43) Solo que sí está de concentrarle a Linc Luís, porque hay un proceso que se está... (2:49) se está saltando. (2:51) Porque sería el coordinador, ¿no es cierto?
+(2:53) Al final. (2:54) El último, ¿no es cierto? (2:55) El final.
+(2:56) No, es Linc Luís. (2:57) Ya. (2:57) Entonces, ahí está perdiéndose un proceso de que el profesor es el responsable de enviar por tipos.
+(3:05) Eso. (3:07) Pero ahí sí sería de... (3:10) Si la profesora está equivocada, le preguntaré a Linc Luís.
+(3:13) Claro, porque... (3:14) Como no había el sistema, ahorita ya está integrado en vez de rellenar de basura... (3:19) Perdón, información al correo.
+(3:20) Una copia, aquí puso otra copia y luego firma y ahí se descarga.
+Orador 2
+(3:24) Sí, pero después de que firme...
+Orador 1
+(3:25) Tema de cosas legales, que aquí puso...
+Orador 2
+(3:28) Ah, la trazabilidad.
+Orador 1
+(3:30) Por eso digo yo, pero no sé si estoy bien. (3:32) No sé si tenga ya la razón. (3:34) Sería de prensa.
+(3:36) Claro, y al final que se descargue el archivo...
+Orador 2
+(3:37) También la clasificación. (3:40) No, sí está generando la clasificación de acuerdo con el archivo.
+Orador 1
+(3:43) Algo así, o cuando esté firmado por nosotros y por él. (3:46) Perdón, perdón.
+Orador 2
+(3:47) Me voy, tengo una reunión.
+Orador 1
+(3:51) Esa última parte nomás. (3:53) Está de consultarle entonces a Linc Luís. (3:55) Porque como dice, para la parte de lo que es la responsabilidad de QIPOC.
+(3:59) Sería entonces que el docente se descargue firme y ahí se envíe por QIPOC. (4:04) Y ahora para validar... (4:06) Sí, lo que pasa es que por ejemplo los sílabos ya es algo legal de la universidad.
+(4:12) Entonces ahí no hay perdón. (4:13) Pero esto, si no esto, aquí sí. (4:16) A menos que genere algún lineamiento o algo así.
+(4:20) Eso está de preguntarle. (4:21) Está de preguntarle, porque sí. (4:22) O sea, está genial que vaya directo allá.
+(4:25) Pero no sé si... (4:26) Esa parte tomé en cuenta. (4:27) Claro, porque hay como un procedimiento para que no se olvide.
+(4:32) Entonces este de aquí va a servir solo para elaborar entonces. (4:36) Sí. (4:37) O sea, yo creo que el profe se descarga después de que nosotros y él firmen.
+(4:42) Sí. (4:42) Ahí acaba. (4:45) Y ahí los demás ellos hacen.
+(4:47) O sea, el coordinador, todo, según yo. (4:49) Pero ¿y para dar seguimiento ahí nosotros? (4:54) Es que igual si les devuelven debería como desactivarse algo en la plataforma.
+(4:59) O sea, como que el coordinador tal vez cuando esté por QIPOC ahí poner validar y firmar desde él o algo así. (5:05) No sé. (5:06) Porque no sé si sea así obligatorio de que debe estar por QIPOC lo que ellos mandan.
+(5:11) Según yo, sí. (5:13) Parece que sí. (5:14) Es que no hay reglamento todavía.
+(5:17) O sea, verán, la última fase va a ser que, a ver. (5:21) Firman ellos y mandan nosotros en coordinación. (5:26) Cuando llegue QIPOC de ellos, ahí los coordinadores manualmente tienen que ponerlo a probar.
+(5:30) O regresarlos. (5:33) Pero viendo que llegó el QIPOC. (5:36) Pero tiene que entonces anexar ese QIPOC que fue aprobado.
+(5:39) Ah, no, es para probar.
+Orador 2
+(5:40) Y ahí sí.
+Orador 1
+(5:41) Sí, sí, ya. (5:43) Entonces ahí sí ya está bien. (5:44) Entonces el coordinador es el que va a probar y el coordinador tiene que subir el QIPOC.
+(5:49) Ok. (5:50) ¿Y sin esa evidencia no continúa como tal ese proceso?
+Orador 2
+(5:53) Sí, no continúa.
+Orador 1
+(5:55) Sí, no continúa esa parte. (5:57) Entendido, ingeniero. (5:58) Sí, es hasta que le de registro.
+(5:59) Esto es lo importante. (6:00) Y el flujo de... (6:02) Listo, ingeniero.
+(6:03) Eso como tal corregir. (6:04) Bueno, ese vendría a ser, bueno, el apartado de la revisión como tal. (6:07) Y como le mostramos, ingeniero.
+(6:09) Y bueno, estas son las funciones de, bueno, lo que le había mostrado el administrador. (6:13) Como tal que puede aquí gestionar todo prácticamente. (6:17) Bueno, los periodos, los grupos, los catálogos, las actividades, flujos de aprobación.
+(6:26) Ah, y el flujo tiene que modificarle para que haga de esa manera el flujo. (6:29) Sí, eso ya lo vamos a modificar, ingeniero. (6:31) Para que, como nos había comentado, las plantillas documentales igualmente aquí se configuran.
+(6:36) Sí, en el orden igual. (6:37) En el mismo orden debe estar lo que es la parte de introducir la información. (6:41) Ok.
+(6:41) O sea, es decir, justificación, objetivos, motriz de actividades, anexos, firmas y control de campos.
+Orador 2
+(6:47) Ok. (6:47) En el mismo orden.
+Orador 1
+(6:48) No sentarse, porque está al revés. (6:50) Sí, ha estado al revés la actividad. (6:53) Eso ya lo vamos a corregir.
+(6:53) Y el flujo como tal de la creación. (6:55) Tal vez algo más que le interesa ver como ingeniero. (7:01) Pamelita, algo más de repente que sería.
+(7:05) Pero eso no más está bien ahí porque leí el formato de eso acá. (7:09) Entonces está que corrigan esto. (7:11) ¿Esta POA, plan, acción, abierto?
+(7:13) ¿Ni un por si acaso poner MAPLIC o es opcional? (7:16) No, dejarle libre. (7:17) O sea, suponiendo que sea una actividad, no es POA, no es plan, ni es acción.
+(7:20) Ponen actividad nada más. (7:22) Con eso ellos insertan la actividad, insertan lo que es la fecha, lo que es el responsable, los recursos y el medio de verificación. (7:36) Ok.
+(7:37) Ok. (7:41) O sea, corrigan eso de ahí. (7:43) ¿Cuándo sería para hablar con el ingeniero?
+(7:47) Ah, hasta el día martes. (7:50) Sí, para el martes. (7:52) Claro, y con gusto si quiere podría hacer estos cambios.
+(7:56) Como no son grandes, podría prestarle mañana para ver si tiene usted alguna observación. (8:00) Y para el día martes que me comenta, venimos ya con los mocados de Villanrovina.
+Orador 2
+(8:04) Ya. (8:05) Si venimos mañana, ¿estará bien cuando acabe la reunión que tienen de mañana? (8:08) ¿O por la tarde?
+Orador 1
+(8:09) ¿Qué horario sería? (8:16) Es que yo tengo la... (8:17) Uy, o sea, acabo y ahí me voy a la casa y almuerzo y ahí regreso a clases.
+(8:21) Ahí vengo en la tarde, ¿verdad? (8:23) Y en la tarde ya estoy libre desde las... (8:25) Tal vez lo que podríamos hacer, ingeniero, para no tener que venir a la reunión con estos pequeños cambios, le podemos...
+(8:32) Al ser una página estática, le podemos desplegar tranquilamente y le podemos mandar el link de todo el flujo.
+Orador 2
+(8:38) Ya, sí, no hay problema.
+Orador 1
+(8:39) Sí, más fácil. (8:39) Sí, con su revisión digo que está bien. (8:41) Es ingeniero.
+(8:43) ¿Listo? (8:43) Sí, porque ya tengo clases. (8:44) Sí.
+(8:45) Y para no molestarlo demasiado tampoco. (8:49) Ayer tengo que hacer una revisión, también ya me acordé de los proyectos que... (8:56) Listo.
+(8:56) Que sigan corrigiendo y cualquier novedad, vienen acá y pregunten, nada más. (9:00) No hay problema. (9:01) Entendido.
+(9:02) Gracias.
+Orador 2
+(9:03) Muchas gracias.
+Orador 1
+(9:26) ¿Todo bien? (9:32) Sí. (9:32) Es solo que me he confundido con el nombre.
+(9:34) Ah, Chuchal. (9:35) Sí. (9:37) No, pero estuvo bien loco, ya está bien.
+(9:40) Ah, te mando un beso. (9:42) Sí, sí, no, te mando un beso. (9:43) Mándamelo más.
+Orador 2
+(9:43) Un beso, dos besos, no puedo. (9:46) Tranquilo. (9:47) Bájate, bájate.
+Orador 1
+(9:48) Sí, sí.
+Orador 1
+(0:21) ¿Cuándo tiene que ingresar la postificación? (0:30) ¿Puedo poner eso como etapas del documento, tal como está? (0:33) Sí, la secuencia está mal.
+(0:37) Sí, porque se va al otro lado.
+Orador 2
+(0:38) No es la secuencia, es el orden mismo, entonces está mal. (0:41) Por ejemplo, la información general de tiempo. (0:45) Actividades no debería ir.
+(0:47) Sí, no debería ir lo que dice de justificación. (0:51) O sea, contenido debe ir acá. (0:53) Sí, puedes moverle aquí.
+(0:54) No, ingeniero. (0:55) En este momento no.
+Orador 1
+(0:56) Es una ruta para definir cómo está.
+Orador 2
+(0:58) Información general, después debe ir a contenido. (1:01) Contenido, directamente.
+Orador 1
+(1:03) Sí, contenido. (1:03) Sí, tiene que tener el resto de los dos. (1:06) O puedes ponerle en justificación.
+Orador 2
+(1:08) Y después debe ir a actividades. (1:11) A irse en las actividades como tal.
+Orador 1
+(1:13) ¿No es tal como usted lo conoce?
+Orador 2
+(1:14) Sí, sí. (1:16) Ya, entonces las actividades como tal. (1:20) Y después, anexos.
+(1:21) Y ahí sí continuamos anexos. (1:23) Sí, la secuencia está mal. (1:24) Ya, tengo que redefinir la secuencia para los anexos.
+(1:27) Y ahí sí, previsualización y la firma como tal. (1:31) Pero ya cuando finalice, digo, firmar y enviar. (1:35) ¿No sería firmar y finalizar?
+(1:38) Es que como va a revisión, pensamos que era correcto mencionar.
+Orador 1
+(1:41) O sea, sí puede ser firmar y finalizar. (1:43) Porque ya no podría dictar a la persona cómo se va a revisión. (1:46) Porque la persona que revisa es la versión final.
+(1:49) Entonces no se le afecta, ¿no? (1:50) No se le va a evitar firmar y finalizar. (1:52) Ni agregar ni quitar nada.
+Orador 2
+(1:53) Hasta ahí. (1:54) Sí, cuando ya finaliza automáticamente ya se va. (1:56) Ok.
+(1:57) Sí, entonces la palabra ahí está mal. (1:58) Ok, es firmar y finalizar. (2:00) Entendido.
+Orador 1
+(2:12) Entonces esa etapa ya está finalizada. (2:14) Ya hizo el documento del docente y envió.
+Orador 2
+(2:17) Ya viene el proceso de revisión como tal. (2:21) Aquí están listadas todos los que están pendientes de revisión.
+Orador 1
+(2:24) ¿Y cuál sería el proceso?
+Orador 2
+(2:27) Ahí sí para revisar. (2:28) Antes se revisa el documento como tal. (2:32) Todas las páginas del documento.
+(2:35) Ahí viene. (2:37) De ser el caso, se añadirían lo que son las observaciones. (2:41) Tanto de una página o de una sección general del documento.
+(2:46) Se puede hacer la observación por página o de general del documento. (2:51) Cualquiera de las dos opciones. (2:53) Entonces se le añade la observación como tal.
+Orador 1
+(2:55) Observación general, no. (2:57) Controlé y suprimí. (2:59) De nuevo.
+(3:02) ¿Y hay cómo resaltar de pronto así como en el múltiple? (3:06) ¿A marcarlo? (3:08) Aunque ya viene con numeración.
+(3:09) Pero es decir, que bueno, por ejemplo aquí. (3:11) Y yo subrayo aquí o resalto aquí. (3:14) Y esta es la actividad que hay que mejorar.
+(3:16) Ah, ok. (3:23) Ok.
+Orador 2
+(3:27) No está integrado como tal. (3:28) Pero sí podríamos hacerle para que se resalte.
+Orador 1
+(3:37) Ok.
+Orador 2
+(3:39) Sí le podemos integrar.
+Orador 1
+(3:47) Lo que estábamos enviando al corregimiento. (3:49) A pesar de que usted le ponía la explicación. (3:51) Pero le digo, como en el múltiple.
+(3:54) Subrayar ahí. (3:55) Y decir ahí hay que cambiar.
+Orador 2
+(4:00) Subrayar como tal.
+Orador 1
+(4:01) Resaltar.
+Orador 2
+(4:05) O rayar también podríamos hacerle con el mouse. (4:10) Sí podríamos integrar estas dos opciones.
+Orador 1
+(4:12) Estaría bien entonces ponerle, por ejemplo, le subraye de un color y al lado le pone. (4:16) Esto es de esta parte subrayada. (4:18) O sea, según color, número o lo que sea.
+(4:20) Y ahí la observación de usted está detectada. (4:22) Como ya le están poniendo la página. (4:24) Ahí podría ver cuando le ponen las observaciones.
+(4:27) Ahí puede poner la página 5. (4:28) Porque está en la página 5, ¿no? (4:29) Si está en la página 4, se cargaría en la página 4.
+(4:31) Sí. (4:32) Más que nada porque dijo, por ejemplo, esta parte. (4:35) Y esta parte se viene a corregir en la misma página.
+(4:36) Entonces, por ejemplo, aquí sería como. (4:39) Subrayado 1. (4:41) Observación esta.
+(4:41) Y subrayado 2. (4:42) Y todo. (4:43) Es...
+(4:44) No, ya no es tanto.
+
+Orador 2
+(0:25) Unas cuantas cosas que, bueno muchas cosas que nos falta definir, en el backend como ahorita estamos en la construcción del backend como tal, tenemos unas dudas que era lo que queríamos preguntarle al ingeniero para el desarrollo ya completo del backend y justamente aquí les había listado. (0:43) En cuanto a un docente elabora un plan para un grupo, comisión a la unidad, ¿de quién se considera formalmente el plan como tal? (0:52) Por ejemplo, Andrea que era el usuario que estaba, elabora un plan para unidad de titulación y después deja de pertenecer a su unidad, ¿el plan sigue perteneciendo a la unidad de titulación y otra persona puede continuar gestionándolo?
+(1:06) Sí, en este caso sí. (1:09) Siguiente teoría, actualmente se considera que sólo puede existir un plan por docente, grupo y periodo, entonces por ejemplo Andrea unidad de titulación y en el periodo julio-diciembre. (1:22) ¿Esta regla la consideramos que pueda existir en más de un plan para la misma combinación o en qué caso se permitiría y quién tendría la autorización para crear el adicional?
+Orador 1
+(1:34) No, es que va a haber sólo un plan para esa comisión, esa persona va a pertenecer, (1:38) puede pertenecer a varias comisiones pero va a ser un representante de esa comisión, por ejemplo (1:45) Andrea va a suponer pertenencia de titulación, pertenece a lo que es la planificación, o sea la UP, (1:52) pero entonces va a ser representante de, en una comisión va a ser miembro de, en cambio la otra (1:57) va a ser ya como responsable de.
+Orador 2
+(2:00) ¿Y para la entrega queremos hacer todos esos datos, le usamos datos de ejemplo demo o tal vez usted nos va a proporcionar algo?
+Orador 1
+(2:06) No, ya le voy a proporcionar lo que es la lista de comisiones y de docentes, ya les voy a proporcionar. (2:11) Voy a compartir un drive con todos los archivos y con su cdmd y usted lo que se utilice.
+Orador 2
+(2:17) Si un docente crea un plan por equivocación, ¿qué debería poder hacer con ese documento? (2:25) ¿Se lo conserva en base al historial o se borra directamente desde la base de datos?
+Orador 1
+(2:29) Se está suponiendo que si es miembro de la comisión crea él por accidente una planificación.
+Orador 2
+(2:35) Una planificación crea pero lo descarte y dice no, ¿ese queda como registro de que se creó?
+Orador 1
+(2:41) Queda como registro de un borrador.
+Orador 2
+(2:47) ¿En vez de eliminar solo archivado?
+Orador 1
+(2:50) Archivado, nada más. (2:52) Queda como un tipo borrador que no se puede eliminar, que queda el registro. (2:58) Y eso solo puede ver el administrador como tal.
+Orador 2
+(3:07) Un plan debe ser editado únicamente por la persona que lo creó o varias personas del mismo grupo pueden trabajar sobre el mismo plan.
+Orador 1
+(3:15) En este caso la persona que creó no importa que tengan varios miembros de esa comisión, sino va a ser solo el que es el jefe en este caso. (3:26) Vamos a poner como jefe el coordinador de esa unidad, es el que edita, pero va a poner el resto de miembros. (3:36) Por ejemplo, aquí tengo que estar elaborado por varias personas, pero siempre va a haber un responsable y ese responsable va a ser la primera persona que está como jefe y él es la que va a poder editar, pero se va a asignar el resto de responsables de miembros de esa comisión.
+(4:05) Solo una persona va a ser el que pueda editar, modificar, no todos.
+Orador 2
+(4:09) ¿Y este registro de los que elaboraron, en dónde salió o en dónde aparecería?
+Orador 1
+(4:13) Es en la parte de abajo de firmas, firmas de la consuelidad. (4:17) ¿Te acuerdas que había elaborado, revisado y aprobado? (4:22) El que revisa únicamente va a dar comentarios y va a devolver.
+(4:25) El que aprueba, igual, si es que devuelve, pone comentarios nada más, pero no puede modificar nada.
+Orador 2
+(4:32) En cuanto al flujo, después de que un docente termina un plan de trabajo, ¿quiénes deben revisarlo y en qué orden?
+Orador 1
+(4:42) En el orden va el responsable de la unidad de planificación, después va con una parte del coordinador y por último va con la parte de aprobación que es el decano, pero aquí hay una estructura, igual ya les voy a indicar cómo es el orden de acuerdo de las unidades, porque a veces no es que aprueba el decano, sino el subdecano, depende de la comisión.
+Orador 2
+(5:06) Entonces, ¿ponemos los roles pero no definimos quién tiene ese rol, tal vez, para después poder definirlo o ya le ponemos los nombres?
+Orador 1
+(5:12) No, no, no, después.
+Orador 2
+(5:13) Después que esté libre para definir.
+Orador 1
+(5:16) El que va a aprobar va a ser el coordinador, pero no sabemos quién va a ser, puede ser que va a ser otra persona y debe asignar automáticamente con una base de datos que se va a actualizar cada periodo. (5:26) Aunque lo que sabemos es que un coordinador va a ser el que va a aprobar, pero también es una consulta de ingeniería, de algunos grupos, de algunas comisiones, aprueba el subdecano y de otros el decano. (5:38) ¿Son separados?
+(5:40) Son separados, son diferentes comisiones. (5:42) Ya, no hay una comisión en la cual el decano o el subdecano puedan aprobar, sino son separados. (5:49) Son separados.
+(5:49) Ya, eso también por si acaso necesitamos la información de cuáles son... (5:52) Sí, después les voy a dar una tabla con todas las comisiones, quién aprueba y quién revisa. (5:58) Y aquí los nombres, ahí les pueden poner en forma genérica, pero sí lo que es la parte de aquí de lo que es el cargo.
+(6:05) El cargo va a ser siempre lo mismo. (6:07) Entendido. (6:08) Pero las personas, como ya sabes, lo puedes notar y va a ser otra persona que asuma ese cargo.
+Orador 2
+(6:12) Ok, lo mismo para el flujo de los informes también, ¿siempre es el mismo flujo de aprobación?
+Orador 1
+(6:18) Sí, pero depende del tipo de documento, ya les voy a indicar de cuáles se pueden hacer. (6:23) Por ejemplo, esta parte de aquí de lo que es la planificación de un evento, ya no es que revisan a estas personas de aquí, que aquí está mal. (6:30) Esto ya no revisa, sino que revisa a otra persona que no es de esta comisión, que es de otro flujo.
+Orador 2
+(6:37) El nombre de las personas no es del mismo, pero el rol, o sea, el cargo es igual.
+Orador 1
+(6:40) Sí, es que depende de qué tipo de evento está generando, y según el evento, va por otro flujo. (6:48) Igual ya, eso estamos también, ya vamos a elaborar el flujo, y entonces les indicamos cómo va a estar eso.
+Orador 2
+(6:53) Ok, genial. (6:55) Siguiente, si una etapa tiene varios revisores obligatorios, ¿todos deben aprobar el documento para continuar, o basta con que aprueben?
+Orador 1
+(7:03) No, no, todos tienen que aprobar, eso fue en el caso. (7:04) Yo aprobé, pero va donde quede el coordinador, coloca unas observaciones y le devuelve, y no se devuelve. (7:13) Y nuevamente continúa el flujo para poder revisar el responsable UPE después del coordinador.
+(7:19) Pero si fue en el caso de si entra el responsable UPE, devuelve y ya no va a ir con el coordinador, sino nuevamente comienza el flujo.
+Orador 2
+(7:28) Ok. (7:31) Si dos personas están revisando el mismo documento, y una lo aprueba, pero la otra lo devuelve para corrección, ¿qué ocurre en ese momento?
+Orador 1
+(7:39) Es que no pueden revisar a las dos personas a la vez, es en forma secuencial. (7:44) Primero el responsable aprueba y continúa con el siguiente. (7:48) La puede estar revisando en forma secuencial con el coordinador, no en forma secuencial.
+(7:54) Por eso no va a existir eso del flujo.
+Orador 2
+(7:58) ¿Una misma persona puede participar en más de una etapa del mismo documento?
+Orador 1
+(8:04) Por ejemplo, tú me dices si es uno que elabora y que la misma persona debe revisar.
+Orador 2
+(8:09) ¿Una persona podría ser revisor y después también validador?
+Orador 1
+(8:13) No tanto, no va a poder ser eso. (8:15) Es que no puede ser parte de eso.
+Orador 2
+(8:18) ¿Dentro de la misma planificación?
+Orador 1
+(8:20) No puede ser. (8:21) Otra planificación sí.
+Orador 2
+(8:24) Entendido. (8:26) Si una persona que debe revisar o aprobar un documento deja de pertenecer al grupo, se encuentra inactivo o el cargo queda vacante, ¿qué debería ocurrir? (8:35) ¿Se debe nombrar un reemplazo, reasignar la tarea o esperar a que exista un titular?
+(8:40) ¿Quién tendría los permisos para hacer esa reasignación?
+Orador 1
+(8:43) En este caso es el coordinador el que reasigna. (8:49) Él va a asignar a otra persona ese puesto para reemplazar por la persona. (8:53) Pero eso va a ser al inicio del semestre.
+(8:55) Al inicio del semestre le manda lo que es una distribución de... (8:59) Déjame ver para que vea dónde estaba... (9:22) Supongo que esto de aquí ya les voy a pasar también.
+(9:25) Es una tabla que tiene lo que son dos docentes, la carrera que pertenecen y lo que es la comisión. (9:32) Sí, deben formar una base de datos. (9:36) Reunida, docente, carrera.
+(9:39) De repente un docente puede pertenecer a dos carreras. (9:43) Esta persona pertenece tanto a la tecnología de información como a software. (9:47) Y va a elaborar por separado un informe que va a ser validado por el representante de la UPDTI y otro que va a ser el responsable de software.
+(9:58) Pero es la misma planificación. (10:00) Debe generar el mismo archivo pero con dos flujos diferentes. (10:05) Porque cada carrera debe tener lo que es una planificación.
+(10:10) O sea, también por si acaso cuando genere un docente lo que es una planificación, debe haber un combo box para que seleccione para qué carrera. (10:19) Automáticamente tiene que generar eso. (10:22) Pero en caso de que tenga más datos, tiene dos.
+(10:25) El sistema tiene que ser automático. (10:33) Pero hay solo casos pequeños. (10:36) Por ejemplo, la unidad de titulación es una sola persona que es encargada.
+(10:43) Y ahí nomás se va a generar ese problema.
+Orador 2
+(10:44) En este caso, como el administrador es quien genera para el usuario la contraseña para cada docente, le asigna la carrera al que pertenece y se crea la cuenta ya asignada a esas carreras.
+Orador 1
+(10:57) Y cuando una unidad está formada por un solo docente, debe tener una condición que se genere en dos planificaciones de las dos carreras separadas. (11:08) Por ejemplo, aquí tiene más docentes. (11:11) Aquí hay uno que va a ser el principal por lo que es el primero y el otro va a ser únicamente miembro.
+(11:17) El primero va a ser el principal y el segundo va a ser el integrante de la comisión. (11:23) Entonces, ¿quién elabora? (11:24) El primero siempre.
+Orador 2
+(11:32) Supongamos que, por ejemplo, hoy un plan entra a revisión con un determinado flujo y mañana el administrador cambia ese flujo. (11:40) ¿El plan que ya estaba en revisión debe continuar con el flujo anterior o debe actualizarse, adaptarse al nuevo que se estableció?
+Orador 1
+(11:48) El flujo ahí está el problema. (11:49) El flujo debe ser para todo el semestre. (11:52) No puede cambiar.
+(11:53) ¿Cuándo cambia el semestre? (11:55) No existe ese caso.
+Orador 2
+(12:02) Actualmente, en los mockups que le presentamos, nosotros utilizábamos una firma demo y después de firmar el documento pasaba a revisión. (12:14) ¿Se firma el documento en el sistema real y se va a revisión o se separan las acciones? (12:20) Primero firmar y después enviar a revisión.
+(12:24) ¿Dos acciones aparte o apenas se firma y ya va automáticamente a revisión?
+Orador 1
+(12:29) Fuera bueno que apenas firmas, directo se va a revisión. (12:32) ¿Tal cual como en el flujo del mockup?
+Orador 2
+(12:35) Firma y ya se va a revisión.
+Orador 1
+(12:37) Ya está aceptando. (12:39) ¿Para qué firmo? (12:40) Si tengo que dar un clic y enviar a revisión.
+Orador 2
+(12:47) ¿En qué momento un plan de trabajo debe quedar bloqueado para que el docente ya no pueda modificar? (12:53) Cuando ya lo ha firmado y lo envía ya no puede hacer nada.
+Orador 1
+(12:58) Cuando lo devuelve tiene que habilitarse nuevamente para que modifique.
+Orador 2
+(13:02) ¿Y ese era como otra versión?
+Orador 1
+(13:05) Cuando ya está aprobado y finalizó el flujo, ahí es otra versión. (13:10) Pero cuando no fue aprobado regresa para edición.
+Orador 2
+(13:19) Los estados que actualmente existen para el documento que se crea son borrador, en revisión, en corrección, validado, en ejecución y finalizado. (13:31) ¿Sería mejor acortarle a 3 estados el borrador, revisión y aprobado? (13:38) No, solo 3 estados.
+(13:48) ¿Qué personas deben colocar la firma electrónica sobre el documento? (13:53) ¿Todas las partes que revisan?
+Orador 1
+(13:55) Todas las partes y todos los que elaboran. (14:00) ¿Quiénes firman? (14:01) Todos los que forman parte de esta matriz que está al final.
+(14:05) Si elaboró debe firmar, si revisa debe firmar y si aprobó debe firmar. (14:11) Hay casos excepcionales que le dan de decir quién les lo firmó.
+Orador 2
+(14:19) ¿Y para devolver un usuario si algo está mal ¿es obligatorio que haya una observación o se puede devolver sin observación?
+Orador 1
+(14:25) Es obligatorio. (14:29) ¿Cómo devuelvo algo?
+Orador 2
+(14:34) Al corregir un documento devuelto en el flujo que debería ocurrir, se debe volver a comenzar desde la primera etapa regresar únicamente a la etapa en que se lo devolvió o continuar desde otra etapa específica. (14:51) Actualmente, como dice aquí nuestra propuesta se crean en una nueva ronda de revisión. (14:57) Si es que nos devuelve, se devuelve desde la primera etapa es decir, desde el comienzo de la creación del documento.
+(15:06) Nosotros estábamos divididos en varias etapas para la elaboración del documento entonces, si se lo devuelve, comienza desde la etapa 1 o desde la etapa para la elaboración de las secciones del documento o en alguna etapa en específico.
+Orador 1
+(15:20) ¿Debe devolverse el documento con toda la información? (15:24) Y toda la información, me imagino que la etapa inicial es crear el documento, ¿no?
+Orador 2
+(15:29) Sí, seleccionar el tipo de documento.
+Orador 1
+(15:31) No, debe ser desde la segunda etapa donde ya creó el documento y llenó toda la información.
+Orador 2
+(15:35) Solo para corregir puntualmente lo que está mal. (15:47) Si fue devuelto por un motivo en una sección específica ¿el docente que lo creó puede aparte de corregir esa parte puntual alguna otra cosa del documento?
+Orador 1
+(15:59) También puede modificar, sí. (16:02) Es que a veces se pone el caso, yo revisé una cosa que estaba mal y la devolví, pero él se dio cuenta que algo estaba mal escrito también, corrí. (16:11) O sea, debe estar habilitado todo, pero resaltado dónde tiene que modificar.
+(16:15) Sí.
+Orador 2
+(16:16) Listo. (16:19) Bueno, la versión ya definimos que era el aprobarse y si se devuelve ya era otra versión completamente diferente. (16:26) Solo si está aprobado.
+(16:30) Si es que después de haberse enviado o aprobado un documento ¿se podría retirar el envío, revocar una aprobación o anular un documento ya aprobado?
+Orador 1
+(16:41) No, no se puede. (16:44) Si ya está aprobado ya no se puede hacer eso, así tiene que enviar nuevamente para modificar, para que actualice. (16:51) Esa es la versión 2.
+Orador 2
+(16:53) Entendido. (16:55) Bueno, todo se trabajaba en base a un semestre entonces el periodo no cambia.
+Orador 1
+(17:03) Por lo general la elaboración de estos documentos está en un plazo de 5 días. (17:07) Para que acabado ese tiempo ya toca bloquearlo y ahí sí le da nuestra orden de habilitarse y que le extienda más el tiempo.
+Orador 2
+(17:15) Claro. (17:16) Y si la actividad estaba realizada por tal fecha, por ejemplo una planificación se hacía de tal fecha a tal fecha ¿tenía hasta el último día, hasta las 11.59 para realizarla?
+Orador 1
+(17:27) Para subir las evidencias, sí. (17:31) Pero esa es la parte ya de ejecución de la planificación. (17:33) Sí.
+(17:40) Fuera bueno que existiera alguna notificación, algo indicando qué tiempo restante tiene para realizarse la actividad. (17:50) Ok.
+Orador 2
+(17:59) ¿Una actividad puede desarrollarse en un periodo que contenga feriados pero que no pueda comenzar ni terminar en un feriado?
+Orador 1
+(18:08) Sí. (18:09) Por ejemplo, tenemos aquí lo que es el 10 de octubre que es el feriado ¿Viernes es 10, no es cierto? (18:20) Digo el 9.
+(18:21) Tenemos que es feriado el 9. (18:22) Pero suponiendo que comienza la actividad el 5 y termine el 12, sí puede generarse. (18:29) Pero que se realice la actividad este día que es feriado no.
+(18:33) Ok.
+Orador 2
+(18:36) En cuanto termine el periodo académico si es que queda uno de los procesos abiertos, por ejemplo todavía está en la etapa de revisión o algo, ¿qué pasaría con eso? (18:46) No puede darse.
+Orador 1
+(18:47) Al final se debe elaborar un documento de realización de informe de las actividades que se ejecutaron. (18:57) Al inicio fue el informe de planificación, pero al finalizar el periodo académico debe realizarse el informe final de todas las actividades. (19:07) En pocas palabras, de todo lo que significó automáticamente ya tiene que generarse con todas las actividades que ya fueron realizadas en las tales fechas.
+Orador 2
+(19:16) Es el informe de finalización. (19:21) El informe de finalización. (19:29) ¿Se permiten prórrogas en cuanto a fechas de límites?
+(19:33) Por ejemplo, si es que alguien todavía no ha terminado su actividad, ¿se puede extender los plazos? (19:38) ¿O las fechas ya cierran?
+Orador 1
+(19:39) Las autoridades pueden extender el tiempo. (19:44) Podría ser que la persona que aprueba le puede extender más el tiempo. (19:50) Porque dependiendo del administrador va a estar complicado.
+(19:53) En este caso podría ser el que apruebe por el momento sería la última persona que extienda más el plazo. (20:02) ¿O si no el coordinador? (20:04) Voy a ir más por la parte del coordinador que habilita el tiempo.
+Orador 2
+(20:08) ¿Ese tiempo solo se habilita para una única persona o se aplica para todos?
+Orador 1
+(20:12) Individualmente. (20:13) Pero debe dar un tiempo máximo. (20:15) Vamos a suponer que el 9 de diciembre es el máximo que le puede extender.
+(20:22) Unos 3 días. (20:25) ¿Cuántas horas es el domingo? (20:26) 10 laborables.
+Orador 2
+(20:33) Para la firma electrónica. (20:37) ¿Cómo manejan aquí la firma electrónica? (20:39) ¿Tal vez tienen un archivo de esta firma como tal?
+(20:42) ¿O manejan algún sistema? (20:44) Porque hay sistemas en los que usted tiene que subir el PDF para poder firmar los documentos. (21:00) Me parece que toca subir el PDF para poder firmarlo.
+Orador 1
+(21:04) Aquí se pone la contraseña. (21:05) Aquí se pone el archivo. (21:08) Aquí se pone la clave.
+(21:15) Aquí es donde va la firma.
+Orador 2
+(21:24) Antes se había mencionado que se debía firmar en línea. (21:29) En este caso para aplicarle con el software que se está utilizando ¿Cómo lo podríamos hacer?
+Orador 1
+(21:41) En contexto de que la firma nunca sale de aquí. (21:44) Se crea el PDF de manera local. (21:48) Y en ese PDF se incrusta la firma.
+(21:52) Y dentro de esa tabla tenemos el campo donde es la firma. (21:57) Acomodaríamos ahí directamente la firma. (21:59) Lo que obtendríamos es el archivo tal cual.
+(22:03) Lo ocupamos para la firma y desaparece.
+Orador 2
+(22:08) ¿El ingeniero firma con un software?
+Orador 1
+(22:13) No es necesario utilizar ese software.
+Orador 2
+(22:16) ¿Tendríamos que ver algo para que puedan subir los ingenieros la firma electrónica? (22:21) Tienen un tipo de archivo que es para subir y poner.
+Orador 1
+(22:24) ¿Cuál es el archivo que se utiliza?
+Orador 2
+(22:29) Para no generar fricción. (22:32) Cuando es un entregable, arrastramos un archivo y le ponemos el archivo de su firma digital.
+Orador 1
+(22:42) ¿Qué extensa es la extensión P2?
+Orador 2
+(22:47) Estamos manejando con archivos P2. (22:50) Ahí sí se sube el archivo al sistema. (22:54) Con la extensión P2, sí.
+(23:00) La firma simplemente se mostraría en el documento como un QR. (23:04) No tiene que tener ninguna información extra como el nombre del docente.
+Orador 1
+(23:08) Cuando firmamos se ve esta manera.
+Orador 2
+(23:13) Solo aparece directamente en base al archivo que se sube.
+Orador 1
+(23:17) Aparece así cuando le firma. (23:24) Ahora sí. (23:25) El QR está equivalido a firmas.
+Orador 2
+(23:29) Solo la firma.
+Orador 1
+(23:34) Porque la tabla va a estar en la parte de acá. (23:36) ¿En caso de que sólo se muestre el código QR, no hay ningún problema? (23:43) ¿Sólo se muestra el código QR o también con el texto?
+(23:46) Con el texto necesitamos que aparezca.
+Orador 2
+(23:52) Ya nos dijo que todos se manejan a cuatro. (24:05) El administrador podría manejar todas las secciones de la estructura del documento. (24:23) Nos había mencionado que no todos los docentes pueden descargar este PDF.
+(24:29) Solo eran ciertos roles o cargos puntuales los que podían descargar el PDF.
+Orador 1
+(24:36) Una vez ya aprobado lo que es la planificación, sí pueden descargarse. (24:39) ¿Quién puede descargarse?
+Orador 2
+(24:47) ¿Y mientras no se apruebe? (24:50) Nadie puede descargarse.
+Orador 1
+(24:52) Una vez aprobado, sí. (24:54) Es como un proceso de emborrador. (24:59) Una vez aprobado, ya puede descargarse.
+(25:01) Una vez que esté aceptado.
+Orador 2
+(25:29) ¿Una actividad está completamente aprobada cuando el revisor final ya da el visto bueno?
+Orador 1
+(25:36) Una actividad o la planificación.
+Orador 2
+(25:38) Una actividad en este caso.
+Orador 1
+(25:40) La actividad de lo que es la planificación. (25:44) ¿Una actividad ya está finalizada cuándo? (25:46) Ya carga todas las evidencias de esa actividad.
+(25:49) Por ejemplo, la actividad decía evento de socialización, tal cosa. (25:53) Entonces debe cargar lo que eligieron ellos. (25:55) ¿Qué instrumentos van a utilizar?
+(25:57) Un informe, entonces debe cargar el informe. (26:00) En este caso ya se pasó el tiempo. (26:02) Ahí tiene que solicitar, en este caso el coordinador.
+(26:04) Vamos a poner que le habilite. (26:08) Pero máximo de tres días. (26:10) Nada más.
+Orador 2
+(26:14) ¿Un mismo PDF podría utilizarse como evidencia para varios medios de una misma actividad? (26:19) ¿O varias actividades?
+Orador 1
+(26:21) El problema depende de la actividad.
+Orador 2
+(26:24) Entonces lo dejamos abierto. (26:27) ¿Cómo se definiría eso?
+Orador 1
+(26:28) No va a haber... (26:30) Tienes una actividad que es socialización, tal cosa. (26:33) Y otra, capacitación.
+(26:34) Va a haber dos instrumentos diferentes. (26:36) Porque van a ser informes. (26:37) El uno de una capacitación y el otro de socialización.
+(26:40) Son cosas diferentes. (26:42) Nunca se va a repetir la misma actividad. (26:44) Pero un PDF sí puede ser utilizado como evidencia de otra comisión.
+(26:50) Eso sí podría ser. (26:51) Pero la misma comisión, no tanto.
+Orador 2
+(26:54) ¿Y esas evidencias también requieren validación o revisión? (26:58) ¿Las deben descartar?
+Orador 1
+(27:00) No tanto, ellos tienen que cargar.
+Orador 2
+(27:01) Ellos cargan lo que sea. (27:03) Si se hayan equivocado en una imagen o algo, ellos cargan.
+Orador 1
+(27:06) Ellos cargan. (27:07) ¿Quién verifica? (27:08) Ellos mismos.
+(27:09) Tiene que haber una previsión.
+Orador 2
+(27:26) ¿Sólo manejamos esos dos formatos que nos dio Ingeniero? (27:30) ¿Eso de la planificación y el informe?
+Orador 1
+(27:32) Sí, hay más formatos. (27:34) Hay planificación, informes, ejecución y el informe final. (27:39) La estructura es casi lo mismo.
+(27:42) Solo cambia ciertos campos. (27:46) Los informes finales van a ser con respecto a las planificaciones. (27:49) Un informe final no puedo generar si no tengo una planificación.
+(27:53) Cuando realizo un informe final, tiene que enlazarse con la planificación que puse.
+Orador 2
+(28:00) ¿Cada plan se podría enlazar a un solo informe o podría enlazarse a varios?
+Orador 1
+(28:06) Uno solo tiene que tener una planificación. (28:10) Y el informe final va a ser la ejecución de esa planificación. (28:13) No va a haber ejecuciones parciales de la planificación.
+(28:17) Si fuera la actividad, va a existir un informe para cada actividad.
+Orador 2
+(28:22) ¿Y la misma persona que crea el plan, crea el informe también? (28:26) ¿No se lo puede asignar a nadie más?
+Orador 1
+(28:28) Lo que haga él mismo. (28:29) Porque si asignamos a otra persona, se complica más. (28:33) Podría ser que dé el usuario la contraseña de otra persona para que cargue.
+(28:36) ¿Sí? (28:38) ¿Sí? (28:39) Y si él solito está friado, le toca hacer todo él.
+(28:43) Puede existir ese caso.
+Orador 2
+(28:48) ¿Las evidencias que se suben a los informes, se anexan con páginas seguidas? (28:56) ¿O como una lista de referencias?
+Orador 1
+(28:58) No, al final como páginas seguidas.
+Orador 2
+(29:00) Páginas seguidas.
+Orador 1
+(29:02) Por ejemplo, podría ser anexo, resolución, tal cosa. (29:06) Entonces tiene que mostrarse ahí en el PDF los anexos. (29:10) Y suponiendo el caso, también puede ser un...
+(29:13) No sé cómo evidencia un repositorio, pero cargar sin enlace. (29:20) Porque eso también puede ser una evidencia. (29:23) Un repositorio que tenga varios archivos, videos y demás cosas.
+Orador 2
+(29:27) Entendido, ingeniero. (29:29) Para la creación de los usuarios, cuando el admin crea los diferentes usuarios, ¿hay que hacer tal vez una validación extra? (29:35) ¿Tal vez como correo institucional o algo que deba validarse?
+Orador 1
+(29:40) ¿O solo crea las credenciales? (29:42) No, directo le crea las credenciales.
+Orador 3
+(29:44) Ok.
+Orador 1
+(29:48) ¿Quién va a crear eso? (29:49) Yo creo que debe ser también el coordinador. (29:51) Porque él va a crear el acuerdo según lo que son las comisiones que están formadas cada uno de ellos.
+(29:57) Ok, entiendo.
+Orador 2
+(0:00) Un repositorio que tenga varios archivos, videos y demás cosas.
+Orador 1
+(0:05) Entendido, ingeniero. (0:07) Para la creación de lo que es los usuarios, cuando el admin crea los diferentes usuarios, ¿hay que hacer tal vez una validación extra, tal vez como correo institucional o algo que deba validarse?
+Orador 2
+(0:18) No, directo le crean las credenciales. (0:26) ¿Quién va a crear eso? (0:28) Yo creo que debe ser también el coordinador, porque él va a crear los recuerdos según lo que son las comisiones que están formadas cada uno de ellos.
+Orador 1
+(0:45) Si un docente, una persona entra a un grupo, a una comisión, después de que ya existen documentos históricos, ¿esa persona nueva puede ver los documentos históricos?
+Orador 2
+(0:56) ¿Cómo, cómo?
+Orador 1
+(0:57) Digamos que a un docente le asignan el rol como revisor o como coordinador, ¿esa persona puede ver los planes pasados que ya se han realizado?
+Orador 2
+(1:07) No, sólo de ese periodo.
+Orador 1
+(1:08) ¿Sólo del periodo en el que se realizó? (1:10) Sí.
+Orador 2
+(1:11) ¿Quién puede revisar eso? (1:13) Sólo el tecano, el subtecano. (1:16) ¿El tecano y el subtecano?
+(1:18) Sí, ellos sí pueden ver todo eso, el historial de cómo fue. (1:21) En cambio, las otras personas no. (1:23) Porque, suponga el caso, si estaba en la comisión de titulación, después le pasan a otra comisión de vinculación, yo no voy a poder ver las entrevistas.
+Orador 1
+(1:32) De acuerdo. (1:35) Si por decir uno de los docentes se olvida la contraseña, porque el administrador crea las credenciales y cuando el docente inicia sesión le dice que cambie la contraseña.
+Orador 2
+(1:46) ¿Recuperar?
+Orador 1
+(1:47) Sí, sí, pero entonces sería con un servicio en base a recuperación por correo electrónico, ahí sí creo que para obtener esa sesión de pago.
+Orador 2
+(1:58) El punto también es que eso nos validaría también ahí al final un correo institucional o por el momento nosotros como un propio de Gmail le ponemos con una clave de acceso. (2:10) De aplicación. (2:10) Ajá.
+(2:11) Un correo cualquiera, claro. (2:13) Sí, porque es institucional normalmente. (2:15) Por el momento.
+Orador 1
+(2:16) Ok, entonces sí hay recuperación de acceso por contraseña. (2:24) ¿Qué datos personales se necesitaría para la creación de cada usuario? (2:29) ¿Sería nombre, correo, la carrera, teléfono celular tal vez y cédula?
+Orador 2
+(2:34) No, nada de eso.
+Orador 1
+(2:35) ¿Qué no?
+Orador 2
+(2:36) Que para acceder a lo que es el sistema debe ser con el correo institucional sin el arrobo.
+Orador 1
+(2:41) Ajá.
+Orador 2
+(2:42) La contraseña que se genere. (2:44) Lo que necesitamos es únicamente los datos del docente, nombres, apellidos y la carrera.
+Orador 1
+(2:48) Y el cargo, ¿no?
+Orador 2
+(2:50) Y el cargo también sí, el cargo.
+Orador 1
+(2:51) Claro. (2:52) Ya, entonces descartado teléfono, cédula. (2:56) Nada de eso.
+(2:57) Nada de eso. (2:58) Ok.
+Orador 2
+(3:02) Por lo general el ID debe ser el nombre del correo electrónico.
+Orador 1
+(3:07) Ok, el ID del correo electrónico. (3:10) ¿Los borradores de todos los documentos históricos que sean archivados deben tener un tiempo de expiración de conserva? (3:16) O sea, si pasan 60 días, ¿se eliminan?
+(3:19) ¿O siempre deben estar ahí permanentemente?
+Orador 2
+(3:22) Al finalizar el semestre. (3:23) Al finalizar el semestre. (3:24) Existe una opción que diga descargarse.
+(3:27) Descargar como historial.
+Orador 1
+(3:29) Pero al final del semestre ¿se pulgaría automáticamente todo? (3:33) Sí, se descarga. (3:34) Ah, y se descarga automáticamente.
+Orador 2
+(3:36) Se descarga y se elimina todo lo que está ahí.
+Orador 1
+(3:38) Se elimina todo y se descarga. (3:39) Ok, entendido. (3:40) Sí.
+(3:54) ¿Qué reportes harían falta para este sistema como tal que pueda obtener el docente o el revisador?
+Orador 2
+(4:01) ¿Durante el coordinador o tecano? (4:04) A ver, los reportes que sería es el número de planificaciones ejecutadas. (4:09) O sea, de todas las planificaciones.
+(4:11) Porque va a ser un reporte que puede hacer en cualquier momento. (4:15) Sí. (4:16) Suponiendo el caso.
+(4:17) Si yo cojo una comisión, vamos a poner la comisión de vinculación. (4:21) Quiero saber el porcentaje de ejecución de la planificación. (4:26) Para saber cuántas actividades ya es.
+(4:29) Ya eso es uno. (4:30) Porcentaje de ejecución de la planificación. (4:32) Ya.
+(4:33) El otro reporte también sería de todas las comisiones. (4:39) Un reporte del número de actividades que van a ejecutar. (4:42) Para saber cuál tiene el mayor porcentaje, mayor número de actividades que van a realizar.
+Orador 1
+(4:48) Entendido. (4:50) Es un cuento de reportería. (4:55) ¿Para las interfaces adaptamos sólo lo que es para escritorio?
+(4:58) ¿O tal vez sería bueno también para móviles?
+Orador 2
+(5:01) Sería bueno, pero medio complicado. (5:06) Imposible. (5:07) Casi demanda, digamos, de que alguien esté...
+(5:09) Haciéndome celular. (5:11) No, es que es difícil, imagínate. (5:14) Es algo que es una planificación.
+Orador 1
+(5:15) Es celular. (5:16) Porque va a estar bastante limitada. (5:19) Entonces está destinado netamente para PC.
+Orador 2
+(5:22) Si fuera bueno, una tablet.
+Orador 1
+(5:23) O limitada para tablet.
+Orador 2
+(5:25) Un celular, nada que ver.
+Orador 1
+(5:45) Bueno, en cuanto a lo que era la implementación con IA Ingeniero. (5:49) Nosotros vamos a utilizar lo que es un proveedor gratuito. (5:52) Pero al momento de entregar el sistema como tal.
+(5:55) La persona que va a estar a cargo de este sistema. (5:57) Tendría que conectar su API para el sistema. (6:01) O sus credenciales, loguearse en ese...
+(6:03) ¿Cómo se dice? (6:04) Grok. (6:04) Entonces tenemos que...
+Orador 2
+(6:07) ¿Generan un Grok así en forma genérica? (6:09) Para que esté implementado aquí mismo.
+Orador 1
+(6:11) Es que él necesita generar una API en base a credenciales. (6:15) O sea, tiene que loguearse una persona, todo eso.
+Orador 2
+(6:17) Por eso creé un correo electrónico así de forma genérica. (6:20) Con toda esa información. (6:22) Y sacamos la API de ese correo.
+Orador 1
+(6:25) ¿Se puede?
+Orador 2
+(6:27) Pero el chiste es que eventualmente se necesitaría uno... (6:30) De que haya ustedes. (6:33) Porque eventualmente...
+Orador 1
+(6:33) No, pues si ya se crea uno destinado para esto. (6:36) Usamos esa credencial y ya queda ahí permanente. (6:39) Porque ya queda creada para esa cosa.
+Orador 2
+(6:42) Ese correo puede utilizar también para la parte de administración.
+Orador 1
+(6:45) Sí, está bien. (6:46) Sí, sí. (6:47) Ya.
+(6:48) En cuanto a ella, tal vez se necesitaría que conserve... (6:56) Registros de qué texto se cambió. (6:59) O sea, qué cambios se hizo en algún texto.
+(7:01) Si es que...
+Orador 2
+(7:02) No, no. (7:03) Solo corrige y se acaba. (7:05) No se elimina también el historial.
+Orador 1
+(7:09) Entendido.
+Orador 2
+(7:11) ¿Qué puertos vamos a utilizar? (7:13) ¿Eh? (7:13) ¿Qué puertos vamos a utilizar?
+(7:15) ¿O qué puertos necesiten?
+Orador 1
+(7:16) Ahorita estamos alojándonos en el puerto 3000, Ingeniero. (7:19) Pero si tal vez...
+Orador 2
+(7:20) ¿Por qué hay un solo puerto nada más que teníamos?
+Orador 1
+(7:22) Eso sí. (7:23) Tiene el puerto que mencionó, Ingeniero. (7:25) Aquí ya le adaptamos ese puerto, Ingeniero.
+Orador 2
+(7:27) A ver, a ver. (7:30) Acá está. (7:31) El puerto que pueden utilizar es el 64430.
+Orador 1
+(7:37) 64430.
+Orador 2
+(7:38) Ok. (7:39) Y solo ese puerto vale.
+Orador 1
+(7:40) Listo, ya lo adaptamos para ese puerto. (7:42) Aunque en el servicio para correos... (7:44) Creo que está limitado solo para un puerto.
+(7:46) El 5437, me parece. (7:49) No sé si hay planes con eso. (7:51) ¿Te acuerdas que lo que es recuperación con contraseña en base a correos...
+(7:54) Gmail lo limita a un puerto en específico. (7:58) Y si se quiere utilizar otro servicio... (8:02) Al menos no conozco otros servicios gratuitos.
+(8:04) Tenemos que investigar esa parte. (8:06) Para la recuperación con correos. (8:08) No sé si tal vez, Ingeniero, usted haya escuchado de alguna versión gratuita...
+(8:14) Que puede usarse para lo que son envíos de correos. (8:16) Como por ejemplo la recuperación de contraseña. (8:18) Nosotros lo que solíamos usar era el de propio Google.
+(8:21) La SMTP me parece que se llamó. (8:23) Sí, SMTP. (8:24) Y ese limita un puerto exacto.
+(8:27) Al menos en la versión que nos dan. (8:29) Si no me recuerdo era el 5473. (8:32) Entonces no sé si le causó algún problema en base a los puertos.
+(8:34) El puerto que nos puede mencionar.
+Orador 2
+(8:35) Tengo que ver para ver si está ese puerto. (8:38) Porque sobre ese puerto me dejaron libre. (8:40) Pero es que...
+(8:42) Yo tengo que ver, ¿verdad? (8:43) Esta semana tengo que ver ya en mi servidor. (8:45) A ver si es que pueden habilitar.
+(8:47) Pero ¿qué puerto es el que necesita?
+Orador 1
+(8:50) El 5437. (8:51) Verifica por ahí. (8:52) Sí, ahorita le verifico si tengo guardado aquí.
+(8:58) SMTP. (8:59) Ahí está. (9:03) Es...
+(9:03) Ah, perdón, aquí está. (9:04) SMTP por 587.
+Orador 2
+(9:07) Sí, 587.
+Orador 1
+(9:08) Sí, ese. (9:10) Ese es el que nos limita Google.
+Orador 2
+(9:14) Basta de direccionar ese puerto.
+Orador 1
+(9:16) Sí lo he intentado, no. (9:17) Ese es uno estricto que tiene para ser una versión gratuita. (10:03) Es aquí, ¿verdad?
+Orador 3
+(10:04) Ajá. (10:06) Sí, está. (10:07) Esa.
+Orador 2
+(10:13) ¿No intentaron de repente eso?
+Orador 1
+(10:16) O sea, redireccionar. (10:17) Sí, sí lo había intentado en otro proyecto diferente. (10:20) Pero es...
+(10:21) O sea, está restringido ese puerto por temas de que son... (10:24) Por temas justamente de que es gratuito. (10:27) Entonces ese era el problema, ingeniero.
+(10:29) No le podíamos mover de puerto. (10:33) Otros servicios ya son de costo. (10:38) Entonces...
+(10:38) ¿Para que el administrador pueda asignar otra contraseña?
+Orador 2
+(10:43) Por el momento intentemos con ese puerto y que también el administrador pueda cambiar.
+Orador 1
+(10:47) ¿Ok?
+Orador 2
+(10:48) Sí, porque si no está grabado. (10:49) Sí, está grabado para servicios gratuitos. (10:51) Dijeron que está bloqueado todo y si cambian algo toca cambiar a todito.
+(10:56) Sí. (10:57) Esa opción. (10:58) O sea, mantienen esas opciones.
+(11:00) Que sea por correo electrónico, pero si el puerto no se puede hacer eso, ahora es el administrador que resetea. (11:06) Entendido. (11:06) Por administrador preferible.
+(11:09) Esperemos las dos opciones.
+Orador 1
+(11:12) Y por último, como esto dijo que iba a ser un aplicativo local, ¿en qué servidor o en qué infraestructura se va a alojar para ver si le adaptamos las tecnologías? (11:22) ¿Qué sistema operativo? (11:23) También, ¿qué sistema operativo y qué servidor como tal se va a alojar?
+(11:27) Porque usted dijo que iba a alojarse en un servidor de alquiler. (11:29) Sí.
+Orador 2
+(11:30) Y ya le voy a preguntar las características. (11:32) ¿Qué características necesitas del servidor? (11:36) Envíese un mensaje para preguntarle todo lo que necesite.
+Orador 1
+(11:39) Con eso adaptar las tecnologías de que no haya problemas al momento de...
+Orador 2
+(11:42) Sí, colóqueme todos los requerimientos. (11:44) O sea, lo que necesites es averiguar.
+Orador 1
+(11:47) Sí. (11:47) Genial. (11:47) Eso nomás sería todo.
+(11:49) Muchísimas gracias.
+Orador 2
+(11:50) Con respecto a las interfaces, intenta ser un poquito más actual. (11:53) O sea, de lo que tú me presentaste, más moderno. (11:56) Ah, sí.
+(11:57) Les dejo a criterio de ustedes.
+Orador 1
+(11:58) Entendido. (11:58) O sea, al principio estábamos intentando... (12:03) O sea, creando las interfaces en base a lo que es diseños profesionales, simples como tal.
+(12:10) Pero si se puede hacerlo más moderno, más llamativo en este caso... (12:14) Más moderno. (12:15) No hay problema.
+(12:16) Porque era más o menos un estilo clásico. (12:18) Sí, algo estándar. (12:20) Sí, algo más moderno.

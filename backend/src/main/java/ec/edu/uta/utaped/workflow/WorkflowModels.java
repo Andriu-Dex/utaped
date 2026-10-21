@@ -13,7 +13,9 @@ public final class WorkflowModels {
         @NotBlank @Pattern(regexp="PERSON|GROUP_ROLE|COLLEGIATE") String recipientKind,
         @NotNull @Size(max=50) List<@NotNull UUID> assigneeIds,
         @Pattern(regexp="MEMBER|COORDINATOR") String groupRole,
-        @NotNull @Size(max=160) String recipientLabel,boolean requiresSignature) {}
+        @NotNull @Size(max=160) String recipientLabel,boolean requiresSignature,@Size(max=160) String positionLabel) {
+        public Stage(UUID id,String label,String action,String kind,List<UUID> people,String role,String recipient,boolean signature) { this(id,label,action,kind,people,role,recipient,signature,null); }
+    }
     public record Definition(@NotBlank @Size(max=160) String name,@NotNull @Size(max=20) List<@NotNull @Valid Stage> stages) {}
     public record Save(@NotNull @PositiveOrZero Long rowVersion,@NotNull @Valid Definition definition) {}
     public record Version(@NotNull @PositiveOrZero Long rowVersion) {}

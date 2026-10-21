@@ -74,6 +74,23 @@ class DocumentIntegrationTests {
             new ArtifactModels.DraftPreview(version(),"","",0,"JUSTIFICATION"))).getStatusCode().value());
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact",Integer.class));
     }
+    @Test void previewHeaderKeepsAllHorizontalCellBordersVisible() throws Exception {
+        var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"Justificación de prueba.","Objetivo de prueba.",-1,"JUSTIFICATION"));
+        byte[] bytes=Base64.getDecoder().decode(preview.image());
+        var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(bytes));
+        int lines=0;boolean previous=false;
+        for(int y=0;y<image.getHeight()/5;y++) {
+            int dark=0;
+            for(int x=0;x<image.getWidth();x++) {
+                int color=image.getRGB(x,y);
+                if(((color>>16)&255)<190 && ((color>>8)&255)<190 && (color&255)<190) dark++;
+            }
+            boolean line=dark>image.getWidth()/2;
+            if(line&&!previous) lines++;previous=line;
+        }
+        assertTrue(lines>=5,"El encabezado debe conservar borde superior, divisiones de filas y borde inferior: "+lines);
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/header-borders-preview.png"),bytes);
+    }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
         plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
@@ -259,8 +276,8 @@ class DocumentIntegrationTests {
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
         UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
-        plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"));
-        assertArrayEquals(bytes,signatures.content(id,signed.id(),email));assertFalse(artifacts.list(id,email).getFirst().current());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
+        assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(id,signed.id(),email)).getStatusCode().value());

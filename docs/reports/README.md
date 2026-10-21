@@ -1,5 +1,17 @@
 # Reportes
 
+- [2026-10-20 — Revisión del staged y preparación del PR](2026-10-20-02-staged-review-and-develop-pr.md).
+
+- [2026-10-20 — Matriz, catálogos y responsables colectivos](2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).
+
+- [2026-10-18 — Bordes completos del encabezado T1/T2](2026-10-18-02-institutional-header-borders.md).
+
+- [2026-10-18 — Elaboradores, revisión y encabezados T1/T2](2026-10-18-01-document-authorship-review-and-headers.md).
+
+- [2026-10-17 — Auditoría de reuniones y brechas funcionales](2026-10-17-06-meeting-transcripts-gap-audit.md).
+
+- [2026-10-17 — Personas ficticias realistas](2026-10-17-05-realistic-development-identities.md).
+
 - [2026-10-17 — Revisión del staged: plantillas e interfaz](2026-10-17-04-staged-templates-and-ui-review.md).
 
 - [2026-10-17 — Previsualización simultánea T1](2026-10-17-03-simultaneous-t1-preview.md).

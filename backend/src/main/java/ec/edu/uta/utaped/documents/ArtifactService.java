@@ -28,6 +28,7 @@ public class ArtifactService {
     private final T1PdfEngine engine;private final AuditService audit;private final Accounts accounts;
     private final DocumentWorkflowSnapshot workflows;
     private final ec.edu.uta.utaped.planning.ReportService reports;
+    private final ec.edu.uta.utaped.planning.DocumentAuthors authors;
     private final ec.edu.uta.utaped.planning.EvidenceService evidence;
     private final JsonMapper json=JsonMapper.builder().build();
     private final Semaphore generation=new Semaphore(1),rendering=new Semaphore(2);
@@ -40,7 +41,7 @@ public class ArtifactService {
         if(!plan.editable() || !plan.documentState().equals("DRAFT") || !plan.documentType().equals("T1"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
         if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
-        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences());
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors());
         String key=email+":"+id+":"+hash(draft);PreviewCache cached;
         synchronized(draftPreviews) {
             draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
@@ -66,11 +67,11 @@ public class ArtifactService {
         return new DraftView(plan.rowVersion(),cached.document().pages(),cached.sections(),page,Base64.getEncoder().encodeToString(renderPage(cached.document().pdf(),page)));
     }
     public ArtifactService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
-        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence) {
+        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence,ec.edu.uta.utaped.planning.DocumentAuthors authors) {
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.files=files;
         this.template=template;this.engine=engine;this.audit=audit;this.accounts=accounts;
         this.workflows=workflows;
-        this.reports=reports;this.evidence=evidence;
+        this.reports=reports;this.authors=authors;this.evidence=evidence;
     }
     public Readiness readiness(UUID id,String email) {
         var plan=plans.get(id,email);var matrix=activities.get(id,email);var annexes=attachments.get(id,email);
@@ -133,7 +134,7 @@ public class ArtifactService {
         // Labels are derived once for the complete sequence, including evidence PDFs.
         var labelled=new ArrayList<AttachmentModels.Attachment>();
         for(var a:annexList) labelled.add(new AttachmentModels.Attachment(a.id(),a.fileId(),AttachmentService.label(labelled.size()),a.title(),a.description(),a.originalName(),a.sizeBytes(),a.pageCount(),a.sha256()));
-        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references));
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email));
     }
     private String hash(Snapshot snapshot) {
         // Permissions belong to the requesting account, not to the document content.

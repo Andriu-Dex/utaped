@@ -9,7 +9,9 @@ import tools.jackson.databind.json.JsonMapper;
 /** Captures configuration, not execution assignments or institutional approval. */
 @Component
 public class DocumentWorkflowSnapshot {
-    public record Participant(UUID id,String name,boolean active) {}
+    public record Participant(UUID id,String name,boolean active,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) String position) {
+        public Participant(UUID id,String name,boolean active) { this(id,name,active,null); }
+    }
     public record Stage(UUID id,String label,String action,String recipientKind,String recipientLabel,
         String groupRole,boolean requiresSignature,List<Participant> participants) {}
     public record Workflow(UUID revisionId,int revisionNumber,String name,List<Stage> stages) {}
@@ -50,6 +52,7 @@ public class DocumentWorkflowSnapshot {
                     (rs,n)->new Participant(rs.getObject(1,UUID.class),rs.getString(2),rs.getBoolean(3)),id).stream().findFirst()
                     .orElse(new Participant(id,"Participante no disponible",false))).toList();
             }
+            people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),stage.positionLabel())).toList();
             return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),stage.requiresSignature(),people);
         }).toList();
         return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages);
