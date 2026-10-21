@@ -57,7 +57,7 @@ public class DevelopmentSeed implements ApplicationRunner {
         // Example positions until the official table of reviewers/approvers per commission is delivered.
         for(var position:List.of(List.of("UPE_RESPONSIBLE","Responsable de la Unidad de Planificación (UPE)","true"),List.of("CAREER_COORDINATOR","Coordinador/a de carrera","true"),
                 List.of("SUBDEAN","Subdecano/a","false"),List.of("DEAN","Decano/a","false")))
-            jdbc.update("INSERT INTO institutional_position(id,code,name,career_specific) VALUES (?,?,?,?) ON CONFLICT DO NOTHING",id("position-"+position.get(0)),position.get(0),position.get(1),Boolean.parseBoolean(position.get(2)));
+            jdbc.update("INSERT INTO institutional_position(id,code,name,career_specific,can_view_history) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",id("position-"+position.get(0)),position.get(0),position.get(1),Boolean.parseBoolean(position.get(2)),Set.of("DEAN","SUBDEAN").contains(position.get(0)));
         for(var career:reference.careers())
             jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING",id("assignment-UPE-"+career.code()),period,id("position-UPE_RESPONSIBLE"),id(career.key()),id("reviewer"),id("admin"));
         jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,NULL,?,?) ON CONFLICT DO NOTHING",id("assignment-SUBDEAN"),period,id("position-SUBDEAN"),id("approver"),id("admin"));
@@ -114,7 +114,7 @@ public class DevelopmentSeed implements ApplicationRunner {
             jdbc.update("UPDATE scope_member SET position_label=?,row_version=row_version+1 WHERE scope_id=? AND user_id=? AND position_label=?",position(role),scope,id(role),"Función de ejemplo: "+role);
         }
         var json=JsonMapper.builder().build();
-        for(String type:List.of("T1","T2")) {
+        for(String type:List.of("T1","T2","T3")) {
             String suffix=group.equals(id("group")) ? type : group+"-"+type;
             UUID configuration=id("configuration-"+suffix),revision=id("revision-"+suffix);
             var definition=new Definition("Revisión y aprobación documental — "+type,List.of(

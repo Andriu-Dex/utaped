@@ -28,6 +28,8 @@ public class PositionService {
         if(!actor.systemRole().equals("ADMIN")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Acceso administrativo requerido.");
         return actor.id();
     }
+    public record HistoryPermission(@NotNull Boolean enabled,@NotNull @PositiveOrZero Long rowVersion) {}
+    @Transactional public void historyPermission(UUID id,String email,HistoryPermission input) { var actor=admin(email);if(jdbc.update("UPDATE institutional_position SET can_view_history=?,row_version=row_version+1 WHERE id=? AND row_version=?",input.enabled(),id,input.rowVersion())!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"El cargo cambió. Recargue antes de guardar.");audit.record(actor,"POSITION_HISTORY_PERMISSION_CHANGED",id); }
     public List<Map<String,Object>> positions(String email) {
         admin(email);
         return jdbc.queryForList("SELECT * FROM institutional_position ORDER BY active DESC,name,id");

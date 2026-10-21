@@ -14,7 +14,7 @@ public class DocumentWorkflowSnapshot {
     }
     public record Stage(UUID id,String label,String action,String recipientKind,String recipientLabel,
         String groupRole,boolean requiresSignature,List<Participant> participants) {}
-    public record Workflow(UUID revisionId,int revisionNumber,String name,List<Stage> stages) {}
+    public record Workflow(UUID revisionId,int revisionNumber,String name,List<Stage> stages,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT) Boolean requiresQuipux) { public Workflow { requiresQuipux=Boolean.TRUE.equals(requiresQuipux); } public Workflow(UUID id,int number,String name,List<Stage> stages) { this(id,number,name,stages,false); } }
     private final JdbcTemplate jdbc;
     private final JsonMapper json=JsonMapper.builder().build();
     public DocumentWorkflowSnapshot(JdbcTemplate jdbc) { this.jdbc=jdbc; }
@@ -29,13 +29,15 @@ public class DocumentWorkflowSnapshot {
     public Workflow capture(UUID groupId,UUID scopeId) {
         return capture(groupId,scopeId,"T1");
     }
-    public Workflow capture(UUID groupId,UUID scopeId,String type) {
+    public Workflow capture(UUID groupId,UUID scopeId,String type) { return capture(groupId,scopeId,type,false); }
+    public Workflow captureNewType(UUID groupId,UUID scopeId,String type) { return capture(groupId,scopeId,type,true); }
+    private Workflow capture(UUID groupId,UUID scopeId,String type,boolean publication) {
         List<Map<String,Object>> revisions;
         if(scopeId==null) revisions=jdbc.queryForList("SELECT r.id,r.revision_number,r.definition::text FROM workflow_configuration c JOIN workflow_revision r ON r.id=c.current_revision_id AND r.configuration_id=c.id WHERE c.group_id=? AND c.document_type=?",groupId,type);
         else {
             var assigned=jdbc.queryForList("SELECT r.id,r.revision_number,r.definition::text,a.frozen_workflow::text,p.workflow_locked_at FROM period_workflow_assignment a JOIN workflow_revision r ON r.id=a.revision_id JOIN organizational_scope s ON s.id=a.scope_id JOIN academic_period p ON p.id=s.period_id WHERE a.scope_id=? AND a.document_type=?",scopeId,type);
             if(!assigned.isEmpty()&&assigned.getFirst().get("frozen_workflow")!=null) return json.readValue((String)assigned.getFirst().get("frozen_workflow"),Workflow.class);
-            if(!assigned.isEmpty()&&assigned.getFirst().get("workflow_locked_at")!=null) return null;
+            if(!publication&&!assigned.isEmpty()&&assigned.getFirst().get("workflow_locked_at")!=null) return null;
             revisions=assigned;
         }
         if(revisions.isEmpty()) return null;
@@ -62,6 +64,6 @@ public class DocumentWorkflowSnapshot {
             String label=position;people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),label)).toList();
             return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),stage.requiresSignature(),people);
         }).toList();
-        return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages);
+        return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages,definition.requiresQuipux());
     }
 }

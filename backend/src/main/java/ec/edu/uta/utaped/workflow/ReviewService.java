@@ -83,7 +83,7 @@ public class ReviewService {
     @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) {
         if(query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
-            || !Set.of("","T1","T2").contains(documentType) || page<0 || page>1000000 || size<1 || size>100)
+            || !Set.of("","T1","T2","T3").contains(documentType) || page<0 || page>1000000 || size<1 || size>100)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revise los filtros de la bandeja.");
         UUID actor=accounts.current(email).id();
         String from=" FROM review_task t JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id "

@@ -25,16 +25,17 @@ public class DocumentLifecycleService {
     @Transactional public WorkPlanModels.Plan archive(UUID doc,String email,Change data) {
         var plan=plans.lock(doc,email);check(plan,data);
         if(plan.documentType().equals("T1")&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE base_plan_id=? AND archived_at IS NULL",Integer.class,doc)>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Archive primero el Informe asociado para conservar el circuito como historial.");
-        archiveRow(doc,email,data.reason());return plans.get(doc,email);
+        archiveRow(doc,email,data.reason());if(plan.documentState().equals("DRAFT")&&!accounts.current(email).systemRole().equals("ADMIN"))return plan.discarded();return plans.get(doc,email);
     }
     private void archiveRow(UUID doc,String email,String reason) {
-        UUID actor=accounts.current(email).id();jdbc.update("UPDATE work_plan SET archived_at=now(),archived_by=?,archive_reason=?,row_version=row_version+1,updated_at=now() WHERE id=?",actor,reason.trim(),doc);audit.record(actor,"DOCUMENT_ARCHIVED",doc,actor);
+        UUID actor=accounts.current(email).id();jdbc.update("UPDATE work_plan SET discarded=(document_state='DRAFT'),archived_at=now(),archived_by=?,archive_reason=?,row_version=row_version+1,updated_at=now() WHERE id=?",actor,reason.trim(),doc);audit.record(actor,"DOCUMENT_ARCHIVED",doc,actor);
     }
     @Transactional public WorkPlanModels.Plan nextVersion(UUID doc,String email,Change data) {
         var plan=plans.lock(doc,email);check(plan,data);
         if(plan.scopeId()==null||!plan.documentState().equals("APPROVED")) throw new ResponseStatusException(HttpStatus.CONFLICT,"Una nueva versión formal requiere un documento aprobado con ámbito institucional.");
+        if(plan.documentType().equals("T3")) throw new ResponseStatusException(HttpStatus.CONFLICT,"Un Informe de ejecución aprobado no se versiona: elabore el siguiente Informe de ejecución del Plan.");
         var dates=jdbc.queryForMap("SELECT p.starts_on,p.ends_on,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on FROM academic_period p LEFT JOIN organizational_scope s ON s.id=? WHERE p.id=?",plan.scopeId(),plan.periodId());
-        var start=((java.sql.Date)dates.get(plan.documentType().equals("T2")?"starts_on":"preparation_starts_on")).toLocalDate();var end=((java.sql.Date)dates.get(plan.documentType().equals("T2")?"ends_on":"preparation_ends_on")).toLocalDate();var today=LocalDate.now(zone);
+        var start=((java.sql.Date)dates.get(plan.documentType().equals("T1")?"preparation_starts_on":"starts_on")).toLocalDate();var end=((java.sql.Date)dates.get(plan.documentType().equals("T1")?"preparation_ends_on":"ends_on")).toLocalDate();var today=LocalDate.now(zone);
         if(enforce&&(today.isBefore(start)||today.isAfter(end))) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La ventana de elaboración está cerrada; una reapertura requiere autorización institucional.");
         if(plan.documentType().equals("T1")&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE base_plan_id=? AND document_state<>'APPROVED' AND archived_at IS NULL",Integer.class,doc)>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Finalice o archive el Informe en elaboración antes de actualizar su Plan fuente.");
         UUID actor=accounts.current(email).id(),id=UUID.randomUUID();int number=Integer.parseInt(plan.formalVersion().split("\\.")[0])+1;
@@ -43,6 +44,7 @@ public class DocumentLifecycleService {
             INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,document_type,base_plan_id,justification,objective,formal_version,previous_version_id,version_reason,attachments_enabled,privacy_notice_enabled)
             SELECT ?,?,?,scope_id,group_id,period_id,?,title,title,?,institutional_unit,career,document_type,base_plan_id,justification,objective,?,?,?,attachments_enabled,privacy_notice_enabled FROM work_plan WHERE id=?
             """,id,actor,actor,UUID.randomUUID(),today,number+".0",doc,data.reason().trim(),doc);
+        jdbc.update("INSERT INTO document_structure(work_plan_id,revision,sections,contents) SELECT ?,revision,sections,contents FROM document_structure WHERE work_plan_id=?",id,doc);
         jdbc.update("INSERT INTO document_author(work_plan_id,user_id,sort_order) SELECT ?,user_id,sort_order FROM document_author WHERE work_plan_id=?",id,doc);
         jdbc.update("INSERT INTO work_plan_matrix(work_plan_id,source,activities) SELECT ?,source,activities FROM work_plan_matrix WHERE work_plan_id=?",id,doc);
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM document_access WHERE work_plan_id=?",id,actor,doc);

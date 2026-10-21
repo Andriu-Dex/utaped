@@ -21,6 +21,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
     @Autowired PeriodWorkflowService assignments;
     @Autowired PeriodArchiveService archives;
     @Autowired PositionService positions;
+    @Autowired ec.edu.uta.utaped.identity.PasswordService passwords;
     @Autowired ec.edu.uta.utaped.documents.DocumentWorkflowSnapshot snapshots;
     UUID scope,reviewer;
     void configuredScope() {
@@ -67,13 +68,18 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         assertNull(jdbc.queryForObject("SELECT workflow_locked_at FROM academic_period WHERE id=?",Object.class,period));
         assertNull(snapshots.capture(group,scope,"T2"));
     }
+    void grantCurrentHistory() {
+        UUID current=UUID.randomUUID();jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) SELECT ?,'Período de autoridad vigente',starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on FROM academic_period WHERE id=?",current,period);
+        UUID position=positions.create(email,new PositionService.PositionInput("HISTORY_"+UUID.randomUUID().toString().substring(0,8).toUpperCase(),"Autoridad con historial",false));
+        positions.historyPermission(position,email,new PositionService.HistoryPermission(true,0L));positions.assign(current,email,new PositionService.AssignmentInput(position,null,user));
+    }
     @Test void closurePreservesBytesStatesAndHistoryAndBlocksEveryDocumentWrite() throws Exception {
         complete("Archivo histórico",1);signingAdmin();attachments.settings(id,email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(version(),true,false));var upload=upload("Anexo conservado",UUID.randomUUID(),pdf(1,false,false),version());
         var original=attachments.content(id,upload.items().getFirst().id(),email);
         assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.close(period,email,new PeriodArchiveService.Close(1L,"Cierre solicitado"))).getStatusCode().value());
         archives.close(period,email,new PeriodArchiveService.Close(0L,"Cierre solicitado"));
-        var plan=plans.get(id,email);assertEquals("DRAFT",plan.documentState());assertFalse(plan.editable());assertFalse(plan.canManage());assertNotNull(plan.archivedAt());
-        assertFalse(plans.options(email).periods().getFirst().editable());
+        grantCurrentHistory();var plan=plans.get(id,email);assertEquals("DRAFT",plan.documentState());assertFalse(plan.editable());assertFalse(plan.canManage());assertNotNull(plan.archivedAt());
+        assertFalse(plans.options(email).periods().stream().filter(p->p.id().equals(period)).findFirst().orElseThrow().editable());
         assertArrayEquals(original,attachments.content(id,upload.items().getFirst().id(),email));
         assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan bloqueado"))).getStatusCode().value());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(plan.rowVersion(),plan.title(),plan.institutionalUnit(),plan.career(),"Cambio","Cambio"))).getStatusCode().value());
@@ -101,6 +107,9 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         assertTrue(entries(custody).containsKey("documents/"+id+"/files/"+file+".pdf"));
         assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
         jdbc.update("UPDATE academic_period SET closed_at=now()-interval '31 days' WHERE id=?",period);
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.verifyCustody(period,email,new java.io.ByteArrayInputStream(new byte[]{1,2,3}))).getStatusCode().value());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+        archives.verifyCustody(period,email,new java.io.ByteArrayInputStream(custody));
         archives.purge(period,email,purge);
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE period_id=?",Integer.class,period));
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM stored_file",Integer.class));
@@ -110,6 +119,22 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='PERIOD_DOCUMENTS_PURGED' AND target_id=?",Integer.class,period));
         assertEquals(410,assertThrows(ResponseStatusException.class,()->archives.download(period,email)).getStatusCode().value());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+    }
+    @Autowired InstitutionController institution;
+    @Test void defaultPreparationWindowCountsFiveBusinessDaysAndKeepsExplicitDates() {
+        var friday=java.time.LocalDate.of(2026,10,23);jdbc.update("INSERT INTO planning_holiday(holiday_date,label) VALUES (?,'Feriado de prueba')",friday.plusDays(3));
+        var created=institution.createPeriod(new InstitutionController.PeriodInput("Ventana hábil",friday,friday.plusMonths(1),friday,null,friday,friday.plusMonths(1)),()->email);
+        assertEquals(friday.plusDays(7),jdbc.queryForObject("SELECT preparation_ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,created.get("id")));
+        var explicit=institution.createPeriod(new InstitutionController.PeriodInput("Ventana explícita",friday,friday.plusMonths(1),friday,friday.plusDays(1),friday,friday.plusMonths(1)),()->email);
+        assertEquals(friday.plusDays(1),jdbc.queryForObject("SELECT preparation_ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,explicit.get("id")));
+    }
+    @Test void lateExecutionFlowIsExplicitOneTimeAndDoesNotChangeFrozenPlanWorkflow() {
+        configuredScope();assignments.activate(period,email,new PeriodWorkflowService.Version(0L));var before=snapshots.capture(group,scope,"T1");
+        var definition=new Definition("Ejecución del período",List.of(new Stage(UUID.randomUUID(),"Validación","APPROVE","PERSON",List.of(reviewer),null,"",false)));
+        workflows.save(group,"T3",email,new Save(0L,definition));workflows.configure(group,"T3",email,new Version(1L));
+        var revision=workflows.get(group,"T3",email).current();assignments.assign(scope,"T3",email,new PeriodWorkflowService.Assign(revision.id(),0L));
+        assertNotNull(snapshots.capture(group,scope,"T3"));assertEquals(before,snapshots.capture(group,scope,"T1"));
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->assignments.assign(scope,"T3",email,new PeriodWorkflowService.Assign(revision.id(),1L))).getStatusCode().value());
     }
     @Test void positionStagesResolvePerCareerAndBlockActivationWithoutHolder() {
         signingAdmin();jdbc.execute("TRUNCATE institutional_position CASCADE");String code="P"+UUID.randomUUID().toString().substring(0,8).toUpperCase();
@@ -142,22 +167,26 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Coordinación','unused','USER',false)",coordinator,coordinatorEmail);
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'candidate@example.invalid','Docente nuevo','unused','USER',false)",candidate);
         assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L))).getStatusCode().value());
-        organization.member(scope,email,new OrganizationService.MemberInput(coordinator,"COORDINATOR","Coordinación",true,0L));
-        assertTrue(organization.candidates(scope,coordinatorEmail).stream().anyMatch(c->candidate.equals(c.get("id"))));
+        organization.member(scope,email,new OrganizationService.MemberInput(coordinator,"COORDINATOR","Coordinación",true,0L,true));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->organization.candidates(scope,coordinatorEmail,"D")).getStatusCode().value());
+        var found=organization.candidates(scope,coordinatorEmail,"docente nuevo");assertTrue(found.stream().anyMatch(c->candidate.equals(c.get("id"))));assertFalse(found.getFirst().containsKey("username"));
         organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active",Integer.class,scope,candidate));
+        // A delegated membership must never open the contextual password reset of that account.
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->passwords.contextualReset(coordinatorEmail,scope,candidate,0L,"Delegated-reset-attempt-2026")).getStatusCode().value());
+        assertTrue(organization.candidates(scope,coordinatorEmail,"docente nuevo").isEmpty());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(reviewer,"COORDINATOR","Otra coordinación",true,0L))).getStatusCode().value());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(coordinator,"MEMBER","Autocambio",true,1L))).getStatusCode().value());
-        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.candidates(scope,"candidate@example.invalid")).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.candidates(scope,"candidate@example.invalid","docente")).getStatusCode().value());
     }
-    @Test void historicDownloadNeverAddsAdminOrNewMemberAccess() throws Exception {
-        configuredScope();UUID other=UUID.randomUUID(),pureAdmin=UUID.randomUUID();
+    @Test void historicDownloadRequiresCurrentAuthorityAndNeverAddsAdminOrNewMemberAccess() throws Exception {
+        configuredScope();UUID pureAdmin=UUID.randomUUID();
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'pure-period-admin@example.invalid','Admin','unused','ADMIN',false)",pureAdmin);
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,creation_title,preparation_date) VALUES (?,?,?,?,?,?,?,'Privado',(now() at time zone 'America/Guayaquil')::date)",other,reviewer,reviewer,group,period,UUID.randomUUID(),"Privado");
         archives.close(period,email,new PeriodArchiveService.Close(0L,"Cierre de prueba"));
         assertEquals(404,assertThrows(ResponseStatusException.class,()->archives.download(period,"pure-period-admin@example.invalid")).getStatusCode().value());
-        var names=entries(archives.download(period,email)).keySet();assertTrue(names.contains("documents/"+id+"/manifest.json"));assertFalse(names.stream().anyMatch(n->n.contains(other.toString())));
-        jdbc.update("DELETE FROM document_access WHERE work_plan_id=? AND user_id=?",id,user);
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->archives.download(period,email)).getStatusCode().value());
+        grantCurrentHistory();assertTrue(entries(archives.download(period,email)).containsKey("documents/"+id+"/manifest.json"));
+        jdbc.update("DELETE FROM position_assignment WHERE user_id=?",user);
         assertEquals(404,assertThrows(ResponseStatusException.class,()->archives.download(period,email)).getStatusCode().value());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,email,new OrganizationService.MemberInput(reviewer,"MEMBER","Nuevo",true,0L))).getStatusCode().value());
     }
@@ -187,16 +216,16 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
             try { assertThrows(java.util.concurrent.TimeoutException.class,()->close.get(250,java.util.concurrent.TimeUnit.MILLISECONDS)); }
             finally { release.countDown(); }
             write.get(10,java.util.concurrent.TimeUnit.SECONDS);close.get(10,java.util.concurrent.TimeUnit.SECONDS);
-            var manifest=entries(archives.download(period,email)).get("documents/"+id+"/manifest.json");
+            var manifest=entries(archives.custody(period,email)).get("documents/"+id+"/manifest.json");
             assertTrue(new String(manifest,StandardCharsets.UTF_8).contains("Contenido confirmado antes del cierre"));
-            assertFalse(plans.get(id,email).editable());
+            assertEquals("CLOSED",jdbc.queryForObject("SELECT status FROM academic_period WHERE id=?",String.class,period));
         } finally { release.countDown(); }
     }
     @Test void archiveDownloadCannotBypassApprovalGateForScopedPreliminaryPdfs() throws Exception {
         complete("Preliminar conservado sin aprobación ficticia",1);configuredScope();assignments.activate(period,email,new PeriodWorkflowService.Version(0L));
         var artifact=artifacts.generate(id,email,new ec.edu.uta.utaped.documents.ArtifactModels.Generate(version()));
         UUID file=jdbc.queryForObject("SELECT file_id FROM document_artifact WHERE id=?",UUID.class,artifact.id());
-        var original=files.read(file);archives.close(period,email,new PeriodArchiveService.Close(1L,"Conservar borrador preliminar"));
+        var original=files.read(file);grantCurrentHistory();archives.close(period,email,new PeriodArchiveService.Close(1L,"Conservar borrador preliminar"));
         var filtered=entries(archives.download(period,email));String name="documents/"+id+"/files/"+file+".pdf";
         assertFalse(filtered.containsKey(name));assertTrue(filtered.containsKey("documents/"+id+"/manifest.json"));
         UUID archive=jdbc.queryForObject("SELECT file_id FROM period_archive WHERE period_id=?",UUID.class,period);

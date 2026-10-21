@@ -15,9 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class WorkPlanService {
+    @org.springframework.beans.factory.annotation.Autowired private DocumentStructures structures;
     private final JdbcTemplate jdbc; private final Accounts accounts; private final AuditService audit;
     private final boolean singlePlan,enforceWindow,legacyCreation; private final ZoneId zone;
-    public static final String ACCESS="""
+    private static final String ORDINARY_ACCESS="""
         g.active AND ((w.scope_id IS NULL AND w.teacher_id=actor.id AND EXISTS
           (SELECT 1 FROM membership m WHERE m.user_id=actor.id AND m.group_id=w.group_id))
         OR (s.active AND EXISTS (SELECT 1 FROM scope_member m WHERE m.scope_id=s.id AND m.user_id=actor.id AND m.active)
@@ -27,6 +28,12 @@ public class WorkPlanService {
         OR EXISTS (SELECT 1 FROM document_review r JOIN review_task t ON t.review_id=r.id JOIN work_plan report ON report.id=r.work_plan_id
           WHERE report.base_plan_id=w.id AND t.actor_id=actor.id AND t.status IN ('ACTIVE','COMPLETED','RETURNED')))
         """;
+    private static final String HISTORY_ACCESS="""
+        EXISTS(SELECT 1 FROM position_assignment ha JOIN institutional_position hp ON hp.id=ha.position_id AND hp.active AND hp.can_view_history
+          JOIN academic_period active_period ON active_period.id=ha.period_id AND active_period.status='ACTIVE'
+          WHERE ha.user_id=actor.id AND (ha.career_id IS NULL OR ha.career_id=s.career_id))
+        """;
+    public static final String ACCESS="g.active AND ((w.discarded AND actor.system_role='ADMIN') OR (NOT w.discarded AND (((SELECT status FROM academic_period access_period WHERE id=w.period_id)<>'CLOSED' AND ("+ORDINARY_ACCESS+")) OR ((SELECT status FROM academic_period access_period WHERE id=w.period_id)='CLOSED' AND ("+HISTORY_ACCESS+")))))";
     private static final String SELECT="""
         SELECT w.*,COALESCE(s.principal_user_id,w.teacher_id) AS responsible_id,u.display_name AS teacher_name,
           g.name AS group_name,p.name AS period_name,p.status AS period_status,p.preparation_starts_on,p.preparation_ends_on,p.starts_on,p.ends_on,
@@ -51,7 +58,7 @@ public class WorkPlanService {
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
         return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
-            &&(!enforceWindow||within(rs.getObject(rs.getString("document_type").equals("T2")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(rs.getString("document_type").equals("T2")?"ends_on":"preparation_effective_ends_on",LocalDate.class)));
+            &&(!enforceWindow||within(rs.getObject(!rs.getString("document_type").equals("T1")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(!rs.getString("document_type").equals("T1")?"ends_on":"preparation_effective_ends_on",LocalDate.class)));
     }
     private Plan map(ResultSet rs,int index) throws SQLException {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
@@ -132,12 +139,12 @@ public class WorkPlanService {
         String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
         jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career,templateService.getJustificationOrDefault("T1"));
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
-        audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
+        structures.initialize(id,"T1");audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
     }
     public boolean signatureWindowOpen(UUID doc,String email) {
         var plan=get(doc,email);
         var dates=jdbc.queryForMap("SELECT p.status,p.starts_on,p.ends_on,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on FROM academic_period p LEFT JOIN organizational_scope s ON s.id=? WHERE p.id=?",plan.scopeId(),plan.periodId());
-        String from=plan.documentType().equals("T2")?"starts_on":"preparation_starts_on",to=plan.documentType().equals("T2")?"ends_on":"preparation_ends_on";
+        String from=plan.documentType().equals("T1")?"preparation_starts_on":"starts_on",to=plan.documentType().equals("T1")?"preparation_ends_on":"ends_on";
         return "ACTIVE".equals(dates.get("status")) && plan.archivedAt()==null && plan.documentState().equals("DRAFT") && (!enforceWindow||within(((java.sql.Date)dates.get(from)).toLocalDate(),((java.sql.Date)dates.get(to)).toLocalDate()));
     }
     private void requireWindow(UUID periodId,UUID scopeId) {
@@ -148,7 +155,7 @@ public class WorkPlanService {
     @Transactional public Plan update(UUID targetDocId,String email,Update data) {
         var plan=lock(targetDocId,email);
         if(!plan.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
-        if(plan.documentType().equals("T2")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Edite el Informe desde su formulario T2.");
+        if(!plan.documentType().equals("T1")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Edite el Informe desde su propio formulario.");
         if(plan.scopeId()!=null&&(!data.career().trim().equals(plan.career())||!data.institutionalUnit().trim().equals(plan.institutionalUnit()))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La carrera y unidad institucional derivan del ámbito; no se editan como texto libre.");
         int changed=jdbc.update("UPDATE work_plan SET title=?,institutional_unit=?,career=?,justification=?,objective=?,row_version=row_version+1,updated_at=now() WHERE id=? AND row_version=? AND document_state='DRAFT'",data.title().trim(),data.institutionalUnit().trim(),data.career().trim(),data.justification(),data.objective(),targetDocId,data.rowVersion());
         if(changed==0) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue la versión actual antes de guardar.");

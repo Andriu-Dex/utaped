@@ -19,7 +19,7 @@ public class WorkflowService {
     public WorkflowService(JdbcTemplate jdbc,Accounts accounts,AuditService audit) { this.jdbc=jdbc;this.accounts=accounts;this.audit=audit; }
     private void admin(String email) { if(!accounts.current(email).systemRole().equals("ADMIN")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo administración puede configurar flujos."); }
     private boolean group(UUID id) { return jdbc.query("SELECT active FROM institutional_group WHERE id=?",(rs,n)->rs.getBoolean(1),id).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Grupo no disponible.")); }
-    private void type(String type) { if(!Set.of("T1","T2").contains(type)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Tipo documental no disponible."); }
+    private void type(String type) { if(!Set.of("T1","T2","T3").contains(type)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Tipo documental no disponible."); }
     private List<String> blockers(UUID groupId,Definition definition) {
         var result=new ArrayList<String>();var ids=new HashSet<UUID>();
         if(definition.stages().isEmpty()) result.add("Agregue al menos una etapa.");

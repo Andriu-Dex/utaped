@@ -1,0 +1,3 @@
+CREATE TABLE document_structure_template (document_type VARCHAR(10) PRIMARY KEY CHECK(document_type IN ('T1','T2','T3')), revision BIGINT NOT NULL DEFAULT 0, sections JSONB NOT NULL, updated_by UUID REFERENCES app_user(id), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE document_structure_revision (document_type VARCHAR(10) NOT NULL, revision BIGINT NOT NULL, sections JSONB NOT NULL, changed_by UUID REFERENCES app_user(id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(document_type,revision));
+CREATE TABLE document_structure (work_plan_id UUID PRIMARY KEY REFERENCES work_plan(id), revision BIGINT NOT NULL, sections JSONB NOT NULL, contents JSONB NOT NULL DEFAULT '{}');

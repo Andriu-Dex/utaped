@@ -75,13 +75,25 @@ public class OrganizationService {
         return jdbc.queryForList("SELECT * FROM organizational_scope WHERE id=? FOR UPDATE",scope).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Ámbito no disponible."));
     }
     private boolean coordinates(UUID scope,UUID user) {
-        return jdbc.queryForObject("SELECT count(*) FROM scope_member m JOIN app_user u ON u.id=m.user_id AND u.active WHERE m.scope_id=? AND m.user_id=? AND m.active AND m.membership_role='COORDINATOR'",Integer.class,scope,user)>0;
+        return jdbc.queryForObject("""
+            SELECT count(*) FROM scope_member m JOIN app_user u ON u.id=m.user_id AND u.active
+            JOIN organizational_scope s ON s.id=m.scope_id AND s.active JOIN institutional_group g ON g.id=s.group_id AND g.active
+            JOIN academic_period cp ON cp.id=s.period_id AND cp.status='ACTIVE'
+            WHERE m.scope_id=? AND m.user_id=? AND m.active AND m.membership_role='COORDINATOR'
+            """,Integer.class,scope,user)>0;
     }
-    /** Active accounts a coordinator may add to their own scope; only identifiers needed to choose a person. */
-    public List<Map<String,Object>> candidates(UUID scope,String email) {
+    /** Searches active accounts a coordinator may add to their scope: name only, a few results, never the whole directory. */
+    public List<Map<String,Object>> candidates(UUID scope,String email,String query) {
         var actor=accounts.current(email);
         if(!actor.systemRole().equals("ADMIN")&&!coordinates(scope,actor.id())) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo la coordinación del ámbito puede gestionar integrantes.");
-        return jdbc.queryForList("SELECT id,display_name,username FROM app_user WHERE active AND system_role='USER' ORDER BY display_name,id");
+        String term=query==null?"":query.strip();
+        if(term.isEmpty()) return List.of();
+        if(term.length()<2||term.length()>100) throw invalid("Escriba al menos dos letras del nombre para buscar.");
+        return jdbc.queryForList("""
+            SELECT u.id,u.display_name FROM app_user u WHERE u.active AND u.system_role='USER' AND position(lower(?) in lower(u.display_name))>0
+              AND NOT EXISTS(SELECT 1 FROM scope_member m WHERE m.scope_id=? AND m.user_id=u.id AND m.active)
+            ORDER BY u.display_name,u.id LIMIT 20
+            """,term,scope);
     }
     @Transactional public void member(UUID scope,String email,MemberInput input) {
         var actor=accounts.current(email);
@@ -91,8 +103,9 @@ public class OrganizationService {
             if(!coordinates(scope,actor.id())||!input.membershipRole().equals("MEMBER")||input.passwordResetAuthorized()!=null||input.userId().equals(actor.id())||existingCoordinator)
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La coordinación del ámbito solo puede agregar o retirar integrantes.");
         }
+        boolean delegated=!actor.systemRole().equals("ADMIN");
         var current=lock(scope);
-        if(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active",Integer.class,input.userId())==0) throw invalid("Seleccione un usuario activo.");
+        if(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE id=? AND active AND (? OR system_role='USER')",Integer.class,input.userId(),actor.systemRole().equals("ADMIN"))==0) throw invalid("Seleccione un usuario activo.");
         if(!input.active() && input.userId().equals(current.get("principal_user_id"))) throw invalid("Designe otro responsable principal antes de retirar esta pertenencia.");
         var previous=jdbc.queryForList("SELECT row_version FROM scope_member WHERE scope_id=? AND user_id=?",scope,input.userId());
         long version=previous.isEmpty()?0:((Number)previous.getFirst().get("row_version")).longValue();
@@ -103,7 +116,7 @@ public class OrganizationService {
             INSERT INTO scope_member(scope_id,user_id,membership_role,position_label,active,row_version) VALUES (?,?,?,?,?,1)
             ON CONFLICT(scope_id,user_id) DO UPDATE SET membership_role=excluded.membership_role,position_label=excluded.position_label,active=excluded.active,row_version=scope_member.row_version+1
             """,scope,input.userId(),input.membershipRole(),input.positionLabel().trim(),input.active());
-        jdbc.update("UPDATE scope_member SET password_reset_authorized=? WHERE scope_id=? AND user_id=?",reset,scope,input.userId());
+        jdbc.update("UPDATE scope_member SET password_reset_authorized=?,delegated=? WHERE scope_id=? AND user_id=?",reset,delegated,scope,input.userId());
         jdbc.update("INSERT INTO scope_membership_history(id,scope_id,user_id,membership_role,position_label,active,password_reset_authorized,row_version,changed_by,origin) SELECT ?,scope_id,user_id,membership_role,position_label,active,password_reset_authorized,row_version,?,'CHANGE' FROM scope_member WHERE scope_id=? AND user_id=?",UUID.randomUUID(),accounts.current(email).id(),scope,input.userId());
         // General membership remains a navigation projection, not authority over scoped documents.
         if(input.active()) jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,?) ON CONFLICT(user_id,group_id) DO NOTHING",input.userId(),current.get("group_id"),input.membershipRole());

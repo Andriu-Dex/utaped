@@ -40,7 +40,7 @@ public class PeriodArchiveService {
     }
     public Map<String,Object> overview(UUID period,String email) {
         admin(email);
-        var rows=jdbc.queryForList("SELECT p.*,a.document_count,a.archive_sha256,a.archive_size,a.custody_downloaded_at,a.purged_at,a.purge_reason,p.closed_at+make_interval(days=>?) AS purge_available_at,COALESCE(p.closed_at+make_interval(days=>?)<=now(),false) AS purge_ready FROM academic_period p LEFT JOIN period_archive a ON a.period_id=p.id WHERE p.id=?",purgeGraceDays,purgeGraceDays,period);
+        var rows=jdbc.queryForList("SELECT p.*,a.document_count,a.archive_sha256,a.archive_size,a.custody_downloaded_at,a.custody_verified_at,a.purged_at,a.purge_reason,p.closed_at+make_interval(days=>?) AS purge_available_at,COALESCE(p.closed_at+make_interval(days=>?)<=now(),false) AS purge_ready FROM academic_period p LEFT JOIN period_archive a ON a.period_id=p.id WHERE p.id=?",purgeGraceDays,purgeGraceDays,period);
         if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Período no disponible.");
         var result=new LinkedHashMap<>(rows.getFirst());
         result.replaceAll((key,value)->value instanceof java.sql.Date date ? date.toLocalDate().toString() : value);
@@ -57,16 +57,20 @@ public class PeriodArchiveService {
             UNION SELECT file_id FROM signed_document_artifact WHERE work_plan_id=?
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=?
             UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
+            UNION SELECT file_id FROM formal_submission WHERE work_plan_id=?
             UNION SELECT current_file_id FROM document_review WHERE work_plan_id=?
             UNION SELECT t.output_file_id FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? AND t.output_file_id IS NOT NULL
             ORDER BY 1
-            """,UUID.class,document,document,document,document,document,document));
+            """,UUID.class,document,document,document,document,document,document,document));
     }
     private Map<String,Object> documentMetadata(UUID document) {
         var data=new LinkedHashMap<String,Object>();
         data.put("document",rows("SELECT * FROM work_plan WHERE id=?",document));
         data.put("matrix",rows("SELECT * FROM work_plan_matrix WHERE work_plan_id=?",document));
         data.put("report",rows("SELECT * FROM work_report WHERE id=?",document));
+        data.put("formalSubmission",rows("SELECT * FROM formal_submission WHERE work_plan_id=?",document));
+        data.put("structure",rows("SELECT * FROM document_structure WHERE work_plan_id=?",document));
+        data.put("executionReport",rows("SELECT * FROM execution_report WHERE id=?",document));
         data.put("artifacts",rows("SELECT * FROM document_artifact WHERE work_plan_id=? ORDER BY created_at,id",document));
         data.put("authorSignatures",rows("SELECT * FROM signed_document_artifact WHERE work_plan_id=? ORDER BY signed_at,id",document));
         data.put("attachments",rows("SELECT * FROM document_attachment WHERE work_plan_id=? ORDER BY sort_order,id",document));
@@ -92,6 +96,9 @@ public class PeriodArchiveService {
     }
     @Transactional public Map<String,Object> close(UUID period,String email,Close input) {
         admin(email);
+        if(jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN document_review r ON r.work_plan_id=w.id AND r.status='APPROVED' JOIN document_artifact a ON a.id=r.artifact_id WHERE w.period_id=? AND w.archived_at IS NULL AND COALESCE((a.snapshot->'workflow'->>'requiresQuipux')::boolean,false) AND NOT EXISTS(SELECT 1 FROM formal_submission f WHERE f.work_plan_id=w.id)",Integer.class,period)>0)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Registre las constancias de Quipux pendientes antes de cerrar el período.");
+
         var rows=jdbc.queryForList("SELECT * FROM academic_period WHERE id=? FOR UPDATE",period);
         if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Período no disponible.");
         var current=rows.getFirst();
@@ -127,6 +134,21 @@ public class PeriodArchiveService {
         audit.record(actor,"PERIOD_ARCHIVE_CUSTODY_DOWNLOADED",period);
         return bytes;
     }
+    /** Proves possession of the exact exported ZIP by hashing the locally selected copy; no upload is retained. */
+    @Transactional public Map<String,Object> verifyCustody(UUID period,String email,InputStream input) throws IOException {
+        admin(email);
+        var rows=jdbc.queryForList("SELECT a.*,p.status FROM period_archive a JOIN academic_period p ON p.id=a.period_id WHERE a.period_id=? FOR UPDATE OF a,p",period);
+        if(rows.isEmpty()||!"CLOSED".equals(rows.getFirst().get("status"))||rows.getFirst().get("purged_at")!=null||rows.getFirst().get("custody_downloaded_at")==null)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Descargue primero el ZIP del período cerrado.");
+        try {
+            var digest=java.security.MessageDigest.getInstance("SHA-256");byte[] buffer=new byte[65536];long length=0;int count;
+            while((count=input.read(buffer))!=-1) { length+=count;if(length>maxBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El ZIP supera el límite permitido.");digest.update(buffer,0,count); }
+            if(!java.util.HexFormat.of().formatHex(digest.digest()).equals(rows.getFirst().get("archive_sha256")))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"La copia no coincide con el ZIP original. No se habilitó el borrado.");
+        } catch(java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+        jdbc.update("UPDATE period_archive SET custody_verified_at=now(),custody_verified_by=? WHERE period_id=?",accounts.current(email).id(),period);
+        audit.record(accounts.current(email).id(),"PERIOD_ARCHIVE_CUSTODY_VERIFIED",period);return overview(period,email);
+    }
     /** Deletes every document, file and the internal ZIP of a closed period, keeping an inventory and the audit trail. */
     @Transactional public Map<String,Object> purge(UUID period,String email,Purge input) {
         admin(email);
@@ -134,7 +156,7 @@ public class PeriodArchiveService {
         if(rows.isEmpty()||!"CLOSED".equals(rows.getFirst().get("status"))) throw new ResponseStatusException(HttpStatus.CONFLICT,"Solo se elimina la documentación de un período cerrado con archivo.");
         var archive=rows.getFirst();
         if(archive.get("purged_at")!=null) throw new ResponseStatusException(HttpStatus.CONFLICT,"La documentación de este período ya fue eliminada.");
-        if(archive.get("custody_downloaded_at")==null) throw new ResponseStatusException(HttpStatus.CONFLICT,"Descargue primero la copia de custodia del período.");
+        if(archive.get("custody_verified_at")==null) throw new ResponseStatusException(HttpStatus.CONFLICT,"Verifique primero la copia local del ZIP de custodia del período.");
         if(!(boolean)archive.get("grace_elapsed")) throw new ResponseStatusException(HttpStatus.CONFLICT,"El período de gracia de "+purgeGraceDays+" días desde el cierre todavía no termina.");
         var documents=jdbc.queryForList("SELECT id FROM work_plan WHERE period_id=?",UUID.class,period);
         if(jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE period_id<>? AND (base_plan_id IN (SELECT id FROM work_plan WHERE period_id=?) OR previous_version_id IN (SELECT id FROM work_plan WHERE period_id=?))",Integer.class,period,period,period)>0)
@@ -146,7 +168,8 @@ public class PeriodArchiveService {
         jdbc.update("DELETE FROM review_task WHERE review_id IN ("+reviews+")",period);
         jdbc.update("DELETE FROM document_review WHERE work_plan_id IN (SELECT id FROM work_plan WHERE period_id=?)",period);
         jdbc.update("DELETE FROM work_report WHERE id IN (SELECT id FROM work_plan WHERE period_id=?)",period);
-        for(String table:List.of("signed_document_artifact","document_artifact","document_attachment","execution_evidence","activity_extension","deadline_extension","deadline_extension_history","deadline_notice_delivery","document_author","document_access","work_plan_matrix"))
+        jdbc.update("DELETE FROM execution_report WHERE id IN (SELECT id FROM work_plan WHERE period_id=?)",period);
+        for(String table:List.of("signed_document_artifact","document_artifact","document_attachment","execution_evidence","activity_extension","deadline_extension","deadline_extension_history","deadline_notice_delivery","document_author","document_access","formal_submission","document_structure","work_plan_matrix"))
             jdbc.update("DELETE FROM "+table+" WHERE work_plan_id IN (SELECT id FROM work_plan WHERE period_id=?)",period);
         jdbc.update("DELETE FROM work_plan WHERE period_id=?",period);
         var actor=accounts.current(email).id();

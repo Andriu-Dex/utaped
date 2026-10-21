@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 public class PositionController {
     private final PositionService service;
     public PositionController(PositionService service) { this.service=service; }
+    @PutMapping("/positions/{id}/history-permission") public void historyPermission(@PathVariable UUID id,@Valid @RequestBody PositionService.HistoryPermission input,Principal p) { service.historyPermission(id,p.getName(),input); }
     @GetMapping("/positions") public List<Map<String,Object>> positions(Principal p) { return service.positions(p.getName()); }
     @PostMapping("/positions") public Map<String,UUID> create(@Valid @RequestBody PositionService.PositionInput input,Principal p) { return Map.of("id",service.create(p.getName(),input)); }
     @PutMapping("/positions/{id}") public void update(@PathVariable UUID id,@Valid @RequestBody PositionService.PositionUpdate input,Principal p) { service.update(id,p.getName(),input); }

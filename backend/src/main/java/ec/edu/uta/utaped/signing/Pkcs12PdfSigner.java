@@ -202,7 +202,7 @@ public final class Pkcs12PdfSigner {
         // The QR repeats the signature metadata; validity comes from the embedded CMS signature, not from the image.
         String data=String.join("\n","FIRMADO POR: "+name,"RAZON: "+reason,"LOCALIZACION: Universidad Tecnica de Ambato",
             "FECHA: "+java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(now.atZone(STAMP_ZONE).truncatedTo(java.time.temporal.ChronoUnit.SECONDS)),
-            "VALIDAR CON: www.firmadigital.gob.ec");
+            "VERIFICACION: firmas digitales incrustadas en el PDF");
         com.google.zxing.common.BitMatrix matrix;
         try {
             matrix=new com.google.zxing.qrcode.QRCodeWriter().encode(data,com.google.zxing.BarcodeFormat.QR_CODE,0,0,Map.of(
