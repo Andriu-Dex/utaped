@@ -41,7 +41,8 @@ public class ArtifactService {
         if(!plan.editable() || !plan.documentState().equals("DRAFT") || !plan.documentType().equals("T1"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
         if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
-        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors());
+        // The elaboration date is provisional until the final artifact is prepared for signing.
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()).withPreparationDate(plans.today()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors());
         String key=email+":"+id+":"+hash(draft);PreviewCache cached;
         synchronized(draftPreviews) {
             draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
@@ -160,6 +161,8 @@ public class ArtifactService {
         if(state.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió. Recargue antes de generar la previsualización.");
         var ready=readiness(id,email);
         if(!ready.ready()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete los requisitos de preparación antes de generar el PDF.");
+        // The elaboration date is the finalization date: it is fixed in the artifact that the authors sign.
+        jdbc.update("UPDATE work_plan SET preparation_date=? WHERE id=? AND preparation_date<>?",plans.today(),id,plans.today());
         var snapshot=snapshot(id,email);String sha=hash(snapshot);
         var existing=list(id,email).stream().filter(a->a.sourceHash().equals(sha) && a.templateVersion().equals(engine.version(snapshot.plan().documentType()))).findFirst();
         if(existing.isPresent()) return existing.get();

@@ -47,6 +47,7 @@ public class WorkPlanService {
         @Value("${app.planning.allow-legacy-creation:false}") boolean legacyCreation) {
         this.jdbc=jdbc;this.accounts=accounts;this.audit=audit;this.templateService=templateService;this.singlePlan=singlePlan;this.enforceWindow=enforceWindow;this.zone=ZoneId.of(zone);this.legacyCreation=legacyCreation;
     }
+    public LocalDate today() { return LocalDate.now(zone); }
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
         return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")

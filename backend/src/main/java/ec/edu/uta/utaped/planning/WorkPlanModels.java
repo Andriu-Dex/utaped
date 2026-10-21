@@ -23,6 +23,10 @@ public final class WorkPlanModels {
                 justification,objective,documentState,formalVersion,rowVersion,preparationDate,createdAt,updatedAt,editable,
                 scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage);
         }
+        public Plan withPreparationDate(LocalDate date) {
+            return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion,date,createdAt,updatedAt,editable,
+                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage);
+        }
     }
     public record Summary(UUID id,String title,String groupName,String periodName,String documentState,
         String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt) {}

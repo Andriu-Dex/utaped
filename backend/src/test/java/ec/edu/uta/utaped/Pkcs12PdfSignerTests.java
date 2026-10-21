@@ -72,6 +72,21 @@ class Pkcs12PdfSignerTests {
             try(var document=Loader.loadPDF(signed)) { assertEquals(1,document.getNumberOfPages());assertEquals(1,document.getSignatureDictionaries().size()); }
         }
     }
+    @Test void visibleStampEmbedsReadableQrWithSignerReasonAndTime() throws Exception {
+        var fixture=container(rsaKey,rsa,false);byte[] original=pdf();
+        var slot=new ec.edu.uta.utaped.documents.ArtifactModels.SignatureSlot("AUTHOR","ELABORADO_POR","Elaborado por",UUID.randomUUID(),0,1,new ec.edu.uta.utaped.documents.ArtifactModels.Bounds(100,100,180,60));
+        byte[] signed=signer.signPinned(original,fixture.container(),fixture.password(),fingerprint(rsa),NOW,slot,"María José Núñez Pérez");
+        try(var document=Loader.loadPDF(signed)) {
+            var image=new org.apache.pdfbox.rendering.PDFRenderer(document).renderImageWithDPI(0,400,org.apache.pdfbox.rendering.ImageType.RGB);
+            float scale=400f/72;int height=image.getHeight();
+            var qr=image.getSubimage(Math.round(95*scale),height-Math.round(165*scale),Math.round(65*scale),Math.round(70*scale));
+            int[] pixels=qr.getRGB(0,0,qr.getWidth(),qr.getHeight(),null,0,qr.getWidth());
+            var bitmap=new com.google.zxing.BinaryBitmap(new com.google.zxing.common.HybridBinarizer(new com.google.zxing.RGBLuminanceSource(qr.getWidth(),qr.getHeight(),pixels)));
+            String text=new com.google.zxing.qrcode.QRCodeReader().decode(bitmap,Map.of(com.google.zxing.DecodeHintType.CHARACTER_SET,"UTF-8")).getText();
+            assertTrue(text.contains("FIRMADO POR: MARÍA JOSÉ NÚÑEZ PÉREZ"),text);assertTrue(text.contains("RAZON: Elaborado por"),text);
+            assertTrue(text.contains("FECHA: 2026-10-04T07:00:00-05:00"),text);
+        }
+    }
     @Test void rejectsChangedSignedContentAppendedBytesAndDifferentOriginal() throws Exception {
         var fixture=container(rsaKey,rsa,false);byte[] original=pdf();byte[] signed=signer.sign(original,fixture.container(),fixture.password(),fingerprint(rsa),anchors(),NOW);
         byte[] tampered=signed.clone();tampered[15]^=1;
