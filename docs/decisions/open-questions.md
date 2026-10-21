@@ -1,5 +1,17 @@
 # Decisiones pendientes y contradicciones
 
+## Decisiones provisionales del equipo — 2026-10-20
+
+El propietario autoriza resolver provisionalmente las contradicciones de reuniones mientras el cliente no entregue información oficial. Son reglas configurables, no normativa institucional ratificada. [Plan de implementación](../planning/institutional-rules-and-execution-report.md).
+
+- Descarga final: solo después de APPROVED y para participantes autorizados del documento. Coincide con el comportamiento actual; no se restringe al último validador.
+- Fin de semestre: se elimina la documentación del período después de exportar y verificar el ZIP, registrar su descarga por ADMIN y cumplir un período de gracia configurable. Se conserva un inventario mínimo y la auditoría. Supera la prohibición anterior de purga en este alcance.
+- Fecha de elaboración: la de finalización, fijada al preparar el artefacto de «Firmar y finalizar» y congelada en los bytes firmados.
+- Prórrogas: máximo acumulado de 3 días hábiles (sin fines de semana ni feriados registrados), individual, con motivo, concedida por el coordinador del ámbito y dentro del período. La ventana de elaboración usa 5 días hábiles con la misma regla de reapertura individual.
+- Puerto: 64430 es el único puerto de entrada; SMTP 587 es salida y requiere confirmación de red, con restablecimiento ADMIN como alternativa.
+- Comisiones, cargos y flujos: datos de ejemplo de FISEI/UTA administrables e importables hasta recibir la tabla oficial.
+- Nuevo formato: `INFORME EJECUCION II E26J26 UPE.docx` se trata como T3 Informe de ejecución, distinto del T2 Informe final.
+
 ## Decisión colegiada y autoría confirmadas — 2026-10-17
 
 El propietario confirma un registrador designado por Administración para cada período, identificado en auditoría y sin firma personal en nombre del órgano. Esta decisión resuelve quién registra; no inventa la tabla de órganos/casos institucionales. Autoriza completar coautores/cargos y corregir observaciones de la ronda y encabezados. [Contrato de la tanda](../api/document-authorship-and-review.md). Siguen pendientes el catálogo completo de funciones y asignaciones oficiales, Quipux, retención y excepciones no incluidas en esta entrega.
