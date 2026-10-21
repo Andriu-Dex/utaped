@@ -240,17 +240,6 @@ export default function App() {
     <div className="workspace">
       <header className="topbar">
         <div className="topbar-branding">
-          {sidebarCollapsed && (
-            <button
-              type="button"
-              className="sidebar-toggle-btn topbar-toggle-btn"
-              onClick={toggleSidebar}
-              title="Expandir menú lateral"
-              aria-label="Expandir menú lateral"
-            >
-              <Icon name="sidebar" size={18} />
-            </button>
-          )}
           <div>
             <span className="breadcrumb">UTAPED <span>/</span> {account.mustChangePassword ? 'Primer acceso' : view === 'home' && administrative ? 'Panel general administrativo' : titles[view]}</span>
             <span className="workspace-caption">Gestión Documental Académica</span>

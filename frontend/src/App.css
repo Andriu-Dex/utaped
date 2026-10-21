@@ -203,21 +203,6 @@ nav:not(.primary-nav) button[aria-current] { background: var(--blue-800); color:
   align-items: center;
   gap: 14px;
 }
-.topbar-toggle-btn {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--blue-800);
-  box-shadow: var(--shadow-sm);
-}
-.topbar-toggle-btn:hover {
-  background: var(--blue-100);
-  color: var(--blue-900);
-}
-:root[data-theme='dark'] .topbar-toggle-btn {
-  background: #14283c;
-  color: #8ec3ea;
-  border-color: #244462;
-}
 
 /* Collapsed sidebar styling */
 .shell.sidebar-collapsed .sidebar {
