@@ -1,6 +1,6 @@
 # Estado de implementación productiva
 
-## Estado vigente al 2026-10-18
+## Estado vigente al 2026-10-20
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
 
@@ -218,3 +218,7 @@ Entregado: selección independiente de elaboradores T1/T2, principal único edit
 ## Bordes del encabezado institucional — 2026-10-18
 
 Bordes exteriores e interiores explícitos y continuos para T1/T2, con logo combinado y separación de unidad/carrera. engine6 evita reutilizar nuevas preparaciones del motor anterior; artefactos firmados conservados. [Reporte](docs/reports/2026-10-18-02-institutional-header-borders.md).
+
+## Matriz y catálogos — 2026-10-20
+
+Fuente editable aclarada, «Elaborado por» automático y representación colectiva al seleccionar todos, sin casilla adicional. Combo de actividades con texto solo en Otra; recursos/medios conservan catálogos y Otro. Semillas adicionales opcionales en grupos sin catálogo: 20 ejemplos separados de las 55 actividades de fuentes oficiales, exclusivamente en desarrollo. [Reporte](docs/reports/2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).

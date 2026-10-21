@@ -57,6 +57,13 @@ public class DevelopmentSeed implements ApplicationRunner {
         for(String kind:List.of("RESOURCE","MEANS")) for (String label : kind.equals("RESOURCE") ? reference.resources() : reference.means())
             jdbc.update("INSERT INTO planning_catalog(id,kind,label,active) VALUES (?,?,?,true) ON CONFLICT DO NOTHING",id("catalog-"+kind+"-"+label),kind,label);
         for (var activity : reference.activities()) jdbc.update("INSERT INTO activity_catalog(id,group_id,title,category,mandatory,active) VALUES (?,?,?,?,false,true) ON CONFLICT(id) DO NOTHING",id(activity.key()),id(activity.groupKey()),activity.title(),activity.category());
+        // Optional examples only where no institutional reference or administrator catalog exists.
+        for(var group:reference.groups()) if(reference.activities().stream().noneMatch(activity->activity.groupKey().equals(group.key()))
+            && jdbc.queryForObject("SELECT count(*) FROM activity_catalog WHERE group_id=? AND active",Integer.class,id(group.key()))==0) {
+            int index=0;
+            for(String title:List.of("Coordinar la planificación y el seguimiento del trabajo del grupo","Elaborar el informe de resultados del período académico"))
+                jdbc.update("INSERT INTO activity_catalog(id,group_id,title,category,mandatory,active) VALUES (?,?,?,'OTHER',false,true) ON CONFLICT(id) DO NOTHING",id("matrix-example-"+group.key()+"-"+index++),id(group.key()),title);
+        }
         // Retire only the original generic seed options. Existing matrices preserve their snapshots.
         jdbc.update("UPDATE planning_catalog SET active=false WHERE id IN (?,?) AND label IN ('Equipo de trabajo — Ejemplo','Informe PDF — Ejemplo')",id("RESOURCE"),id("MEANS"));
         jdbc.update("UPDATE activity_catalog SET active=false WHERE id=? AND title='Preparar resultados de ejemplo'",id("activity"));

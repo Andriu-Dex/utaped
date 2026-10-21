@@ -27,6 +27,9 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     return () => { cancelled = true }
   }, [targetDocId])
   function update(id: string, patch: Partial<Activity>) { setDraft(d => d && ({ ...d, activities: d.activities.map(a => a.id === id ? { ...a, ...patch } : a) })); setNotice('') }
+  function selectResponsible(row: Activity, responsibleIds: string[]) {
+    update(row.id, { responsibleIds, collective: !!saved?.collectiveLabel && !!saved.members.length && saved.members.every(member => responsibleIds.includes(member.id)) && responsibleIds.length === saved.members.length })
+  }
   function add() {
     if (!saved || !draft) return
     const definition = saved.definitions.find(d => d.id === catalogId)
@@ -163,7 +166,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
           <Icon name="document" size={15} />
           <span><strong>{draft.activities.length}</strong> {draft.activities.length === 1 ? 'actividad' : 'actividades'}</span>
           <span className="dot-sep">·</span>
-          <span className="matrix-author-pill">Elaborador: <strong>{saved.elaboratedBy}</strong></span>
+          <span className="matrix-author-pill">Elaborado por: <strong>{saved.elaboratedBy}</strong></span>
         </div>
       </header>
 
@@ -175,14 +178,14 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
             <div className="matrix-source-header">
               <label htmlFor="matrix-source">
                 <span className="matrix-field-label">Fuente de la matriz</span>
-                <span className="matrix-field-desc">Especifique el marco de referencia u origen normativo institucional (ej: Plan Operativo Anual 2026, Comisión de Vinculación, etc.)</span>
+                <span className="matrix-field-desc">Indique de dónde procede la información: puede ser esta misma comisión o un documento de referencia. Este dato es editable.</span>
               </label>
             </div>
             <input
               id="matrix-source"
               className="matrix-source-input"
               maxLength={500}
-              placeholder="Escriba la fuente o marco normativo institucional…"
+              placeholder="Ej.: nombre de la comisión o documento de referencia…"
               value={draft.source}
               onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }}
             />
@@ -206,15 +209,16 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
                 <label>
                   Actividad del catálogo
                   <select value={catalogId} onChange={e => setCatalogId(e.target.value)}>
-                    <option value="">Otra actividad</option>
+                    <option value="">Seleccione una actividad</option>
                     {saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => (
                       <option key={d.id} value={d.id}>
                         {categoryLabels[d.category]} · {d.title}
                       </option>
                     ))}
+                    <option value="__OTHER__">Otra actividad (especifique)</option>
                   </select>
                 </label>
-                {!catalogId && (
+                {catalogId === '__OTHER__' && (
                   <label>
                     Título de Otra actividad
                     <input
@@ -225,7 +229,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
                     />
                   </label>
                 )}
-                <button type="button" disabled={draft.activities.length >= 100} onClick={add}>
+                <button type="button" disabled={draft.activities.length >= 100 || !catalogId || (catalogId === '__OTHER__' && !otherTitle.trim())} onClick={add}>
                   <Icon name="plus" size={15} />
                   <span>Agregar actividad</span>
                 </button>
@@ -321,7 +325,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
                     <button
                       type="button"
                       className="secondary select-all-btn"
-                      onClick={() => update(row.id, { responsibleIds: saved.members.map(m => m.id), collective: false })}
+                      onClick={() => selectResponsible(row, saved.members.map(m => m.id))}
                     >
                       <Icon name="users" size={13} />
                       <span>Seleccionar todos</span>
@@ -335,12 +339,9 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
                       <input
                         type="checkbox"
                         checked={row.responsibleIds.includes(member.id)}
-                        onChange={e => update(row.id, {
-                          responsibleIds: e.target.checked
-                            ? [...row.responsibleIds, member.id]
-                            : row.responsibleIds.filter(id => id !== member.id),
-                          collective: false
-                        })}
+                        onChange={e => selectResponsible(row, e.target.checked
+                          ? [...row.responsibleIds, member.id]
+                          : row.responsibleIds.filter(id => id !== member.id))}
                       />
                       <span className="chip-label">{member.name}</span>
                     </label>
@@ -351,17 +352,11 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
                   <p className="error">Hay responsables que ya no están disponibles. Vuelva a seleccionarlos.</p>
                 )}
 
-                <div className="collective-toggle-card">
-                  <label className="check collective-toggle">
-                    <input
-                      type="checkbox"
-                      disabled={!saved.collectiveLabel || row.responsibleIds.length !== saved.members.length || !saved.members.length}
-                      checked={row.collective}
-                      onChange={e => update(row.id, { collective: e.target.checked })}
-                    />
-                    <span>Usar denominación colectiva{saved.collectiveLabel ? ': ' + saved.collectiveLabel : ' (sin configurar)'}</span>
-                  </label>
-                </div>
+                <p className="field-help" role="status">{row.collective
+                  ? 'En el documento aparecerá: ' + saved.collectiveLabel + '. Se conservan los integrantes seleccionados para trazabilidad.'
+                  : !saved.collectiveLabel && row.responsibleIds.length === saved.members.length && saved.members.length > 0
+                    ? 'Todos seleccionados. Administración debe configurar la denominación colectiva; mientras tanto se mostrarán los nombres.'
+                    : 'Al seleccionar a todos se mostrará automáticamente la denominación colectiva configurada.'}</p>
               </fieldset>
 
               <div className="activity-catalogs-grid">

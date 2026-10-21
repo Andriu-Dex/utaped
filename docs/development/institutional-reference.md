@@ -44,3 +44,7 @@ La herramienta scripts/clean-development-data.py requiere el proyecto exacto uta
 ## Presentación realista de personas — 2026-10-17
 
 El propietario solicita nombres y datos verosímiles en la demostración. Las siete cuentas semilla usan nombres completos ficticios documentados en sample-environment.md y cargos legibles, manteniendo credenciales y autorizaciones. No se toman nombres de autoridades de las fuentes como usuarios ni se precargan firmas. La actualización solo reconoce los valores genéricos originales; no sobrescribe personalizaciones administrativas. Las referencias académicas oficiales y el formato A4 permanecen sin cambios.
+
+## Ejemplos complementarios — 2026-10-20
+
+Por autorización del propietario se añaden dos actividades opcionales genéricas en cada grupo sin actividades derivadas de fuentes ni catálogo activo personalizado: coordinar planificación/seguimiento y elaborar informe de resultados. En la referencia inicial son 20 opciones para diez grupos, además de las 55 oficiales. Se crean desde DevelopmentSeed, fuera del JSON de procedencia oficial, solo en utaped_dev; no se presentan como obligaciones ni como actividades extraídas de templates. Son editables/desactivables en Administración y no sobrescriben cambios existentes.

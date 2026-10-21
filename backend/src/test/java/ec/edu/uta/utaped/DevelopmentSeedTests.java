@@ -35,7 +35,10 @@ class DevelopmentSeedTests {
             assertEquals(3,jdbc.queryForObject("SELECT count(*) FROM academic_career",Integer.class));
             assertEquals(30,jdbc.queryForObject("SELECT count(*) FROM organizational_scope",Integer.class));
             assertEquals(7,jdbc.queryForObject("SELECT count(*) FROM app_user",Integer.class));
-            assertEquals(55,jdbc.queryForObject("SELECT count(*) FROM activity_catalog",Integer.class));
+            var referenceCatalog=ec.edu.uta.utaped.institution.DevelopmentReference.load();
+            long groupsWithoutReference=referenceCatalog.groups().stream().filter(group->referenceCatalog.activities().stream().noneMatch(activity->activity.groupKey().equals(group.key()))).count();
+            assertEquals((int)(55+2*groupsWithoutReference),jdbc.queryForObject("SELECT count(*) FROM activity_catalog",Integer.class).intValue());
+            assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM activity_catalog WHERE mandatory",Integer.class));
             assertEquals(26,jdbc.queryForObject("SELECT count(*) FROM planning_catalog",Integer.class));
             assertEquals(60,jdbc.queryForObject("SELECT count(*) FROM period_workflow_assignment",Integer.class));
             assertEquals("Julio–Diciembre 2026",jdbc.queryForObject("SELECT name FROM academic_period",String.class));
