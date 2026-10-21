@@ -222,3 +222,7 @@ Bordes exteriores e interiores explícitos y continuos para T1/T2, con logo comb
 ## Matriz y catálogos — 2026-10-20
 
 Fuente editable aclarada, «Elaborado por» automático y representación colectiva al seleccionar todos, sin casilla adicional. Combo de actividades con texto solo en Otra; recursos/medios conservan catálogos y Otro. Semillas adicionales opcionales en grupos sin catálogo: 20 ejemplos separados de las 55 actividades de fuentes oficiales, exclusivamente en desarrollo. [Reporte](docs/reports/2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).
+
+## Reglas institucionales provisionales — 2026-10-20
+
+F1: prórrogas de evidencias en días hábiles (sin fines de semana ni feriados registrados) y reapertura individual de elaboración por ámbito concedida por su coordinador, con historial y auditoría (V25). F2: fecha de elaboración fijada al preparar la firma y sello visible con QR, firmante y fecha en el espacio asignado. F3: copia de custodia del período y eliminación de su documentación tras período de gracia, conservando inventario, huella y auditoría (V26). [Reporte](docs/reports/2026-10-20-04-institutional-rules-and-execution-report.md).

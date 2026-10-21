@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HexFormat;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +50,21 @@ public class StoredFiles {
         String sha=hash(bytes);
         jdbc.update("INSERT INTO stored_file(id,storage_key,sha256,size_bytes,original_name,page_count) VALUES (?,?,?,?,?,?)",id,key,sha,bytes.length,originalName,pageCount);
         return new File(id,sha,bytes.length,originalName,pageCount);
+    }
+    /** Removes the rows now and the bytes only after the transaction commits, so a rollback keeps every file readable. */
+    public void delete(Collection<UUID> ids) {
+        if(!TransactionSynchronizationManager.isSynchronizationActive()) throw new IllegalStateException("File deletions require a transaction.");
+        var paths=new ArrayList<Path>();
+        for(var id:ids) {
+            var keys=jdbc.queryForList("DELETE FROM stored_file WHERE id=? RETURNING storage_key",UUID.class,id);
+            keys.forEach(key->paths.add(root.resolve(key.toString())));
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void afterCompletion(int status) {
+                if(status!=STATUS_COMMITTED) return;
+                for(var path:paths) try { Files.deleteIfExists(path); } catch(IOException e) { throw new IllegalStateException("No se pudo eliminar un archivo del almacenamiento.",e); }
+            }
+        });
     }
     public File metadata(UUID id) {
         return jdbc.query("SELECT * FROM stored_file WHERE id=?",(rs,n)->new File(id,rs.getString("sha256"),rs.getLong("size_bytes"),rs.getString("original_name"),rs.getInt("page_count")),id).stream().findFirst()

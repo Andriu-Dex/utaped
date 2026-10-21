@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-20 — Reglas institucionales provisionales e Informe de ejecución](2026-10-20-04-institutional-rules-and-execution-report.md).
+
 - [2026-10-20 — Preparación de develop hacia main](2026-10-20-03-develop-main-handoff.md).
 
 - [2026-10-20 — Revisión del staged y preparación del PR](2026-10-20-02-staged-review-and-develop-pr.md).

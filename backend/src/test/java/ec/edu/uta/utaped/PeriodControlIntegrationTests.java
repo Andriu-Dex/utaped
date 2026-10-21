@@ -84,6 +84,32 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         assertTrue(new String(archive.get("documents/"+id+"/manifest.json"),StandardCharsets.UTF_8).contains(StoredFiles.hash(original)));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM period_archive WHERE period_id=?",Integer.class,period));
     }
+    @Test void purgeRequiresCustodyAndGraceThenDeletesOnlyThisPeriodKeepingInventory() throws Exception {
+        complete("Documentación a eliminar",1);signingAdmin();attachments.settings(id,email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(version(),true,false));
+        UUID file=upload("Anexo",UUID.randomUUID(),pdf(1,false,false),version()).items().getFirst().fileId();
+        UUID key=jdbc.queryForObject("SELECT storage_key FROM stored_file WHERE id=?",UUID.class,file);
+        UUID otherPeriod=UUID.randomUUID(),otherPlan=UUID.randomUUID();
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Otro período','2027-01-01','2027-06-30','2027-01-01','2027-01-10','2027-01-11','2027-01-20')",otherPeriod);
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,creation_title,preparation_date) VALUES (?,?,?,?,?,?,'Otro','Otro','2027-01-02')",otherPlan,user,user,group,otherPeriod,UUID.randomUUID());
+        var purge=new PeriodArchiveService.Purge("Fin de semestre");
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+        archives.close(period,email,new PeriodArchiveService.Close(0L,"Cierre de semestre"));
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+        byte[] custody=archives.custody(period,email);
+        assertEquals(jdbc.queryForObject("SELECT archive_sha256 FROM period_archive WHERE period_id=?",String.class,period),StoredFiles.hash(custody));
+        assertTrue(entries(custody).containsKey("documents/"+id+"/files/"+file+".pdf"));
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+        jdbc.update("UPDATE academic_period SET closed_at=now()-interval '31 days' WHERE id=?",period);
+        archives.purge(period,email,purge);
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE period_id=?",Integer.class,period));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM stored_file",Integer.class));
+        assertFalse(Files.exists(Path.of(root).resolve(key.toString())));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE id=?",Integer.class,otherPlan));
+        assertTrue(jdbc.queryForObject("SELECT purge_inventory::text FROM period_archive WHERE period_id=?",String.class,period).contains(id.toString()));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='PERIOD_DOCUMENTS_PURGED' AND target_id=?",Integer.class,period));
+        assertEquals(410,assertThrows(ResponseStatusException.class,()->archives.download(period,email)).getStatusCode().value());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->archives.purge(period,email,purge)).getStatusCode().value());
+    }
     @Test void historicDownloadNeverAddsAdminOrNewMemberAccess() throws Exception {
         configuredScope();UUID other=UUID.randomUUID(),pureAdmin=UUID.randomUUID();
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'pure-period-admin@example.invalid','Admin','unused','ADMIN',false)",pureAdmin);
