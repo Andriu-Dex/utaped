@@ -23,9 +23,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class T1PdfEngine {
-    private final T1Template template;private final T2Template reports;private final StoredFiles files;
-    public T1PdfEngine(T1Template template,T2Template reports,StoredFiles files) { this.template=template;this.reports=reports;this.files=files; }
-    public String version(String type) { return type.equals("T2")?reports.version():template.version(); }
+    private final T1Template template;private final T2Template reports;private final T3Template executions;private final StoredFiles files;
+    public T1PdfEngine(T1Template template,T2Template reports,T3Template executions,StoredFiles files) { this.template=template;this.reports=reports;this.executions=executions;this.files=files; }
+    public String version(String type) { return switch(type) { case "T2" -> reports.version();case "T3" -> executions.version();default -> template.version(); }; }
     private byte[] export(byte[] docx) throws Exception {
         var pkg=WordprocessingMLPackage.load(new ByteArrayInputStream(docx));
         var mapper=new IdentityPlusMapper();var sans=PhysicalFonts.get("Liberation Sans");if(sans==null) sans=PhysicalFonts.get("DejaVu Sans");
@@ -52,12 +52,13 @@ public class T1PdfEngine {
     public Generated generate(Snapshot snapshot) {
         try {
             Map<String,Integer> numbers=new LinkedHashMap<>();byte[] nativeBytes=null;
-            var sections=snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
-            if(snapshot.report()==null) { if(!snapshot.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
+            var sections=snapshot.execution()!=null?new ArrayList<>(executions.sections(snapshot)):snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
+            if(snapshot.report()==null&&snapshot.execution()==null) { if(!snapshot.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
+            sections=new ArrayList<>(StructuredSections.sections(snapshot,sections));
             int insertedPages=snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum();
             boolean stable=false;
             for(int attempt=0;attempt<4;attempt++) {
-                nativeBytes=export(snapshot.report()!=null?reports.compose(snapshot,numbers):template.compose(snapshot,numbers));var actual=new LinkedHashMap<String,Integer>();
+                nativeBytes=export(snapshot.execution()!=null?executions.compose(snapshot,numbers):snapshot.report()!=null?reports.compose(snapshot,numbers):template.compose(snapshot,numbers));var actual=new LinkedHashMap<String,Integer>();
                 try(var nativePdf=Loader.loadPDF(nativeBytes)) {
                     int insertion=sectionPage(nativePdf,"FIRMAS DE RESPONSABILIDAD");
                     for(String section:sections) { int page=sectionPage(nativePdf,section);actual.put(section,page+1+(page>=insertion?insertedPages:0)); }

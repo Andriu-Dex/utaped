@@ -1,5 +1,19 @@
 # Requisitos de UTAPED
 
+## Reglas provisionales y completado documental — 2026-10-21
+
+La autorización del propietario incorpora las decisiones técnicas del [plan de entrega](docs/planning/institutional-rules-and-execution-report.md), manteniendo pendiente su ratificación institucional. Supera únicamente las contradicciones históricas indicadas aquí:
+
+- UT-T3-130: Informe de ejecución independiente por corte de Plan aprobado, numeración I/II…, actividades seleccionadas, resultados/FODA/mejoras, PDF A4 y circuito de firma/revisión. T3 es identificador interno; el código oficial de plantilla es `UTA-SGC-A-1-1-P4-T2`. T2 final permanece independiente.
+- UT-TPL-130: estructuras publicadas/versionadas por formato, orden de secciones y apartados adicionales con obligatoriedad/texto inicial; snapshot por documento. Conservar secciones oficiales, su estilo, firmas/control final y artefactos existentes.
+- UT-SEC-130: búsqueda de candidatos por nombre y ámbito; solo coordinación puede delegar integrantes ordinarios. Esa alta no habilita restablecer contraseñas de cuentas ajenas. Descartados manuales solo ADMIN; historia cerrada solo mediante cargo vigente habilitado expresamente y con alcance de carrera/facultad.
+- UT-PER-130: días hábiles para máximos de prórroga; cinco días hábiles por defecto al crear una ventana sin fin explícito. Extensión por ámbito autorizada/auditada; no se extiende un período cerrado. Fechas anteriores no cambian retroactivamente.
+- UT-CUS-130: cierre, descarga de ZIP completo para custodia, verificación de copia local mediante SHA-256 y purga explícita con motivo tras gracia configurable de 30 días. Retener inventario y auditoría; no hay purga automática.
+- UT-QPX-130: constancia PDF de Quipux opcional por flujo congelado, registrada por coordinación tras aprobación; bloquea evidencias, informes derivados y cierre mientras esté pendiente. La descarga del aprobado permite tramitarlo. Sin integración con Quipux.
+- UT-IND-130: cobertura documental y avance declarado son indicadores distintos. Avance = media simple de porcentajes aprobados por actividad (último corte; T2 final prevalece). Mostrar actividades incluidas y ausencia de declaración; no presentar una ponderación institucional ficticia.
+
+La fecha de elaboración es la preparación del artefacto firmable, incluida en los bytes antes de la primera firma. Cada firma conserva su fecha/hora propia; no se sustituye la fecha después de firmar. El QR repite metadatos de la firma y no acredita un validador institucional externo. [Contrato y operación](docs/api/institutional-rules-and-execution.md).
+
 ## Matriz y selección de catálogos — 2026-10-20
 
 El propietario confirma conservar el flujo actual, aclarar que la fuente editable puede ser la comisión o un documento y automatizar la denominación colectiva al seleccionar todos los integrantes. Priorizar opciones de catálogo donde las reuniones solicitan listas; mantener Otro cuando corresponde. Se autorizan opciones de ejemplo precargadas para catálogos aún no entregados, sin convertirlas en datos o reglas institucionales oficiales. [Reporte](docs/reports/2026-10-20-01-matrix-catalogs-and-collective-responsibility.md).

@@ -20,23 +20,23 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine6"; }
-    private static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
-    private static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
-    private static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
-    private static Element property(Element p,String name) { var pr=children(p,"pPr").stream().findFirst().orElseGet(()->{ var e=element(p.getOwnerDocument(),"pPr");p.insertBefore(e,p.getFirstChild());return e; });return children(pr,name).stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),name);pr.appendChild(e);return e;}); }
-    private static void removeAll(Element n,String local) { for(var e:all(n,local)) e.getParentNode().removeChild(e); }
-    private static void text(Element p,String value) {
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine7"; }
+    static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
+    static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
+    static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
+    static Element property(Element p,String name) { var pr=children(p,"pPr").stream().findFirst().orElseGet(()->{ var e=element(p.getOwnerDocument(),"pPr");p.insertBefore(e,p.getFirstChild());return e; });return children(pr,name).stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),name);pr.appendChild(e);return e;}); }
+    static void removeAll(Element n,String local) { for(var e:all(n,local)) e.getParentNode().removeChild(e); }
+    static void text(Element p,String value) {
         var runs=children(p,"r");Element style=runs.isEmpty()?null:children(runs.getFirst(),"rPr").stream().findFirst().map(e->(Element)e.cloneNode(true)).orElse(null);
         for(var e:children(p,null)) if(!e.getLocalName().equals("pPr")) p.removeChild(e);var r=element(p.getOwnerDocument(),"r");if(style!=null) r.appendChild(style);var t=element(p.getOwnerDocument(),"t");t.setAttributeNS(XMLConstants.XML_NS_URI,"xml:space","preserve");t.setTextContent(value);r.appendChild(t);p.appendChild(r);
     }
-    private static Element paragraph(Element prototype,String value) { var p=(Element)prototype.cloneNode(true);text(p,value);removeAll(p,"color");removeAll(p,"sectPr");return p; }
-    private static void cell(Element cell,String value) {
+    static Element paragraph(Element prototype,String value) { var p=(Element)prototype.cloneNode(true);text(p,value);removeAll(p,"color");removeAll(p,"sectPr");return p; }
+    static void cell(Element cell,String value) {
         // Allow long identifiers and email addresses to wrap inside the official narrow columns.
         if(!value.startsWith("@@SIG")) value=value.replaceAll("(?<=\\S)(?=[@./])","\u200B").replaceAll("(\\S{12})(?=\\S)","$1\u200B");
         var paragraphs=children(cell,"p");var prototype=paragraphs.getFirst();for(var p:paragraphs) cell.removeChild(p);for(String line:value.split("\\R",-1)) cell.appendChild(paragraph(prototype,line));
     }
-    private static void lines(List<Element> out,Element prototype,String value) { for(String line:value.split("\\R",-1)) out.add(paragraph(prototype,line)); }
+    static void lines(List<Element> out,Element prototype,String value) { for(String line:value.split("\\R",-1)) out.add(paragraph(prototype,line)); }
     public List<String> sections(Snapshot s) {
         var sections=new ArrayList<>(List.of("ANTECEDENTES","DESARROLLO DE ACTIVIDADES","CONCLUSIONES","OPORTUNIDADES DE MEJORA"));
         if(!s.report().delegations().isEmpty()) sections.add("REGISTRO DE CONTACTOS Y GESTIONES DE LA DELEGACIÓN");
@@ -49,7 +49,7 @@ public class T2Template {
                 if(entry.getName().equals("word/document.xml")||entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) body(doc,s,pageNumbers);else furniture(doc,s);
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers); }else furniture(doc,s);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
                 out.putNextEntry(new ZipEntry(entry.getName()));out.write(bytes);out.closeEntry();
@@ -100,8 +100,8 @@ public class T2Template {
         for(var size:all(body,"pgSz")) { boolean landscape="landscape".equals(size.getAttributeNS(W,"orient"));size.setAttributeNS(W,"w:w",landscape?"16838":"11906");size.setAttributeNS(W,"w:h",landscape?"11906":"16838"); }
         for(var t:all(body,"tbl")) fit(t,9026);
     }
-    private static void heading(List<Element> result,Map<String,Element> nodes,Element source,String label) { var p=paragraph(source,label);property(p,"keepNext");result.add(p);nodes.put(label,p); }
-    private static void signature(Element table,Element prototype,String label,String name,String position,String suffix) {
+    static void heading(List<Element> result,Map<String,Element> nodes,Element source,String label) { var p=paragraph(source,label);property(p,"keepNext");result.add(p);nodes.put(label,p); }
+    static void signature(Element table,Element prototype,String label,String name,String position,String suffix) {
         var row=(Element)prototype.cloneNode(true);removeAll(row,"trHeight");var cells=children(row,"tc");cell(cells.get(0),label);cell(cells.get(1),name);cell(cells.get(2),position);cell(cells.get(3),suffix==null?"":"@@SIGTOP"+suffix+"@@\n@@SIGBOTTOM"+suffix+"@@");
         if(suffix!=null) { var markers=children(cells.get(3),"p");for(int i=0;i<markers.size();i++) { var p=markers.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");var spacing=property(p,"spacing");spacing.setAttributeNS(W,"w:before","0");spacing.setAttributeNS(W,"w:after",i==0?"1000":"0");spacing.setAttributeNS(W,"w:line","40");spacing.setAttributeNS(W,"w:lineRule","exact");for(var r:children(p,"r")) { var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"rPr");r.insertBefore(e,r.getFirstChild());return e;});var size=element(p.getOwnerDocument(),"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size); } } }
         var pr=children(row,"trPr").stream().findFirst().orElseGet(()->{var e=element(row.getOwnerDocument(),"trPr");row.insertBefore(e,row.getFirstChild());return e;});if(children(pr,"cantSplit").isEmpty()) pr.appendChild(element(row.getOwnerDocument(),"cantSplit"));
@@ -127,7 +127,7 @@ public class T2Template {
             if(columns.size()==3 && widths.size()==3) { int[] sizes={4404,3500,600};for(int i=0;i<3;i++) { columns.get(i).setAttributeNS(W,"w:w",String.valueOf(sizes[i]));widths.get(i).setAttributeNS(W,"w:w",String.valueOf(sizes[i])); } }
         }
     }
-    private static void fit(Element table,int width) {
+    static void fit(Element table,int width) {
         int previous=all(table,"gridCol").stream().mapToInt(c->Integer.parseInt(c.getAttributeNS(W,"w"))).sum();if(previous==0) return;double factor=(double)width/previous;
         for(String tag:List.of("gridCol","tcW","tblW")) for(var size:all(table,tag)) if(tag.equals("gridCol")||size.getAttributeNS(W,"type").equals("dxa")) size.setAttributeNS(W,"w:w",String.valueOf((int)Math.round(Integer.parseInt(size.getAttributeNS(W,"w"))*factor)));
         for(var indent:all(table,"tblInd")) indent.setAttributeNS(W,"w:w","0");

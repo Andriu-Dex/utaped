@@ -107,7 +107,7 @@ public class AuthorSignatureService {
             var stored=files.put(signed,"plan-t1-firmado.pdf",source.pageCount());UUID id=UUID.randomUUID();
             jdbc.update("INSERT INTO signed_document_artifact(id,work_plan_id,artifact_id,actor_id,binding_id,file_id,request_key,source_row_version,input_hash,output_hash,signer_name,signed_at,signature_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 id,doc,artifact,actor.id(),binding.id(),stored.id(),requestKey,rowVersion,inputHash,stored.sha256(),actor.displayName(),OffsetDateTime.ofInstant(now,ZoneOffset.UTC),state.signed().size());
-            audit.record(actor.id(),plan.documentType().equals("T2")?"T2_ARTIFACT_SIGNED":"T1_ARTIFACT_SIGNED",doc);if(state.pendingAuthors().size()==1) reviews.start(doc,artifact,id,email);
+            audit.record(actor.id(),plan.documentType()+"_ARTIFACT_SIGNED",doc);if(state.pendingAuthors().size()==1) reviews.start(doc,artifact,id,email);
             else audit.record(actor.id(),"AUTHOR_SIGNATURE_REQUESTED",doc,state.pendingAuthors().get(1).id());return list(doc,artifact,email).getFirst();
         } catch(java.nio.charset.CharacterCodingException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Contraseña con codificación no válida."); }
         finally { if(body!=null) Arrays.fill(body,(byte)0);if(password!=null) Arrays.fill(password,'\0');if(container!=null) Arrays.fill(container,(byte)0); }

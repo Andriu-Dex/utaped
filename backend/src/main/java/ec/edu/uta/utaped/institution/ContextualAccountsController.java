@@ -20,7 +20,7 @@ public class ContextualAccountsController {
             JOIN organizational_scope s ON s.id=t.scope_id AND s.active
             JOIN academic_period period ON period.id=s.period_id AND period.status='ACTIVE'
             JOIN institutional_group g ON g.id=s.group_id AND g.active
-            WHERE s.id=? AND t.active AND u.active AND u.system_role='USER' AND u.id<>?
+            WHERE s.id=? AND t.active AND NOT t.delegated AND u.active AND u.system_role='USER' AND u.id<>?
               AND EXISTS(SELECT 1 FROM scope_member a WHERE a.scope_id=s.id AND a.user_id=? AND a.active AND a.membership_role='COORDINATOR' AND a.password_reset_authorized)
             ORDER BY u.display_name,u.id
             """,scope,actor.id(),actor.id());

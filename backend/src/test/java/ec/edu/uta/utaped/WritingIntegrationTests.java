@@ -45,9 +45,10 @@ class WritingIntegrationTests extends WorkPlanIntegrationTests {
         jdbc.update("UPDATE work_plan SET document_state='IN_REVIEW' WHERE id=?",doc);assertEquals(403,error(()->writing.suggest(doc,"user@example.invalid",input("OBJECTIVE","Texto"))));
         jdbc.update("UPDATE work_plan SET document_state='DRAFT' WHERE id=?",doc);
         when(provider.suggest(anyString(),anyString(),anyString())).thenAnswer(call -> { jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);return "Cambio que no debe aplicarse"; });
-        assertEquals(403,error(()->writing.suggest(doc,"user@example.invalid",input("OBJECTIVE","Texto"))));
+        assertEquals(404,error(()->writing.suggest(doc,"user@example.invalid",input("OBJECTIVE","Texto"))));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='WRITING_FAILED'",Integer.class));
-        assertEquals("",plans.get(doc,"user@example.invalid").objective());
+        assertEquals(404,error(()->plans.get(doc,"user@example.invalid")));
+        assertEquals("",jdbc.queryForObject("SELECT objective FROM work_plan WHERE id=?",String.class,doc));
     }
     @Test void unavailableAndRateLimitedProviderLeavesDraftEditable() {
         when(provider.configuration()).thenReturn(new AiProvider.Configuration(false,"GROQ",8000));assertEquals(503,error(()->writing.suggest(doc,"user@example.invalid",input("OBJECTIVE","Texto"))));

@@ -23,6 +23,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class ArtifactService {
+    @org.springframework.beans.factory.annotation.Autowired private ec.edu.uta.utaped.planning.DocumentStructures structures;
     private final JdbcTemplate jdbc;private final WorkPlanService plans;private final ActivityService activities;
     private final AttachmentService attachments;private final StoredFiles files;private final T1Template template;
     private final T1PdfEngine engine;private final AuditService audit;private final Accounts accounts;
@@ -30,6 +31,7 @@ public class ArtifactService {
     private final ec.edu.uta.utaped.planning.ReportService reports;
     private final ec.edu.uta.utaped.planning.DocumentAuthors authors;
     private final ec.edu.uta.utaped.planning.EvidenceService evidence;
+    private final ec.edu.uta.utaped.planning.ExecutionReportService executions;
     private final JsonMapper json=JsonMapper.builder().build();
     private final Semaphore generation=new Semaphore(1),rendering=new Semaphore(2);
     private record PreviewCache(Generated document,Map<String,Integer> sections,long expiresAt) {}
@@ -41,7 +43,8 @@ public class ArtifactService {
         if(!plan.editable() || !plan.documentState().equals("DRAFT") || !plan.documentType().equals("T1"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
         if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
-        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors());
+        // The elaboration date is provisional until the final artifact is prepared for signing.
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()).withPreparationDate(plans.today()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors(),null,saved.structure());
         String key=email+":"+id+":"+hash(draft);PreviewCache cached;
         synchronized(draftPreviews) {
             draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
@@ -67,7 +70,8 @@ public class ArtifactService {
         return new DraftView(plan.rowVersion(),cached.document().pages(),cached.sections(),page,Base64.getEncoder().encodeToString(renderPage(cached.document().pdf(),page)));
     }
     public ArtifactService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
-        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence,ec.edu.uta.utaped.planning.DocumentAuthors authors) {
+        StoredFiles files,T1Template template,T1PdfEngine engine,AuditService audit,Accounts accounts,DocumentWorkflowSnapshot workflows,ec.edu.uta.utaped.planning.ReportService reports,ec.edu.uta.utaped.planning.EvidenceService evidence,ec.edu.uta.utaped.planning.DocumentAuthors authors,ec.edu.uta.utaped.planning.ExecutionReportService executions) {
+        this.executions=executions;
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.files=files;
         this.template=template;this.engine=engine;this.audit=audit;this.accounts=accounts;
         this.workflows=workflows;
@@ -75,9 +79,9 @@ public class ArtifactService {
     }
     public Readiness readiness(UUID id,String email) {
         var plan=plans.get(id,email);var matrix=activities.get(id,email);var annexes=attachments.get(id,email);
-        var blockers=new ArrayList<Blocker>();
-        if(plan.documentType().equals("T2")) {
-            blockers.addAll(reports.blockers(id,email));
+        var blockers=new ArrayList<Blocker>(structures.blockers(id));
+        if(!plan.documentType().equals("T1")) {
+            blockers.addAll(plan.documentType().equals("T2")?reports.blockers(id,email):executions.blockers(id,email));
             if(annexes.enabled()&&annexes.items().isEmpty()) blockers.add(new Blocker("Anexos","Agregue un PDF o seleccione No en anexos adicionales."));
             return new Readiness(plan.rowVersion(),blockers.isEmpty(),List.copyOf(blockers));
         }
@@ -131,10 +135,29 @@ public class ArtifactService {
             }
             rows=List.copyOf(linked);annexList.addAll(evidence.annexes(report.basePlanId(),email));
         }
+        var execution=plan.documentType().equals("T3")?executions.data(id,email):null;
+        if(execution!=null) {
+            // Same frozen labels as T2, limited to the activities of this cut and in the Plan order.
+            var source=jdbc.queryForObject("SELECT snapshot::text FROM document_artifact WHERE id=? AND work_plan_id=?",String.class,execution.baseArtifactId(),execution.basePlanId());
+            var base=json.readValue(source,Snapshot.class).activities();var state=evidence.get(execution.basePlanId(),email);
+            var selected=new HashSet<>(execution.activityIds());var linked=new ArrayList<Activity>();int annexIndex=annexList.size();
+            for(int i=0;i<base.size();i++) {
+                var row=state.activities().get(i);if(!selected.contains(row.id())) continue;var a=base.get(i);var means=new ArrayList<String>();
+                for(var medium:row.media()) {
+                    if(medium.evidenceKind().equals("URL")&&!medium.versions().isEmpty()) {
+                        var reference=medium.versions().getFirst();
+                        means.add(medium.label()+" — "+reference.referenceTitle()+": "+reference.externalUrl());
+                        references.add(new ExternalReference(reference.id(),reference.version(),a.title(),medium.label(),reference.referenceTitle(),reference.externalUrl()));
+                    } else means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
+                }
+                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means)));
+            }
+            rows=List.copyOf(linked);annexList.addAll(evidence.annexes(execution.basePlanId(),email,selected));
+        }
         // Labels are derived once for the complete sequence, including evidence PDFs.
         var labelled=new ArrayList<AttachmentModels.Attachment>();
         for(var a:annexList) labelled.add(new AttachmentModels.Attachment(a.id(),a.fileId(),AttachmentService.label(labelled.size()),a.title(),a.description(),a.originalName(),a.sizeBytes(),a.pageCount(),a.sha256()));
-        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email));
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email),execution,structures.snapshot(id));
     }
     private String hash(Snapshot snapshot) {
         // Permissions belong to the requesting account, not to the document content.
@@ -160,6 +183,8 @@ public class ArtifactService {
         if(state.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió. Recargue antes de generar la previsualización.");
         var ready=readiness(id,email);
         if(!ready.ready()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete los requisitos de preparación antes de generar el PDF.");
+        // The elaboration date is the finalization date: it is fixed in the artifact that the authors sign.
+        jdbc.update("UPDATE work_plan SET preparation_date=? WHERE id=? AND preparation_date<>?",plans.today(),id,plans.today());
         var snapshot=snapshot(id,email);String sha=hash(snapshot);
         var existing=list(id,email).stream().filter(a->a.sourceHash().equals(sha) && a.templateVersion().equals(engine.version(snapshot.plan().documentType()))).findFirst();
         if(existing.isPresent()) return existing.get();
@@ -169,7 +194,7 @@ public class ArtifactService {
             Generated generated;
             try { generated=engine.generate(snapshot); }
             catch(IllegalStateException error) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo generar el PDF. Revise el contenido o intente nuevamente.",error); }
-            var file=files.put(generated.pdf(),snapshot.plan().documentType().equals("T2")?"informe-t2.pdf":"plan-trabajo-t1.pdf",generated.pages().size());UUID artifactId=UUID.randomUUID();
+            var file=files.put(generated.pdf(),switch(snapshot.plan().documentType()) { case "T2" -> "informe-t2.pdf";case "T3" -> "informe-ejecucion-t3.pdf";default -> "plan-trabajo-t1.pdf"; },generated.pages().size());UUID artifactId=UUID.randomUUID();
             jdbc.update("INSERT INTO document_artifact(id,work_plan_id,actor_id,source_row_version,source_hash,template_version,file_id,snapshot,pages,signature_slots) VALUES (?,?,?,?,?,?,?,?::jsonb,?::jsonb,?::jsonb)",
                 artifactId,id,accounts.current(email).id(),state.rowVersion(),sha,engine.version(snapshot.plan().documentType()),file.id(),json.writeValueAsString(snapshot),json.writeValueAsString(generated.pages()),json.writeValueAsString(generated.signatureSlots()));
             audit.record(accounts.current(email).id(),snapshot.plan().documentType()+"_PREVIEW_GENERATED",id);
@@ -193,7 +218,7 @@ public class ArtifactService {
             .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Previsualización no disponible."));
         var stored=jdbc.queryForMap("SELECT snapshot::text FROM document_artifact WHERE id=? AND work_plan_id=?",artifactId,id);
         var frozen=json.readValue((String)stored.get("snapshot"),Snapshot.class);
-        var blockers=new ArrayList<Blocker>();
+        var blockers=new ArrayList<Blocker>(structures.blockers(id));
         if(!artifact.current()) blockers.add(new Blocker("Artefacto","El contenido, la plantilla o la configuración del flujo cambió. Genere una nueva previsualización."));
         if(!plan.editable()) blockers.add(new Blocker("Período","El Plan no está habilitado para elaboración en este momento."));
         if(plan.scopeId()!=null&&jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=? AND workflow_locked_at IS NOT NULL",Integer.class,plan.periodId())==0)
@@ -217,7 +242,8 @@ public class ArtifactService {
         return renderPage(bytes,pageIndex);
     }
     public byte[] renderPage(byte[] bytes,int pageIndex) {
-        if(!rendering.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización ocupada. Intente nuevamente.");
+        try { if(!rendering.tryAcquire(2,java.util.concurrent.TimeUnit.SECONDS)) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización ocupada. Intente nuevamente."); }
+        catch(InterruptedException interrupted) { Thread.currentThread().interrupt();throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Previsualización interrumpida. Intente nuevamente."); }
         try(var pdf=Loader.loadPDF(bytes)) {
             if(pageIndex<0 || pageIndex>=pdf.getNumberOfPages()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
             // Bound raster dimensions independently of uploaded PDF media boxes.

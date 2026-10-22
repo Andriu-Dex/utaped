@@ -1,0 +1,13 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { api } from '../shared/api'
+import { Toast } from '../shared/Toast'
+import { ActionForm } from '../shared/ActionForm'
+type State = { required: boolean; registered: boolean; canRegister: boolean }
+export function FormalSubmission({ targetDocId, onDirtyChange, onRegistered }: { targetDocId: string; onDirtyChange: (value: boolean) => void; onRegistered?: () => void }) {
+  const [state, setState] = useState<State | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(''), [dirty, setDirty] = useState(false)
+  useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { let active = true; api<State>('/work-plans/' + targetDocId + '/formal-submission').then(value => { if (active) setState(value) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [targetDocId])
+  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = event.currentTarget, data = new FormData(form); setBusy(true); setError(''); try { setState(await api<State>('/work-plans/' + targetDocId + '/formal-submission', 'POST', data)); setDirty(false); form.reset(); onRegistered?.() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo registrar la constancia.') } finally { setBusy(false) } }
+  if (!state?.required && !error) return null
+  return <section className="card" aria-label="Trámite institucional"><span className="section-kicker">TRÁMITE INSTITUCIONAL</span><h2>Constancia de Quipux</h2>{error && <Toast message={error} onDismiss={() => setError('')} />}{state?.registered ? <><p>Constancia registrada. La ejecución y los informes derivados están habilitados según sus permisos.</p><a href={'/api/work-plans/' + targetDocId + '/formal-submission/content'}>Descargar constancia</a></> : <><p>Documento aprobado, pendiente de trámite externo. Descargue su PDF aprobado, tramite el envío y solicite a la coordinación registrar la constancia.</p>{state?.canRegister && <ActionForm label="Registrar constancia" dirty={dirty} disabled={busy} onCancel={() => setDirty(false)}><form onSubmit={save} onChange={() => setDirty(true)}><fieldset disabled={busy}><label>PDF de la constancia<input type="file" name="file" accept="application/pdf,.pdf" required /></label><p className="field-help">Máximo 10 MB. Se conserva como constancia privada; no modifica el PDF firmado.</p><button>Guardar constancia</button></fieldset></form></ActionForm>}</>}</section>
+}

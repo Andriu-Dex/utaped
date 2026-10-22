@@ -1,5 +1,30 @@
 # Decisiones pendientes y contradicciones
 
+## Precisiones de implementación — 2026-10-21
+
+- La copia local de custodia debe verificarse realmente por SHA-256; una respuesta HTTP de descarga no prueba su conservación. Sigue siendo necesaria la custodia fuera del servidor, antes de cualquier purga manual.
+- Fecha de elaboración = preparación del PDF para firma, no fecha de la última firma. No se puede cambiar después sin invalidar firmas; fecha/hora de cada firmante se conserva por separado.
+- El QR contiene metadatos; se elimina la referencia no contratada a un validador público. No afirma confianza institucional, TSA ni validación de revocación.
+- Historia cerrada: ADMIN habilita permiso sobre un cargo y lo asigna en un período activo, por carrera o facultad. Decano/Subdecano se precargan únicamente como ejemplos de desarrollo. Ser ADMIN técnico no concede lectura de aprobados históricos. Descartados manuales son distintos del archivo automático al cerrar.
+- Quipux se representa mediante constancia PDF opcional por flujo congelado, registrada por coordinación. Se bloquea avance a ejecución/informes derivados y cierre si falta; el aprobado se puede descargar para efectuar el trámite externo.
+- La estructura adicional se publica para documentos nuevos y se congela por documento. Las secciones institucionales se conservan; validar con el cliente cualquier reordenamiento antes de usarlo institucionalmente.
+- `Informe_ejecucion.pdf` muestra cuatro entradas de índice; el DOCX incorpora además acciones de mejora, firmas/control y FODA. Se usa el DOCX más completo como fuente de composición y el PDF como referencia visual. No se modifica ningún original de templates.
+- La ventana inicial de cinco días hábiles se calcula cuando el fin de elaboración se deja vacío; una fecha final explícita configura otra ventana. La reapertura individual se aplica al ámbito del T1; T2/T3 disponen del período vigente. No se reabren períodos cerrados.
+
+El corte/periodicidad definitiva del Informe de ejecución, las tablas reales de cargos/firmas, la reasignación de tareas ya activadas y las políticas institucionales de custodia/retención/operación requieren validación. [Contrato](../api/institutional-rules-and-execution.md).
+
+## Decisiones provisionales del equipo — 2026-10-20
+
+El propietario autoriza resolver provisionalmente las contradicciones de reuniones mientras el cliente no entregue información oficial. Son reglas configurables, no normativa institucional ratificada. [Plan de implementación](../planning/institutional-rules-and-execution-report.md).
+
+- Descarga final: solo después de APPROVED y para participantes autorizados del documento. Coincide con el comportamiento actual; no se restringe al último validador.
+- Fin de semestre: se elimina la documentación del período después de exportar y verificar el ZIP, registrar su descarga por ADMIN y cumplir un período de gracia configurable. Se conserva un inventario mínimo y la auditoría. Supera la prohibición anterior de purga en este alcance.
+- Fecha de elaboración: la de finalización, fijada al preparar el artefacto de «Firmar y finalizar» y congelada en los bytes firmados.
+- Prórrogas: máximo acumulado de 3 días hábiles (sin fines de semana ni feriados registrados), individual, con motivo, concedida por el coordinador del ámbito y dentro del período. La ventana de elaboración usa 5 días hábiles con la misma regla de reapertura individual.
+- Puerto: 64430 es el único puerto de entrada; SMTP 587 es salida y requiere confirmación de red, con restablecimiento ADMIN como alternativa.
+- Comisiones, cargos y flujos: datos de ejemplo de FISEI/UTA administrables e importables hasta recibir la tabla oficial.
+- Nuevo formato: `INFORME EJECUCION II E26J26 UPE.docx` se trata como T3 Informe de ejecución, distinto del T2 Informe final.
+
 ## Decisión colegiada y autoría confirmadas — 2026-10-17
 
 El propietario confirma un registrador designado por Administración para cada período, identificado en auditoría y sin firma personal en nombre del órgano. Esta decisión resuelve quién registra; no inventa la tabla de órganos/casos institucionales. Autoriza completar coautores/cargos y corregir observaciones de la ronda y encabezados. [Contrato de la tanda](../api/document-authorship-and-review.md). Siguen pendientes el catálogo completo de funciones y asignaciones oficiales, Quipux, retención y excepciones no incluidas en esta entrega.

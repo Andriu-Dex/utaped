@@ -25,6 +25,7 @@ public class InstitutionController {
     private final JdbcTemplate jdbc;
     private final Accounts accounts;
     private final AuditService audit;
+    @org.springframework.beans.factory.annotation.Autowired private ec.edu.uta.utaped.planning.BusinessCalendar calendar;
     public InstitutionController(JdbcTemplate jdbc,Accounts accounts,AuditService audit) { this.jdbc=jdbc;this.accounts=accounts;this.audit=audit; }
     @GetMapping("/groups") public List<Map<String,Object>> groups(Principal principal) {
         var actor=accounts.current(principal.getName());
@@ -79,12 +80,14 @@ public class InstitutionController {
         return periods;
     }
     public record PeriodInput(@NotBlank @Size(max=120) String name,@NotNull LocalDate startsOn,@NotNull LocalDate endsOn,
-        @NotNull LocalDate preparationStartsOn,@NotNull LocalDate preparationEndsOn,@NotNull LocalDate reviewStartsOn,@NotNull LocalDate reviewEndsOn) {}
+        @NotNull LocalDate preparationStartsOn,LocalDate preparationEndsOn,@NotNull LocalDate reviewStartsOn,@NotNull LocalDate reviewEndsOn) {}
     @PostMapping("/admin/periods") @Transactional public Map<String,UUID> createPeriod(@Valid @RequestBody PeriodInput data,Principal principal) {
-        if(data.startsOn().isAfter(data.endsOn()) || data.preparationStartsOn().isAfter(data.preparationEndsOn()) || data.reviewStartsOn().isAfter(data.reviewEndsOn()))
+        var preparationEnd=data.preparationEndsOn()==null?calendar.addBusinessDays(data.preparationStartsOn().minusDays(1),5):data.preparationEndsOn();
+        if(data.preparationEndsOn()==null&&preparationEnd.isAfter(data.endsOn()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La ventana de cinco días hábiles supera el período. Indique una fecha de elaboración válida.");
+        if(data.startsOn().isAfter(data.endsOn()) || data.preparationStartsOn().isAfter(preparationEnd) || data.reviewStartsOn().isAfter(data.reviewEndsOn()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Las fechas iniciales no pueden superar las finales.");
         UUID id=UUID.randomUUID();
-        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,?,?,?,?,?,?,?)",id,data.name().trim(),data.startsOn(),data.endsOn(),data.preparationStartsOn(),data.preparationEndsOn(),data.reviewStartsOn(),data.reviewEndsOn());
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,?,?,?,?,?,?,?)",id,data.name().trim(),data.startsOn(),data.endsOn(),data.preparationStartsOn(),preparationEnd,data.reviewStartsOn(),data.reviewEndsOn());
         audit.record(accounts.current(principal.getName()).id(),"PERIOD_CREATED",id); return Map.of("id",id);
     }
 }

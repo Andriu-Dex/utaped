@@ -65,7 +65,7 @@ public class ActivityService {
         // Lock the document aggregate: metadata and matrix share one concurrency token.
         plans.lock(targetDocId,email);
         var current=get(targetDocId,email);
-        if(plans.get(targetDocId,email).documentType().equals("T2")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Las actividades del Informe se conservan desde el Plan aprobado.");
+        if(!plans.get(targetDocId,email).documentType().equals("T1")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Las actividades del Informe se conservan desde el Plan aprobado.");
         if(!current.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
         if(current.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue antes de guardar la matriz.");
         Set<UUID> memberIds=new HashSet<>();current.members().forEach(m->memberIds.add(m.id()));

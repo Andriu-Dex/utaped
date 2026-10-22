@@ -10,13 +10,14 @@ public final class WorkflowModels {
     private WorkflowModels() {}
     public record Stage(@NotNull UUID id,@NotBlank @Size(max=160) String label,
         @NotBlank @Pattern(regexp="REVIEW|VALIDATE|APPROVE") String action,
-        @NotBlank @Pattern(regexp="PERSON|GROUP_ROLE|COLLEGIATE") String recipientKind,
+        @NotBlank @Pattern(regexp="PERSON|GROUP_ROLE|COLLEGIATE|POSITION") String recipientKind,
         @NotNull @Size(max=50) List<@NotNull UUID> assigneeIds,
         @Pattern(regexp="MEMBER|COORDINATOR") String groupRole,
-        @NotNull @Size(max=160) String recipientLabel,boolean requiresSignature,@Size(max=160) String positionLabel) {
-        public Stage(UUID id,String label,String action,String kind,List<UUID> people,String role,String recipient,boolean signature) { this(id,label,action,kind,people,role,recipient,signature,null); }
+        @NotNull @Size(max=160) String recipientLabel,boolean requiresSignature,@Size(max=160) String positionLabel,UUID positionId) {
+        public Stage(UUID id,String label,String action,String kind,List<UUID> people,String role,String recipient,boolean signature) { this(id,label,action,kind,people,role,recipient,signature,null,null); }
+        public Stage(UUID id,String label,String action,String kind,List<UUID> people,String role,String recipient,boolean signature,String position) { this(id,label,action,kind,people,role,recipient,signature,position,null); }
     }
-    public record Definition(@NotBlank @Size(max=160) String name,@NotNull @Size(max=20) List<@NotNull @Valid Stage> stages) {}
+    public record Definition(@NotBlank @Size(max=160) String name,@NotNull @Size(max=20) List<@NotNull @Valid Stage> stages,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT) Boolean requiresQuipux) { public Definition { requiresQuipux=Boolean.TRUE.equals(requiresQuipux); } public Definition(String name,List<Stage> stages) { this(name,stages,false); } }
     public record Save(@NotNull @PositiveOrZero Long rowVersion,@NotNull @Valid Definition definition) {}
     public record Version(@NotNull @PositiveOrZero Long rowVersion) {}
     public record Revision(UUID id,int revisionNumber,Definition definition,String configuredBy,OffsetDateTime configuredAt) {}

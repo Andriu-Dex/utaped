@@ -15,6 +15,7 @@ import { adminPages, type AdminPage } from './adminNavigation'
 import { Icon } from '../shared/Icon'
 import { OrganizationAdministration } from './OrganizationAdministration'
 import { TemplateAdministration } from './TemplateAdministration'
+import { PositionAdministration } from './PositionAdministration'
 
 export function Administration({ page, periods, initialGroupId, onChange, onDirtyChange }: { page: AdminPage; periods: import('../shared/api').Period[]; initialGroupId?: string; onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [users, setUsers] = useState<User[]>([]); const [groups, setGroups] = useState<Group[]>([])
@@ -45,6 +46,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
   async function submit(event: FormEvent<HTMLFormElement>, path: string) {
     event.preventDefault(); const form = event.currentTarget; setError(''); setNotice(''); setBusy(true)
     const data = Object.fromEntries(new FormData(form))
+    if (path === '/admin/periods' && !data.preparationEndsOn) delete data.preparationEndsOn
     if (path === '/admin/users') { data.displayName = data.firstNames + ' ' + data.lastNames; if (!data.username) delete data.username }
     try {
       const target = path === 'membership' ? '/admin/groups/' + data.groupId + '/members' : path
@@ -120,15 +122,16 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
           </div>
         </div>
         <div className="grid" style={{ marginBottom: 16 }}>
-          {([['preparationStartsOn','Inicio de elaboración'],['preparationEndsOn','Fin de elaboración'],['reviewStartsOn','Inicio de revisión'],['reviewEndsOn','Fin de revisión']] as const).map(([name,label]) => <label key={name}>{label}<input required type="date" name={name} /></label>)}
+          {([['preparationStartsOn','Inicio de elaboración'],['preparationEndsOn','Fin de elaboración'],['reviewStartsOn','Inicio de revisión'],['reviewEndsOn','Fin de revisión']] as const).map(([name,label]) => <label key={name}>{label}<input required={name !== 'preparationEndsOn'} type="date" name={name} /></label>)}
         </div>
-        <button disabled={busy}><Icon name="calendar" size={16} />Crear período</button>
+        <p className="field-help">Fin de elaboración: déjelo vacío para calcular cinco días hábiles desde el inicio, excluyendo fines de semana y feriados registrados. Indique otra fecha para configurar una ventana diferente; los períodos existentes no cambian.</p><button disabled={busy}><Icon name="calendar" size={16} />Crear período</button>
       </form></ActionForm>
     </section>
 
     </>}
     {page === 'templates' && <TemplateAdministration onDirtyChange={setTemplateDirty} />}
     {(page === 'resources' || page === 'activities' || page === 'holidays') && <PlanningAdministration groups={groups} section={page} onDirtyChange={setProfileDirty} />}
+    {page === 'positions' && <PositionAdministration periods={periods} onDirtyChange={setProfileDirty} />}
     {page === 'workflows' && <WorkflowAdministration groups={groups} users={users} suggestedQuery={directoryQuery} onDirtyChange={setFlowDirty} />}
     {page === 'audit' && <AuditViewer />}
     {page === 'certificates' && <CertificateAdministration onDirtyChange={setProfileDirty} />}

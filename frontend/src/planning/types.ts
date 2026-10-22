@@ -3,7 +3,7 @@ export interface WorkPlan {
   title: string; institutionalUnit: string; career: string; justification: string; objective: string
   documentState: 'DRAFT' | 'IN_REVIEW' | 'APPROVED'; formalVersion: string; rowVersion: number; preparationDate: string
   scopeId: string | null; createdBy: string; reviewRound: number; archivedAt: string | null
-  documentType: 'T1' | 'T2'; basePlanId: string | null
+  documentType: 'T1' | 'T2' | 'T3'; basePlanId: string | null
   createdAt: string; updatedAt: string; editable: boolean; canManage: boolean
 }
 export interface PlanOptions {

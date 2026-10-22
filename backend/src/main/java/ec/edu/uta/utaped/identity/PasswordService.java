@@ -53,7 +53,7 @@ public class PasswordService {
         boolean allowed=jdbc.queryForObject("""
             SELECT EXISTS(SELECT 1 FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id AND g.active
               JOIN scope_member a ON a.scope_id=s.id AND a.user_id=? AND a.active AND a.membership_role='COORDINATOR' AND a.password_reset_authorized
-              JOIN scope_member t ON t.scope_id=s.id AND t.user_id=? AND t.active
+              JOIN scope_member t ON t.scope_id=s.id AND t.user_id=? AND t.active AND NOT t.delegated
               JOIN app_user u ON u.id=t.user_id AND u.active AND u.system_role='USER'
               WHERE s.id=? AND s.active)
             """,Boolean.class,actor.id(),id,scope);

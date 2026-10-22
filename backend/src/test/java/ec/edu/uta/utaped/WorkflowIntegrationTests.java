@@ -70,7 +70,7 @@ class WorkflowIntegrationTests {
         jdbc.update("UPDATE institutional_group SET active=false WHERE id=?",group);
         assertEquals(false,JsonPath.read(b.request("GET",path,null,false).body(),"$.groupActive"));
         assertEquals(403,b.request("PUT",path,new Save(1L,body.definition()),true).statusCode());
-        assertEquals(400,b.request("GET",path(group,"T3"),null,false).statusCode());
+        assertEquals(400,b.request("GET",path(group,"T4"),null,false).statusCode());
     }
     @Test void validationRejectsUnresolvedRecipientsAndPreservesDraft() throws Exception {
         var b=new Browser();b.login("admin@example.invalid");String path=path(group,"T1");

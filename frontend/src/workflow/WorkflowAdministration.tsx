@@ -5,14 +5,16 @@ import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
-interface Stage { positionLabel?: string; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
-interface Definition { name: string; stages: Stage[] }
+interface Stage { positionLabel?: string; positionId?: string | null; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
+interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
 export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyChange }: { groups: Group[]; users: User[]; suggestedQuery: string; onDirtyChange: (dirty: boolean) => void }) {
   const [group, setGroup] = useState(''); const [type, setType] = useState('T1'); const [state, setState] = useState<State | null>(null)
   const [draft, setDraft] = useState<Definition>({ name: '', stages: [] }); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [revision, setRevision] = useState<Revision | null>(null)
+  const [positions, setPositions] = useState<{ id: string; name: string; active: boolean }[]>([])
+  useEffect(() => { let active = true; api<{ id: string; name: string; active: boolean }[]>('/admin/positions').then(p => { if (active) setPositions(p) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [])
   const [search, setSearch] = useState(''); const [page, setPage] = useState(0); const [options, setOptions] = useState<{ items: User[]; total: number }>({ items: [], total: 0 })
   const [cachedUsers, setKnown] = useState<Record<string, User>>({})
   const known = { ...cachedUsers, ...Object.fromEntries(users.map(u => [u.id, u])) }
@@ -42,7 +44,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
       <div className="grid">
         <label>Grupo del flujo<select value={group} disabled={busy} onChange={e => choose(e.target.value, type)}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
-        <label>Tipo documental del flujo<select value={type} disabled={busy} onChange={e => choose(group, e.target.value)}><option value="T1">Plan T1</option><option value="T2">Informe T2</option></select></label>
+        <label>Tipo documental del flujo<select value={type} disabled={busy} onChange={e => choose(group, e.target.value)}><option value="T1">Plan T1</option><option value="T2">Informe T2</option><option value="T3">Informe de ejecución</option></select></label>
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
@@ -63,7 +65,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       <ActionForm label="Editar flujo" dirty={dirty} disabled={busy || !state.groupActive} onCancel={() => setDraft(state.draft)}>
         <form onSubmit={e => { e.preventDefault(); void operation('', 'PUT', { rowVersion: state.rowVersion, definition: draft }) }}>
           <fieldset disabled={busy || !state.groupActive}>
-            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label>
+            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label><label className="check"><input type="checkbox" checked={draft.requiresQuipux ?? false} onChange={e => setDraft(d => ({ ...d, requiresQuipux: e.target.checked }))} />Requerir constancia de Quipux después de aprobar</label><p className="field-help">El PDF aprobado se descarga para el trámite externo. La coordinación registra la constancia antes de iniciar ejecución o informes derivados. No hay conexión automática con Quipux.</p>
             {draft.stages.map((s, index) => <section className="card workflow-stage-card" key={s.id} aria-label={'Etapa ' + (index + 1)}>
               <div className="activity-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -82,8 +84,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
               <div className="grid">
                 <label>Nombre de la etapa<input required maxLength={160} value={s.label} onChange={e => change(s.id, { label: e.target.value })} /></label>
                 <label>Acción de la etapa<select value={s.action} onChange={e => change(s.id, { action: e.target.value })}><option value="REVIEW">Revisión</option><option value="VALIDATE">Validación</option><option value="APPROVE">Aprobación</option></select></label>
-                <label>Destinatario de la etapa<select value={s.recipientKind} onChange={e => change(s.id, { recipientKind: e.target.value, assigneeIds: [], groupRole: e.target.value === 'GROUP_ROLE' ? 'COORDINATOR' : null, recipientLabel: '' })}><option value="PERSON">Personas</option><option value="GROUP_ROLE">Rol de pertenencia del grupo</option><option value="COLLEGIATE">Órgano colegiado</option></select></label>
+                <label>Destinatario de la etapa<select value={s.recipientKind} onChange={e => change(s.id, { recipientKind: e.target.value, assigneeIds: [], groupRole: e.target.value === 'GROUP_ROLE' ? 'COORDINATOR' : null, recipientLabel: '', positionId: e.target.value === 'POSITION' ? (positions.find(p => p.active)?.id ?? null) : null })}><option value="POSITION">Cargo institucional</option><option value="PERSON">Personas</option><option value="GROUP_ROLE">Rol de pertenencia del grupo</option><option value="COLLEGIATE">Órgano colegiado</option></select></label>
                 {s.recipientKind === 'COLLEGIATE' && <label>Nombre del órgano colegiado<input required maxLength={160} value={s.recipientLabel} onChange={e => change(s.id, { recipientLabel: e.target.value })} /></label>}
+                {s.recipientKind === 'POSITION' && <label>Cargo destinatario<select required value={s.positionId ?? ''} onChange={e => change(s.id, { positionId: e.target.value || null })}><option value="">Seleccione un cargo</option>{positions.filter(p => p.active || p.id === s.positionId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select><small className="field-help">Se resuelve con la persona asignada al cargo en el período y la carrera de cada ámbito.</small></label>}
                 {s.recipientKind === 'GROUP_ROLE' && <label>Rol destinatario<select value={s.groupRole ?? ''} onChange={e => change(s.id, { groupRole: e.target.value })}><option value="MEMBER">Miembros</option><option value="COORDINATOR">Coordinadores</option></select></label>}
               </div>
               <label>Cargo institucional de esta etapa<input maxLength={160} value={s.positionLabel ?? ''} onChange={event => change(s.id, { positionLabel: event.target.value })} placeholder="Cargo que aparecerá en la matriz de firmas" /></label>

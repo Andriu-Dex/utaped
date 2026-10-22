@@ -17,6 +17,8 @@ public class OrganizationController {
     @PutMapping("/admin/careers/{id}") public void updateCareer(@PathVariable UUID id,@Valid @RequestBody OrganizationService.CareerUpdate input,Principal p) { service.updateCareer(id,p.getName(),input); }
     @GetMapping("/organization/scopes/{id}/history") public Map<String,Object> history(@PathVariable UUID id,Principal p) { return service.history(id,p.getName()); }
     @PostMapping("/admin/organization/scopes") public Map<String,UUID> scope(@Valid @RequestBody OrganizationService.ScopeInput input,Principal p) { return Map.of("id",service.createScope(p.getName(),input)); }
+    @GetMapping("/organization/scopes/{id}/candidates") public List<Map<String,Object>> candidates(@PathVariable UUID id,@RequestParam(defaultValue="") String query,Principal p) { return service.candidates(id,p.getName(),query); }
+    @PutMapping("/organization/scopes/{id}/members") public void delegatedMember(@PathVariable UUID id,@Valid @RequestBody OrganizationService.MemberInput input,Principal p) { service.member(id,p.getName(),input); }
     @PutMapping("/admin/organization/scopes/{id}/members") public void member(@PathVariable UUID id,@Valid @RequestBody OrganizationService.MemberInput input,Principal p) { service.member(id,p.getName(),input); }
     @PutMapping("/admin/organization/scopes/{id}/principal") public void principal(@PathVariable UUID id,@Valid @RequestBody OrganizationService.PrincipalInput input,Principal p) { service.principal(id,p.getName(),input); }
 }

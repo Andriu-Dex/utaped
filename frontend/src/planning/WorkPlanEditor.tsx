@@ -119,7 +119,7 @@ export function WorkPlanEditor({
   }
   if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
   if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'preparation' || section === 'signing') return <DocumentPreparation targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
+  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
   if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
   if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={returnToPlan} />
@@ -133,7 +133,7 @@ export function WorkPlanEditor({
     <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
     <span className="section-kicker review-kicker">PLAN DE TRABAJO · T1</span>
     <h1>{plan.title}</h1><div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span></div>
-    <DocumentLifecycle plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
+    <DocumentLifecycle plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
     <p role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
     <nav className="document-steps" aria-label="Pasos del Plan"><button className="secondary" type="button" aria-current={section === 'general' ? 'step' : undefined} onClick={() => setSection('general')}><span>1</span>Información general</button><button className="secondary" type="button" aria-current={section === 'content' ? 'step' : undefined} onClick={() => setSection('content')}><span>2</span>Contenido</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}><span>3</span>Actividades y matriz</button>
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('attachments')}><span>4</span>Anexos y opciones</button>
@@ -150,7 +150,7 @@ export function WorkPlanEditor({
           <h2>{section === 'general' ? 'Información general del Plan' : 'Contenido y redacción académica'}</h2>
         </div>
       </div>
-      <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
+      <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.documentState === 'DRAFT' ? 'Se fija al preparar la firma' : plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
       {section === 'content' && plan.editable && (
         <div className="live-preview-controls">

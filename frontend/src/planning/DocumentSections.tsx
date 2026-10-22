@@ -1,0 +1,15 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { api } from '../shared/api'
+import { Toast } from '../shared/Toast'
+import { ActionForm } from '../shared/ActionForm'
+type State = { rowVersion: number; editable: boolean; structure: null | { revision: number; sections: { key: string; label: string; required: boolean }[]; contents: Record<string, string> } }
+export function DocumentSections({ targetDocId, disabled, onDirtyChange, onSaved }: { targetDocId: string; disabled: boolean; onDirtyChange: (dirty: boolean) => void; onSaved: () => void }) {
+  const [state, setState] = useState<State | null>(null), [values, setValues] = useState<Record<string, string>>({}), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const dirty = !!state?.structure && JSON.stringify(state.structure.contents) !== JSON.stringify(values)
+  useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { let active = true; api<State>('/work-plans/' + targetDocId + '/structure').then(value => { if (active) { setState(value); setValues(value.structure?.contents ?? {}) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [targetDocId])
+  async function save(event: FormEvent) { event.preventDefault(); if (!state) return; setBusy(true); setError(''); try { const value = await api<State>('/work-plans/' + targetDocId + '/structure', 'PUT', { rowVersion: state.rowVersion, contents: values }); setState(value); setNotice('Secciones adicionales guardadas.'); onSaved() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo guardar; sus datos se conservan.') } finally { setBusy(false) } }
+  const sections = state?.structure?.sections.filter(s => s.key.startsWith('CUSTOM_')) ?? []
+  if (!sections.length && !error) return null
+  return <section className="card" aria-label="Secciones adicionales"><h2>Secciones adicionales del documento</h2><p className="field-help">Estructura {state?.structure?.revision}. Los apartados obligatorios se comprueban antes de preparar el PDF.</p>{error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}{state?.editable ? <ActionForm label="Editar secciones adicionales" dirty={dirty} disabled={disabled || busy} onCancel={() => setValues(state.structure?.contents ?? {})}><form onSubmit={save}><fieldset disabled={busy}>{sections.map(section => <label key={section.key}>{section.label}{section.required && <span aria-hidden="true"> *</span>}<textarea aria-label={section.label} aria-required={section.required} rows={5} maxLength={10000} value={values[section.key] ?? ''} onChange={e => setValues({ ...values, [section.key]: e.target.value })} /></label>)}<button disabled={!dirty}>Guardar secciones</button></fieldset></form></ActionForm> : sections.map(section => <section key={section.key}><h3>{section.label}</h3><p>{values[section.key] || 'No aplica.'}</p></section>)}</section>
+}

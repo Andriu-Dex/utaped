@@ -136,7 +136,9 @@ class DocumentIntegrationTests {
         complete("La comisión requiere planificar las actividades y conservar evidencias de cumplimiento.",2);
         attachments.settings(id,email,new AttachmentModels.Settings(version(),true,true));var state=upload("Actas",UUID.randomUUID(),pdf(2,false,false),version());
         assertTrue(artifacts.readiness(id,email).ready());long before=version();
+        jdbc.update("UPDATE work_plan SET preparation_date=preparation_date-30 WHERE id=?",id);
         var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(before));byte[] original=artifacts.content(id,artifact.id(),email);
+        assertEquals(plans.today(),plans.get(id,email).preparationDate());
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-short.pdf"),original);
         assertEquals(before,version());assertEquals(artifact.id(),artifacts.generate(id,email,new ArtifactModels.Generate(before)).id());
         try(var document=Loader.loadPDF(original)) {
