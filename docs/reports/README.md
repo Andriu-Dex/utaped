@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-21 — PR directo a main y comparación con develop](2026-10-21-02-direct-main-pr.md).
+
 - [2026-10-21 — Informe de ejecución, estructuras y controles institucionales](2026-10-21-01-institutional-completion-and-stabilization.md).
 
 - [2026-10-20 — Reglas institucionales provisionales e Informe de ejecución](2026-10-20-04-institutional-rules-and-execution-report.md).
