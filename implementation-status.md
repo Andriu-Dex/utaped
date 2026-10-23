@@ -1,5 +1,15 @@
 # Estado de implementación productiva
 
+Encabezado T1/T2: Fecha de elaboración conserva dos celdas y divisor vertical según el original; engine9 para composición nueva, sin reescribir firmados. [Reporte](docs/reports/2026-10-23-12-header-date-cells-and-commits.md).
+
+Procedencia institucional: catálogo académico/administrativo, carreras y ámbitos asociados, selección de catálogo e información heredada bloqueada en Planes/Informes; V34 preserva registros y artefactos. [Reporte](docs/reports/2026-10-23-11-institutional-provenance-catalog.md).
+
+Paso 5 T1: previsualización automática con reutilización del artefacto vigente, pendientes y reintento; conserva documentos no editables y bloquea avance incompleto a firma. [Reporte](docs/reports/2026-10-23-10-automatic-plan-preview.md).
+
+Responsables del resumen: nombres agrupados en un único badge por celda; representación colectiva conservada. [Reporte](docs/reports/2026-10-23-09-single-responsibles-badge.md).
+
+Ajuste visual de matriz: Plazo en una línea y responsables con etiquetas compactas; detalle colectivo en tooltip. [Reporte](docs/reports/2026-10-23-08-matrix-column-presentation.md).
+
 Responsables colectivos: etiquetas de ejemplo según tipo de grupo, reparación limitada de semillas antiguas y trazabilidad individual visible en resumen. Revisión de mejoras visuales y navegación secuencial. [Reporte](docs/reports/2026-10-23-07-collective-responsibility-and-ui-review.md).
 
 

@@ -1,5 +1,15 @@
 # Reportes
 
+- [Celdas de fecha del encabezado y commits](2026-10-23-12-header-date-cells-and-commits.md).
+
+- [Catálogo y procedencia institucional](2026-10-23-11-institutional-provenance-catalog.md).
+
+- [Previsualización automática T1](2026-10-23-10-automatic-plan-preview.md).
+
+- [Badge único de responsables](2026-10-23-09-single-responsibles-badge.md).
+
+- [Presentación compacta de columnas de matriz](2026-10-23-08-matrix-column-presentation.md).
+
 - [Responsables colectivos y revisión de interfaz](2026-10-23-07-collective-responsibility-and-ui-review.md).
 
 

@@ -1,5 +1,11 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-23): conservar en el encabezado la celda de Fecha de elaboración y la celda gris independiente a su derecha, con división vertical conforme al documento original.
+
+CONFIRMADO-PROYECTO (2026-10-23): completar catálogo de unidades académicas/administrativas y selección por opciones administradas. La procedencia del ámbito o del Plan base se hereda y se muestra bloqueada; el encabezado refleja unidad y tipo correspondientes.
+
+CONFIRMADO-PROYECTO (2026-10-23): el paso 5 T1 muestra directamente la previsualización, con generación automática cuando corresponde, carga, pendientes y reintento. Se conservan las validaciones y no se regeneran documentos firmados.
+
 ## Avance desde la matriz — 2026-10-23
 
 CONFIRMADO-PROYECTO por el propietario: el botón Siguiente: Anexos del T1 exige al menos una actividad con fechas, responsables, recursos y medios completos, aunque no existan cambios pendientes. Conservar guardado de matriz vacía, borrador y salida protegida; informar mediante toast y foco contextual. No sustituye las validaciones finales del servidor ni cambia las reglas existentes de guardado de actividades.
