@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## Corrección documental — 2026-10-23
+
+Encabezado T1/T2 con proporciones institucionales, escudo sin reducción, altura de filas y separación explícita antes del contenido. Se conserva A4, paginación dinámica y bytes históricos; las nuevas composiciones usan engine8. [Reporte](docs/reports/2026-10-23-01-institutional-document-spacing.md).
+
 ## Estado vigente al 2026-10-21
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.

@@ -27,14 +27,11 @@ final class InstitutionalHeader {
     }
     private static void logo(Element cell) {
         for(var p:children(cell,"p")) {
+            if(elements(p,"t").isEmpty()&&p.getElementsByTagNameNS(W,"drawing").getLength()==0) { cell.removeChild(p);continue; }
             var pp=prop(p,"pPr");var spacing=prop(pp,"spacing");attr(spacing,"before","0");attr(spacing,"after","0");attr(spacing,"line","200");attr(spacing,"lineRule","auto");attr(prop(pp,"jc"),"val","center");
             for(var r:elements(p,"r")) { var rp=prop(r,"rPr");attr(prop(rp,"sz"),"val","14");attr(prop(rp,"spacing"),"val","0"); }
         }
-        var extents=cell.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing","extent");
-        if(extents.getLength()>0) {
-            var extent=(Element)extents.item(0);double ratio=Math.min(1d,508000d/Long.parseLong(extent.getAttribute("cy")));
-            for(String local:List.of("extent","ext")) { var sizes=cell.getElementsByTagNameNS("*",local);for(int i=0;i<sizes.getLength();i++) { var size=(Element)sizes.item(i);if(size.hasAttribute("cx")&&size.hasAttribute("cy")) { size.setAttribute("cx",String.valueOf(Math.round(Long.parseLong(size.getAttribute("cx"))*ratio)));size.setAttribute("cy",String.valueOf(Math.round(Long.parseLong(size.getAttribute("cy"))*ratio))); } } }
-        }
+        // Preserve the official crest dimensions; shrinking it compressed the merged header.
     }
     private static void borders(Element table,List<Element> rows) {
         var tableProperties=prop(table,"tblPr");
@@ -60,16 +57,21 @@ final class InstitutionalHeader {
         for(var table:elements(doc.getDocumentElement(),"tbl")) {
             var rows=children(table,"tr");if(rows.size()!=4 || children(rows.getFirst(),"tc").size()!=2) continue;
             var grids=elements(table,"gridCol");if(grids.size()!=3) continue;
-            int[] widths={1500,3502,3502};for(int i=0;i<3;i++) attr(grids.get(i),"w",String.valueOf(widths[i]));
+            int[] widths={1640,2786,4078};for(int i=0;i<3;i++) attr(grids.get(i),"w",String.valueOf(widths[i]));
             var tw=prop(prop(table,"tblPr"),"tblW");attr(tw,"type","dxa");attr(tw,"w","8504");
-            for(var height:elements(table,"trHeight")) height.getParentNode().removeChild(height);
+            // Minimum heights reproduce the official rows and still allow long names to wrap.
+            int[] minimumHeights={370,250,500,760};
+            for(int i=0;i<rows.size();i++) {
+                var height=prop(prop(rows.get(i),"trPr"),"trHeight");
+                attr(height,"val",String.valueOf(minimumHeights[i]));attr(height,"hRule","atLeast");
+            }
             for(int rowIndex=0;rowIndex<rows.size();rowIndex++) {
                 var cells=children(rows.get(rowIndex),"tc");
                 for(int i=0;i<cells.size();i++) {
-                    var cp=prop(cells.get(i),"tcPr");var width=prop(cp,"tcW");attr(width,"type","dxa");attr(width,"w",String.valueOf(i==0?widths[0]:cells.size()==2?7004:widths[i]));
+                    var cp=prop(cells.get(i),"tcPr");var width=prop(cp,"tcW");attr(width,"type","dxa");attr(width,"w",String.valueOf(i==0?widths[0]:cells.size()==2?6864:widths[i]));
                     var align=prop(cp,"vAlign");attr(align,"val","center");
                     if(i>0) {
-                        var margins=prop(cp,"tcMar");for(String side:List.of("top","bottom","left","right")) { var margin=prop(margins,side);attr(margin,"type","dxa");attr(margin,"w",side.equals("left")||side.equals("right")?"80":"40"); }
+                        var margins=prop(cp,"tcMar");for(String side:List.of("top","bottom","left","right")) { var margin=prop(margins,side);attr(margin,"type","dxa");attr(margin,"w",side.equals("left")||side.equals("right")?"80":"0"); }
                         var shade=prop(cp,"shd");attr(shade,"fill",rowIndex==1||rowIndex==3?"E7E6E6":"FFFFFF"); }
                 }
             }
@@ -80,8 +82,16 @@ final class InstitutionalHeader {
             var data=children(rows.get(2),"tc");setText(data.get(1),"Unidad académica: "+snapshot.plan().institutionalUnit(),18,false,"000000");setText(data.get(2),"Carrera: "+snapshot.plan().career(),18,false,"000000");
             var last=children(rows.get(3),"tc");setText(last.get(1),"Fecha de elaboración: "+snapshot.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),18,false,"1F4E79");
             // Keep date on one full-width cell, instead of an empty grey column beside it.
-            if(last.size()==3) { rows.get(3).removeChild(last.get(2));var cp=prop(last.get(1),"tcPr");attr(prop(cp,"gridSpan"),"val","2");attr(prop(cp,"tcW"),"w","7004"); }
+            if(last.size()==3) { rows.get(3).removeChild(last.get(2));var cp=prop(last.get(1),"tcPr");attr(prop(cp,"gridSpan"),"val","2");attr(prop(cp,"tcW"),"w","6864"); }
             borders(table,rows);
+            // The header is a separate Word story: reserve its trailing space explicitly for FOP.
+            for(Node sibling=table.getNextSibling();sibling!=null;sibling=sibling.getNextSibling()) {
+                if(sibling instanceof Element p&&p.getLocalName().equals("p")) {
+                    var spacing=prop(prop(p,"pPr"),"spacing");
+                    attr(spacing,"before","0");attr(spacing,"after","360");attr(spacing,"line","100");attr(spacing,"lineRule","exact");
+                    break;
+                }
+            }
         }
     }
 }
