@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-23 — Revisión de interfaz y estabilidad](2026-10-23-05-ui-review-and-hardening.md).
+
 - [2026-10-23 — Validación para continuar desde la matriz](2026-10-23-04-matrix-step-validation.md).
 
 - [2026-10-23 — Documentos preparados para revisión manual](2026-10-23-03-prepared-example-documents.md).

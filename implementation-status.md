@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## Revisión de interfaz — 2026-10-23
+
+Mejoras del propietario en documentos, matriz, formularios y notificaciones revisadas e integradas con correcciones de teclado/foco/solo lectura, filtros, tokens de color y protección de la selección de elaboradores. [Reporte](docs/reports/2026-10-23-05-ui-review-and-hardening.md).
+
 ## Validación de avance desde matriz — 2026-10-23
 
 Siguiente: Anexos exige al menos una actividad completa incluso sin cambios pendientes; toast y foco contextual, sin perder el borrador. Guardar una matriz vacía continúa disponible. [Reporte](docs/reports/2026-10-23-04-matrix-step-validation.md).
