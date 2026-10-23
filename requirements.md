@@ -1,5 +1,9 @@
 # Requisitos de UTAPED
 
+## Avance desde la matriz — 2026-10-23
+
+CONFIRMADO-PROYECTO por el propietario: el botón Siguiente: Anexos del T1 exige al menos una actividad con fechas, responsables, recursos y medios completos, aunque no existan cambios pendientes. Conservar guardado de matriz vacía, borrador y salida protegida; informar mediante toast y foco contextual. No sustituye las validaciones finales del servidor ni cambia las reglas existentes de guardado de actividades.
+
 ## Reglas provisionales y completado documental — 2026-10-21
 
 La autorización del propietario incorpora las decisiones técnicas del [plan de entrega](docs/planning/institutional-rules-and-execution-report.md), manteniendo pendiente su ratificación institucional. Supera únicamente las contradicciones históricas indicadas aquí:

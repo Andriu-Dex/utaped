@@ -277,6 +277,15 @@
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-save-status::before {
+  content: '●';
+  font-size: 0.65rem;
+  color: var(--teal-700);
 }
 
 .step-save-status.is-dirty {
@@ -284,8 +293,16 @@
   font-weight: 600;
 }
 
+.step-save-status.is-dirty::before {
+  color: #b47710;
+}
+
 :root[data-theme='dark'] .step-save-status.is-dirty {
   color: #8ec3ea;
+}
+
+:root[data-theme='dark'] .step-save-status.is-dirty::before {
+  color: #e0a33e;
 }
 
 .step-save-row button {
@@ -328,6 +345,50 @@
 
 .step-nav-spacer {
   flex: 1;
+}
+
+.general-pagination-row {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Document Authorship in Step 1 */
+.document-authors {
+  margin-top: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.document-authors .action-form {
+  margin-top: 18px;
+}
+
+.document-authors .action-form-body {
+  border: 1px solid var(--border);
+  background: var(--canvas);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.document-authors .action-form-body fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+.document-authors .action-form-body legend {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.document-authors .choice-chip-grid {
+  margin: 16px 0;
 }
 
 .document-save {
@@ -457,67 +518,270 @@ details.document-lifecycle li {
   color: var(--text);
 }
 
-/* Source Card */
+/* Matrix Source Card */
 .matrix-source-card {
+  margin: 18px 0 24px;
+  padding: 20px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 18px 22px;
-  margin: 20px 0 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.matrix-source-header label {
-  margin: 0 !important;
+.matrix-source-card label {
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px;
+  gap: 6px !important;
+  margin: 0 !important;
 }
 
 .matrix-field-label {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
-.matrix-field-desc {
-  font-size: 0.82rem;
+.matrix-source-card .field-help {
+  margin: 0 0 10px 0;
+  font-size: 0.84rem;
   color: var(--muted);
+  line-height: 1.4;
 }
 
 .matrix-source-input {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--canvas);
   color: var(--text);
-  font-size: 0.92rem;
-  outline: none;
+  font-size: 0.9rem;
+  min-height: 42px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.matrix-source-input:focus {
-  border-color: var(--primary);
+.matrix-source-input:focus,
+.matrix-source-input:focus-visible {
+  outline: none !important;
+  border-color: var(--blue-600) !important;
   background: var(--surface);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue-700) 22%, transparent) !important;
 }
 
-/* Add Activity Section */
-.matrix-add-section {
-  margin: 20px 0 28px;
+/* Global focus override in workspace to prevent harsh amber double outlines */
+.matrix-workspace input:focus-visible,
+.matrix-workspace select:focus-visible,
+.matrix-workspace textarea:focus-visible,
+.live-preview-editor input:focus-visible,
+.live-preview-editor textarea:focus-visible,
+.live-preview-editor select:focus-visible,
+.action-form-dialog input:focus-visible,
+.action-form-dialog select:focus-visible,
+.action-form-dialog textarea:focus-visible {
+  outline: none !important;
+  border-color: var(--blue-600) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue-700) 22%, transparent) !important;
 }
 
-.matrix-add-card {
-  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
-  border-radius: 14px;
-  padding: 22px;
-  margin-top: 14px;
+/* Matrix Activities Section Header */
+.matrix-activities-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 28px 0 18px;
+  flex-wrap: wrap;
+}
+
+.matrix-activities-section-header .section-heading {
+  margin: 0;
+}
+
+.matrix-activities-section-header .action-form {
+  margin: 0;
+}
+
+/* Modal Content for Adding Activity */
+.matrix-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.matrix-modal-intro {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.matrix-modal-content label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.matrix-modal-content select,
+.matrix-modal-content input {
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--canvas);
+  color: var(--text);
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.matrix-modal-content .action-form-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Activity Configuration Modal Dialog */
+.activity-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+:root[data-theme='dark'] .activity-modal-overlay {
+  background: rgba(4, 9, 18, 0.75);
+}
+
+.animate-fade-in {
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-scale-up {
+  animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-scale-up {
+    animation: none !important;
+  }
+}
+
+.activity-modal-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 48px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  width: 100%;
+  max-width: 900px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden;
+  margin: auto;
+  outline: none;
+}
+
+.activity-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: color-mix(in srgb, var(--blue-700) 3%, var(--surface));
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.activity-modal-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.activity-modal-title-group h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.activity-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.modal-close-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+  color: var(--text);
+  background: var(--canvas);
+  border-color: var(--muted);
+}
+
+.activity-modal-scrollable {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.activity-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 24px;
+  background: color-mix(in srgb, var(--canvas) 60%, var(--surface));
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.activity-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Activity Card */
@@ -532,7 +796,7 @@ details.document-lifecycle li {
 }
 
 .activity-card:hover {
-  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  border-color: color-mix(in srgb, var(--blue-700) 35%, var(--border));
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
 }
 
@@ -561,8 +825,8 @@ details.document-lifecycle li {
   height: 36px;
   min-width: 36px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
-  color: var(--primary);
+  background: color-mix(in srgb, var(--blue-700) 12%, var(--surface));
+  color: var(--blue-700);
   font-weight: 800;
   font-size: 0.95rem;
   letter-spacing: -0.02em;
@@ -585,13 +849,13 @@ details.document-lifecycle li {
 }
 
 .activity-tags .doc-type-pill {
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
-  color: var(--primary);
+  background: color-mix(in srgb, var(--blue-700) 10%, var(--surface));
+  color: var(--blue-700);
   font-weight: 700;
   font-size: 0.74rem;
   padding: 3px 10px;
   border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--blue-700) 22%, transparent);
 }
 
 .activity-tags .is-mandatory {
@@ -638,7 +902,7 @@ details.document-lifecycle li {
 
 /* Dates Section */
 .activity-dates-block {
-  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+  background: color-mix(in srgb, var(--blue-700) 3%, var(--surface));
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 18px;
@@ -754,9 +1018,9 @@ details.document-lifecycle li {
 }
 
 .choice-count-badge.has-selected {
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
-  color: var(--primary);
-  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: color-mix(in srgb, var(--blue-700) 12%, var(--surface));
+  color: var(--blue-700);
+  border-color: color-mix(in srgb, var(--blue-700) 30%, var(--border));
 }
 
 /* Choice Chip Grid & Chips (The Sleek Horizontal Pills) */
@@ -791,15 +1055,15 @@ details.document-lifecycle li {
 }
 
 .choice-chip:hover {
-  border-color: var(--primary) !important;
-  background: color-mix(in srgb, var(--primary) 4%, var(--surface)) !important;
+  border-color: var(--blue-700) !important;
+  background: color-mix(in srgb, var(--blue-700) 4%, var(--surface)) !important;
   transform: translateY(-1px);
 }
 
 .choice-chip.is-selected {
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface)) !important;
-  border-color: var(--primary) !important;
-  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--blue-700) 12%, var(--surface)) !important;
+  border-color: var(--blue-700) !important;
+  color: var(--blue-700) !important;
   font-weight: 650 !important;
   box-shadow: 0 1px 4px rgba(23, 95, 148, 0.16) !important;
 }
@@ -810,7 +1074,7 @@ details.document-lifecycle li {
   margin: 0 !important;
   flex-shrink: 0 !important;
   cursor: pointer !important;
-  accent-color: var(--primary) !important;
+  accent-color: var(--blue-700) !important;
 }
 
 .choice-chip .chip-label {
@@ -825,9 +1089,9 @@ details.document-lifecycle li {
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-  color: var(--primary);
-  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  background: color-mix(in srgb, var(--blue-700) 8%, var(--surface));
+  color: var(--blue-700);
+  border: 1px solid color-mix(in srgb, var(--blue-700) 20%, transparent);
 }
 
 .choice-chip small.doc-type-pill.is-url {
@@ -865,7 +1129,7 @@ details.document-lifecycle li {
   height: 16px;
   margin: 0 !important;
   cursor: pointer;
-  accent-color: var(--primary);
+  accent-color: var(--blue-700);
 }
 
 /* Activity Catalogs Grid (Recursos + Medios) */
@@ -1274,10 +1538,26 @@ details.document-lifecycle li {
 }
 
 :root[data-theme='dark'] .matrix-source-input,
+:root[data-theme='dark'] .matrix-modal-content select,
+:root[data-theme='dark'] .matrix-modal-content input,
 :root[data-theme='dark'] .activity-dates-block,
 :root[data-theme='dark'] .collective-toggle-card {
   background: #0d1a26;
   border-color: #243c52;
+  color: #f1f5f9;
+}
+
+:root[data-theme='dark'] .matrix-workspace input:focus-visible,
+:root[data-theme='dark'] .matrix-workspace select:focus-visible,
+:root[data-theme='dark'] .matrix-workspace textarea:focus-visible,
+:root[data-theme='dark'] .action-form-dialog input:focus-visible,
+:root[data-theme='dark'] .action-form-dialog select:focus-visible,
+:root[data-theme='dark'] .action-form-dialog textarea:focus-visible,
+:root[data-theme='dark'] .live-preview-editor input:focus-visible,
+:root[data-theme='dark'] .live-preview-editor textarea:focus-visible,
+:root[data-theme='dark'] .live-preview-editor select:focus-visible {
+  border-color: #439ccc !important;
+  box-shadow: 0 0 0 3px rgba(67, 156, 204, 0.25) !important;
 }
 
 :root[data-theme='dark'] .choice-chip {
@@ -1349,3 +1629,289 @@ details.document-lifecycle li {
 }
 
 .choice-group-header .choice-group-title { font-weight:700; color:var(--text); font-size:.9rem; }
+
+/* Matrix overview: scan first, then jump to the full activity editor. */
+.matrix-summary-card { min-width: 0; margin-bottom: 28px; }
+.matrix-summary-card .section-heading { margin-bottom: 12px; }
+.matrix-summary-card .field-help { margin: 6px 0 0; }
+.matrix-summary-state { color: var(--muted); font-size: .82rem; margin: 0; }
+.matrix-summary-table { max-width: 100%; max-height: 420px; overflow: auto; }
+.matrix-summary-table thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+.matrix-summary-table table { min-width: 1100px; table-layout: fixed; width: 100%; }
+.matrix-summary-table thead th:nth-child(1) { width: 25%; }
+.matrix-summary-table thead th:nth-child(2) { width: 9%; }
+.matrix-summary-table thead th:nth-child(3) { width: 9%; }
+.matrix-summary-table thead th:nth-child(4) { width: 21%; }
+.matrix-summary-table thead th:nth-child(5) { width: 14%; }
+.matrix-summary-table thead th:nth-child(6) { width: 14%; }
+.matrix-summary-table thead th:nth-child(7) { width: 8%; min-width: 90px; text-align: center; }
+.matrix-summary-table th[scope='row'] { min-width: 200px; text-align: left; font-weight: 400; background: transparent; white-space: normal; text-transform: none; letter-spacing: normal; vertical-align: middle; padding: 14px 16px; }
+.matrix-activity-title-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.matrix-activity-title-content {
+  flex: 1;
+  min-width: 0;
+}
+.matrix-activity-title-content strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.matrix-activity-title-content small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.matrix-summary-table td { overflow-wrap: break-word; word-break: normal; vertical-align: middle; padding: 14px 14px; }
+.matrix-summary-table td:nth-child(7) { text-align: center; vertical-align: middle; }
+.matrix-pending-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--canvas);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: normal;
+}
+.matrix-row-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blue-700) 12%, var(--surface));
+  color: var(--blue-700);
+  font-weight: 800;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.matrix-summary-table tr.is-selected-row {
+  background: color-mix(in srgb, var(--blue-700) 7%, transparent);
+}
+.matrix-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.matrix-icon-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  border-radius: 9px !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.matrix-edit-btn {
+  color: var(--blue-700) !important;
+  border: 1px solid color-mix(in srgb, var(--blue-700) 35%, var(--border)) !important;
+  background: color-mix(in srgb, var(--blue-700) 7%, var(--surface)) !important;
+}
+.matrix-edit-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--blue-700) 16%, var(--surface)) !important;
+  border-color: var(--blue-700) !important;
+  color: var(--blue-900) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(13, 59, 102, 0.15);
+}
+.matrix-delete-btn {
+  color: #c92a2a !important;
+  border: 1px solid rgba(201, 42, 42, 0.3) !important;
+  background: #fff5f5 !important;
+}
+.matrix-delete-btn:hover:not(:disabled) {
+  background: #ffe3e3 !important;
+  border-color: #c92a2a !important;
+  color: #a61e1e !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(201, 42, 42, 0.15);
+}
+:root[data-theme='dark'] .matrix-edit-btn {
+  color: #8ec3ea !important;
+  border-color: rgba(142, 195, 234, 0.35) !important;
+  background: rgba(23, 95, 148, 0.16) !important;
+}
+:root[data-theme='dark'] .matrix-edit-btn:hover:not(:disabled) {
+  background: rgba(23, 95, 148, 0.28) !important;
+  color: #b8dcff !important;
+}
+:root[data-theme='dark'] .matrix-delete-btn {
+  background: rgba(201, 42, 42, 0.12) !important;
+  border-color: rgba(201, 42, 42, 0.4) !important;
+}
+:root[data-theme='dark'] .matrix-delete-btn:hover:not(:disabled) {
+  background: rgba(201, 42, 42, 0.22) !important;
+}
+:root[data-theme='dark'] .matrix-pending-badge {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+}
+.activity-card.is-active-inspector {
+  border: 2px solid var(--blue-600);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--blue-700) 15%, rgba(0, 0, 0, 0.08));
+}
+.activity-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.activity-title-row h2 {
+  margin: 0 !important;
+}
+.is-active-badge {
+  background: color-mix(in srgb, var(--blue-700) 14%, var(--surface));
+  color: var(--blue-700);
+  border: 1px solid color-mix(in srgb, var(--blue-700) 30%, transparent);
+  font-weight: 700;
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.matrix-summary-table .status-badge {
+  white-space: normal !important;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.matrix-row-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 8px; background: var(--canvas); color: var(--muted); margin-bottom: 8px; font-weight: 700; }
+.matrix-pending { color: var(--muted); font-style: italic; }
+.matrix-detail-button { padding: 10px; }
+.matrix-table-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.activity-card { scroll-margin-top: 120px; }
+.activity-card:focus-visible { outline: 3px solid var(--blue-700); outline-offset: 4px; }
+.matrix-footer-buttons { flex-wrap: wrap; }
+.matrix-next-button { display: inline-flex; align-items: center; gap: 10px; }
+@media (prefers-reduced-motion: reduce) { .activity-card { scroll-behavior: auto; } }
+
+/* Activity Modal Dialog */
+.activity-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 28, 50, 0.62);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px 16px;
+  animation: fadeInActivityModal 0.18s ease-out;
+}
+
+@keyframes fadeInActivityModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.activity-modal-dialog {
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 48px rgba(7, 28, 50, 0.22), 0 0 0 1px rgba(7, 28, 50, 0.08);
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.activity-modal-dialog:focus-visible {
+  outline: 3px solid var(--blue-700);
+  outline-offset: -2px;
+}
+
+.activity-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.activity-modal-close-btn {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  color: var(--muted) !important;
+  flex-shrink: 0;
+}
+
+.activity-modal-close-btn:hover {
+  color: var(--text) !important;
+  background: var(--canvas) !important;
+}
+
+.activity-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activity-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+
+.activity-modal-footer-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+:root[data-theme='dark'] .activity-modal-overlay {
+  background: rgba(3, 10, 20, 0.75);
+}
+
+:root[data-theme='dark'] .activity-modal-dialog {
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Native modal keeps keyboard focus and background interaction scoped to the activity. */
+dialog.activity-modal-overlay { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; color: var(--text); }
+dialog.activity-modal-overlay:not([open]) { display: none; }
+dialog.activity-modal-overlay::backdrop { background: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .activity-modal-overlay, .activity-modal-dialog, .notification-popover { animation: none; }
+}
+
+.activity-modal-scrollable { min-height: 0; }
+.activity-modal-fields { display: flex; flex-direction: column; gap: 18px; flex: none; }

@@ -33,8 +33,16 @@ export function DocumentAuthorsEditor({ targetDocId, version, disabled, onDirtyC
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {state?.editable && <ActionForm key={state.rowVersion} label="Configurar elaboradores" dirty={dirty} disabled={disabled || busy} onCancel={() => setSelected(state.authors.slice(1).map(person => person.id))}>
       <form onSubmit={event => void save(event)}><fieldset disabled={busy || disabled}><legend>Coautores del ámbito</legend><p className="field-help">La selección conserva su orden. El cargo procede de la pertenencia institucional configurada por Administración.</p><div className="choice-chip-grid">
-        {state.candidates.filter(person => person.id !== principal?.id).map(person => <label className="check choice-chip" key={person.id}><input type="checkbox" checked={selected.includes(person.id)} onChange={event => setSelected(current => event.target.checked ? [...current, person.id] : current.filter(id => id !== person.id))} />{person.name}</label>)}
-      </div><button type="button" className="secondary" onClick={() => setSelected([])}>Conservar solo al responsable principal</button><button disabled={!dirty}>Guardar elaboradores</button></fieldset></form>
+        {state.candidates.filter(person => person.id !== principal?.id).map(person => {
+          const isSelected = selected.includes(person.id)
+          return <label className={'check choice-chip' + (isSelected ? ' is-selected' : '')} key={person.id}><input type="checkbox" checked={isSelected} onChange={event => setSelected(current => event.target.checked ? [...current, person.id] : current.filter(id => id !== person.id))} />{person.name}</label>
+        })}
+      </div>
+      <div className="action-form-actions">
+        <button type="button" className="secondary" onClick={() => setSelected([])}>Conservar solo al responsable principal</button>
+        <button disabled={!dirty}>Guardar elaboradores</button>
+      </div>
+      </fieldset></form>
     </ActionForm>}
   </section>
 }

@@ -117,7 +117,10 @@ export function WorkPlanEditor({
     setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.'); setSection('general') }
   }
-  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
+  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} onNext={async () => {
+    const current = await api<WorkPlan>('/work-plans/' + plan.id)
+    setPlan(current); setDraft(fields(current)); setConflict(false); setError(''); setNotice(''); setSection('attachments')
+  }} />
   if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
   if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
@@ -209,11 +212,23 @@ export function WorkPlanEditor({
         </div>
       )}
       <div className={section === 'content' && plan.editable ? 'live-preview-layout' : undefined} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}><div className="live-preview-editor">
-      <form onSubmit={save}><fieldset disabled={!plan.editable || busy}>
+      <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
           <label>Unidad institucional<input maxLength={200} readOnly={!!plan.scopeId} value={draft.institutionalUnit} onChange={e => change('institutionalUnit', e.target.value)} /></label>
           <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
+          <div className="step-save-row">
+            <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
+              {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
+            </span>
+            <button
+              disabled={!contentDirty || conflict}
+              className={dirty ? 'primary-save-btn' : 'secondary'}
+            >
+              <Icon name="check" size={14} />
+              <span>{busy ? 'Guardando…' : 'Guardar borrador'}</span>
+            </button>
+          </div>
         </> : <>
           <div className="field-header-row">
             <label htmlFor={'justification-' + plan.id}>Justificación</label>
@@ -242,22 +257,20 @@ export function WorkPlanEditor({
           </div>
           <textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
           <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
-        </>}
-        <div className="document-step-actions">
-          <div className="step-save-row">
-            <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
-              {dirty ? '• Hay cambios sin guardar' : '• Contenido sincronizado'}
-            </span>
-            <button
-              disabled={!dirty || conflict}
-              className={dirty ? 'primary-save-btn' : 'secondary'}
-            >
-              <Icon name="check" size={14} />
-              <span>{busy ? 'Guardando…' : 'Guardar borrador'}</span>
-            </button>
-          </div>
-          <div className="step-pagination-row">
-            {section === 'content' ? (
+          <div className="document-step-actions">
+            <div className="step-save-row">
+              <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
+                {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
+              </span>
+              <button
+                disabled={!contentDirty || conflict}
+                className={dirty ? 'primary-save-btn' : 'secondary'}
+              >
+                <Icon name="check" size={14} />
+                <span>{busy ? 'Guardando…' : 'Guardar borrador'}</span>
+              </button>
+            </div>
+            <div className="step-pagination-row">
               <button
                 type="button"
                 className="secondary step-prev-btn"
@@ -266,18 +279,6 @@ export function WorkPlanEditor({
               >
                 ← Información general
               </button>
-            ) : <span className="step-nav-spacer" />}
-            {section === 'general' && (
-              <button
-                type="button"
-                className="secondary step-next-btn"
-                disabled={busy}
-                onClick={() => setSection('content')}
-              >
-                Siguiente: Contenido →
-              </button>
-            )}
-            {section === 'content' && (
               <button
                 type="button"
                 className="secondary step-next-btn"
@@ -287,12 +288,26 @@ export function WorkPlanEditor({
               >
                 Siguiente: Actividades y matriz →
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        </>}
       </fieldset></form></div>
       {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>
-      {section === 'general' && <DocumentAuthorsEditor targetDocId={plan.id} version={plan.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { const current = await api<WorkPlan>('/work-plans/' + plan.id); setPlan(current); setDraft(fields(current)) }} />}
+      {section === 'general' && <>
+        <DocumentAuthorsEditor targetDocId={plan.id} version={plan.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { const current = await api<WorkPlan>('/work-plans/' + plan.id); setPlan(current); setDraft(fields(current)) }} />
+        <div className="step-pagination-row general-pagination-row">
+          <span className="step-nav-spacer" />
+          <button
+            type="button"
+            className="secondary step-next-btn"
+            disabled={busy || dirty}
+            onClick={() => setSection('content')}
+            title={dirty ? 'Guarde los cambios pendientes antes de continuar' : undefined}
+          >
+            Siguiente: Contenido →
+          </button>
+        </div>
+      </>}
       {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}

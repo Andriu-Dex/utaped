@@ -17,6 +17,7 @@ import ec.edu.uta.utaped.workflow.WorkflowModels.*;
 /** Explicit development profile. Never runs in the default application profile. */
 @Component
 @Profile("development-seed")
+@org.springframework.core.annotation.Order(10)
 public class DevelopmentSeed implements ApplicationRunner {
     private final JdbcTemplate jdbc; private final PasswordEncoder encoder; private final String password;
     public DevelopmentSeed(JdbcTemplate jdbc,PasswordEncoder encoder,@Value("${UTAPED_SEED_PASSWORD:}") String password) { this.jdbc=jdbc;this.encoder=encoder;this.password=password; }

@@ -1,5 +1,15 @@
 # Reportes
 
+- [2026-10-23 — Revisión de interfaz y estabilidad](2026-10-23-05-ui-review-and-hardening.md).
+
+- [2026-10-23 — Validación para continuar desde la matriz](2026-10-23-04-matrix-step-validation.md).
+
+- [2026-10-23 — Documentos preparados para revisión manual](2026-10-23-03-prepared-example-documents.md).
+
+- [2026-10-23 — Resumen de matriz y navegación a Anexos](2026-10-23-02-matrix-overview-and-navigation.md).
+
+- [2026-10-23 — Espaciado institucional de T1 y T2](2026-10-23-01-institutional-document-spacing.md).
+
 - [2026-10-21 — PR directo a main y comparación con develop](2026-10-21-02-direct-main-pr.md).
 
 - [2026-10-21 — Informe de ejecución, estructuras y controles institucionales](2026-10-21-01-institutional-completion-and-stabilization.md).

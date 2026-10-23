@@ -78,17 +78,28 @@ class DocumentIntegrationTests {
         var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"Justificación de prueba.","Objetivo de prueba.",-1,"JUSTIFICATION"));
         byte[] bytes=Base64.getDecoder().decode(preview.image());
         var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(bytes));
-        int lines=0;boolean previous=false;
-        for(int y=0;y<image.getHeight()/5;y++) {
+        int lines=0,firstLine=-1,lastLine=-1;boolean previous=false;
+        for(int y=0;y<image.getHeight()/3;y++) {
             int dark=0;
             for(int x=0;x<image.getWidth();x++) {
                 int color=image.getRGB(x,y);
                 if(((color>>16)&255)<190 && ((color>>8)&255)<190 && (color&255)<190) dark++;
             }
             boolean line=dark>image.getWidth()/2;
-            if(line&&!previous) lines++;previous=line;
+            if(line&&!previous) { lines++;if(firstLine<0) firstLine=y;lastLine=y; }previous=line;
         }
         assertTrue(lines>=5,"El encabezado debe conservar borde superior, divisiones de filas y borde inferior: "+lines);
+        double headerFraction=(lastLine-firstLine)/(double)image.getHeight();
+        assertTrue(headerFraction>0.09&&headerFraction<0.16,"El encabezado debe conservar su altura institucional proporcional en A4: "+headerFraction);
+        int firstBodyInk=-1;
+        for(int y=lastLine+3;y<image.getHeight()/2&&firstBodyInk<0;y++) {
+            int dark=0;
+            for(int x=image.getWidth()/7;x<image.getWidth()*6/7;x++) {
+                int rgb=image.getRGB(x,y);if(((rgb>>16)&255)<150&&((rgb>>8)&255)<150&&(rgb&255)<150) dark++;
+            }
+            if(dark>15) firstBodyInk=y;
+        }
+        assertTrue(firstBodyInk-lastLine>image.getHeight()*0.015,"El contenido debe separarse del encabezado, sin superposición.");
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/header-borders-preview.png"),bytes);
     }
     long version() { return plans.get(id,email).rowVersion(); }

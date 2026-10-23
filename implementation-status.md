@@ -1,5 +1,25 @@
 # Estado de implementación productiva
 
+## Revisión de interfaz — 2026-10-23
+
+Mejoras del propietario en documentos, matriz, formularios y notificaciones revisadas e integradas con correcciones de teclado/foco/solo lectura, filtros, tokens de color y protección de la selección de elaboradores. [Reporte](docs/reports/2026-10-23-05-ui-review-and-hardening.md).
+
+## Validación de avance desde matriz — 2026-10-23
+
+Siguiente: Anexos exige al menos una actividad completa incluso sin cambios pendientes; toast y foco contextual, sin perder el borrador. Guardar una matriz vacía continúa disponible. [Reporte](docs/reports/2026-10-23-04-matrix-step-validation.md).
+
+## Escenarios documentales preparados — 2026-10-23
+
+Carga opcional y repetible en desarrollo: Plan editable, Plan en revisión, Plan aprobado con evidencia e Informe en borrador. Artefactos reales, firmas autofirmadas de ejemplo sin persistir claves, servicios normales y conservación de documentos/credenciales existentes. Ya cargados en utaped-sample. [Reporte](docs/reports/2026-10-23-03-prepared-example-documents.md).
+
+## Usabilidad del paso 3 — 2026-10-23
+
+Resumen de matriz antes del detalle, campos pendientes, acceso al editor por actividad y navegación directa a Anexos con guardado de cambios y conservación ante errores. PC/tablet, temas y teclado. [Reporte](docs/reports/2026-10-23-02-matrix-overview-and-navigation.md).
+
+## Corrección documental — 2026-10-23
+
+Encabezado T1/T2 con proporciones institucionales, escudo sin reducción, altura de filas y separación explícita antes del contenido. Se conserva A4, paginación dinámica y bytes históricos; las nuevas composiciones usan engine8. [Reporte](docs/reports/2026-10-23-01-institutional-document-spacing.md).
+
 ## Estado vigente al 2026-10-21
 
 La tanda amplia incorpora un circuito documental de desarrollo integrado. No equivale a completar todos los apartados del Plan Maestro ni a aprobación institucional para producción. Los apartados anteriores conservados debajo son registros históricos de entregas parciales; la tabla y límites de esta sección expresan el estado actual.
