@@ -62,7 +62,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     setAddKey(k => k + 1)
     setEditingActivityId(activity.id)
     setError('')
-    setNotice('Actividad agregada al Plan. Configure sus opciones a continuación.')
+    setNotice('')
     requestAnimationFrame(() => {
       document.getElementById('activity-' + activity.id)?.focus()
     })
@@ -255,65 +255,106 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
       <p className="matrix-summary-state" role="status">{dirty ? 'Vista de sus cambios locales · Pendiente de guardar' : 'Información guardada en el servidor'}</p>
       <div className="table-scroll matrix-summary-table" role="region" aria-label="Resumen de actividades" tabIndex={0}>
         <table>
-          <caption className="matrix-table-caption">Planificación de actividades, fechas, responsables, recursos y medios de verificación</caption>
+          <caption className="matrix-table-caption">Planificación de actividades, plazo, responsables y estado de configuración</caption>
           <thead>
             <tr>
               <th scope="col">Actividad</th>
-              <th scope="col">Desde</th>
-              <th scope="col">Hasta</th>
+              <th scope="col" className="matrix-col-center">Plazo</th>
               <th scope="col">Responsables</th>
-              <th scope="col">Recursos</th>
-              <th scope="col">Medios de verificación</th>
+              <th scope="col" className="matrix-col-center">Configuración</th>
               <th scope="col" className="matrix-col-action">Acción</th>
             </tr>
           </thead>
           <tbody>
-            {draft.activities.map((a, index) => <tr key={a.id} className={editingActivityId === a.id ? 'is-selected-row' : ''}>
-              <th scope="row">
-                <div className="matrix-activity-title-cell">
-                  <span className="matrix-row-number">#{index + 1}</span>
-                  <div className="matrix-activity-title-content">
-                    <strong>{a.title}</strong>
-                    <small>{categoryLabels[a.category]}{a.mandatory ? ' · Obligatoria' : ''}</small>
-                  </div>
-                </div>
-              </th>
-              <td>{a.startsOn ? <span className="matrix-date-cell">{a.startsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.endsOn ? <span className="matrix-date-cell">{a.endsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td className="matrix-action-cell">
-                <div className="matrix-row-actions">
-                  <button
-                    type="button"
-                    className="secondary matrix-icon-btn matrix-edit-btn"
-                    onClick={() => showActivity(a.id)}
-                    title={saved.editable ? 'Configurar actividad ' + (index + 1) : 'Ver detalle de la actividad ' + (index + 1)}
-                    aria-label={'Ver detalle de la actividad ' + (index + 1)}
-                  >
-                    <Icon name={saved.editable ? 'edit' : 'eye'} size={15} />
-                  </button>
-                  {saved.editable && !a.mandatory && (
-                    <button
-                      type="button"
-                      className="secondary danger-btn matrix-icon-btn matrix-delete-btn"
-                      title={'Quitar actividad ' + (index + 1)}
-                      aria-label={'Quitar ' + a.title}
-                      onClick={async () => {
-                        if (await confirmAction(`¿Quitar la actividad «${a.title}» del borrador?`)) {
-                          if (editingActivityId === a.id) setEditingActivityId(null)
-                          setDraft({ ...draft, activities: draft.activities.filter(item => item.id !== a.id) })
-                          setNotice('Actividad quitada del borrador.')
-                        }
-                      }}
-                    >
-                      <Icon name="trash" size={15} />
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>)}
+            {draft.activities.map((a, index) => {
+              const resourcesCount = a.resources.filter(c => c.catalogId !== null || c.other?.trim()).length
+              const meansCount = a.means.filter(c => c.catalogId !== null || c.other?.trim()).length
+              const hasConfig = resourcesCount > 0 && meansCount > 0
+              const dateRange = (a.startsOn && a.endsOn)
+                ? `${a.startsOn.split('-').reverse().join('/')} — ${a.endsOn.split('-').reverse().join('/')}`
+                : a.startsOn
+                  ? `Desde ${a.startsOn.split('-').reverse().join('/')}`
+                  : a.endsOn
+                    ? `Hasta ${a.endsOn.split('-').reverse().join('/')}`
+                    : null
+
+              return (
+                <tr key={a.id} className={editingActivityId === a.id ? 'is-selected-row' : ''}>
+                  <th scope="row">
+                    <div className="matrix-activity-title-cell">
+                      <span className="matrix-row-number">#{index + 1}</span>
+                      <div className="matrix-activity-title-content">
+                        <strong>{a.title}</strong>
+                        <div className="matrix-table-tags">
+                          <small className="status-badge doc-type-pill">{categoryLabels[a.category]}</small>
+                          {a.mandatory && <small className="status-badge is-mandatory">Obligatoria</small>}
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+                  <td className="matrix-col-center">
+                    {dateRange ? (
+                      <span className="matrix-date-range-badge">
+                        <Icon name="calendar" size={12} />
+                        <span>{dateRange}</span>
+                      </span>
+                    ) : (
+                      <span className="matrix-pending-badge">Pendiente</span>
+                    )}
+                  </td>
+                  <td>
+                    {a.collective ? (
+                      <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span><small>{a.responsibleIds.length} integrantes · Todos seleccionados</small></div>
+                    ) : a.responsibleIds.length > 0 ? (
+                      <div className="matrix-responsibles-cell">
+                        <span>{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
+                      </div>
+                    ) : (
+                      <span className="matrix-pending-badge">Pendiente</span>
+                    )}
+                  </td>
+                  <td className="matrix-col-center">
+                    {hasConfig ? (
+                      <span className="matrix-coverage-badge">
+                        {resourcesCount} {resourcesCount === 1 ? 'recurso' : 'recursos'} · {meansCount} {meansCount === 1 ? 'medio' : 'medios'}
+                      </span>
+                    ) : (
+                      <span className="matrix-pending-badge">Pendiente</span>
+                    )}
+                  </td>
+                  <td className="matrix-action-cell">
+                    <div className="matrix-row-actions">
+                      <button
+                        type="button"
+                        className="secondary matrix-icon-btn matrix-edit-btn"
+                        onClick={() => showActivity(a.id)}
+                        title={saved.editable ? 'Configurar actividad ' + (index + 1) : 'Ver detalle de la actividad ' + (index + 1)}
+                        aria-label={'Ver detalle de la actividad ' + (index + 1)}
+                      >
+                        <Icon name={saved.editable ? 'edit' : 'eye'} size={15} />
+                      </button>
+                      {saved.editable && !a.mandatory && (
+                        <button
+                          type="button"
+                          className="secondary danger-btn matrix-icon-btn matrix-delete-btn"
+                          title={'Quitar actividad ' + (index + 1)}
+                          aria-label={'Quitar ' + a.title}
+                          onClick={async () => {
+                            if (await confirmAction(`¿Quitar la actividad «${a.title}» del borrador?`)) {
+                              if (editingActivityId === a.id) setEditingActivityId(null)
+                              setDraft({ ...draft, activities: draft.activities.filter(item => item.id !== a.id) })
+                              setNotice('Actividad quitada del borrador.')
+                            }
+                          }}
+                        >
+                          <Icon name="trash" size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -418,36 +459,16 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                 <header className="activity-modal-header">
                   <div className="activity-modal-title-group">
                     <span className="activity-index-pill">#{activeIndex + 1}</span>
-                    <div>
-                      <div className="activity-title-row">
-                        <h2 id={`activity-${activeActivity.id}-title`}>{activeIndex + 1}. {activeActivity.title}</h2>
-                        <span className="status-badge is-active-badge">En configuración</span>
-                      </div>
+                    <div className="activity-modal-header-text">
+                      <h2 id={`activity-${activeActivity.id}-title`}>{activeIndex + 1}. {activeActivity.title}</h2>
                       <div className="activity-tags">
                         <span className="status-badge doc-type-pill">{categoryLabels[activeActivity.category]}</span>
                         {activeActivity.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+                        <span className="status-badge is-active-badge">En configuración</span>
                       </div>
                     </div>
                   </div>
                   <div className="activity-modal-header-actions">
-                    {!activeActivity.mandatory && saved.editable && (
-                      <button
-                        type="button"
-                        className="secondary danger-btn"
-                        title="Quitar actividad"
-                        aria-label={'Quitar ' + activeActivity.title}
-                        onClick={async () => {
-                          if (await confirmAction(`¿Quitar la actividad «${activeActivity.title}» del borrador?`)) {
-                            setEditingActivityId(null)
-                            setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== activeActivity.id) })
-                            setNotice('Actividad quitada del borrador.')
-                          }
-                        }}
-                      >
-                        <Icon name="trash" size={14} />
-                        <span>Quitar</span>
-                      </button>
-                    )}
                     <button
                       type="button"
                       className="secondary matrix-icon-btn modal-close-btn"

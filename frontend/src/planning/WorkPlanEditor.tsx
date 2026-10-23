@@ -111,21 +111,23 @@ export function WorkPlanEditor({
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
   async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
-  async function returnToPlan() {
-    try {
+  async function navigateStep(next: WorkPlanSection) {
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
-    setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.'); setSection('general') }
+    setPlan(current); setDraft(fields(current)); setSection(next); setConflict(false); setError(''); setNotice('')
+  }
+  async function returnToPlan() {
+    try { await navigateStep('general') }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
   }
   if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} onNext={async () => {
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
     setPlan(current); setDraft(fields(current)); setConflict(false); setError(''); setNotice(''); setSection('attachments')
   }} />
-  if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
-  if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={returnToPlan} />
+  if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('preparation')} />
+  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />
+  if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
+  if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
+  if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={() => void returnToPlan()} />
   if (report) return <ReportEditor initial={report} onDirtyChange={onDirtyChange} onBack={() => setReport(null)} />
   async function createReport() {
     setBusy(true); setError('')

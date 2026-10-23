@@ -10,7 +10,7 @@ import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
-export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange }: { targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
+export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext }: { onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/artifacts'
   const [ready, setReady] = useState<Readiness | null>(null); const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [sectionsDirty, setSectionsDirty] = useState(false), [formalDirty, setFormalDirty] = useState(false)
@@ -20,6 +20,10 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
   const [loadedImage, setLoadedImage] = useState(''), [imageAttempt, setImageAttempt] = useState(0)
   const label = documentType === 'T1' ? 'Plan' : 'Informe'
   useEffect(() => { let active = true; Promise.all([api<Readiness>(path + '/readiness'), api<Artifact[]>(path), api<WorkPlan>('/work-plans/' + targetDocId)]).then(([r, a, p]) => { if (active) { setReady(r); setArtifacts(a); setPlan(p); setSelected(a[0] ?? null); setPage(0) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path, targetDocId, reload])
+  async function navigate(action: () => Promise<void>) {
+    setBusy(true); setError('')
+    try { await action() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.') } finally { setBusy(false) }
+  }
   async function generate() {
     if (!ready) return; setBusy(true); setError('')
     try { const artifact = await api<Artifact>(path, 'POST', { rowVersion: ready.rowVersion }); setSelected(artifact); setPage(0); setImageError(false); setArtifacts(await api<Artifact[]>(path)) }
@@ -53,5 +57,9 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
         </div>
       </div>
     </div>}
+    {(onPrevious || onNext) && <nav className="step-pagination-row" aria-label="Navegación entre pasos del Plan">
+      {onPrevious && <button type="button" className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={() => void navigate(onPrevious)}>← Anterior: {mode === 'sign' ? 'Preparación y previsualización' : 'Anexos y opciones'}</button>}
+      {onNext && <button type="button" disabled={busy || formalDirty || sectionsDirty} onClick={() => void navigate(onNext)}>Siguiente: Firma y finalización →</button>}
+    </nav>}
   </section>
 }

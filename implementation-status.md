@@ -1,5 +1,11 @@
 # Estado de implementación productiva
 
+Responsables colectivos: etiquetas de ejemplo según tipo de grupo, reparación limitada de semillas antiguas y trazabilidad individual visible en resumen. Revisión de mejoras visuales y navegación secuencial. [Reporte](docs/reports/2026-10-23-07-collective-responsibility-and-ui-review.md).
+
+
+Navegación secuencial T1: Anexos → Preparación → Firma con regreso al paso anterior y protección de cambios. Compilación/lint y recorrido interactivo mediante Playwright aprobados. [Reporte](docs/reports/2026-10-23-06-plan-step-navigation.md).
+
+
 ## Revisión de interfaz — 2026-10-23
 
 Mejoras del propietario en documentos, matriz, formularios y notificaciones revisadas e integradas con correcciones de teclado/foco/solo lectura, filtros, tokens de color y protección de la selección de elaboradores. [Reporte](docs/reports/2026-10-23-05-ui-review-and-hardening.md).

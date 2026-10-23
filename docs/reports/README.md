@@ -1,5 +1,11 @@
 # Reportes
 
+- [Responsables colectivos y revisión de interfaz](2026-10-23-07-collective-responsibility-and-ui-review.md).
+
+
+- [Navegación secuencial T1](2026-10-23-06-plan-step-navigation.md).
+
+
 - [2026-10-23 — Revisión de interfaz y estabilidad](2026-10-23-05-ui-review-and-hardening.md).
 
 - [2026-10-23 — Validación para continuar desde la matriz](2026-10-23-04-matrix-step-validation.md).

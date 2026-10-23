@@ -48,6 +48,15 @@ class DevelopmentSeedTests {
             assertEquals("Andrés Sebastián Molina Vera",jdbc.queryForObject("SELECT display_name FROM app_user WHERE username='dev.principal'",String.class));
             assertEquals("Patricia Elizabeth Cárdenas Ríos",jdbc.queryForObject("SELECT display_name FROM app_user WHERE username='dev.coordinator'",String.class));
             assertEquals("Docente integrante",jdbc.queryForObject("SELECT position_label FROM scope_member WHERE scope_id=? AND user_id=?",String.class,DevelopmentSeed.id("scope"),DevelopmentSeed.id("member")));
+            var commission=referenceCatalog.groups().stream().filter(g -> g.type().equals("COMMISSION")).findFirst().orElseThrow();
+            assertEquals("Responsable de la comisión",jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,DevelopmentSeed.id(commission.key())));
+            assertEquals("Responsable de la unidad",jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,DevelopmentSeed.id("group")));
+            jdbc.update("UPDATE institutional_group SET collective_label=? WHERE id=?",commission.name(),DevelopmentSeed.id(commission.key()));
+            seed.run(new DefaultApplicationArguments());
+            assertEquals("Responsable de la comisión",jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,DevelopmentSeed.id(commission.key())));
+            jdbc.update("UPDATE institutional_group SET collective_label='Equipo responsable personalizado' WHERE id=?",DevelopmentSeed.id(commission.key()));
+            seed.run(new DefaultApplicationArguments());
+            assertEquals("Equipo responsable personalizado",jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,DevelopmentSeed.id(commission.key())));
             var credentials=jdbc.queryForList("SELECT id,password_hash,username,email,system_role,must_change_password FROM app_user ORDER BY id");
             jdbc.update("UPDATE app_user SET display_name='Desarrollo principal',first_names='Desarrollo',last_names='principal' WHERE id=?",DevelopmentSeed.id("principal"));
             jdbc.update("UPDATE scope_member SET position_label='Función de ejemplo: member' WHERE scope_id=? AND user_id=?",DevelopmentSeed.id("scope"),DevelopmentSeed.id("member"));

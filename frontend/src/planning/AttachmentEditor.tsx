@@ -6,7 +6,7 @@ import { api } from '../shared/api'
 
 interface Attachment { id: string; label: string; title: string; description: string; originalName: string; sizeBytes: number; pageCount: number }
 interface State { rowVersion: number; editable: boolean; enabled: boolean; privacyNoticeEnabled: boolean; maxFileBytes: number; maxTotalBytes: number; maxAttachments: number; items: Attachment[] }
-export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
+export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPrevious, onNext }: { onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/attachments'
   const [state, setState] = useState<State | null>(null)
   const [title, setTitle] = useState(''); const [file, setFile] = useState<File | null>(null)
@@ -16,6 +16,11 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
   const dirty = !!title || !!file || editing !== null
   useEffect(() => { let active = true; api<State>(path).then(value => { if (active) setState(value) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path])
   useEffect(() => { onDirtyChange(dirty); const prevent = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = '' } }; window.addEventListener('beforeunload', prevent); return () => { window.removeEventListener('beforeunload', prevent); onDirtyChange(false) } }, [dirty, onDirtyChange])
+  async function navigate(action: () => Promise<void>) {
+    if (dirty && !(await confirmAction('¿Descartar los cambios sin guardar antes de cambiar de paso?'))) return
+    setBusy(true); setError('')
+    try { await action() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.') } finally { setBusy(false) }
+  }
   async function mutate(action: () => Promise<State>, message: string) {
     setBusy(true); setError(''); setNotice('')
     try { setState(await action()); setNotice(message); return true } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo completar la operación.'); return false } finally { setBusy(false) }
@@ -50,5 +55,9 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange }: { targe
       {editing && <form onSubmit={saveEdit}><fieldset disabled={busy}><legend>Editar anexo</legend><label>Nuevo título del anexo<input required maxLength={200} value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} /></label><label>Descripción del anexo<textarea maxLength={2000} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} /></label><button>Guardar anexo</button><button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar edición</button></fieldset></form>}
       <button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios locales y recargar?'))) { setTitle(''); setFile(null); setEditing(null); requestKey.current = crypto.randomUUID(); if (fileInput.current) fileInput.current.value = ''; void mutate(() => api<State>(path), 'Versión actual cargada.') } }}>Recargar anexos</button>
     </div>}
+    {(onPrevious || onNext) && <nav className="step-pagination-row" aria-label="Navegación entre pasos del Plan">
+      {onPrevious && <button type="button" className="secondary" disabled={busy || !state} onClick={() => void navigate(onPrevious)}>← Anterior: Actividades y matriz</button>}
+      {onNext && <button type="button" disabled={busy || !state} onClick={() => void navigate(onNext)}>Siguiente: Preparación y previsualización →</button>}
+    </nav>}
   </section>
 }

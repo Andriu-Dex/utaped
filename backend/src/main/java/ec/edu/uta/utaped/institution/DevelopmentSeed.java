@@ -47,7 +47,10 @@ public class DevelopmentSeed implements ApplicationRunner {
             """,period,reference.periodName(),reference.startsOn(),reference.endsOn(),reference.startsOn(),reference.endsOn(),reference.startsOn(),reference.endsOn());
         for (var group : reference.groups()) {
             UUID groupId=id(group.key());
-            jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING",groupId,group.name(),group.type(),group.name());
+            jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING",groupId,group.name(),group.type(),collectiveLabel(group.type()));
+            // Repair only the untouched legacy seed label; preserve administrator customizations.
+            jdbc.update("UPDATE institutional_group SET collective_label=?,row_version=row_version+1 WHERE id=? AND name=? AND collective_label=?",
+                collectiveLabel(group.type()),groupId,group.name(),group.name());
             for (String code : group.careers()) {
                 var career=reference.careers().stream().filter(c -> c.code().equals(code)).findFirst().orElseThrow();
                 UUID scope=group.key().equals("group") && code.equals("TI") ? id("scope") : id("scope-"+group.key()+"-"+code);
@@ -76,6 +79,14 @@ public class DevelopmentSeed implements ApplicationRunner {
         jdbc.update("UPDATE planning_catalog SET active=false WHERE id IN (?,?) AND label IN ('Equipo de trabajo — Ejemplo','Informe PDF — Ejemplo')",id("RESOURCE"),id("MEANS"));
         jdbc.update("UPDATE activity_catalog SET active=false WHERE id=? AND title='Preparar resultados de ejemplo'",id("activity"));
     }
+    static String collectiveLabel(String type) {
+        return switch(type) {
+            case "COMMISSION" -> "Responsable de la comisión";
+            case "UNIT" -> "Responsable de la unidad";
+            case "CLUB" -> "Responsable del club";
+            default -> "Responsable del grupo";
+        };
+    }
     // Fictional people for demonstrations; these are not institutional appointments.
     private record Person(String role,String firstNames,String lastNames) {
         String displayName() { return firstNames+" "+lastNames; }
@@ -101,7 +112,7 @@ public class DevelopmentSeed implements ApplicationRunner {
     private void upgradeUnusedLegacyReference(DevelopmentReference reference) {
         // Never rewrite a period/group/career already referenced by a document or changed by an administrator.
         jdbc.update("UPDATE academic_career SET code='TI',name='Tecnologías de la Información',row_version=row_version+1 WHERE id=? AND code='DEV-SW' AND name='Carrera de ejemplo — Software' AND NOT EXISTS(SELECT 1 FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id WHERE s.career_id=?)",id("career"),id("career"));
-        jdbc.update("UPDATE institutional_group SET name='Unidad de Titulación',group_type='UNIT',collective_label='Unidad de Titulación' WHERE id=? AND name='Comisión de desarrollo — Ejemplo' AND NOT EXISTS(SELECT 1 FROM work_plan WHERE group_id=?)",id("group"),id("group"));
+        jdbc.update("UPDATE institutional_group SET name='Unidad de Titulación',group_type='UNIT',collective_label='Responsable de la unidad' WHERE id=? AND name='Comisión de desarrollo — Ejemplo' AND NOT EXISTS(SELECT 1 FROM work_plan WHERE group_id=?)",id("group"),id("group"));
         jdbc.update("""
             UPDATE academic_period SET name=?,starts_on=?,ends_on=?,preparation_starts_on=?,preparation_ends_on=?,review_starts_on=?,review_ends_on=?,row_version=row_version+1
             WHERE id=? AND name='Período de desarrollo — Ejemplo' AND status='ACTIVE' AND workflow_locked_at IS NULL AND NOT EXISTS(SELECT 1 FROM work_plan WHERE period_id=?)
