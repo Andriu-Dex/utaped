@@ -1658,12 +1658,12 @@ details.document-lifecycle li {
   padding: 12px 14px;
   line-height: 1.35;
 }
-.matrix-summary-table table { min-width: 870px; table-layout: fixed; width: 100%; }
-.matrix-summary-table thead th:nth-child(1) { width: 34%; min-width: 260px; padding: 12px 16px; }
-.matrix-summary-table thead th:nth-child(2) { width: 18%; min-width: 175px; text-align: center; }
+.matrix-summary-table table { min-width: 1100px; table-layout: fixed; width: 100%; }
+.matrix-summary-table thead th:nth-child(1) { width: auto; min-width: 260px; padding: 12px 16px; }
+.matrix-summary-table thead th:nth-child(2) { width: 244px; min-width: 244px; text-align: center; }
 .matrix-summary-table thead th:nth-child(3) { width: 22%; min-width: 180px; text-align: left; }
-.matrix-summary-table thead th:nth-child(4) { width: 17%; min-width: 165px; text-align: center; }
-.matrix-summary-table thead th:nth-child(5) { width: 9%; min-width: 90px; text-align: center; }
+.matrix-summary-table thead th:nth-child(4) { width: 190px; min-width: 190px; text-align: center; }
+.matrix-summary-table thead th:nth-child(5) { width: 116px; min-width: 116px; text-align: center; }
 .matrix-summary-table th[scope='row'] { min-width: 260px; text-align: left; font-weight: 400; background: transparent; white-space: normal; text-transform: none; letter-spacing: normal; vertical-align: middle; padding: 14px 16px; }
 .matrix-activity-title-cell {
   display: flex;
@@ -1706,7 +1706,7 @@ details.document-lifecycle li {
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 600;
-  white-space: normal;
+  white-space: nowrap;
   max-width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--border);
@@ -1749,6 +1749,10 @@ details.document-lifecycle li {
   border-color: rgba(142, 195, 234, 0.25);
 }
 .matrix-responsibles-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   font-size: 0.86rem;
   line-height: 1.4;
   color: var(--text);

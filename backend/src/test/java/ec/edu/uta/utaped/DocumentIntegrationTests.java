@@ -41,6 +41,7 @@ class DocumentIntegrationTests {
         jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,'Comisión de prueba','COMMISSION','Responsable de la comisión')",group);
         jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,'MEMBER')",user,group);
         jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período de prueba',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
+        jdbc.update("INSERT INTO academic_career(id,code,name) VALUES (?,'DOC-SW','Ingeniería de Software') ON CONFLICT(name) DO NOTHING",UUID.randomUUID());
         id=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan de Trabajo de prueba")).id();
     }
     @Test void editingPreviewAllowsIncompleteUnsavedContentWithoutPersistingArtifacts() throws Exception {
@@ -89,6 +90,20 @@ class DocumentIntegrationTests {
             if(line&&!previous) { lines++;if(firstLine<0) firstLine=y;lastLine=y; }previous=line;
         }
         assertTrue(lines>=5,"El encabezado debe conservar borde superior, divisiones de filas y borde inferior: "+lines);
+        // The date row retains the same vertical divider as the unit/career row above it.
+        int left=-1,right=-1;
+        for(int x=0;x<image.getWidth();x++) {
+            int rgb=image.getRGB(x,firstLine);
+            if(((rgb>>16)&255)<190&&((rgb>>8)&255)<190&&(rgb&255)<190) { if(left<0) left=x;right=x; }
+        }
+        int divider=left+(int)Math.round((right-left)*4426.0/8504.0);
+        int dateRowY=lastLine-(int)Math.round((lastLine-firstLine)*0.15);
+        boolean dateDivider=false;
+        for(int x=divider-3;x<=divider+3;x++) {
+            int rgb=image.getRGB(x,dateRowY);
+            dateDivider|=((rgb>>16)&255)<130&&((rgb>>8)&255)<130&&(rgb&255)<130;
+        }
+        assertTrue(dateDivider,"La fila de fecha debe conservar la división vertical de sus dos celdas.");
         double headerFraction=(lastLine-firstLine)/(double)image.getHeight();
         assertTrue(headerFraction>0.09&&headerFraction<0.16,"El encabezado debe conservar su altura institucional proporcional en A4: "+headerFraction);
         int firstBodyInk=-1;
@@ -104,7 +119,7 @@ class DocumentIntegrationTests {
     }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
-        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
+        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI — Universidad Técnica de Ambato","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
         var rows=new ArrayList<ActivityModels.Activity>();var date=LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
         for(int i=0;i<count;i++) rows.add(new ActivityModels.Activity(UUID.randomUUID(),null,"Actividad "+(i+1)+". Verificar el cumplimiento de la planificación institucional y registrar sus resultados.","OTHER",false,date,date,List.of(user),true,
             List.of(new ActivityModels.Choice(null,"Recursos institucionales",null)),List.of(new ActivityModels.Choice(null,"Acta de seguimiento",null))));
@@ -142,6 +157,25 @@ class DocumentIntegrationTests {
         assertEquals(403,assertThrows(ResponseStatusException.class,()->attachments.remove(id,a.id(),email,version())).getStatusCode().value());
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertThrows(ResponseStatusException.class,()->attachments.content(id,a.id(),email));
+    }
+    @Test void administrativeHeaderUsesCatalogueTypeAndPreservesThePreparedArtifactAfterRenaming() throws Exception {
+        complete("Justificación administrativa.",1);
+        UUID unit=UUID.randomUUID();
+        jdbc.update("INSERT INTO institutional_unit(id,name,unit_type) VALUES (?,'Unidad administrativa documental','ADMINISTRATIVE')",unit);
+        var plan=plans.get(id,email);
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),"Unidad inexistente","",plan.justification(),plan.objective()))).getStatusCode().value());
+        plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),"Unidad administrativa documental","",plan.justification(),plan.objective()));
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] bytes=artifacts.content(id,artifact.id(),email);
+        try(var document=Loader.loadPDF(bytes)) {
+            String text=new PDFTextStripper().getText(document).replaceAll("\\s+"," ");
+            assertTrue(text.contains("Unidad administrativa: Unidad administrativa documental"),text);
+            assertFalse(text.contains("Carrera: Ingeniería de Software"),text);
+        }
+        jdbc.update("UPDATE institutional_unit SET name='Unidad renombrada' WHERE id=?",unit);
+        assertArrayEquals(bytes,artifacts.content(id,artifact.id(),email));
+        assertTrue(artifacts.list(id,email).getFirst().current());
+        assertEquals("Unidad administrativa documental",plans.get(id,email).institutionalUnit());
     }
     @Test void immutableTemplatePdfActualPaginationAndHistoricalContent() throws Exception {
         complete("La comisión requiere planificar las actividades y conservar evidencias de cumplimiento.",2);
@@ -289,7 +323,7 @@ class DocumentIntegrationTests {
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
         UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
-        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI — Universidad Técnica de Ambato","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
         assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);

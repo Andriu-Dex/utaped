@@ -60,7 +60,7 @@ class DocumentTemplateIntegrationTests {
         var initial=u.request("POST","/api/work-plans",create,true);assertEquals(200,initial.statusCode());
         String id=JsonPath.read(initial.body(),"$.id");String original=JsonPath.read(initial.body(),"$.justification");
         long row=((Number)JsonPath.read(initial.body(),"$.rowVersion")).longValue();
-        var clear=Map.of("rowVersion",row,"title","Plan original","institutionalUnit","FISEI","career","","justification","","objective","");
+        var clear=Map.of("rowVersion",row,"title","Plan original","institutionalUnit","FISEI — Universidad Técnica de Ambato","career","","justification","","objective","");
         assertEquals(200,u.request("PUT","/api/work-plans/"+id,clear,true).statusCode());
         var template=a.request("GET","/api/admin/document-templates/T1",null,false);
         long version=((Number)JsonPath.read(template.body(),"$.rowVersion")).longValue();

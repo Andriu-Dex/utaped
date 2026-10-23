@@ -12,8 +12,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class OrganizationService {
-    public record CareerInput(@NotBlank @Pattern(regexp="[A-Z0-9_-]{1,30}") String code,@NotBlank @Size(max=160) String name) {}
-    public record ScopeInput(@NotNull UUID groupId,@NotNull UUID periodId,UUID careerId) {}
+    public record CareerInput(@NotBlank @Pattern(regexp="[A-Z0-9_-]{1,30}") String code,@NotBlank @Size(max=160) String name,UUID institutionalUnitId) { public CareerInput(String code,String name) { this(code,name,null); } }
+    public record ScopeInput(@NotNull UUID groupId,@NotNull UUID periodId,UUID careerId,UUID institutionalUnitId) { public ScopeInput(UUID groupId,UUID periodId,UUID careerId) { this(groupId,periodId,careerId,null); } }
     public record MemberInput(@NotNull UUID userId,@NotBlank @Pattern(regexp="MEMBER|COORDINATOR") String membershipRole,
         @NotNull @Size(max=160) String positionLabel,@NotNull Boolean active,@NotNull @PositiveOrZero Long rowVersion,Boolean passwordResetAuthorized) {
         public MemberInput(UUID userId,String role,String position,Boolean active,Long version) { this(userId,role,position,active,version,null); }
@@ -28,9 +28,9 @@ public class OrganizationService {
     public List<Map<String,Object>> scopes(String email) {
         var actor=accounts.current(email);
         return jdbc.queryForList("""
-            SELECT s.*,g.name AS group_name,p.name AS period_name,p.status AS period_status,c.name AS career_name,u.display_name AS principal_name,
+            SELECT s.*,iu.name AS institutional_unit_name,iu.unit_type AS institutional_unit_type,g.name AS group_name,p.name AS period_name,p.status AS period_status,c.name AS career_name,u.display_name AS principal_name,
               (SELECT count(*) FROM scope_member m JOIN app_user a ON a.id=m.user_id WHERE m.scope_id=s.id AND m.active AND a.active) AS member_count
-            FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id JOIN academic_period p ON p.id=s.period_id
+            FROM organizational_scope s JOIN institutional_unit iu ON iu.id=s.institutional_unit_id JOIN institutional_group g ON g.id=s.group_id JOIN academic_period p ON p.id=s.period_id
             LEFT JOIN academic_career c ON c.id=s.career_id LEFT JOIN app_user u ON u.id=s.principal_user_id
             WHERE ? OR (s.active AND g.active AND EXISTS (SELECT 1 FROM scope_member m WHERE m.scope_id=s.id AND m.user_id=? AND m.active))
             ORDER BY p.starts_on DESC,g.name,c.name NULLS FIRST,s.id
@@ -42,8 +42,10 @@ public class OrganizationService {
     }
     @Transactional public UUID createCareer(String email,CareerInput input) {
         admin(email);UUID id=UUID.randomUUID();
+        UUID unit=input.institutionalUnitId()==null?InstitutionalUnits.FISEI:input.institutionalUnitId();
+        if(jdbc.queryForList("SELECT id FROM institutional_unit WHERE id=? AND active AND unit_type='ACADEMIC' FOR SHARE",unit).isEmpty()) throw invalid("Seleccione una unidad académica activa.");
         if(jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE code=? OR name=?",Integer.class,input.code(),input.name().trim())>0) throw invalid("La carrera ya está registrada.");
-        jdbc.update("INSERT INTO academic_career(id,code,name) VALUES (?,?,?)",id,input.code(),input.name().trim());audit.record(accounts.current(email).id(),"CAREER_CREATED",id);return id;
+        jdbc.update("INSERT INTO academic_career(id,code,name,institutional_unit_id) VALUES (?,?,?,?)",id,input.code(),input.name().trim(),unit);audit.record(accounts.current(email).id(),"CAREER_CREATED",id);return id;
     }
     @Transactional public void updateCareer(UUID id,String email,CareerUpdate input) {
         admin(email);
@@ -66,8 +68,13 @@ public class OrganizationService {
         jdbc.queryForList("SELECT id FROM institutional_group WHERE id=? FOR UPDATE",input.groupId());
         if(jdbc.queryForObject("SELECT count(*) FROM institutional_group WHERE id=? AND active",Integer.class,input.groupId())==0 || jdbc.queryForObject("SELECT count(*) FROM academic_period WHERE id=?",Integer.class,input.periodId())==0) throw invalid("Seleccione grupo y período válidos.");
         if(input.careerId()!=null && jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE id=? AND active",Integer.class,input.careerId())==0) throw invalid("Seleccione una carrera activa.");
-        if(jdbc.queryForObject("SELECT count(*) FROM organizational_scope WHERE group_id=? AND period_id=? AND career_id IS NOT DISTINCT FROM ?::uuid",Integer.class,input.groupId(),input.periodId(),input.careerId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ese ámbito ya está registrado.");
-        UUID id=UUID.randomUUID();jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id,career_id) VALUES (?,?,?,?)",id,input.groupId(),input.periodId(),input.careerId());audit.record(accounts.current(email).id(),"SCOPE_CREATED",id);return id;
+        UUID unit=input.institutionalUnitId();
+        if(unit==null) unit=input.careerId()==null?InstitutionalUnits.FISEI:jdbc.queryForObject("SELECT institutional_unit_id FROM academic_career WHERE id=?",UUID.class,input.careerId());
+        var units=jdbc.queryForList("SELECT unit_type FROM institutional_unit WHERE id=? AND active FOR SHARE",unit);
+        if(units.isEmpty()) throw invalid("Seleccione una unidad institucional activa.");
+        if(input.careerId()!=null && (!units.getFirst().get("unit_type").equals("ACADEMIC") || jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE id=? AND institutional_unit_id=? AND active",Integer.class,input.careerId(),unit)==0)) throw invalid("La carrera debe pertenecer a la unidad académica seleccionada.");
+        if(jdbc.queryForObject("SELECT count(*) FROM organizational_scope WHERE group_id=? AND period_id=? AND institutional_unit_id=? AND career_id IS NOT DISTINCT FROM ?::uuid",Integer.class,input.groupId(),input.periodId(),unit,input.careerId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ese ámbito ya está registrado.");
+        UUID id=UUID.randomUUID();jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id,career_id,institutional_unit_id) VALUES (?,?,?,?,?)",id,input.groupId(),input.periodId(),input.careerId(),unit);audit.record(accounts.current(email).id(),"SCOPE_CREATED",id);return id;
     }
     private Map<String,Object> lock(UUID scope) {
         var periods=jdbc.queryForList("SELECT period_id FROM organizational_scope WHERE id=?",UUID.class,scope);

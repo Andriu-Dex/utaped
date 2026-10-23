@@ -64,20 +64,20 @@ public class WorkPlanService {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
             rs.getObject("period_id",UUID.class),rs.getString("period_name"),rs.getString("title"),rs.getString("institutional_unit"),rs.getString("career"),rs.getString("justification"),rs.getString("objective"),
             rs.getString("document_state"),rs.getString("formal_version"),rs.getLong("row_version"),rs.getObject("preparation_date",LocalDate.class),
-            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE"));
+            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE"),rs.getString("institutional_unit_type"));
     }
     public Options options(String email) {
         var actor=accounts.current(email);
         var scopes=jdbc.query("""
-            SELECT s.id,s.group_id,s.period_id,g.name AS group_name,p.name AS period_name,c.name AS career_name,
+            SELECT s.id,s.group_id,s.period_id,iu.name AS unit_name,iu.unit_type,g.name AS group_name,p.name AS period_name,c.name AS career_name,
               (s.principal_user_id=? AND p.status='ACTIVE') AS is_principal,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on,
               NOT EXISTS (SELECT 1 FROM work_plan w WHERE w.scope_id=s.id AND (w.archived_at IS NULL OR w.document_state='APPROVED') AND w.document_type='T1') AS available
-            FROM organizational_scope s JOIN scope_member m ON m.scope_id=s.id AND m.user_id=? AND m.active
+            FROM organizational_scope s JOIN institutional_unit iu ON iu.id=s.institutional_unit_id AND iu.active JOIN scope_member m ON m.scope_id=s.id AND m.user_id=? AND m.active
             JOIN institutional_group g ON g.id=s.group_id AND g.active JOIN academic_period p ON p.id=s.period_id
             LEFT JOIN academic_career c ON c.id=s.career_id WHERE s.active AND (c.id IS NULL OR c.active)
             ORDER BY p.starts_on DESC,g.name,c.name
             """,(rs,n)->new ScopeOption(rs.getObject("id",UUID.class),rs.getObject("group_id",UUID.class),rs.getObject("period_id",UUID.class),rs.getString("group_name"),rs.getString("period_name"),rs.getString("career_name"),
-                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name"))),actor.id(),actor.id());
+                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name")),rs.getString("unit_name"),rs.getString("unit_type")),actor.id(),actor.id());
         var groups=jdbc.query("SELECT g.id,g.name FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND g.active ORDER BY g.name",(rs,n)->new GroupOption(rs.getObject("id",UUID.class),rs.getString("name")),actor.id());
         var periods=jdbc.query("SELECT id,name,status,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
@@ -117,10 +117,10 @@ public class WorkPlanService {
             if(!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(requestedTitle)) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
             return get((UUID)prior.get("id"),email);
         }
-        String career="";
+        String career="",unitName="FISEI — Universidad Técnica de Ambato",unitType="ACADEMIC";
         if(data.scopeId()!=null) {
             var scopes=jdbc.queryForList("""
-                SELECT s.*,c.name AS career_name FROM organizational_scope s
+                SELECT s.*,c.name AS career_name,iu.name AS unit_name,iu.unit_type FROM organizational_scope s JOIN institutional_unit iu ON iu.id=s.institutional_unit_id AND iu.active
                 JOIN institutional_group g ON g.id=s.group_id AND g.active LEFT JOIN academic_career c ON c.id=s.career_id
                 WHERE s.id=? AND s.active AND (c.id IS NULL OR c.active) FOR UPDATE OF s
                 """,data.scopeId());
@@ -128,7 +128,7 @@ public class WorkPlanService {
             var scope=scopes.getFirst();
             if(!data.groupId().equals(scope.get("group_id"))||!data.periodId().equals(scope.get("period_id"))||!actor.id().equals(scope.get("principal_user_id"))||jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active",Integer.class,data.scopeId(),actor.id())==0) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo el responsable principal puede crear el Plan de su ámbito.");
             if(jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE scope_id=? AND (archived_at IS NULL OR document_state='APPROVED') AND document_type='T1'",Integer.class,data.scopeId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan activo en este grupo, carrera y período.");
-            career=Objects.toString(scope.get("career_name"),"");
+            career=Objects.toString(scope.get("career_name"),"");unitName=(String)scope.get("unit_name");unitType=(String)scope.get("unit_type");
         } else {
             if(!legacyCreation) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un ámbito institucional con responsable principal asignado.");
             if(jdbc.queryForObject("SELECT count(*) FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND m.group_id=? AND g.active",Integer.class,actor.id(),data.groupId())==0) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo puede crear un Plan en sus grupos activos.");
@@ -137,7 +137,8 @@ public class WorkPlanService {
         requireWindow(data.periodId(),data.scopeId());UUID id=UUID.randomUUID();
         if(data.scopeId()==null && requestedTitle.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Indique un título para el documento anterior.");
         String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),"FISEI — Universidad Técnica de Ambato",career,templateService.getJustificationOrDefault("T1"));
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),unitName,career,templateService.getJustificationOrDefault("T1"));
+        jdbc.update("UPDATE work_plan SET institutional_unit_type=? WHERE id=?",unitType,id);
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
         structures.initialize(id,"T1");audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
     }
@@ -157,6 +158,13 @@ public class WorkPlanService {
         if(!plan.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
         if(!plan.documentType().equals("T1")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Edite el Informe desde su propio formulario.");
         if(plan.scopeId()!=null&&(!data.career().trim().equals(plan.career())||!data.institutionalUnit().trim().equals(plan.institutionalUnit()))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La carrera y unidad institucional derivan del ámbito; no se editan como texto libre.");
+        if(plan.scopeId()==null && (!data.institutionalUnit().trim().equals(plan.institutionalUnit()) || !data.career().trim().equals(plan.career()))) {
+            var units=jdbc.queryForList("SELECT id,unit_type FROM institutional_unit WHERE name=? AND active",data.institutionalUnit().trim());
+            if(units.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione una unidad del catálogo activo.");
+            var unit=units.getFirst();
+            if(!data.career().isBlank() && (!unit.get("unit_type").equals("ACADEMIC") || jdbc.queryForObject("SELECT count(*) FROM academic_career WHERE name=? AND institutional_unit_id=? AND active",Integer.class,data.career().trim(),unit.get("id"))==0)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione una carrera de la unidad académica.");
+            jdbc.update("UPDATE work_plan SET institutional_unit_type=? WHERE id=?",unit.get("unit_type"),targetDocId);
+        }
         int changed=jdbc.update("UPDATE work_plan SET title=?,institutional_unit=?,career=?,justification=?,objective=?,row_version=row_version+1,updated_at=now() WHERE id=? AND row_version=? AND document_state='DRAFT'",data.title().trim(),data.institutionalUnit().trim(),data.career().trim(),data.justification(),data.objective(),targetDocId,data.rowVersion());
         if(changed==0) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue la versión actual antes de guardar.");
         audit.record(accounts.current(email).id(),"WORK_PLAN_DRAFT_SAVED",targetDocId);return get(targetDocId,email);

@@ -79,10 +79,9 @@ final class InstitutionalHeader {
             var first=children(rows.get(0),"tc").get(1);setText(first,"UNIVERSIDAD TÉCNICA DE AMBATO",22,true,"000000");attr(prop(prop(children(first,"p").getFirst(),"pPr"),"jc"),"val","center");
             String title=snapshot.plan().title().replaceFirst("(?i)^Plan de Trabajo\\s*:\\s*","").replaceFirst("(?i)^Informe(?: final)?\\s*:\\s*","");
             setText(children(rows.get(1),"tc").get(1),(snapshot.plan().documentType().equals("T2")?"INFORME DE: ":"PLAN DE TRABAJO: ")+title,18,true,"1F4E79");
-            var data=children(rows.get(2),"tc");setText(data.get(1),"Unidad académica: "+snapshot.plan().institutionalUnit(),18,false,"000000");setText(data.get(2),"Carrera: "+snapshot.plan().career(),18,false,"000000");
+            var data=children(rows.get(2),"tc");setText(data.get(1),("ADMINISTRATIVE".equals(snapshot.plan().institutionalUnitType())?"Unidad administrativa: ":"Unidad académica: ")+snapshot.plan().institutionalUnit(),18,false,"000000");setText(data.get(2),"ADMINISTRATIVE".equals(snapshot.plan().institutionalUnitType())?"":"Carrera: "+snapshot.plan().career(),18,false,"000000");
             var last=children(rows.get(3),"tc");setText(last.get(1),"Fecha de elaboración: "+snapshot.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),18,false,"1F4E79");
-            // Keep date on one full-width cell, instead of an empty grey column beside it.
-            if(last.size()==3) { rows.get(3).removeChild(last.get(2));var cp=prop(last.get(1),"tcPr");attr(prop(cp,"gridSpan"),"val","2");attr(prop(cp,"tcW"),"w","6864"); }
+            // Preserve the original date cell and the separate empty grey cell to its right.
             borders(table,rows);
             // The header is a separate Word story: reserve its trailing space explicitly for FOP.
             for(Node sibling=table.getNextSibling();sibling!=null;sibling=sibling.getNextSibling()) {

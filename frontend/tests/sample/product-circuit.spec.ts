@@ -30,6 +30,18 @@ async function bind(admin: Page, id: string, cert: ReturnType<typeof certificate
   await api(admin, '/admin/users/' + id + '/signing-certificates','POST',{fingerprint:cert.fingerprint,identityVerified:true,verificationNote:'Public identity checked for isolated E2E fixture',expectedBindingId:bindings.find((b: {active:boolean})=>b.active)?.id ?? null})
 }
 async function generatePreview(page: Page, doc: string) {
+  if (await page.getByRole('heading', { name: 'Preparación y previsualización T1', exact: true }).count()) {
+    await expect.poll(async () => {
+      const retry = page.getByRole('button', { name: 'Reintentar previsualización', exact: true })
+      if (await retry.isVisible()) {
+        await expect(page.getByText(/Hay otra generación en curso/)).toBeVisible()
+        await retry.click()
+      }
+      return (await api(page, '/work-plans/' + doc + '/artifacts')).some((a: { current: boolean }) => a.current)
+    }, { timeout: 90000, intervals: [1000] }).toBeTruthy()
+    return
+  }
+
   // A just-unmounted live preview may still hold the server generation permit.
   // Retry only its explicit busy response; all other errors remain test failures.
   await expect.poll(async () => {

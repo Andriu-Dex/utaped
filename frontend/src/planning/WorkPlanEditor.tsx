@@ -1,3 +1,4 @@
+import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
 import { DraftPreview } from './DraftPreview'
 import { confirmAction } from '../shared/confirm-action'
@@ -124,7 +125,7 @@ export function WorkPlanEditor({
     setPlan(current); setDraft(fields(current)); setConflict(false); setError(''); setNotice(''); setSection('attachments')
   }} />
   if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('preparation')} />
-  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />
+  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={() => void returnToPlan()} />
@@ -217,8 +218,7 @@ export function WorkPlanEditor({
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
-          <label>Unidad institucional<input maxLength={200} readOnly={!!plan.scopeId} value={draft.institutionalUnit} onChange={e => change('institutionalUnit', e.target.value)} /></label>
-          <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
+          <InstitutionalProvenance key={plan.id + ':' + plan.rowVersion} unit={draft.institutionalUnit} career={draft.career} unitType={plan.institutionalUnitType} inherited={!!plan.scopeId || !!plan.basePlanId} disabled={busy || authorsDirty || lifecycleDirty || !plan.editable} onChange={(unit, career) => { change('institutionalUnit', unit); change('career', career) }} />
           <div className="step-save-row">
             <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
               {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}

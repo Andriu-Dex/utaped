@@ -62,7 +62,7 @@ class WorkPlanIntegrationTests {
         jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
     }
     String createBody(UUID key) { return "{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"title\":\"Plan inicial\"}"; }
-    String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"FISEI\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
+    String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"FISEI — Universidad Técnica de Ambato\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
     @Test void draftPersistenceIsolationIdempotencyAndConcurrency() throws Exception {
         openPeriod();Browser b=new Browser();b.login("user@example.invalid",PASSWORD);
         UUID key=UUID.randomUUID();String body=createBody(key);

@@ -164,6 +164,8 @@ public class ArtifactService {
         var tree=(tools.jackson.databind.node.ObjectNode)json.valueToTree(snapshot);
         ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("editable");
         ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("canManage");
+        // Academic is the historical implicit type; retain hashes of existing signed snapshots.
+        if(snapshot.plan().institutionalUnitType()==null || snapshot.plan().institutionalUnitType().equals("ACADEMIC")) ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("institutionalUnitType");
         return StoredFiles.hash(json.writeValueAsString(tree).getBytes(StandardCharsets.UTF_8));
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)

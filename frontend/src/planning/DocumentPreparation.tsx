@@ -10,16 +10,41 @@ import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
-export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext }: { onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
+export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext, onResolveSection }: { onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => Promise<void>; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/artifacts'
   const [ready, setReady] = useState<Readiness | null>(null); const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [sectionsDirty, setSectionsDirty] = useState(false), [formalDirty, setFormalDirty] = useState(false)
   useEffect(() => { onDirtyChange?.(sectionsDirty || formalDirty); return () => onDirtyChange?.(false) }, [sectionsDirty, formalDirty, onDirtyChange])
   const [selected, setSelected] = useState<Artifact | null>(null); const [page, setPage] = useState(0); const [plan, setPlan] = useState<WorkPlan | null>(null)
-  const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const [imageError, setImageError] = useState(false); const [reload, setReload] = useState(0)
+  const [error, setError] = useState(''); const [busy, setBusy] = useState(true); const [imageError, setImageError] = useState(false); const [reload, setReload] = useState(0)
   const [loadedImage, setLoadedImage] = useState(''), [imageAttempt, setImageAttempt] = useState(0)
   const label = documentType === 'T1' ? 'Plan' : 'Informe'
-  useEffect(() => { let active = true; Promise.all([api<Readiness>(path + '/readiness'), api<Artifact[]>(path), api<WorkPlan>('/work-plans/' + targetDocId)]).then(([r, a, p]) => { if (active) { setReady(r); setArtifacts(a); setPlan(p); setSelected(a[0] ?? null); setPage(0) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path, targetDocId, reload])
+  const automaticPreview = mode === 'preview'
+  const blockerSections: Record<string, 'general' | 'content' | 'matrix' | 'attachments'> = {
+    'Información general': 'general', 'Contenido': 'content', 'Actividades y matriz': 'matrix', 'Anexos': 'attachments',
+  }
+  useEffect(() => {
+    let active = true
+    async function load() {
+      await Promise.resolve()
+      if (!active) return
+      setBusy(true); setError(''); setReady(null); setSelected(null); setImageError(false); setLoadedImage('')
+      try {
+        const [r, a, p] = await Promise.all([api<Readiness>(path + '/readiness'), api<Artifact[]>(path), api<WorkPlan>('/work-plans/' + targetDocId)])
+        if (!active) return
+        setReady(r); setArtifacts(a); setPlan(p); setPage(0)
+        const current = a.find(item => item.current)
+        if (automaticPreview && !current && r.ready && p.editable && p.documentState === 'DRAFT') {
+          const artifact = await api<Artifact>(path, 'POST', { rowVersion: r.rowVersion })
+          if (!active) return
+          setArtifacts([artifact, ...a.filter(item => item.id !== artifact.id)]); setSelected(artifact)
+        } else setSelected(current ?? a[0] ?? null)
+      } catch (e) { if (active) setError(e instanceof Error ? e.message : 'No se pudo preparar el documento.') }
+      finally { if (active) setBusy(false) }
+    }
+    void load()
+    return () => { active = false }
+  }, [path, targetDocId, reload, automaticPreview])
   async function navigate(action: () => Promise<void>) {
     setBusy(true); setError('')
     try { await action() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.') } finally { setBusy(false) }
@@ -30,12 +55,17 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.') }
     finally { setBusy(false) }
   }
-  return <section><button className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={onBack}>Volver al {label}</button><span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span><h1>{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h1><p className="muted">Formato institucional en A4. Los anexos y evidencias conservan sus páginas originales. La fecha documental corresponde a la preparación del PDF para firma; la fecha y hora de cada firma se conservan por separado. Cada artefacto se guarda completo y no se reconstruye después de firmarlo.</p>
+  return <section><button className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={onBack}>Volver al {label}</button><span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span><h1>{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h1><p className="muted">Revise el documento en formato A4 antes de continuar a la firma.</p>
     {error && <Toast message={error} onDismiss={() => setError('')} />}
     <FormalSubmission targetDocId={targetDocId} onDirtyChange={setFormalDirty} />
     <DocumentSections key={targetDocId + reload} targetDocId={targetDocId} disabled={busy} onDirtyChange={setSectionsDirty} onSaved={() => setReload(n => n + 1)} />
-    {!ready ? <p role="status">Consultando preparación…</p> : <div className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PREPARACIÓN DOCUMENTAL</span><h2>Revisión del contenido</h2></div></div>{ready.ready ? <p role="status">Contenido completo para previsualizar.</p> : <ul>{ready.blockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}{plan?.editable ? <button disabled={busy || formalDirty || sectionsDirty || !ready.ready} onClick={() => void generate()}>{busy ? 'Generando PDF…' : 'Generar previsualización'}</button> : <p className="field-help">Documento de solo lectura. Consulte su artefacto conservado y las rondas de revisión; la descarga final se habilita al aprobarse.</p>}</div>}
-    {artifacts.length > 0 && <label>Previsualizaciones guardadas<select value={selected?.id ?? ''} disabled={busy} onChange={e => { setSelected(artifacts.find(a => a.id === e.target.value) ?? null); setPage(0); setImageError(false) }}>{artifacts.map(a => <option value={a.id} key={a.id}>{new Date(a.createdAt).toLocaleString('es-EC')} · {a.pageCount} páginas · {a.current ? 'Contenido actual' : 'Artefacto conservado'}</option>)}</select></label>}
+    {automaticPreview ? <>
+      {busy && <p role="status">Preparando documento…</p>}
+      {!busy && (!ready || (ready.ready && !selected && plan?.editable)) && <button type="button" className="secondary" onClick={() => setReload(n => n + 1)}>Reintentar previsualización</button>}
+      {!busy && ready && !ready.ready && <section className="card" aria-label="Datos pendientes"><h2>Complete los datos pendientes</h2><ul>{ready.blockers.map((blocker, index) => <li key={index}><strong>{blocker.section}:</strong> {blocker.message}{onResolveSection && blockerSections[blocker.section] && <button type="button" className="link" disabled={formalDirty || sectionsDirty} onClick={() => void navigate(() => onResolveSection(blockerSections[blocker.section]))}>Ir a {blocker.section.toLowerCase()}</button>}</li>)}</ul></section>}
+      {!busy && !error && plan && !plan.editable && !selected && <p role="status">Este documento de solo lectura todavía no tiene una previsualización conservada.</p>}
+    </> : !ready ? <p role="status">Consultando preparación…</p> : <div className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PREPARACIÓN DOCUMENTAL</span><h2>Revisión del contenido</h2></div></div>{ready.ready ? <p role="status">Contenido completo para previsualizar.</p> : <ul>{ready.blockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}{plan?.editable ? <button disabled={busy || formalDirty || sectionsDirty || !ready.ready} onClick={() => void generate()}>{busy ? 'Generando PDF…' : 'Generar previsualización'}</button> : <p className="field-help">Documento de solo lectura. Consulte su artefacto conservado y las rondas de revisión.</p>}</div>}
+    {artifacts.length > (automaticPreview ? 1 : 0) && <label>Previsualizaciones guardadas<select value={selected?.id ?? ''} disabled={busy} onChange={e => { setSelected(artifacts.find(a => a.id === e.target.value) ?? null); setPage(0); setImageError(false) }}>{artifacts.map(a => <option value={a.id} key={a.id}>{new Date(a.createdAt).toLocaleString('es-EC')} · {a.pageCount} páginas · {a.current ? 'Contenido actual' : 'Artefacto conservado'}</option>)}</select></label>}
     {selected && <div className="card">
       <div className="review-summary">
         <span className={'status-badge ' + (selected.current ? 'active' : '')}>
@@ -59,7 +89,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     </div>}
     {(onPrevious || onNext) && <nav className="step-pagination-row" aria-label="Navegación entre pasos del Plan">
       {onPrevious && <button type="button" className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={() => void navigate(onPrevious)}>← Anterior: {mode === 'sign' ? 'Preparación y previsualización' : 'Anexos y opciones'}</button>}
-      {onNext && <button type="button" disabled={busy || formalDirty || sectionsDirty} onClick={() => void navigate(onNext)}>Siguiente: Firma y finalización →</button>}
+      {onNext && <button type="button" disabled={busy || formalDirty || sectionsDirty || (automaticPreview && (!selected || !selected.current || !ready?.ready || !!error))} onClick={() => void navigate(onNext)}>Siguiente: Firma y finalización →</button>}
     </nav>}
   </section>
 }

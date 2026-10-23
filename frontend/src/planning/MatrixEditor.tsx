@@ -304,10 +304,10 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                   </td>
                   <td>
                     {a.collective ? (
-                      <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span><small>{a.responsibleIds.length} integrantes · Todos seleccionados</small></div>
+                      <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.length + ' integrantes · Todos seleccionados: ' + a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span></div>
                     ) : a.responsibleIds.length > 0 ? (
                       <div className="matrix-responsibles-cell">
-                        <span>{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
+                        <span className="matrix-collective-badge">{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
                       </div>
                     ) : (
                       <span className="matrix-pending-badge">Pendiente</span>
