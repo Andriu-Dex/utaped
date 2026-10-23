@@ -16,6 +16,8 @@ test('principal configures coauthors while members retain read-only access', asy
     await expect(panel.getByRole('checkbox')).toHaveCount(0)
     await openAction(panel, 'Configurar elaboradores')
     await panel.getByRole('checkbox', { name: identity.displayName, exact: true }).check()
+    await expect(page.getByRole('button', { name: 'Guardar borrador', exact: true })).toBeDisabled()
+    await expect(page.getByLabel('Título del Plan', { exact: true })).toBeDisabled()
     await panel.getByRole('button', { name: 'Guardar elaboradores', exact: true }).click()
     await expect(page.getByText('Elaboradores guardados. Cada persona firmará con su propia identidad.', { exact: true })).toBeVisible()
     const authors = await api(page, '/work-plans/' + plan.id + '/authors')

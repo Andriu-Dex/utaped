@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import { categoryLabels, type Activity, type Matrix } from './matrixTypes'
 import { Icon } from '../shared/Icon'
+import { containDialogFocus } from '../shared/dialog-focus'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
 export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
@@ -12,8 +13,28 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
   const [catalogId, setCatalogId] = useState(''); const [otherTitle, setOtherTitle] = useState('')
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
+  const [addKey, setAddKey] = useState(0)
   const [attempted, setAttempted] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const activityDialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const dialog = activityDialog.current
+    if (!editingActivityId || !dialog) return
+    const origin = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const form = formRef.current
+    const overflow = document.body.style.overflow
+    dialog.showModal(); document.body.style.overflow = 'hidden'
+    dialog.querySelector<HTMLElement>('[id^="activity-"]')?.focus()
+    const release = containDialogFocus(dialog)
+    return () => {
+      release(); dialog.close(); document.body.style.overflow = overflow
+      requestAnimationFrame(() => {
+        const target = origin?.isConnected ? origin : form?.querySelector<HTMLElement>('button[aria-expanded]')
+        target?.focus()
+      })
+    }
+  }, [editingActivityId])
   const dirty = !!catalogId || !!otherTitle || !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
@@ -35,7 +56,16 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     const definition = saved.definitions.find(d => d.id === catalogId)
     if (!definition && !otherTitle.trim()) { setError('Escriba el título de la actividad Otra.'); return }
     const activity: Activity = { id: crypto.randomUUID(), catalogId: definition?.id ?? null, title: definition?.title ?? otherTitle.trim(), category: definition?.category ?? 'OTHER', mandatory: definition?.mandatory ?? false, startsOn: null, endsOn: null, responsibleIds: [], collective: false, resources: [], means: [] }
-    setDraft({ ...draft, activities: [...draft.activities, activity] }); setCatalogId(''); setOtherTitle(''); setError(''); setNotice('')
+    setDraft({ ...draft, activities: [...draft.activities, activity] })
+    setCatalogId('')
+    setOtherTitle('')
+    setAddKey(k => k + 1)
+    setEditingActivityId(activity.id)
+    setError('')
+    setNotice('Actividad agregada al Plan. Configure sus opciones a continuación.')
+    requestAnimationFrame(() => {
+      document.getElementById('activity-' + activity.id)?.focus()
+    })
   }
   function toggleChoice(row: Activity, key: 'resources' | 'means', id: string | null, checked: boolean) {
     const values = row[key].filter(c => c.catalogId !== id)
@@ -46,13 +76,15 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     if (!saved || !draft) return false
     if (catalogId || otherTitle) { setError('Agregue la actividad seleccionada o cancele su creación antes de guardar y continuar.'); return false }
     setAttempted(true); setError(''); setNotice('')
+    const missingDates = draft.activities.find(a => !a.startsOn || !a.endsOn || a.startsOn > a.endsOn)
+    if (missingDates) { setError('Complete fechas válidas antes de guardar la matriz.'); showActivity(missingDates.id); return false }
     const emptyOther = formRef.current?.querySelector<HTMLInputElement>('input[data-other="true"][aria-invalid="true"]')
     if (emptyOther) { setError('Complete la descripción de Otro.'); emptyOther.focus(); return false }
     if (draft.activities.some(a => !a.responsibleIds.length || !a.resources.length || !a.means.length)) { setError('Cada actividad requiere al menos un responsable, un recurso y un medio de verificación.'); return false }
     setBusy(true)
     try {
       const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion })
-      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false); return true
+      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true); return false }
     finally { setBusy(false) }
   }
@@ -86,8 +118,10 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     try { await onNext() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir Anexos.'); setBusy(false) }
   }
   function showActivity(id: string) {
-    const card = document.getElementById('activity-' + id)
-    card?.focus({ preventScroll: true }); card?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
+    setEditingActivityId(id)
+    requestAnimationFrame(() => {
+      document.getElementById('activity-' + id)?.focus()
+    })
   }
   async function back() {
     if (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?'))) return
@@ -97,7 +131,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
   async function compare() { try { setLatest(await api<Matrix>('/work-plans/' + targetDocId + '/matrix')) } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo consultar.') } }
   async function reload() {
     if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
-    setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
+    setEditingActivityId(null); setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
   if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
@@ -174,6 +208,9 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     )
   }
 
+  const activeActivity = draft.activities.find(a => a.id === editingActivityId)
+  const activeIndex = activeActivity ? draft.activities.indexOf(activeActivity) : -1
+
   return (
     <section className="matrix-workspace">
       <div className="matrix-topbar">
@@ -184,7 +221,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
         <div className="matrix-topbar-meta">
           <span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span>
           <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
-            {dirty ? '• Tiene cambios sin guardar.' : '• Sin cambios pendientes.'}
+            {dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}
           </span>
         </div>
       </div>
@@ -227,18 +264,55 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
               <th scope="col">Responsables</th>
               <th scope="col">Recursos</th>
               <th scope="col">Medios de verificación</th>
-              <th scope="col">Detalle</th>
+              <th scope="col" className="matrix-col-action">Acción</th>
             </tr>
           </thead>
           <tbody>
-            {draft.activities.map((a, index) => <tr key={a.id}>
-              <th scope="row"><span className="matrix-row-number">{index + 1}</span><strong>{a.title}</strong><small>{categoryLabels[a.category]}{a.mandatory ? ' · Obligatoria' : ''}</small></th>
-              <td><span className="matrix-date-cell">{a.startsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
-              <td><span className="matrix-date-cell">{a.endsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
-              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
-              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
-              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
-            <td><button type="button" className="secondary matrix-detail-button" onClick={() => showActivity(a.id)} title={'Ver detalle de la actividad ' + (index + 1)} aria-label={'Ver detalle de la actividad ' + (index + 1)}><Icon name="eye" size={16} /></button></td>
+            {draft.activities.map((a, index) => <tr key={a.id} className={editingActivityId === a.id ? 'is-selected-row' : ''}>
+              <th scope="row">
+                <div className="matrix-activity-title-cell">
+                  <span className="matrix-row-number">#{index + 1}</span>
+                  <div className="matrix-activity-title-content">
+                    <strong>{a.title}</strong>
+                    <small>{categoryLabels[a.category]}{a.mandatory ? ' · Obligatoria' : ''}</small>
+                  </div>
+                </div>
+              </th>
+              <td>{a.startsOn ? <span className="matrix-date-cell">{a.startsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
+              <td>{a.endsOn ? <span className="matrix-date-cell">{a.endsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
+              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
+              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
+              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
+              <td className="matrix-action-cell">
+                <div className="matrix-row-actions">
+                  <button
+                    type="button"
+                    className="secondary matrix-icon-btn matrix-edit-btn"
+                    onClick={() => showActivity(a.id)}
+                    title={saved.editable ? 'Configurar actividad ' + (index + 1) : 'Ver detalle de la actividad ' + (index + 1)}
+                    aria-label={'Ver detalle de la actividad ' + (index + 1)}
+                  >
+                    <Icon name={saved.editable ? 'edit' : 'eye'} size={15} />
+                  </button>
+                  {saved.editable && !a.mandatory && (
+                    <button
+                      type="button"
+                      className="secondary danger-btn matrix-icon-btn matrix-delete-btn"
+                      title={'Quitar actividad ' + (index + 1)}
+                      aria-label={'Quitar ' + a.title}
+                      onClick={async () => {
+                        if (await confirmAction(`¿Quitar la actividad «${a.title}» del borrador?`)) {
+                          if (editingActivityId === a.id) setEditingActivityId(null)
+                          setDraft({ ...draft, activities: draft.activities.filter(item => item.id !== a.id) })
+                          setNotice('Actividad quitada del borrador.')
+                        }
+                      }}
+                    >
+                      <Icon name="trash" size={15} />
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>)}
           </tbody>
         </table>
@@ -247,38 +321,42 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
 
       <form ref={formRef} onSubmit={save}>
         <fieldset disabled={busy || !saved.editable}>
-          <div className="matrix-source-card">
-            <div className="matrix-source-header">
-              <label htmlFor="matrix-source">
-                <span className="matrix-field-label">Fuente de la matriz</span>
-                <span className="matrix-field-desc">Indique de dónde procede la información: puede ser esta misma comisión o un documento de referencia. Este dato es editable.</span>
-              </label>
-            </div>
-            <input
-              id="matrix-source"
-              className="matrix-source-input"
-              maxLength={500}
-              placeholder="Ej.: nombre de la comisión o documento de referencia…"
-              value={draft.source}
-              onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }}
-            />
+          <div className="card matrix-source-card">
+            <label htmlFor="matrix-source" className="matrix-source-label">
+              <span className="matrix-field-label">Fuente de la matriz</span>
+              <p className="field-help">Indique de dónde procede la información: puede ser esta misma comisión o un documento de referencia institucional.</p>
+              <input
+                id="matrix-source"
+                className="matrix-source-input"
+                maxLength={500}
+                placeholder="Ej.: nombre de la comisión o documento de referencia…"
+                value={draft.source}
+                onChange={e => { setDraft({ ...draft, source: e.target.value }); setNotice('') }}
+              />
+            </label>
           </div>
 
-          <div className="matrix-add-section">
+          <div className="matrix-activities-section-header">
+            <div className="section-heading">
+              <span className="section-icon"><Icon name="document" /></span>
+              <div>
+                <span className="section-kicker">PLANIFICACIÓN OPERATIVA</span>
+                <h2>Actividades del Plan ({draft.activities.length})</h2>
+              </div>
+            </div>
+
             <ActionForm
+              modal
+              key={addKey}
               label="Agregar actividad"
               disabled={busy || !saved.editable}
               dirty={!!catalogId || !!otherTitle}
               onCancel={() => { setCatalogId(''); setOtherTitle('') }}
             >
-              <div className="card matrix-add-card">
-                <div className="section-heading">
-                  <span className="section-icon"><Icon name="plus" /></span>
-                  <div>
-                    <span className="section-kicker">CATÁLOGO INSTITUCIONAL</span>
-                    <h2>Seleccionar actividades</h2>
-                  </div>
-                </div>
+              <div className="matrix-modal-content">
+                <p className="matrix-modal-intro">
+                  Seleccione una actividad del catálogo institucional o elija «Otra actividad» para especificar una actividad complementaria.
+                </p>
                 <label>
                   Actividad del catálogo
                   <select value={catalogId} onChange={e => setCatalogId(e.target.value)}>
@@ -302,10 +380,12 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                     />
                   </label>
                 )}
-                <button type="button" disabled={draft.activities.length >= 100 || !catalogId || (catalogId === '__OTHER__' && !otherTitle.trim())} onClick={add}>
-                  <Icon name="plus" size={15} />
-                  <span>Agregar actividad</span>
-                </button>
+                <div className="action-form-actions">
+                  <button type="button" disabled={draft.activities.length >= 100 || !catalogId || (catalogId === '__OTHER__' && !otherTitle.trim())} onClick={add}>
+                    <Icon name="plus" size={15} />
+                    <span>Agregar actividad</span>
+                  </button>
+                </div>
               </div>
             </ActionForm>
           </div>
@@ -316,149 +396,217 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
               <p>No hay actividades seleccionadas. Use el botón «Agregar actividad» para incorporar actividades al Plan.</p>
             </div>
           )}
-
-          {draft.activities.map((row, index) => (
-            <section id={'activity-' + row.id} tabIndex={-1} className="card activity-card" key={row.id} aria-label={`Actividad ${index + 1}`}>
-              <header className="activity-card-header">
-                <div className="activity-header-meta">
-                  <span className="activity-index-pill">#{index + 1}</span>
-                  <div>
-                    <h2>{index + 1}. {row.title}</h2>
-                    <div className="activity-tags">
-                      <span className="status-badge doc-type-pill">{categoryLabels[row.category]}</span>
-                      {row.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+        </fieldset>
+          {activeActivity && (
+            <dialog
+              ref={activityDialog}
+              aria-labelledby={`activity-${activeActivity.id}-title`}
+              className="activity-modal-overlay animate-fade-in"
+              onCancel={e => { e.preventDefault(); if (!busy) setEditingActivityId(null) }}
+              onClick={e => {
+                if (!busy && e.target === e.currentTarget) setEditingActivityId(null)
+              }}
+            >
+              <section
+                id={'activity-' + activeActivity.id}
+                tabIndex={-1}
+                className="card activity-modal-dialog animate-scale-up"
+                role="region"
+                aria-label={`Actividad ${activeIndex + 1}`}
+                onClick={e => e.stopPropagation()}
+              >
+                <header className="activity-modal-header">
+                  <div className="activity-modal-title-group">
+                    <span className="activity-index-pill">#{activeIndex + 1}</span>
+                    <div>
+                      <div className="activity-title-row">
+                        <h2 id={`activity-${activeActivity.id}-title`}>{activeIndex + 1}. {activeActivity.title}</h2>
+                        <span className="status-badge is-active-badge">En configuración</span>
+                      </div>
+                      <div className="activity-tags">
+                        <span className="status-badge doc-type-pill">{categoryLabels[activeActivity.category]}</span>
+                        {activeActivity.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {!row.mandatory && (
-                  <button
-                    type="button"
-                    className="secondary danger-btn"
-                    title="Quitar actividad"
-                    aria-label={'Quitar ' + row.title}
-                    onClick={() => {
-                      setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== row.id) })
-                      setNotice('')
-                    }}
-                  >
-                    <Icon name="trash" size={14} />
-                    <span>Quitar actividad</span>
-                  </button>
-                )}
-              </header>
-
-              {!row.catalogId && (
-                <div className="activity-custom-title-field">
-                  <label>
-                    Título de la actividad
-                    <input required maxLength={500} value={row.title} onChange={e => update(row.id, { title: e.target.value })} />
-                  </label>
-                </div>
-              )}
-
-              <div className="activity-dates-block">
-                <div className="activity-block-title">
-                  <Icon name="calendar" size={15} />
-                  <span>Plazo de ejecución</span>
-                  <small>(Período académico: {saved.periodStartsOn?.split('-').reverse().join('/')} — {saved.periodEndsOn?.split('-').reverse().join('/')})</small>
-                </div>
-                <div className="activity-dates-inputs">
-                  <label>
-                    <span>Desde</span>
-                    <input
-                      type="date"
-                      required
-                      min={saved.periodStartsOn}
-                      max={saved.periodEndsOn}
-                      value={row.startsOn ?? ''}
-                      onChange={e => update(row.id, { startsOn: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    <span>Hasta</span>
-                    <input
-                      type="date"
-                      required
-                      min={row.startsOn || saved.periodStartsOn}
-                      max={saved.periodEndsOn}
-                      value={row.endsOn ?? ''}
-                      onChange={e => update(row.id, { endsOn: e.target.value })}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <fieldset className="choice-group" aria-label="Responsables">
-                <div className="choice-group-header">
-                  <span className="choice-group-title">Responsables</span>
-                  <div className="choice-group-header-right">
-                    <span className="choice-count-badge">
-                      {row.responsibleIds.length} {row.responsibleIds.length === 1 ? 'responsable' : 'responsables'} seleccionados
-                    </span>
+                  <div className="activity-modal-header-actions">
+                    {!activeActivity.mandatory && saved.editable && (
+                      <button
+                        type="button"
+                        className="secondary danger-btn"
+                        title="Quitar actividad"
+                        aria-label={'Quitar ' + activeActivity.title}
+                        onClick={async () => {
+                          if (await confirmAction(`¿Quitar la actividad «${activeActivity.title}» del borrador?`)) {
+                            setEditingActivityId(null)
+                            setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== activeActivity.id) })
+                            setNotice('Actividad quitada del borrador.')
+                          }
+                        }}
+                      >
+                        <Icon name="trash" size={14} />
+                        <span>Quitar</span>
+                      </button>
+                    )}
                     <button
                       type="button"
-                      className="secondary select-all-btn"
-                      onClick={() => selectResponsible(row, saved.members.map(m => m.id))}
+                      className="secondary matrix-icon-btn modal-close-btn"
+                      title="Cerrar modal"
+                      aria-label="Cerrar modal"
+                      disabled={busy}
+                      onClick={() => setEditingActivityId(null)}
                     >
-                      <Icon name="users" size={13} />
-                      <span>Seleccionar todos</span>
+                      <Icon name="x" size={15} />
                     </button>
                   </div>
-                </div>
+                </header>
 
-                <div className="choice-chip-grid">
-                  {saved.members.map(member => (
-                    <label className={'choice-chip' + (row.responsibleIds.includes(member.id) ? ' is-selected' : '')} key={member.id}>
-                      <input
-                        type="checkbox"
-                        checked={row.responsibleIds.includes(member.id)}
-                        onChange={e => selectResponsible(row, e.target.checked
-                          ? [...row.responsibleIds, member.id]
-                          : row.responsibleIds.filter(id => id !== member.id))}
-                      />
-                      <span className="chip-label">{member.name}</span>
-                    </label>
-                  ))}
-                </div>
+                <div className="activity-modal-scrollable"><fieldset disabled={busy || !saved.editable} className="activity-modal-fields">
+                  {!activeActivity.catalogId && (
+                    <div className="activity-custom-title-field">
+                      <label>
+                        Título de la actividad
+                        <input
+                          required
+                          maxLength={500}
+                          value={activeActivity.title}
+                          onChange={e => update(activeActivity.id, { title: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                  )}
 
-                {row.responsibleIds.some(id => !saved.members.some(m => m.id === id)) && (
-                  <p className="error">Hay responsables que ya no están disponibles. Vuelva a seleccionarlos.</p>
-                )}
+                  <div className="activity-dates-block">
+                    <div className="activity-block-title">
+                      <Icon name="calendar" size={15} />
+                      <span>Plazo de ejecución</span>
+                      <small>(Período académico: {saved.periodStartsOn?.split('-').reverse().join('/')} — {saved.periodEndsOn?.split('-').reverse().join('/')})</small>
+                    </div>
+                    <div className="activity-dates-inputs">
+                      <label>
+                        <span>Desde</span>
+                        <input
+                          type="date"
+                          required
+                          min={saved.periodStartsOn}
+                          max={saved.periodEndsOn}
+                          value={activeActivity.startsOn ?? ''}
+                          onChange={e => update(activeActivity.id, { startsOn: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        <span>Hasta</span>
+                        <input
+                          type="date"
+                          required
+                          min={activeActivity.startsOn || saved.periodStartsOn}
+                          max={saved.periodEndsOn}
+                          value={activeActivity.endsOn ?? ''}
+                          onChange={e => update(activeActivity.id, { endsOn: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                  </div>
 
-                <p className="field-help" role="status">{row.collective
-                  ? 'En el documento aparecerá: ' + saved.collectiveLabel + '. Se conservan los integrantes seleccionados para trazabilidad.'
-                  : !saved.collectiveLabel && row.responsibleIds.length === saved.members.length && saved.members.length > 0
-                    ? 'Todos seleccionados. Administración debe configurar la denominación colectiva; mientras tanto se mostrarán los nombres.'
-                    : 'Al seleccionar a todos se mostrará automáticamente la denominación colectiva configurada.'}</p>
-              </fieldset>
+                  <fieldset className="choice-group" aria-label="Responsables">
+                    <div className="choice-group-header">
+                      <span className="choice-group-title">Responsables</span>
+                      <div className="choice-group-header-right">
+                        <span className="choice-count-badge">
+                          {activeActivity.responsibleIds.length} {activeActivity.responsibleIds.length === 1 ? 'responsable' : 'responsables'} seleccionados
+                        </span>
+                        <button
+                          type="button"
+                          className="secondary select-all-btn"
+                          onClick={() => selectResponsible(activeActivity, saved.members.map(m => m.id))}
+                        >
+                          <Icon name="users" size={13} />
+                          <span>Seleccionar todos</span>
+                        </button>
+                      </div>
+                    </div>
 
-              <div className="activity-catalogs-grid">
-                {choices(row, 'resources', 'Recursos')}
-                {choices(row, 'means', 'Medios de verificación')}
+                    <div className="choice-chip-grid">
+                      {saved.members.map(member => (
+                        <label className={'choice-chip' + (activeActivity.responsibleIds.includes(member.id) ? ' is-selected' : '')} key={member.id}>
+                          <input
+                            type="checkbox"
+                            checked={activeActivity.responsibleIds.includes(member.id)}
+                            onChange={e => selectResponsible(activeActivity, e.target.checked
+                              ? [...activeActivity.responsibleIds, member.id]
+                              : activeActivity.responsibleIds.filter(id => id !== member.id))}
+                          />
+                          <span className="chip-label">{member.name}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {activeActivity.responsibleIds.some(id => !saved.members.some(m => m.id === id)) && (
+                      <p className="error">Hay responsables que ya no están disponibles. Vuelva a seleccionarlos.</p>
+                    )}
+
+                    <p className="field-help" role="status">{activeActivity.collective
+                      ? 'En el documento aparecerá: ' + saved.collectiveLabel + '. Se conservan los integrantes seleccionados para trazabilidad.'
+                      : !saved.collectiveLabel && activeActivity.responsibleIds.length === saved.members.length && saved.members.length > 0
+                        ? 'Todos seleccionados. Administración debe configurar la denominación colectiva; mientras tanto se mostrarán los nombres.'
+                        : 'Al seleccionar a todos se mostrará automáticamente la denominación colectiva configurada.'}</p>
+                  </fieldset>
+
+                  <div className="activity-catalogs-grid">
+                    {choices(activeActivity, 'resources', 'Recursos')}
+                    {choices(activeActivity, 'means', 'Medios de verificación')}
+                  </div>
+                </fieldset></div>
+
+                <footer className="activity-modal-footer">
+                  <div className="activity-modal-footer-left">
+                    <span className="field-help">Los cambios se guardan en el borrador local.</span>
+                  </div>
+                  <div className="activity-modal-footer-actions">
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setEditingActivityId(null)}
+                    >
+                      Listo
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || conflict || !saved.editable}
+                      className="primary-save-btn"
+                      onClick={async () => {
+                        await persist()
+                      }}
+                    >
+                      <Icon name="check" size={15} />
+                      <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
+                    </button>
+                  </div>
+                </footer>
+              </section>
+            </dialog>
+          )}
+          {!activeActivity && (
+            <div className="matrix-footer-actions">
+              <div className="matrix-footer-status">
+                <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
+                  {dirty ? 'Hay cambios sin guardar en la matriz' : 'Matriz sincronizada con el servidor'}
+                </span>
               </div>
-            </section>
-          ))}
-
-        </fieldset>
-          <div className="matrix-footer-actions">
-            <div className="matrix-footer-status">
-              <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
-                {dirty ? '• Hay cambios sin guardar en la matriz' : '• Matriz sincronizada con el servidor'}
-              </span>
+              <div className="matrix-footer-buttons">
+                <button
+                  disabled={busy || conflict || !saved.editable}
+                  className={dirty ? 'primary-save-btn' : 'secondary'}
+                >
+                  <Icon name="check" size={15} />
+                  <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
+                </button>
+                <button type="button" disabled={busy || conflict} onClick={next} className="matrix-next-button">
+                  <span>{busy ? 'Procesando…' : 'Siguiente: Anexos'}</span><Icon name="arrow" size={16} />
+                </button>
+              </div>
             </div>
-            <div className="matrix-footer-buttons">
-              <button
-                disabled={busy || conflict || !saved.editable}
-                className={dirty ? 'primary-save-btn' : 'secondary'}
-              >
-                <Icon name="check" size={15} />
-                <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
-              </button>
-              <button type="button" disabled={busy || conflict} onClick={next} className="matrix-next-button">
-                <span>{busy ? 'Procesando…' : 'Siguiente: Anexos'}</span><Icon name="arrow" size={16} />
-              </button>
-            </div>
-          </div>
+          )}
       </form>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}

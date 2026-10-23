@@ -38,6 +38,19 @@
 .action-form-heading strong { color: var(--text); font-size: 1rem; }
 .action-form-body { padding: 20px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
 .action-form-body > form { margin-top: 0 !important; }
+.action-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+:is(.action-form-body, fieldset) > button + button {
+  margin-left: 12px;
+}
+.action-form-actions > button + button {
+  margin-left: 0;
+}
 
 /* Modal dialog display and container */
 .action-form-dialog:not([open]) {
