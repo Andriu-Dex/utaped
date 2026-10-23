@@ -58,10 +58,30 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
   }
   async function save(e: FormEvent) { e.preventDefault(); await persist() }
   async function next() {
-    if (busy || conflict) return
-    if (dirty) {
-      if (!formRef.current?.reportValidity() || !(await persist())) return
+    if (!saved || !draft || busy || conflict) return
+    setError(''); setNotice('')
+    if (!draft.activities.length) {
+      setError('Agregue al menos una actividad para continuar.')
+      formRef.current?.querySelector<HTMLButtonElement>('button[aria-expanded]')?.focus()
+      return
     }
+    setAttempted(true)
+    const incomplete = draft.activities.find(a => !a.title.trim() || !a.startsOn || !a.endsOn ||
+      a.startsOn > a.endsOn || a.startsOn < saved.periodStartsOn || a.endsOn > saved.periodEndsOn ||
+      !a.responsibleIds.length || a.responsibleIds.some(id => !saved.members.some(member => member.id === id)) ||
+      !a.resources.length || !a.means.length || [...a.resources, ...a.means].some(c => c.catalogId === null && !c.other?.trim()) ||
+      saved.restrictHolidayEndpoints && saved.holidays.some(h => h.date === a.startsOn || h.date === a.endsOn))
+    if (incomplete) {
+      setError('Complete fechas válidas, responsables, recursos y medios de verificación de la actividad ' + (draft.activities.indexOf(incomplete) + 1) + ' para continuar.')
+      showActivity(incomplete.id)
+      return
+    }
+    if (formRef.current && !formRef.current.checkValidity()) {
+      setError('Revise los campos obligatorios de la matriz antes de continuar.')
+      formRef.current.querySelector<HTMLElement>(':invalid')?.focus()
+      return
+    }
+    if (dirty && !(await persist())) return
     setBusy(true)
     try { await onNext() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir Anexos.'); setBusy(false) }
   }

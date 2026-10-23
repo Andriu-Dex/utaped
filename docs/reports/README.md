@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-23 — Validación para continuar desde la matriz](2026-10-23-04-matrix-step-validation.md).
+
 - [2026-10-23 — Documentos preparados para revisión manual](2026-10-23-03-prepared-example-documents.md).
 
 - [2026-10-23 — Resumen de matriz y navegación a Anexos](2026-10-23-02-matrix-overview-and-navigation.md).

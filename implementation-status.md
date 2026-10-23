@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## Validación de avance desde matriz — 2026-10-23
+
+Siguiente: Anexos exige al menos una actividad completa incluso sin cambios pendientes; toast y foco contextual, sin perder el borrador. Guardar una matriz vacía continúa disponible. [Reporte](docs/reports/2026-10-23-04-matrix-step-validation.md).
+
 ## Escenarios documentales preparados — 2026-10-23
 
 Carga opcional y repetible en desarrollo: Plan editable, Plan en revisión, Plan aprobado con evidencia e Informe en borrador. Artefactos reales, firmas autofirmadas de ejemplo sin persistir claves, servicios normales y conservación de documentos/credenciales existentes. Ya cargados en utaped-sample. [Reporte](docs/reports/2026-10-23-03-prepared-example-documents.md).
