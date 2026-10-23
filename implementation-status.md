@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## Escenarios documentales preparados — 2026-10-23
+
+Carga opcional y repetible en desarrollo: Plan editable, Plan en revisión, Plan aprobado con evidencia e Informe en borrador. Artefactos reales, firmas autofirmadas de ejemplo sin persistir claves, servicios normales y conservación de documentos/credenciales existentes. Ya cargados en utaped-sample. [Reporte](docs/reports/2026-10-23-03-prepared-example-documents.md).
+
 ## Usabilidad del paso 3 — 2026-10-23
 
 Resumen de matriz antes del detalle, campos pendientes, acceso al editor por actividad y navegación directa a Anexos con guardado de cambios y conservación ante errores. PC/tablet, temas y teclado. [Reporte](docs/reports/2026-10-23-02-matrix-overview-and-navigation.md).

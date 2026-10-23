@@ -1,5 +1,7 @@
 # Reportes
 
+- [2026-10-23 — Documentos preparados para revisión manual](2026-10-23-03-prepared-example-documents.md).
+
 - [2026-10-23 — Resumen de matriz y navegación a Anexos](2026-10-23-02-matrix-overview-and-navigation.md).
 
 - [2026-10-23 — Espaciado institucional de T1 y T2](2026-10-23-01-institutional-document-spacing.md).

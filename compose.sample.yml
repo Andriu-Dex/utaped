@@ -10,6 +10,7 @@ services:
     environment:
       DB_URL: jdbc:postgresql://db:5432/utaped_dev
       SPRING_PROFILES_ACTIVE: development-seed
+      APP_DEVELOPMENT_DOCUMENTS: ${UTAPED_SEED_DOCUMENTS:-false}
       UTAPED_SEED_PASSWORD: ${UTAPED_SEED_PASSWORD:?Generate .env.sample with start-development-sample.ps1}
       BOOTSTRAP_ADMIN_EMAIL: ""
       BOOTSTRAP_ADMIN_PASSWORD: ""

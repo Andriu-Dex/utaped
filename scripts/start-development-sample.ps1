@@ -1,9 +1,11 @@
-﻿param([switch]$ResetData, [switch]$Web)
+﻿param([switch]$ResetData, [switch]$Web, [switch]$PreparedDocuments)
 $ErrorActionPreference = 'Stop'
 $previousPublicUrl = $env:APP_PUBLIC_URL
+$previousPreparedDocuments = $env:UTAPED_SEED_DOCUMENTS
 $projectRoot = Split-Path $PSScriptRoot -Parent
 Push-Location $projectRoot
 try {
+    $env:UTAPED_SEED_DOCUMENTS = if ($PreparedDocuments) { 'true' } else { 'false' }
     $sampleEnvironment = Join-Path $projectRoot '.env.sample'
     if (-not (Test-Path -LiteralPath $sampleEnvironment)) {
         $random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
@@ -69,7 +71,12 @@ COMMIT;
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
         try {
             $response = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$backendPort/api/auth/csrf" -TimeoutSec 3
-            if ($response.StatusCode -eq 200) { $ready = $true; break }
+            if ($response.StatusCode -eq 200) {
+                if (-not $PreparedDocuments) { $ready = $true; break }
+                $seedCount = docker compose --env-file .env.sample -p utaped-sample -f compose.yml -f compose.sample.yml exec -T db psql -U utaped -d utaped_dev -At -c "SELECT count(*) FROM audit_event WHERE action='DEVELOPMENT_DOCUMENTS_CREATED'"
+                if ($LASTEXITCODE -eq 0 -and "$seedCount".Trim() -eq '1') { $ready = $true; break }
+                Start-Sleep -Seconds 2
+            }
         } catch { Start-Sleep -Seconds 2 }
     }
     if (-not $ready) { throw 'El backend no estuvo disponible a tiempo. Revisa sus logs antes de iniciar sesión.' }
@@ -79,5 +86,6 @@ COMMIT;
     Write-Output 'Usuarios: dev.admin, dev.principal, dev.coordinator, dev.reviewer, dev.approver, dev.member, dev.outsider.'
 } finally {
     $env:APP_PUBLIC_URL = $previousPublicUrl
+    $env:UTAPED_SEED_DOCUMENTS = $previousPreparedDocuments
     Pop-Location
 }

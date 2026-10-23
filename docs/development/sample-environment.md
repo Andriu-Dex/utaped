@@ -92,3 +92,26 @@ python scripts/clean-development-data.py --backup backups/NOMBRE-NUEVO --apply
 ```
 
 El primer comando solo previsualiza. El segundo elimina los datos operativos de ejemplo, conserva las siete cuentas y Flyway, y reinicia los servicios que estaban activos para regenerar referencias oficiales. Cierra las sesiones existentes: iniciar sesión de nuevo y recargar la página. No usarlo sobre producción. No elimina archivos físicos del volumen. Los datos oficiales de templates son la fuente; T1/T2 permanecen en A4, aunque una referencia esté en Carta.
+
+## Documentos preparados (carga opcional)
+
+```powershell
+./scripts/start-development.ps1 -PreparedDocuments
+```
+
+También admite `-Web`. No requiere nuevas contraseñas ni editar `.env.sample`. El inicio normal no activa esta carga. Solo funciona con perfil `development-seed` y base `utaped_dev`; `compose.sample.yml` deja `APP_DEVELOPMENT_DOCUMENTS` desactivado por defecto. El script espera la confirmación de carga antes de anunciar que está listo.
+
+Con `dev.principal`, abrir Documentos y buscar **Ejemplo**:
+
+| Escenario | Qué permite probar |
+|---|---|
+| Plan editable | Contenido, matriz con responsables/recursos/medios, anexo y previsualización preparada. |
+| Plan en revisión | Revisar con `dev.reviewer`, observar/devolver o completar; después actúa `dev.approver`. |
+| Plan aprobado | Consultar el artefacto conservado, evidencias PDF y su relación con el Informe. |
+| Informe en borrador | Resultados, antecedentes, conclusiones, mejoras y previsualización preparada, derivado del Plan aprobado. Anexos opcionales desactivados inicialmente. |
+
+La carga selecciona tres ámbitos disponibles del período Julio–Diciembre 2026, sin ocupar ámbitos que ya tengan un Plan. Usa carreras/grupos/catálogos de las referencias y cuentas ficticias existentes. Los nombres concretos pueden variar si otros ámbitos ya están ocupados. No modifica el documento que ya estuviera trabajando el usuario.
+
+Se activan los flujos configurados del período de desarrollo si aún no estaban activados; sus asignaciones quedan congeladas conforme al comportamiento normal. Las firmas de elaboración utilizan un certificado autofirmado efímero con nombre **UTAPED EJEMPLO SIN VALIDEZ INSTITUCIONAL**, únicamente para construir escenarios operables. No se importan firmas de templates ni se afirma confianza institucional. Los certificados privados y contraseñas no se guardan; las vinculaciones temporales se revocan y se conserva/restablece cualquier vinculación pública anterior. Los PDF firmados, certificados públicos y auditoría permanecen como parte del ejemplo. Para firmar el Informe o reenviar un documento devuelto se utiliza el proceso normal de vinculación y firma con un certificado propio de prueba; la clave efímera de la carga no puede recuperarse ni reutilizarse.
+
+Un evento de auditoría marca la carga completada. Repetir el comando o reiniciar no duplica documentos ni restablece sus cambios, observaciones o estados. La ejecución es transaccional y serializada. Para reconstruir ejemplos después de modificarlos, planificar expresamente un reinicio del entorno; no borrar el marcador ni ejecutar SQL de limpieza como rutina. Mantener respaldo conjunto antes de operaciones masivas.
