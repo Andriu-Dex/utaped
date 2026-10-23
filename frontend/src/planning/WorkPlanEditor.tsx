@@ -117,7 +117,10 @@ export function WorkPlanEditor({
     setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.'); setSection('general') }
   }
-  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
+  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} onNext={async () => {
+    const current = await api<WorkPlan>('/work-plans/' + plan.id)
+    setPlan(current); setDraft(fields(current)); setConflict(false); setError(''); setNotice(''); setSection('attachments')
+  }} />
   if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
   if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={returnToPlan} />

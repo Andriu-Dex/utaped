@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## Usabilidad del paso 3 — 2026-10-23
+
+Resumen de matriz antes del detalle, campos pendientes, acceso al editor por actividad y navegación directa a Anexos con guardado de cambios y conservación ante errores. PC/tablet, temas y teclado. [Reporte](docs/reports/2026-10-23-02-matrix-overview-and-navigation.md).
+
 ## Corrección documental — 2026-10-23
 
 Encabezado T1/T2 con proporciones institucionales, escudo sin reducción, altura de filas y separación explícita antes del contenido. Se conserva A4, paginación dinámica y bytes históricos; las nuevas composiciones usan engine8. [Reporte](docs/reports/2026-10-23-01-institutional-document-spacing.md).

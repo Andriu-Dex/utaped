@@ -1349,3 +1349,28 @@ details.document-lifecycle li {
 }
 
 .choice-group-header .choice-group-title { font-weight:700; color:var(--text); font-size:.9rem; }
+
+/* Matrix overview: scan first, then jump to the full activity editor. */
+.matrix-summary-card { min-width: 0; margin-bottom: 28px; }
+.matrix-summary-card .section-heading { margin-bottom: 12px; }
+.matrix-summary-card .field-help { margin: 6px 0 0; }
+.matrix-summary-state { color: var(--muted); font-size: .82rem; margin: 0; }
+.matrix-summary-table { max-width: 100%; max-height: 420px; overflow: auto; }
+.matrix-summary-table thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+.matrix-summary-table table { min-width: 1050px; table-layout: fixed; }
+.matrix-summary-table thead th:first-child { width: 26%; }
+.matrix-summary-table thead th:nth-child(2), .matrix-summary-table thead th:nth-child(3) { width: 10%; }
+.matrix-summary-table thead th:last-child { width: 8%; }
+.matrix-summary-table th[scope='row'] { min-width: 230px; max-width: 330px; text-align: left; font-weight: 400; background: transparent; white-space: normal; text-transform: none; letter-spacing: normal; }
+.matrix-summary-table th[scope='row'] strong { display: block; overflow-wrap: anywhere; }
+.matrix-summary-table th[scope='row'] small { display: block; margin-top: 6px; color: var(--muted); }
+.matrix-summary-table td { min-width: 110px; max-width: 240px; overflow-wrap: anywhere; vertical-align: top; }
+.matrix-row-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 8px; background: var(--canvas); color: var(--muted); margin-bottom: 8px; font-weight: 700; }
+.matrix-pending { color: var(--muted); font-style: italic; }
+.matrix-detail-button { padding: 10px; }
+.matrix-table-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.activity-card { scroll-margin-top: 120px; }
+.activity-card:focus-visible { outline: 3px solid var(--blue-700); outline-offset: 4px; }
+.matrix-footer-buttons { flex-wrap: wrap; }
+.matrix-next-button { display: inline-flex; align-items: center; gap: 10px; }
+@media (prefers-reduced-motion: reduce) { .activity-card { scroll-behavior: auto; } }

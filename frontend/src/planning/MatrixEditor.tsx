@@ -7,7 +7,7 @@ import { categoryLabels, type Activity, type Matrix } from './matrixTypes'
 import { Icon } from '../shared/Icon'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
-export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDocId: string; onBack: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
+export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
@@ -42,18 +42,32 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
     if (checked) values.push({ catalogId: id, other: id === null ? '' : null, label: null })
     update(row.id, { [key]: values })
   }
-  async function save(e: FormEvent) {
-    e.preventDefault(); if (!saved || !draft) return
+  async function persist(): Promise<boolean> {
+    if (!saved || !draft) return false
+    if (catalogId || otherTitle) { setError('Agregue la actividad seleccionada o cancele su creación antes de guardar y continuar.'); return false }
     setAttempted(true); setError(''); setNotice('')
     const emptyOther = formRef.current?.querySelector<HTMLInputElement>('input[data-other="true"][aria-invalid="true"]')
-    if (emptyOther) { setError('Complete la descripción de Otro.'); emptyOther.focus(); return }
-    if (draft.activities.some(a => !a.responsibleIds.length || !a.resources.length || !a.means.length)) { setError('Cada actividad requiere al menos un responsable, un recurso y un medio de verificación.'); return }
+    if (emptyOther) { setError('Complete la descripción de Otro.'); emptyOther.focus(); return false }
+    if (draft.activities.some(a => !a.responsibleIds.length || !a.resources.length || !a.means.length)) { setError('Cada actividad requiere al menos un responsable, un recurso y un medio de verificación.'); return false }
     setBusy(true)
     try {
       const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion })
-      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false)
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true) }
+      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false); return true
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true); return false }
     finally { setBusy(false) }
+  }
+  async function save(e: FormEvent) { e.preventDefault(); await persist() }
+  async function next() {
+    if (busy || conflict) return
+    if (dirty) {
+      if (!formRef.current?.reportValidity() || !(await persist())) return
+    }
+    setBusy(true)
+    try { await onNext() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir Anexos.'); setBusy(false) }
+  }
+  function showActivity(id: string) {
+    const card = document.getElementById('activity-' + id)
+    card?.focus({ preventScroll: true }); card?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
   }
   async function back() {
     if (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?'))) return
@@ -172,6 +186,45 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
 
       {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
 
+    {!!draft.activities.length && <section className="card matrix-summary-card">
+      <div className="section-heading">
+        <span className="section-icon"><Icon name="document" /></span>
+        <div>
+          <span className="section-kicker">CONSOLIDADO T1</span>
+          <h2>Resumen de la matriz</h2>
+          <p className="field-help">Revise la planificación completa y abra el detalle de una actividad para ajustarla.</p>
+        </div>
+      </div>
+      <p className="matrix-summary-state" role="status">{dirty ? 'Vista de sus cambios locales · Pendiente de guardar' : 'Información guardada en el servidor'}</p>
+      <div className="table-scroll matrix-summary-table" role="region" aria-label="Resumen de actividades" tabIndex={0}>
+        <table>
+          <caption className="matrix-table-caption">Planificación de actividades, fechas, responsables, recursos y medios de verificación</caption>
+          <thead>
+            <tr>
+              <th scope="col">Actividad</th>
+              <th scope="col">Desde</th>
+              <th scope="col">Hasta</th>
+              <th scope="col">Responsables</th>
+              <th scope="col">Recursos</th>
+              <th scope="col">Medios de verificación</th>
+              <th scope="col">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {draft.activities.map((a, index) => <tr key={a.id}>
+              <th scope="row"><span className="matrix-row-number">{index + 1}</span><strong>{a.title}</strong><small>{categoryLabels[a.category]}{a.mandatory ? ' · Obligatoria' : ''}</small></th>
+              <td><span className="matrix-date-cell">{a.startsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
+              <td><span className="matrix-date-cell">{a.endsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
+              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
+              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
+              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending">Pendiente</span>}</td>
+            <td><button type="button" className="secondary matrix-detail-button" onClick={() => showActivity(a.id)} title={'Ver detalle de la actividad ' + (index + 1)} aria-label={'Ver detalle de la actividad ' + (index + 1)}><Icon name="eye" size={16} /></button></td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </section>}
+
       <form ref={formRef} onSubmit={save}>
         <fieldset disabled={busy || !saved.editable}>
           <div className="matrix-source-card">
@@ -245,7 +298,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
           )}
 
           {draft.activities.map((row, index) => (
-            <section className="card activity-card" key={row.id} aria-label={`Actividad ${index + 1}`}>
+            <section id={'activity-' + row.id} tabIndex={-1} className="card activity-card" key={row.id} aria-label={`Actividad ${index + 1}`}>
               <header className="activity-card-header">
                 <div className="activity-header-meta">
                   <span className="activity-index-pill">#{index + 1}</span>
@@ -366,6 +419,7 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
             </section>
           ))}
 
+        </fieldset>
           <div className="matrix-footer-actions">
             <div className="matrix-footer-status">
               <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
@@ -374,49 +428,18 @@ export function MatrixEditor({ targetDocId, onBack, onDirtyChange }: { targetDoc
             </div>
             <div className="matrix-footer-buttons">
               <button
-                disabled={conflict}
+                disabled={busy || conflict || !saved.editable}
                 className={dirty ? 'primary-save-btn' : 'secondary'}
               >
                 <Icon name="check" size={15} />
                 <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
               </button>
+              <button type="button" disabled={busy || conflict} onClick={next} className="matrix-next-button">
+                <span>{busy ? 'Procesando…' : 'Siguiente: Anexos'}</span><Icon name="arrow" size={16} />
+              </button>
             </div>
           </div>
-        </fieldset>
       </form>
-    {!!draft.activities.length && <section className="card matrix-summary-card">
-      <div className="section-heading">
-        <span className="section-icon"><Icon name="document" /></span>
-        <div>
-          <span className="section-kicker">CONSOLIDADO T1</span>
-          <h2>Resumen de la matriz</h2>
-        </div>
-      </div>
-      <div className="table-scroll matrix-summary-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Actividad</th>
-              <th>Desde</th>
-              <th>Hasta</th>
-              <th>Responsables</th>
-              <th>Recursos</th>
-              <th>Medios de verificación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {draft.activities.map(a => <tr key={a.id}>
-              <td><strong>{a.title}</strong></td>
-              <td><span className="matrix-date-cell">{a.startsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
-              <td><span className="matrix-date-cell">{a.endsOn?.split('-').reverse().join('/') || 'Pendiente'}</span></td>
-              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</td>
-              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ')}</td>
-              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ')}</td>
-            </tr>)}
-          </tbody>
-        </table>
-      </div>
-    </section>}
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>
