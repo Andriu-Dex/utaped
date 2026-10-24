@@ -189,21 +189,21 @@ export function Notifications({ onOpen, onClose }: { onOpen: (target: Notificati
 
   function getNotificationIcon(kind: string, targetType: Notification['targetType']) {
     if (kind === 'DOCUMENT_APPROVED') {
-      return { icon: <Icon name="check" size={16} />, className: 'kind-success' }
+      return { icon: <Icon name="check" size={13} />, className: 'kind-success' }
     }
     if (kind === 'DOCUMENT_RETURNED' || kind.includes('WARNING') || kind.includes('NEAR')) {
-      return { icon: <Icon name="refresh" size={16} />, className: 'kind-warning' }
+      return { icon: <Icon name="refresh" size={13} />, className: 'kind-warning' }
     }
     if (kind === 'AUTHOR_SIGNATURE_REQUESTED') {
-      return { icon: <Icon name="edit" size={16} />, className: 'kind-warning' }
+      return { icon: <Icon name="edit" size={13} />, className: 'kind-warning' }
     }
     if (targetType === 'ACCOUNT') {
-      return { icon: <Icon name="lock" size={16} />, className: 'kind-account' }
+      return { icon: <Icon name="lock" size={13} />, className: 'kind-account' }
     }
     if (targetType === 'GROUP') {
-      return { icon: <Icon name="users" size={16} />, className: 'kind-group' }
+      return { icon: <Icon name="users" size={13} />, className: 'kind-group' }
     }
-    return { icon: <Icon name="document" size={16} />, className: 'kind-work_plan' }
+    return { icon: <Icon name="document" size={13} />, className: 'kind-work_plan' }
   }
 
   return (
@@ -239,15 +239,18 @@ export function Notifications({ onOpen, onClose }: { onOpen: (target: Notificati
             <Icon name="refresh" size={16} />
           </button>
           {onClose && (
-            <button
-              type="button"
-              className="notification-header-btn"
-              onClick={onClose}
-              title="Cerrar"
-              aria-label="Cerrar"
-            >
-              <Icon name="x" size={16} />
-            </button>
+            <>
+              <span className="notification-header-divider" aria-hidden="true" />
+              <button
+                type="button"
+                className="notification-header-btn"
+                onClick={onClose}
+                title="Cerrar"
+                aria-label="Cerrar"
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -283,9 +286,31 @@ export function Notifications({ onOpen, onClose }: { onOpen: (target: Notificati
                     className={'notification-item ' + (!notification.readAt ? 'unread' : '')}
                     key={notification.id}
                   >
-                    <span className={'notification-avatar ' + avatar.className}>
-                      {avatar.icon}
-                    </span>
+                    <div className="notification-header-actions">
+                      <time
+                        className="notification-time"
+                        dateTime={notification.createdAt}
+                        title={new Date(notification.createdAt).toLocaleString('es-EC')}
+                      >
+                        {formatNotificationTime(notification.createdAt)}
+                      </time>
+
+                      {!notification.readAt && (
+                        <button
+                          type="button"
+                          className="notification-action-btn"
+                          disabled={busy}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void mutate('/notifications/' + notification.id + '/read')
+                          }}
+                          title="Marcar como leída"
+                          aria-label="Marcar como leída"
+                        >
+                          <Icon name="check" size={12} />
+                        </button>
+                      )}
+                    </div>
 
                     <button
                       type="button"
@@ -298,49 +323,31 @@ export function Notifications({ onOpen, onClose }: { onOpen: (target: Notificati
                         }
                       }}
                     >
-                      <div className="notification-title-row">
+                      <span className={'notification-avatar ' + avatar.className}>
+                        {avatar.icon}
                         {!notification.readAt && <span className="unread-dot" title="No leída" />}
-                        <p className="notification-title">{notification.title}</p>
-                      </div>
+                      </span>
 
-                      <p className="notification-message">{parsed.body}</p>
-
-                      {parsed.targetObject && (
-                        <div className="notification-target-badge" title={parsed.targetObject}>
-                          <Icon name="document" size={12} />
-                          <span>{parsed.targetObject}</span>
+                      <div className="notification-main">
+                        <div className="notification-title-row">
+                          <p className="notification-title">{notification.title}</p>
                         </div>
-                      )}
 
-                      <div className="notification-time">
-                        <Icon name="clock" size={11} />
-                        <time dateTime={notification.createdAt} title={new Date(notification.createdAt).toLocaleString('es-EC')}>
-                          {formatNotificationTime(notification.createdAt)} · {new Date(notification.createdAt).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
-                        </time>
+                        <p className="notification-message">{parsed.body}</p>
+
+                        {parsed.targetObject && (
+                          <div className="notification-target-badge" title={parsed.targetObject}>
+                            <span>{parsed.targetObject}</span>
+                          </div>
+                        )}
+
+                        {!notification.targetAvailable && (
+                          <p className="notification-unavailable-msg">
+                            Objeto no disponible.
+                          </p>
+                        )}
                       </div>
-
-                      {!notification.targetAvailable && (
-                        <p style={{ margin: '6px 0 0', fontSize: '0.74rem', color: 'var(--danger)', fontWeight: 600 }}>
-                          Objeto no disponible.
-                        </p>
-                      )}
                     </button>
-
-                    {!notification.readAt && (
-                      <button
-                        type="button"
-                        className="notification-action-btn"
-                        disabled={busy}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          void mutate('/notifications/' + notification.id + '/read')
-                        }}
-                        title="Marcar como leída"
-                        aria-label="Marcar como leída"
-                      >
-                        <Icon name="check" size={13} />
-                      </button>
-                    )}
                   </div>
                 )
               })}
