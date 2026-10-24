@@ -23,7 +23,7 @@ test('live A4 preview follows unsaved content without saving or creating an arti
   expect(await api(page, '/work-plans/' + plan.id + '/artifacts')).toHaveLength(0)
   await expect(preview.getByRole('button', { name: 'Página anterior' })).toBeEnabled()
   await preview.getByRole('spinbutton', { name: 'Ir a página', exact: true }).fill('1')
-  await preview.getByRole('button', { name: 'Ir a la página indicada', exact: true }).click()
+  await preview.getByRole('spinbutton', { name: 'Ir a página', exact: true }).press('Enter')
   await expect(preview.getByRole('status').filter({ hasText: /Pág\. 1 de/ })).toBeVisible()
   await preview.getByRole('button', { name: /^Objetivo/ }).click()
   await expect(preview.getByRole('button', { name: 'Página anterior' })).toBeEnabled()

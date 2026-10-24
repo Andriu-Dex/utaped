@@ -1,3 +1,6 @@
+import { StepPagination } from './StepPagination'
+import { usePlanStepGuard } from './PlanStepNavigation'
+import { confirmAction } from '../shared/confirm-action'
 import { FormalSubmission } from './FormalSubmission'
 import { DocumentSections } from './DocumentSections'
 import { Toast } from '../shared/Toast'
@@ -10,11 +13,12 @@ import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
-export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext, onResolveSection }: { onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => Promise<void>; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
+export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext, onResolveSection, onDocumentChange }: { onDocumentChange?: (plan: WorkPlan) => void; onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => Promise<void>; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/artifacts'
   const [ready, setReady] = useState<Readiness | null>(null); const [artifacts, setArtifacts] = useState<Artifact[]>([])
+  const [signingDirty, setSigningDirty] = useState(false), [signingBusy, setSigningBusy] = useState(false)
   const [sectionsDirty, setSectionsDirty] = useState(false), [formalDirty, setFormalDirty] = useState(false)
-  useEffect(() => { onDirtyChange?.(sectionsDirty || formalDirty); return () => onDirtyChange?.(false) }, [sectionsDirty, formalDirty, onDirtyChange])
+  useEffect(() => { onDirtyChange?.(sectionsDirty || formalDirty || signingDirty); return () => onDirtyChange?.(false) }, [sectionsDirty, formalDirty, signingDirty, onDirtyChange])
   const [selected, setSelected] = useState<Artifact | null>(null); const [page, setPage] = useState(0); const [plan, setPlan] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [busy, setBusy] = useState(true); const [imageError, setImageError] = useState(false); const [reload, setReload] = useState(0)
   const [loadedImage, setLoadedImage] = useState(''), [imageAttempt, setImageAttempt] = useState(0)
@@ -32,7 +36,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
       try {
         const [r, a, p] = await Promise.all([api<Readiness>(path + '/readiness'), api<Artifact[]>(path), api<WorkPlan>('/work-plans/' + targetDocId)])
         if (!active) return
-        setReady(r); setArtifacts(a); setPlan(p); setPage(0)
+        setReady(r); setArtifacts(a); setPlan(p); onDocumentChange?.(p); setPage(0)
         const current = a.find(item => item.current)
         if (automaticPreview && !current && r.ready && p.editable && p.documentState === 'DRAFT') {
           const artifact = await api<Artifact>(path, 'POST', { rowVersion: r.rowVersion })
@@ -44,8 +48,13 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     }
     void load()
     return () => { active = false }
-  }, [path, targetDocId, reload, automaticPreview])
+  }, [path, targetDocId, reload, automaticPreview, onDocumentChange])
+  const embedded = usePlanStepGuard(async () => {
+    if (busy || signingBusy) return false
+    return !(sectionsDirty || formalDirty || signingDirty) || await confirmAction('Hay cambios sin guardar. ¿Cambiar de paso y descartarlos?')
+  }, busy || signingBusy)
   async function navigate(action: () => Promise<void>) {
+    if ((sectionsDirty || formalDirty || signingDirty) && !(await confirmAction('Hay cambios sin guardar. ¿Cambiar de paso y descartarlos?'))) return
     setBusy(true); setError('')
     try { await action() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.') } finally { setBusy(false) }
   }
@@ -55,7 +64,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.') }
     finally { setBusy(false) }
   }
-  return <section><button className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={onBack}>Volver al {label}</button><span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span><h1>{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h1><p className="muted">Revise el documento en formato A4 antes de continuar a la firma.</p>
+  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={onBack}>Volver al {label}</button>}<span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>{embedded ? <h2 className="plan-step-title">{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h2> : <h1>{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h1>}
     {error && <Toast message={error} onDismiss={() => setError('')} />}
     <FormalSubmission targetDocId={targetDocId} onDirtyChange={setFormalDirty} />
     <DocumentSections key={targetDocId + reload} targetDocId={targetDocId} disabled={busy} onDirtyChange={setSectionsDirty} onSaved={() => setReload(n => n + 1)} />
@@ -75,9 +84,9 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
           Espacios de firma: {selected.signatureSlots.map(s => s.label + ', página ' + s.pageNumber).join('; ')}.
         </span>
       </div>
-      <p className="field-help">{selected.current ? 'Coincide con el contenido actual.' : 'Artefacto conservado de una preparación anterior. Consulte las rondas para ver los bytes firmados.'}</p>
+      {!selected.current && <p className="field-help">Artefacto conservado de una preparación anterior. Consulte las rondas para ver los bytes firmados.</p>}
       {mode !== 'preview' && <SignaturePreparation key={targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} />}
-      {mode !== 'preview' && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} onSigned={() => { setReload(n => n + 1) }} />}
+      {mode !== 'preview' && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} onDirtyChange={setSigningDirty} onBusyChange={setSigningBusy} onSigned={() => { setReload(n => n + 1) }} />}
       <DocumentPageNavigator key={selected.id} page={page} pageCount={selected.pageCount} disabled={busy || (!imageError && loadedImage !== selected.id + '-' + page)} onChange={target => { setPage(target); setImageError(false);setImageAttempt(0) }} references={[...selected.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })), ...selected.pages.filter((item, index) => item.kind === 'ANNEX' && selected.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' }))]} />
       {imageError && <><Toast message="No se pudo cargar la página. Pulse Reintentar página." /><button type="button" className="secondary" onClick={() => { setImageError(false);setLoadedImage('');setImageAttempt(n => n + 1) }}>Reintentar página</button></>}
       {!imageError && loadedImage !== selected.id + '-' + page && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
@@ -87,9 +96,6 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
         </div>
       </div>
     </div>}
-    {(onPrevious || onNext) && <nav className="step-pagination-row" aria-label="Navegación entre pasos del Plan">
-      {onPrevious && <button type="button" className="secondary" disabled={busy || formalDirty || sectionsDirty} onClick={() => void navigate(onPrevious)}>← Anterior: {mode === 'sign' ? 'Preparación y previsualización' : 'Anexos y opciones'}</button>}
-      {onNext && <button type="button" disabled={busy || formalDirty || sectionsDirty || (automaticPreview && (!selected || !selected.current || !ready?.ready || !!error))} onClick={() => void navigate(onNext)}>Siguiente: Firma y finalización →</button>}
-    </nav>}
+    {(onPrevious || onNext) && <StepPagination previous={onPrevious ? { label: mode === 'sign' ? 'Preparación y previsualización' : 'Anexos y opciones', action: () => void navigate(onPrevious) } : undefined} next={onNext ? { label: 'Firma y finalización', action: () => void navigate(onNext) } : undefined} disabled={busy || signingBusy} nextDisabled={sectionsDirty || formalDirty || signingDirty || automaticPreview && (!selected || !selected.current || !ready?.ready || !!error)} />}
   </section>
 }

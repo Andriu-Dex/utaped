@@ -1,0 +1,96 @@
+import { test, expect } from '@playwright/test'
+import { randomUUID, createHash } from 'node:crypto'
+import { api, login, acceptanceBaseURL } from './sample-fixtures'
+import { withConfirmation } from '../confirmation'
+import { openAction } from '../open-action'
+
+const date = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10)
+function pdf() {
+  const content = 'BT /F1 12 Tf 60 760 Td (Anexo institucional de prueba) Tj ET'
+  const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', `<< /Length ${content.length} >>\nstream\n${content}\nendstream`]
+  let text = '%PDF-1.4\n'; const offsets = [0]
+  objects.forEach((object, i) => { offsets.push(Buffer.byteLength(text)); text += `${i + 1} 0 obj\n${object}\nendobj\n` })
+  const start = Buffer.byteLength(text)
+  text += 'xref\n0 6\n0000000000 65535 f \n' + offsets.slice(1).map(value => String(value).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${start}\n%%EOF\n`
+  return Buffer.from(text)
+}
+
+test('persistent Plan steps protect drafts, validate matrix and keep attachment tools functional', async ({ page, browser }) => {
+  const context = await browser.newContext({ baseURL: acceptanceBaseURL })
+  try {
+    const author = await login(page, 'dev.principal'), admin = await context.newPage(); await login(admin, 'dev.admin')
+    const suffix = randomUUID().slice(0, 8)
+    const group = await api(admin, '/admin/groups', 'POST', { name: 'Comisión navegación ' + suffix, groupType: 'COMMISSION' })
+    const period = await api(admin, '/admin/periods', 'POST', { name: 'Período navegación ' + suffix, startsOn: date(-2), endsOn: date(60), preparationStartsOn: date(-2), reviewStartsOn: date(-2), reviewEndsOn: date(60) })
+    const scope = await api(admin, '/admin/organization/scopes', 'POST', { groupId: group.id, periodId: period.id, careerId: null })
+    await api(admin, '/admin/organization/scopes/' + scope.id + '/members', 'PUT', { userId: author.id, membershipRole: 'MEMBER', positionLabel: 'Responsable', active: true, rowVersion: 0 })
+    await api(admin, '/admin/organization/scopes/' + scope.id + '/principal', 'PUT', { userId: author.id, rowVersion: 0 })
+    const plan = await api(page, '/work-plans', 'POST', { scopeId: scope.id, groupId: group.id, periodId: period.id, title: 'Plan de navegación ' + suffix, requestKey: randomUUID() })
+    await page.getByRole('button', { name: 'Documentos', exact: true }).click()
+    await page.getByLabel('Buscar por título').fill(suffix); await page.getByRole('button', { name: 'Buscar', exact: true }).click()
+    await page.getByRole('button', { name: 'Editar ' + plan.title, exact: false }).click()
+    const steps = page.getByRole('navigation', { name: 'Pasos del Plan', exact: true })
+    const step = (number: number) => steps.getByRole('button').nth(number - 1)
+    await expect(steps.getByRole('button')).toHaveCount(6); await expect(step(1)).toHaveAttribute('aria-current', 'step')
+    await expect(page.getByRole('button', { name: 'Siguiente: Contenido', exact: true })).toHaveCSS('background-color', 'rgb(23, 95, 148)')
+    await page.getByRole('button', { name: 'Siguiente: Contenido', exact: true }).click()
+    await page.getByRole('textbox', { name: 'Objetivo', exact: true }).fill('Texto local protegido')
+    await withConfirmation(page, false, () => step(3).click())
+    await expect(step(2)).toHaveAttribute('aria-current', 'step'); await expect(page.getByRole('textbox', { name: 'Objetivo', exact: true })).toHaveValue('Texto local protegido')
+    await withConfirmation(page, true, () => step(3).click())
+    await expect(step(3)).toHaveAttribute('aria-current', 'step')
+    await expect(page.getByRole('button', { name: 'Volver al Plan', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Anterior: Contenido', exact: true })).toBeVisible()
+    await step(4).click(); await expect(page.getByText('Agregue al menos una actividad para continuar.', { exact: true })).toBeVisible(); await expect(step(3)).toHaveAttribute('aria-current', 'step')
+    await page.screenshot({ path: 'test-results/plan-wizard-matrix-desktop.png', fullPage: true, animations: 'disabled' })
+    await page.route('**/api/work-plans/' + plan.id + '/matrix', route => route.fulfill({ status: 500, json: { message: 'Matriz temporalmente no disponible.' } }))
+    await page.reload(); await expect(page.getByText('Matriz temporalmente no disponible.', { exact: true })).toBeVisible()
+    await expect(step(1)).toBeEnabled(); await step(1).click(); await expect(step(1)).toHaveAttribute('aria-current', 'step')
+    await page.unroute('**/api/work-plans/' + plan.id + '/matrix')
+    await step(3).click(); await expect(page.getByRole('button', { name: 'Anterior: Contenido', exact: true })).toBeEnabled()
+    const current = await api(page, '/work-plans/' + plan.id)
+    await api(page, '/work-plans/' + plan.id, 'PUT', { rowVersion: current.rowVersion, title: current.title, institutionalUnit: current.institutionalUnit, career: current.career, justification: 'Justificación institucional del escenario.', objective: 'Organizar actividades y verificar resultados.' })
+    const matrix = await api(page, '/work-plans/' + plan.id + '/matrix')
+    await api(page, '/work-plans/' + plan.id + '/matrix', 'PUT', { rowVersion: matrix.rowVersion, source: 'Comisión de navegación', activities: [{ id: randomUUID(), catalogId: null, title: 'Validar la planificación', category: 'OTHER', mandatory: false, startsOn: date(0), endsOn: date(1), responsibleIds: [author.id], collective: false, resources: [{ catalogId: null, other: 'Recursos institucionales' }], means: [{ catalogId: null, other: 'Acta de validación' }] }] })
+    await page.reload(); await expect(step(3)).toHaveAttribute('aria-current', 'step')
+    await page.getByRole('button', { name: 'Siguiente: Anexos', exact: true }).click(); await expect(step(4)).toHaveAttribute('aria-current', 'step')
+    await page.getByRole('combobox', { name: '¿El Plan tiene anexos?', exact: true }).selectOption('true')
+    for (const title of ['Primer anexo', 'Segundo anexo']) {
+      await openAction(page, 'Agregar anexo')
+      await page.getByLabel('Título del anexo', { exact: true }).fill(title)
+      await page.getByLabel('Archivo PDF del anexo', { exact: true }).setInputFiles({ name: 'anexo.pdf', mimeType: 'application/pdf', buffer: pdf() })
+      await page.getByRole('button', { name: 'Agregar PDF', exact: true }).click()
+      await expect(page.getByText('Anexo agregado.', { exact: true })).toBeVisible()
+      await page.getByRole('button', { name: 'Cancelar: Agregar anexo', exact: true }).click()
+    }
+    await expect(page.getByRole('button', { name: 'Subir Anexo A', exact: true })).toBeDisabled()
+    await page.getByRole('button', { name: 'Subir Anexo B', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Anexo A. Segundo anexo', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Editar Anexo A', exact: true }).click(); await page.getByLabel('Nuevo título del anexo').fill('Segundo anexo ajustado'); await page.getByRole('button', { name: 'Guardar anexo', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Anexo A. Segundo anexo ajustado', exact: true })).toBeVisible()
+    const href = await page.getByRole('link', { name: 'Descargar original de Anexo A', exact: true }).getAttribute('href')
+    const original = await page.request.get(href!); expect(original.ok()).toBeTruthy(); expect(createHash('sha256').update(await original.body()).digest('hex')).toBe(createHash('sha256').update(pdf()).digest('hex'))
+    await withConfirmation(page, false, () => page.getByRole('button', { name: 'Quitar Anexo B', exact: true }).click())
+    await expect(page.getByRole('heading', { name: 'Anexo B. Primer anexo', exact: true })).toBeVisible()
+    await withConfirmation(page, true, () => page.getByRole('button', { name: 'Quitar Anexo B', exact: true }).click())
+    await expect(page.getByRole('heading', { name: 'Anexo B. Primer anexo', exact: true })).toHaveCount(0)
+    await openAction(page, 'Agregar anexo'); await page.getByLabel('Título del anexo', { exact: true }).fill('Pendiente sin guardar')
+    await withConfirmation(page, false, () => step(2).click()); await expect(step(4)).toHaveAttribute('aria-current', 'step'); await expect(page.getByLabel('Título del anexo', { exact: true })).toHaveValue('Pendiente sin guardar')
+    await withConfirmation(page, true, () => page.getByRole('button', { name: 'Cancelar: Agregar anexo', exact: true }).click())
+    await page.setViewportSize({ width: 820, height: 1180 }); await page.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    const navBox = await steps.boundingBox(), barBox = await page.locator('.topbar').boundingBox()
+    expect(navBox).not.toBeNull(); expect(barBox).not.toBeNull(); expect(navBox!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height); expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(1180); await expect(page.locator('.plan-wizard-navigation')).toHaveCSS('position', 'sticky')
+    await expect(page.getByRole('button', { name: 'Siguiente: Preparación y previsualización', exact: true })).toHaveCSS('background-color', 'rgb(23, 95, 148)')
+    await page.screenshot({ path: 'test-results/plan-wizard-attachments-tablet-dark.png', animations: 'disabled' })
+    await step(5).click(); await expect(step(5)).toHaveAttribute('aria-current', 'step'); await expect(page.getByAltText('Página 1 del Plan T1')).toBeVisible({ timeout: 90000 })
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await expect.poll(async () => { const navigation = await page.locator('.plan-wizard-navigation').boundingBox(), header = await page.locator('.topbar').boundingBox(); return navigation!.y - header!.y - header!.height }).toBeLessThanOrEqual(16)
+    await page.screenshot({ path: 'test-results/plan-wizard-preview-sticky-tablet-dark.png', animations: 'disabled' })
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.screenshot({ path: 'test-results/plan-wizard-preview-tablet-dark.png', fullPage: true, animations: 'disabled' })
+    await step(6).click(); await expect(step(6)).toHaveAttribute('aria-current', 'step'); await expect(page.getByRole('region', { name: 'Firma del elaborador', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Anterior: Preparación y previsualización', exact: true }).click(); await expect(step(5)).toHaveAttribute('aria-current', 'step')
+    await expect(steps.getByRole('button')).toHaveCount(6)
+  } finally { await context.close() }
+})

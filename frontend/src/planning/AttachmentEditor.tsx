@@ -1,3 +1,6 @@
+import { StepPagination } from './StepPagination'
+import { usePlanStepGuard } from './PlanStepNavigation'
+import { Icon } from '../shared/Icon'
 import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
@@ -16,6 +19,10 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPreviou
   const dirty = !!title || !!file || editing !== null
   useEffect(() => { let active = true; api<State>(path).then(value => { if (active) setState(value) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path])
   useEffect(() => { onDirtyChange(dirty); const prevent = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = '' } }; window.addEventListener('beforeunload', prevent); return () => { window.removeEventListener('beforeunload', prevent); onDirtyChange(false) } }, [dirty, onDirtyChange])
+  const embedded = usePlanStepGuard(async () => {
+    if (busy) return false
+    return !dirty || await confirmAction('¿Descartar los cambios sin guardar antes de cambiar de paso?')
+  }, busy || (!state && !error))
   async function navigate(action: () => Promise<void>) {
     if (dirty && !(await confirmAction('¿Descartar los cambios sin guardar antes de cambiar de paso?'))) return
     setBusy(true); setError('')
@@ -34,7 +41,7 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPreviou
   }
   async function saveEdit(e: FormEvent) { e.preventDefault(); if (!state || !editing) return; if (await mutate(() => api<State>(path + '/' + editing.id, 'PUT', { rowVersion: state.rowVersion, title: editing.title, description: editing.description }), 'Anexo actualizado.')) setEditing(null) }
   function move(index: number, delta: number) { if (!state) return; const ids = state.items.map(a => a.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; void mutate(() => api<State>(path + '/order', 'PUT', { rowVersion: state.rowVersion, attachmentIds: ids }), 'Orden actualizado.') }
-  return <section><button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios sin guardar?'))) onBack() }}>Volver al Plan</button><span className="section-kicker review-kicker">PASO 4 DE 6 · ANEXOS Y OPCIONES</span><h1>Anexos del Plan T1</h1>
+  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios sin guardar?'))) onBack() }}>Volver al Plan</button>}<span className="section-kicker review-kicker">PASO 4 DE 6 · ANEXOS Y OPCIONES</span>{embedded ? <h2 className="plan-step-title">Anexos del Plan T1</h2> : <h1>Anexos del Plan T1</h1>}
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? <p>Cargando anexos…</p> : <div className="card">
       <p>Archivos PDF privados. Máximo {state.maxAttachments} anexos, {Math.floor(state.maxFileBytes / 1048576)} MB por archivo y {Math.floor(state.maxTotalBytes / 1048576)} MB en total. Límites técnicos configurables.</p>
@@ -46,18 +53,15 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPreviou
       </fieldset>
       {state.enabled && <ActionForm label="Agregar anexo" dirty={!!title || !!file} disabled={busy || !state.editable || editing !== null} onCancel={() => { setTitle(''); setFile(null); requestKey.current = crypto.randomUUID() }}><form onSubmit={upload}><fieldset disabled={busy || !state.editable || editing !== null}><legend>Agregar anexo</legend><label>Título del anexo<input required maxLength={200} value={title} onChange={e => setTitle(e.target.value)} /></label><label>Archivo PDF del anexo<input ref={fileInput} required type="file" accept="application/pdf,.pdf" onChange={e => { setFile(e.target.files?.[0] ?? null); requestKey.current = crypto.randomUUID() }} /></label><button disabled={state.items.length >= state.maxAttachments}>Agregar PDF</button></fieldset></form></ActionForm>}
       {state.items.map((a, index) => <article className="card" key={a.id} aria-label={a.label}><h2>{a.label}. {a.title}</h2><p>{a.originalName} · {a.pageCount} páginas · {(a.sizeBytes / 1024).toFixed(1)} KB</p><p className="preserve-text">{a.description}</p>
-        <a href={'/api' + path + '/' + a.id + '/content'}>Descargar original</a>{' '}
-        <button className="secondary" title={'Editar ' + a.label} aria-label={'Editar ' + a.label} disabled={busy || !state.editable || dirty} onClick={() => setEditing({ ...a })}>✎</button>{' '}
-        <button className="secondary" title={'Subir ' + a.label} aria-label={'Subir ' + a.label} disabled={busy || !state.editable || dirty || index === 0} onClick={() => move(index, -1)}>↑</button>{' '}
-        <button className="secondary" title={'Bajar ' + a.label} aria-label={'Bajar ' + a.label} disabled={busy || !state.editable || dirty || index === state.items.length - 1} onClick={() => move(index, 1)}>↓</button>{' '}
-        <button className="danger" title={'Quitar ' + a.label} aria-label={'Quitar ' + a.label} disabled={busy || !state.editable || dirty} onClick={async () => { if ((await confirmAction('¿Quitar este anexo del borrador? Las previsualizaciones anteriores se conservarán.'))) void mutate(() => api<State>(path + '/' + a.id + '?rowVersion=' + state.rowVersion, 'DELETE'), 'Anexo quitado y etiquetas actualizadas.') }}>×</button>
+        <div className="attachment-actions" role="group" aria-label={'Acciones de ' + a.label}><a className="secondary attachment-action" href={'/api' + path + '/' + a.id + '/content'} title={'Descargar original de ' + a.label} aria-label={'Descargar original de ' + a.label}><Icon name="download" size={18} /></a>
+        <button className="secondary attachment-action" title={'Editar ' + a.label} aria-label={'Editar ' + a.label} disabled={busy || !state.editable || dirty} onClick={() => setEditing({ ...a })}><Icon name="edit" size={18} /></button>{' '}
+        <button className="secondary attachment-action" title={'Subir ' + a.label} aria-label={'Subir ' + a.label} disabled={busy || !state.editable || dirty || index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={18} /></button>{' '}
+        <button className="secondary attachment-action" title={'Bajar ' + a.label} aria-label={'Bajar ' + a.label} disabled={busy || !state.editable || dirty || index === state.items.length - 1} onClick={() => move(index, 1)}><Icon name="arrowDown" size={18} /></button>{' '}
+        <button className="secondary attachment-action attachment-remove" title={'Quitar ' + a.label} aria-label={'Quitar ' + a.label} disabled={busy || !state.editable || dirty} onClick={async () => { if ((await confirmAction('¿Quitar este anexo del borrador? Las previsualizaciones anteriores se conservarán.'))) void mutate(() => api<State>(path + '/' + a.id + '?rowVersion=' + state.rowVersion, 'DELETE'), 'Anexo quitado y etiquetas actualizadas.') }}><Icon name="trash" size={18} /></button></div>
       </article>)}
       {editing && <form onSubmit={saveEdit}><fieldset disabled={busy}><legend>Editar anexo</legend><label>Nuevo título del anexo<input required maxLength={200} value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} /></label><label>Descripción del anexo<textarea maxLength={2000} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} /></label><button>Guardar anexo</button><button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar edición</button></fieldset></form>}
       <button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios locales y recargar?'))) { setTitle(''); setFile(null); setEditing(null); requestKey.current = crypto.randomUUID(); if (fileInput.current) fileInput.current.value = ''; void mutate(() => api<State>(path), 'Versión actual cargada.') } }}>Recargar anexos</button>
     </div>}
-    {(onPrevious || onNext) && <nav className="step-pagination-row" aria-label="Navegación entre pasos del Plan">
-      {onPrevious && <button type="button" className="secondary" disabled={busy || !state} onClick={() => void navigate(onPrevious)}>← Anterior: Actividades y matriz</button>}
-      {onNext && <button type="button" disabled={busy || !state} onClick={() => void navigate(onNext)}>Siguiente: Preparación y previsualización →</button>}
-    </nav>}
+    {(onPrevious || onNext) && <StepPagination previous={onPrevious ? { label: 'Actividades y matriz', action: () => void navigate(onPrevious) } : undefined} next={onNext ? { label: 'Preparación y previsualización', action: () => void navigate(onNext) } : undefined} disabled={busy || !state} />}
   </section>
 }

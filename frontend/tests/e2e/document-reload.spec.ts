@@ -1,3 +1,4 @@
+import { returnToPlan } from '../plan-navigation'
 import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { solveCaptcha } from './login'
@@ -138,7 +139,7 @@ test('page reload preserves active document editor and step without resetting to
   await expect(page.getByRole('heading', { name: /Bienvenido,/ })).toHaveCount(0)
 
   // 9. Return to Plan and then return to documents list
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   await expect(page.getByRole('button', { name: 'Volver a documentos', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Volver a documentos', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Gestión Documental Académica', exact: true })).toBeVisible()

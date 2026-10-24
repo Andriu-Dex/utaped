@@ -1,5 +1,9 @@
 # Reportes
 
+- [Revisión de navegación y planificación documental](2026-10-24-19-navigation-review-and-document-plan.md).
+
+- [Navegación persistente del Plan y acciones de anexos](2026-10-23-18-persistent-plan-wizard.md).
+
 - [Revisión y commits de cambios acumulados](2026-10-23-17-staged-review-and-commits.md).
 
 - [Descarte y archivo visibles en documentos](2026-10-23-16-document-list-lifecycle-actions.md).

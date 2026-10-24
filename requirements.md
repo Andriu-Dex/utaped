@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-23): conservar la navegación de los seis pasos del T1 en una estructura persistente; Anterior secundario y Siguiente principal, acciones de anexos con iconos coherentes y controles accesibles para PC/tablet. Preservar borradores, confirmaciones de descarte, validación de matriz y requisitos previos a firma. Revisión y commit local autorizados por el propietario el 2026-10-24.
+
 CONFIRMADO-PROYECTO (2026-10-23): mostrar en la tabla documental «Descartar borrador» y «Archivar» para aprobados, con modal de confirmación, motivo y permisos del responsable. Mantener trazabilidad, artefactos firmados y restricciones de revisión; no introducir borrado físico.
 
 CONFIRMADO-PROYECTO (2026-10-23): contrastar la composición completa con los templates oficiales y el ejemplo firmado: encabezado con etiquetas/valores separados, índices dinámicos y matriz con todas sus líneas. Conservar los datos propios de cada documento, formato A4 y bytes firmados.

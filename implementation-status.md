@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+Flujo T1: navegación persistente de seis pasos, pie común, regreso desde matriz a Contenido y barra de acciones de anexos; conserva borrador entre Información general/Contenido y confirma salidas de otros editores. Revisado para commit local autorizado el 2026-10-24. [Reporte](docs/reports/2026-10-23-18-persistent-plan-wizard.md).
+
 Revisión de entrega: documentos institucionales, acciones de bandeja y mejoras de notificaciones verificados para cierre en commits locales. [Reporte](docs/reports/2026-10-23-17-staged-review-and-commits.md).
 
 Acciones documentales visibles: descarte de borradores y archivo de aprobados desde la tabla, modal con motivo, control de concurrencia y permisos derivados del servidor. [Reporte](docs/reports/2026-10-23-16-document-list-lifecycle-actions.md).

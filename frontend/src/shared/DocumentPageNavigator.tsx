@@ -28,7 +28,31 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
 
         <div className="navigator-compact-status">
           <span role="status">Pág. {page + 1} de {pageCount}</span>
-          <div className="compact-page-jump"><input type="number" aria-label="Ir a página" min={1} max={pageCount} value={input ?? page + 1} disabled={disabled} aria-invalid={!valid} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (valid) go(candidate - 1) } }} /><button type="button" className="secondary" title="Ir a la página indicada" aria-label="Ir a la página indicada" disabled={disabled || !valid} onClick={() => go(candidate - 1)}><Icon name="arrow" size={14} /></button></div>
+          <div className="compact-page-jump">
+            <input
+              type="number"
+              aria-label="Ir a página"
+              min={1}
+              max={pageCount}
+              value={input ?? page + 1}
+              disabled={disabled}
+              aria-invalid={!valid}
+              onChange={event => setInput(event.target.value)}
+              onKeyDown={event => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  if (valid) go(candidate - 1)
+                }
+              }}
+              onBlur={() => {
+                if (valid && candidate - 1 !== page) {
+                  go(candidate - 1)
+                } else {
+                  setInput(null)
+                }
+              }}
+            />
+          </div>
         </div>
 
         <button
@@ -66,8 +90,84 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
   }
 
   return <nav className="document-page-navigator" aria-label="Páginas del PDF">
-    <div className="document-navigator-heading"><span className="section-icon"><Icon name="document" size={18} /></span><div><strong>Explorar el documento</strong><span role="status">Página {page + 1} de {pageCount}</span></div><div className="document-page-progress" aria-hidden="true"><span style={{ width: ((page + 1) / pageCount * 100) + '%' }} /></div></div>
-    <div className="document-navigator-controls"><button type="button" className="secondary" disabled={disabled || page === 0} onClick={() => go(page - 1)}>Página anterior</button><label>Ir a página<div><input type="number" min={1} max={pageCount} step={1} value={input ?? page + 1} disabled={disabled} aria-invalid={!valid} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (valid) go(candidate - 1) } }} /><button type="button" className="secondary" disabled={disabled || !valid} aria-label="Ir a la página indicada" title="Ir a la página indicada" onClick={() => go(candidate - 1)}><Icon name="arrow" size={16} /></button></div></label><button type="button" className="secondary" disabled={disabled || page + 1 === pageCount} onClick={() => go(page + 1)}>Página siguiente</button>{shortcuts.length > 0 && <label>Referencias del documento<select value="" disabled={disabled} onChange={event => { if (event.target.value !== '') go(Number(event.target.value)) }}><option value="">Selecciona una referencia</option>{shortcuts.map((reference, i) => <option key={i} value={reference.page}>{reference.label} · pág. {reference.page + 1}</option>)}</select></label>}</div>
-    {!valid && <p className="field-help">Introduce una página entre 1 y {pageCount}.</p>}
+    <div className="navigator-dock">
+      <div className="navigator-dock-info">
+        <span className="navigator-dock-icon" aria-hidden="true"><Icon name="document" size={15} /></span>
+        <strong className="navigator-dock-title">Vista del documento</strong>
+        <span className="sr-only" role="status">Página {page + 1} de {pageCount}</span>
+        <div className="document-page-progress" aria-hidden="true">
+          <span style={{ width: ((page + 1) / pageCount * 100) + '%' }} />
+        </div>
+      </div>
+
+      <div className="navigator-dock-controls">
+        <button
+          type="button"
+          className="secondary navigator-nav-btn"
+          disabled={disabled || page === 0}
+          onClick={() => go(page - 1)}
+          aria-label="Página anterior"
+          title="Página anterior"
+        >
+          <Icon name="chevronLeft" size={14} />
+          <span>Anterior</span>
+        </button>
+
+        <div className="navigator-page-capsule">
+          <span className="navigator-page-label">Pág.</span>
+          <input
+            type="number"
+            aria-label="Ir a página"
+            min={1}
+            max={pageCount}
+            step={1}
+            value={input ?? page + 1}
+            disabled={disabled}
+            aria-invalid={!valid}
+            onChange={event => setInput(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                if (valid) go(candidate - 1)
+              }
+            }}
+            onBlur={() => {
+              if (valid && candidate - 1 !== page) {
+                go(candidate - 1)
+              } else {
+                setInput(null)
+              }
+            }}
+          />
+          <span className="navigator-page-total">de {pageCount}</span>
+        </div>
+
+        <button
+          type="button"
+          className="secondary navigator-nav-btn"
+          disabled={disabled || page + 1 === pageCount}
+          onClick={() => go(page + 1)}
+          aria-label="Página siguiente"
+          title="Página siguiente"
+        >
+          <span>Siguiente</span>
+          <Icon name="chevronRight" size={14} />
+        </button>
+      </div>
+
+      {shortcuts.length > 0 && <div className="navigator-dock-references">
+        <select
+          className="navigator-references-select"
+          aria-label="Referencias del documento"
+          value=""
+          disabled={disabled}
+          onChange={event => { if (event.target.value !== '') go(Number(event.target.value)) }}
+        >
+          <option value="">Ir a sección o firma…</option>
+          {shortcuts.map((reference, i) => <option key={i} value={reference.page}>{reference.label} · pág. {reference.page + 1}</option>)}
+        </select>
+      </div>}
+    </div>
+    {!valid && <p className="field-help navigator-error">Introduce una página entre 1 y {pageCount}.</p>}
   </nav>
 }

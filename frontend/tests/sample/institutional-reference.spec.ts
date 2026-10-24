@@ -1,3 +1,4 @@
+import { returnToPlan } from '../plan-navigation'
 import { randomUUID } from 'node:crypto'
 import { withConfirmation } from '../confirmation'
 import { test, expect } from '@playwright/test'
@@ -127,7 +128,7 @@ test('fictional people have realistic names in the profile and activity responsi
   const continued = await api(page, '/work-plans/' + plan.id + '/matrix')
   expect(continued.source).toBe('Fuente ajustada antes de Anexos')
   expect(continued.activities[0].responsibleIds).toHaveLength(matrix.members.length)
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   await page.route('**/api/work-plans/' + plan.id + '/matrix', route => route.fulfill({ json: { ...continued, editable: false } }))
   await page.getByRole('button', { name: /3\s*Actividades y matriz/ }).click()
   await page.getByRole('button', { name: 'Ver detalle de la actividad 1', exact: true }).click()

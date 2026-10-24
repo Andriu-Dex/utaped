@@ -1,3 +1,5 @@
+import { StepPagination } from './StepPagination'
+import { usePlanStepGuard } from './PlanStepNavigation'
 import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
@@ -8,7 +10,7 @@ import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
-export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
+export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange }: { onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
@@ -89,13 +91,14 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     finally { setBusy(false) }
   }
   async function save(e: FormEvent) { e.preventDefault(); await persist() }
-  async function next() {
-    if (!saved || !draft || busy || conflict) return
+  async function canContinue(): Promise<boolean> {
+    if (!saved || !draft || busy || conflict) return false
+    if (!saved.editable) return true
     setError(''); setNotice('')
     if (!draft.activities.length) {
       setError('Agregue al menos una actividad para continuar.')
       formRef.current?.querySelector<HTMLButtonElement>('button[aria-expanded]')?.focus()
-      return
+      return false
     }
     setAttempted(true)
     const incomplete = draft.activities.find(a => !a.title.trim() || !a.startsOn || !a.endsOn ||
@@ -106,14 +109,24 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     if (incomplete) {
       setError('Complete fechas válidas, responsables, recursos y medios de verificación de la actividad ' + (draft.activities.indexOf(incomplete) + 1) + ' para continuar.')
       showActivity(incomplete.id)
-      return
+      return false
     }
     if (formRef.current && !formRef.current.checkValidity()) {
       setError('Revise los campos obligatorios de la matriz antes de continuar.')
       formRef.current.querySelector<HTMLElement>(':invalid')?.focus()
-      return
+      return false
     }
-    if (dirty && !(await persist())) return
+    if (dirty && !(await persist())) return false
+    return true
+  }
+  const embedded = usePlanStepGuard(async target => {
+    if (busy) return false
+    if (!saved || !draft) return ['general', 'content'].includes(target)
+    if (['attachments', 'preparation', 'signing'].includes(target)) return canContinue()
+    return !dirty || await confirmAction('Hay cambios sin guardar en la matriz. ¿Cambiar de paso y descartarlos?')
+  }, busy || (!saved && !error))
+  async function next() {
+    if (!(await canContinue())) return
     setBusy(true)
     try { await onNext() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir Anexos.'); setBusy(false) }
   }
@@ -128,12 +141,17 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     setBusy(true)
     try { await onBack() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo volver.'); setBusy(false) }
   }
+  async function previous() {
+    if (busy || (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Volver al contenido y descartarlos?')))) return
+    setBusy(true)
+    try { await (onPrevious ?? onBack)() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.'); setBusy(false) }
+  }
   async function compare() { try { setLatest(await api<Matrix>('/work-plans/' + targetDocId + '/matrix')) } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo consultar.') } }
   async function reload() {
     if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
     setEditingActivityId(null); setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
-  if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
+  if (!saved || !draft) return <section>{!embedded && <button className="secondary" onClick={back}>Volver al Plan</button>}{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
     if (!saved) return null
     const available = saved.catalogs.filter(c => c.kind === (key === 'resources' ? 'RESOURCE' : 'MEANS') && (c.active || row[key].some(v => v.catalogId === c.id)))
@@ -212,12 +230,12 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
   const activeIndex = activeActivity ? draft.activities.indexOf(activeActivity) : -1
 
   return (
-    <section className="matrix-workspace">
+    <section className={'matrix-workspace' + (embedded ? ' plan-step-panel' : '')}>
       <div className="matrix-topbar">
-        <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
+        {!embedded && <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
           <Icon name="arrow" size={14} style={{ transform: 'rotate(180deg)' }} />
           <span>Volver al Plan</span>
-        </button>
+        </button>}
         <div className="matrix-topbar-meta">
           <span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span>
           <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
@@ -228,7 +246,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
 
       <header className="matrix-main-header">
         <div className="matrix-title-group">
-          <h1>Actividades y matriz T1</h1>
+          {embedded ? <h2 className="plan-step-title">Actividades y matriz T1</h2> : <h1>Actividades y matriz T1</h1>}
           <p className="matrix-subtitle">
             Planificación operativa y articulación institucional: configure actividades, cronograma, integrantes responsables, recursos y medios de verificación.
           </p>
@@ -622,13 +640,12 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                   <Icon name="check" size={15} />
                   <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
                 </button>
-                <button type="button" disabled={busy || conflict} onClick={next} className="matrix-next-button">
-                  <span>{busy ? 'Procesando…' : 'Siguiente: Anexos'}</span><Icon name="arrow" size={16} />
-                </button>
+
               </div>
             </div>
           )}
       </form>
+    <StepPagination previous={{ label: 'Contenido', action: () => void previous() }} next={{ label: 'Anexos', action: () => void next() }} disabled={busy} nextDisabled={conflict} />
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>

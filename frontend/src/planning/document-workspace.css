@@ -1271,13 +1271,13 @@ details.document-lifecycle li {
 /* Reading Desk and A4 Viewer Frame */
 .document-reading-desk {
   background: color-mix(in srgb, var(--blue-900) 4%, var(--canvas));
-  padding: 28px 16px;
-  border-radius: 16px;
+  padding: 18px 14px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  margin: 12px 0 18px;
   overflow-x: auto;
 }
 
@@ -2321,3 +2321,36 @@ dialog.activity-modal-overlay::backdrop { background: transparent; }
   border-color: #0f5132;
   color: #6ee7b7;
 }
+
+/* One persistent workspace for the six Plan steps. */
+.plan-wizard { min-width: 0; }
+.plan-wizard-header { margin: 22px 0 18px; }
+.plan-wizard-header h1 { margin: 6px 0 12px; overflow-wrap: anywhere; }
+.plan-wizard-navigation { position: sticky; top: calc(var(--plan-topbar-height, 88px) + 8px); z-index: 9; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; margin: 18px 0 12px; box-shadow: var(--shadow-sm); scroll-margin-top: 110px; }
+.plan-wizard-navigation .document-steps { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; gap: 6px; }
+.plan-wizard-navigation .document-steps button { min-height: 48px; padding: 8px 10px; gap: 8px; font-size: .78rem; }
+.plan-step-location { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 0 4px 14px; margin-bottom: 8px; font-size: .75rem; color: var(--muted); }
+.plan-step-document { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
+.plan-wizard-workspace { min-width: 0; }
+.plan-wizard-workspace .review-kicker { margin-top: 0; }
+.plan-step-title { font-size: clamp(1.4rem, 2vw, 1.85rem); margin: 6px 0 16px; letter-spacing: -.025em; color: var(--text); }
+.plan-step-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 22px 0 6px; margin-top: 20px; border-top: 1px solid var(--border); }
+.plan-step-pagination button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; font-size: .86rem; border-radius: 10px; line-height: 1.35; }
+.plan-step-pagination .plan-step-next { background: var(--blue-700); color: #fff; border: 1px solid var(--blue-700); margin-left: auto; }
+.plan-step-pagination .plan-step-next:hover:not(:disabled) { background: var(--blue-800); }
+.attachment-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.attachment-actions .attachment-action { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; width: 44px; height: 44px; padding: 0; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--blue-700); text-decoration: none; }
+.attachment-actions .attachment-action:hover:not(:disabled) { background: var(--blue-100); border-color: var(--blue-700); }
+.attachment-actions .attachment-remove { color: var(--danger); }
+.attachment-actions .attachment-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 8%, var(--surface)); border-color: var(--danger); }
+:root[data-theme='dark'] .attachment-actions .attachment-action { color: #a6d4f8; }
+:root[data-theme='dark'] .attachment-actions .attachment-remove { color: #ffb0bb; }
+@media (min-width: 768px) and (max-width: 1079px) {
+  .plan-wizard-navigation .document-steps button { font-size: .74rem; padding: 8px; min-height: 48px; }
+  .plan-step-location { align-items: flex-start; gap: 8px; font-size: .7rem; }
+}
+
+.plan-step-panel > .review-kicker, .plan-step-panel .matrix-topbar { display: none; }
+
+:root[data-theme='dark'] nav.plan-step-pagination button.plan-step-next { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+:root[data-theme='dark'] nav.plan-step-pagination button.plan-step-next:hover:not(:disabled) { background: var(--blue-800); border-color: var(--blue-800); }

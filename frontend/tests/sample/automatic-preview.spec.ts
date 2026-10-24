@@ -1,3 +1,4 @@
+import { returnToPlan } from '../plan-navigation'
 import { randomUUID } from 'node:crypto'
 import { test, expect } from '@playwright/test'
 import { api, login } from './sample-fixtures'
@@ -33,17 +34,17 @@ test('T1 preview retries failures, reuses current artifacts and never generates 
   await page.getByRole('button', { name: 'Reintentar previsualización', exact: true }).click()
   await expect(page.getByAltText('Página 1 del Plan T1')).toBeVisible()
   expect(posts).toBe(2)
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   await open()
   await expect(page.getByAltText('Página 1 del Plan T1')).toBeVisible()
   expect(posts).toBe(2)
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   readOnly = true
   artifact.current = false
   await open()
   await expect(page.getByAltText('Página 1 del Plan T1')).toBeVisible()
   expect(posts).toBe(2)
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   failLoading = true
   await open()
   await expect(page.getByText('Error de carga de ejemplo', { exact: true })).toBeVisible()
