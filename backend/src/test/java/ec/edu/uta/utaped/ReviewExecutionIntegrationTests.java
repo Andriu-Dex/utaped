@@ -337,7 +337,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             for(String section:List.of("ANTECEDENTES","CONCLUSIONES","OPORTUNIDADES DE MEJORA")) {
                 int actual=-1;
                 for(int page=0;page<pdf.getNumberOfPages();page++) { stripper.setStartPage(page+1);stripper.setEndPage(page+1);if(stripper.getText(pdf).lines().anyMatch(line->line.strip().replaceAll("^\\d+[.\\s]*", "").equals(section))) {actual=page+1;break;} }
-                assertTrue(actual>0,section);assertTrue(text.matches("(?s).*"+section+" \\.{3,} "+actual+".*"),section+" index");
+                assertTrue(actual>0,section);assertTrue(text.matches("(?s).*"+section+"\\s*\\.{3,}\\s*"+actual+".*"),section+" index");
             }
         }
         var preparation=signatures.state(report.id(),artifact.id(),email,true);
@@ -364,7 +364,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         UUID reportReview=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(reportReview);
         assertEquals("APPROVED",plans.get(report.id(),email).documentState());assertEquals(parent.rowVersion(),plans.get(id,email).rowVersion());assertEquals(parent.formalVersion(),plans.get(id,email).formalVersion());
         byte[] pdf=reviews.content(reportReview,email);java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-approved.pdf"),pdf);
-        try(var rendered=org.apache.pdfbox.Loader.loadPDF(pdf)) { String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertTrue(text.contains("ANTECEDENTES"));assertTrue(text.contains("CONCLUSIONES"));assertFalse(text.contains("@@SIG"));for(int i=0;i<rendered.getNumberOfPages();i++) java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-page-"+i+".png"),artifacts.renderPage(pdf,i)); }
+        try(var rendered=org.apache.pdfbox.Loader.loadPDF(pdf)) { String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertFalse(text.contains("INFORME DE: Informe:"));assertHeaderDateIsInTheRightCell(rendered);assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: FISEI"));assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"));assertTrue(text.contains("ANTECEDENTES"));assertTrue(text.contains("CONCLUSIONES"));assertFalse(text.contains("@@SIG"));for(int i=0;i<rendered.getNumberOfPages();i++) java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-page-"+i+".png"),artifacts.renderPage(pdf,i)); }
     }
     @Test void executionReportsCutThePlanAreNumberedAndProduceTheirOwnOfficialPdf() throws Exception {
         UUID review=submit(false);approve(review);var activity=activities.get(id,email).activities().getFirst();

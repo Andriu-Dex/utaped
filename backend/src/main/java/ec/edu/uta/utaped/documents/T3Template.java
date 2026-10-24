@@ -23,7 +23,7 @@ public class T3Template {
     private static final DateTimeFormatter PRESENTATION=DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy",Locale.forLanguageTag("es-EC"));
     private final byte[] reference;
     public T3Template() throws IOException { try(var in=new ClassPathResource("document-templates/t3-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine7"; }
+    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine8"; }
     public List<String> sections(Snapshot s) { return SECTIONS; }
     private static String title(Snapshot s) { return "INFORME DE EJECUCIÓN "+ec.edu.uta.utaped.planning.ExecutionReportService.roman(s.execution().sequenceNumber())+": "+s.plan().groupName().toUpperCase(Locale.ROOT); }
     public byte[] compose(Snapshot s,Map<String,Integer> pageNumbers) {
@@ -33,7 +33,7 @@ public class T3Template {
                 if(entry.getName().equals("word/document.xml")||entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers); }else furniture(doc,s);
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers);InstitutionalIndex.finish(doc); }else furniture(doc,s);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
                     var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
@@ -55,7 +55,7 @@ public class T3Template {
         result.addAll(source.subList(0,21));
         // The template's static table of contents is rebuilt with the real page numbers.
         var tocPrototype=all(source.get(21),"p").stream().filter(p->all(p,"pStyle").stream().anyMatch(st->st.getAttributeNS(W,"val").equals("TDC1"))).findFirst().orElseThrow();
-        for(int i=0;i<SECTIONS.size();i++) result.add(paragraph(tocPrototype,(i+1)+". "+SECTIONS.get(i)+" ................................ "+numbers.getOrDefault(SECTIONS.get(i),0)));
+        for(int i=0;i<SECTIONS.size();i++) result.add(InstitutionalIndex.entry(tocPrototype,(i+1)+". "+SECTIONS.get(i),SECTIONS.get(i),numbers));
         result.addAll(source.subList(22,27));
         heading(result,sectionNodes,source.get(27),SECTIONS.get(0));result.add(source.get(28));
         lines(result,plain,s.plan().objective().isBlank()?"No registrado en el Plan.":s.plan().objective());

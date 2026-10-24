@@ -249,7 +249,8 @@ public class ArtifactService {
         try(var pdf=Loader.loadPDF(bytes)) {
             if(pageIndex<0 || pageIndex>=pdf.getNumberOfPages()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
             // Bound raster dimensions independently of uploaded PDF media boxes.
-            var box=pdf.getPage(pageIndex).getCropBox();float scale=Math.min(1.5f,1800f/Math.max(box.getWidth(),box.getHeight()));
+            var box=pdf.getPage(pageIndex).getCropBox();float scale=Math.min(2f,1800f/Math.max(box.getWidth(),box.getHeight()));
+            // Two pixels per PDF point preserve thin template borders at normal preview sizes.
             var out=new ByteArrayOutputStream();ImageIO.write(new PDFRenderer(pdf).renderImage(pageIndex,scale),"png",out);return out.toByteArray();
         } catch(IOException e) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo visualizar la página."); }
         finally { rendering.release(); }

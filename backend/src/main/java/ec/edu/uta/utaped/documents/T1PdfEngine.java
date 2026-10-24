@@ -55,6 +55,7 @@ public class T1PdfEngine {
             var sections=snapshot.execution()!=null?new ArrayList<>(executions.sections(snapshot)):snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
             if(snapshot.report()==null&&snapshot.execution()==null) { if(!snapshot.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
             sections=new ArrayList<>(StructuredSections.sections(snapshot,sections));
+            if(snapshot.execution()==null&&snapshot.report()==null) sections.addAll(List.of("ÍNDICE DE CONTENIDO","ÍNDICE DE TABLAS"));
             int insertedPages=snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum();
             boolean stable=false;
             for(int attempt=0;attempt<4;attempt++) {
@@ -107,12 +108,30 @@ public class T1PdfEngine {
                             slotNumber++;
                         }
                     }
+                    rebindIndexLinks(nativePdf,composed,insertion,insertedPages);
                     stampPageNumbers(composed);
                     var out=new ByteArrayOutputStream();composed.save(out);
                     return new Generated(out.toByteArray(),List.copyOf(pages),List.copyOf(slots));
                 } finally { for(var source:sources) source.close(); }
             }
         } catch(Exception e) { throw new IllegalStateException("No se pudo generar el documento T1.",e); }
+    }
+    private static void rebindIndexLinks(PDDocument original,PDDocument composed,int insertion,int insertedPages) throws IOException {
+        for(int page=0;page<original.getNumberOfPages();page++) {
+            int finalPage=page+(page>=insertion?insertedPages:0);
+            for(var annotation:composed.getPage(finalPage).getAnnotations()) {
+                if(!(annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link))continue;
+                org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDestination destination=link.getDestination();
+                var action=link.getAction();
+                if(action instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go) destination=go.getDestination();
+                if(destination instanceof PDNamedDestination named)destination=original.getDocumentCatalog().findNamedDestinationPage(named);
+                if(!(destination instanceof org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination target))continue;
+                int index=target.getPage()==null?target.getPageNumber():original.getPages().indexOf(target.getPage());
+                if(index<0||index>=original.getNumberOfPages())continue;
+                target.setPage(composed.getPage(index+(index>=insertion?insertedPages:0)));
+                if(action instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go)go.setDestination(target);else link.setDestination(target);
+            }
+        }
     }
     private static Page metadata(PDPage page,int index,String kind,UUID attachmentId) { return new Page(index,index+1,page.getMediaBox().getWidth(),page.getMediaBox().getHeight(),kind,attachmentId); }
     private static class SignatureMarkers extends PDFTextStripper {

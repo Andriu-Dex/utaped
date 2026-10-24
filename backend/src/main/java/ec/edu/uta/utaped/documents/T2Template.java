@@ -20,7 +20,7 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine9"; }
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine12"; }
     static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
     static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
     static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
@@ -49,7 +49,7 @@ public class T2Template {
                 if(entry.getName().equals("word/document.xml")||entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers); }else furniture(doc,s);
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers);InstitutionalIndex.finish(doc); }else furniture(doc,s);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
                 out.putNextEntry(new ZipEntry(entry.getName()));out.write(bytes);out.closeEntry();
@@ -59,10 +59,10 @@ public class T2Template {
     }
     private void body(Document doc,Snapshot s,Map<String,Integer> numbers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);var result=new ArrayList<Element>();var sectionNodes=new LinkedHashMap<String,Element>();
-        text(source.get(5),"UNIDAD ACADÉMICA / ADMINISTRATIVA: "+s.plan().institutionalUnit());text(source.get(7),"INFORME DE: "+s.plan().title());text(source.get(9),"PERÍODO: "+s.plan().periodName());
+        text(source.get(5),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());text(source.get(7),"INFORME DE: "+InstitutionalHeader.title(s));text(source.get(9),"PERÍODO: "+s.plan().periodName());
         result.addAll(source.subList(0,20));
-        for(String section:sections(s)) result.add(paragraph(source.get(20),section+" ................................ "+numbers.getOrDefault(section,0)));
-        result.add(source.get(28));result.add(paragraph(source.get(20),"Tabla 1. Resultados de la matriz de actividades ................................ "+numbers.getOrDefault("DESARROLLO DE ACTIVIDADES",0)));
+        for(String section:sections(s)) result.add(InstitutionalIndex.entry(source.get(20),section,section,numbers));
+        result.add(source.get(28));result.add(InstitutionalIndex.entry(source.get(20),"Tabla 1. Resultados de la matriz de actividades","DESARROLLO DE ACTIVIDADES",numbers));
         heading(result,sectionNodes,source.get(32),"ANTECEDENTES");lines(result,source.get(34),s.report().background());
         result.add(paragraph(source.get(38),"Informe derivado del Plan de Trabajo, versión formal "+s.report().baseFormalVersion()+". Los resultados declarados corresponden a sus actividades aprobadas."));
         heading(result,sectionNodes,source.get(39),"DESARROLLO DE ACTIVIDADES");result.add(source.get(42));
@@ -98,7 +98,7 @@ public class T2Template {
             for(var index:result) if(index.getLocalName().equals("p")&&all(index,"t").stream().anyMatch(t->t.getTextContent().startsWith(entryNode.getKey()+" ...."))) { var link=element(doc,"hyperlink");link.setAttributeNS(W,"w:anchor",T1Template.anchor(entryNode.getKey()));for(var r:children(index,"r")) link.appendChild(r);index.appendChild(link); }
         }
         for(var size:all(body,"pgSz")) { boolean landscape="landscape".equals(size.getAttributeNS(W,"orient"));size.setAttributeNS(W,"w:w",landscape?"16838":"11906");size.setAttributeNS(W,"w:h",landscape?"11906":"16838"); }
-        for(var t:all(body,"tbl")) fit(t,9026);
+        for(var t:all(body,"tbl")) {fit(t,9026);InstitutionalTables.apply(t);}
     }
     static void heading(List<Element> result,Map<String,Element> nodes,Element source,String label) { var p=paragraph(source,label);property(p,"keepNext");result.add(p);nodes.put(label,p); }
     static void signature(Element table,Element prototype,String label,String name,String position,String suffix) {
@@ -112,8 +112,8 @@ public class T2Template {
         if(root.getLocalName().equals("hdr")) { InstitutionalHeader.apply(doc,s);return; }
         for(var p:all(root,"p")) {
             String value=String.join("",all(p,"t").stream().map(Element::getTextContent).toList());
-            if(value.startsWith("INFORME DE:")) text(p,"INFORME DE: "+s.plan().title());
-            else if(value.startsWith("Unidad académica/ administrativa:")) text(p,"Unidad académica/ administrativa: "+s.plan().institutionalUnit());
+            if(value.startsWith("INFORME DE:")) text(p,"INFORME DE: "+InstitutionalHeader.title(s));
+            else if(value.startsWith("Unidad académica/ administrativa:")) text(p,("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"Unidad administrativa: ":"Unidad académica: ")+s.plan().institutionalUnit());
             else if(value.startsWith("Fecha de elaboración:")) text(p,"Fecha de elaboración: "+s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
             if(value.contains("Formato N")) text(p,"Formato N°: UTA-SGC-A-2-1-P7-T2");
             if(all(p,"instrText").stream().anyMatch(n->n.getTextContent().contains("PAGE"))) {

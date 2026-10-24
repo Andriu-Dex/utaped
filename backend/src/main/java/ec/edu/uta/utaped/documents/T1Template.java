@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine9"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine12"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -43,9 +43,18 @@ public class T1Template {
         var t=element(p.getOwnerDocument(),"t");t.setAttributeNS(XMLConstants.XML_NS_URI,"xml:space","preserve");t.setTextContent(value);run.appendChild(t);p.appendChild(run);
     }
     private static Element paragraph(Element prototype,String value) { var p=(Element)prototype.cloneNode(true);text(p,value);return p; }
-    private static void cell(Element cell,String value) {
+    private static void cell(Element cell,String value) { cell(cell,value,null); }
+    private static void cell(Element cell,String value,String align) {
         var paragraphs=children(cell,"p");var prototype=paragraphs.getFirst();for(var p:paragraphs) cell.removeChild(p);
-        for(String line:value.split("\\R",-1)) cell.appendChild(paragraph(prototype,line));
+        for(String line:value.split("\\R",-1)) {
+            var p=paragraph(prototype,line);
+            if(align!=null) {
+                var pr=children(p,"pPr").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"pPr");p.insertBefore(e,p.getFirstChild());return e;});
+                var jc=children(pr,"jc").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"jc");pr.appendChild(e);return e;});
+                jc.setAttributeNS(W,"w:val",align);
+            }
+            cell.appendChild(p);
+        }
     }
     private static String date(String value) { return java.time.LocalDate.parse(value).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")); }
     private static void keepWithNext(Element p) { property(p,"keepNext"); }
@@ -66,7 +75,7 @@ public class T1Template {
                 if(entry.getName().equals("word/document.xml") || entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,indexPages);StructuredSections.apply(doc,s,indexPages); }
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,indexPages);StructuredSections.apply(doc,s,indexPages);InstitutionalIndex.finish(doc); }
                     else if(entry.getName().startsWith("word/header")) header(doc,s);
                     else footer(doc);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
@@ -80,28 +89,76 @@ public class T1Template {
     private void body(Document doc,Snapshot s,Map<String,Integer> pageNumbers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);
         // Fixed source-node positions are a versioned template binding, never PDF page numbers.
-        text(source.get(4),"UNIDAD ACADÉMICA / ADMINISTRATIVA: "+s.plan().institutionalUnit());
-        text(source.get(6),"PLAN DE TRABAJO DE: "+s.plan().title());text(source.get(9),"PERÍODO: "+s.plan().periodName());
-        var result=new ArrayList<Element>();result.addAll(source.subList(0,14));
-        if(!s.plan().career().isBlank()) result.add(8,paragraph(source.get(9),"CARRERA: "+s.plan().career()));
+        text(source.get(4),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());
+        text(source.get(6),"PLAN DE TRABAJO DE: "+InstitutionalHeader.title(s));text(source.get(9),"PERÍODO: "+s.plan().periodName());
+        var result=new ArrayList<Element>();result.addAll(source.subList(0,10));
+        if(!s.plan().career().isBlank()) result.add(6,paragraph(source.get(4),"CARRERA: "+s.plan().career()));
+        property(source.get(14),"pageBreakBefore");
+        var indexSpacing=property(source.get(14),"spacing");indexSpacing.setAttributeNS(W,"w:before","130");indexSpacing.setAttributeNS(W,"w:after","680");
         result.add(source.get(14));
         var sections=new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
         if(!s.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));
-        for(String section:sections) result.add(paragraph(source.get(16),section+" ................................ "+pageNumbers.getOrDefault(section,0)));
-        result.add(source.get(25));result.add(paragraph(source.get(27),"Tabla 1. Matriz de actividades ................................ "+pageNumbers.getOrDefault("MATRIZ DE ACTIVIDADES",0)));result.add(source.get(28));
+        result.add(InstitutionalIndex.entry(source.get(16),"ÍNDICE DE CONTENIDO","ÍNDICE DE CONTENIDO",pageNumbers));
+        result.add(InstitutionalIndex.entry(source.get(16),"ÍNDICE DE TABLAS","ÍNDICE DE TABLAS",pageNumbers));
+        int sectionNumber=1;
+        for(String section:sections) result.add(InstitutionalIndex.entry(source.get(16),
+            (List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS").contains(section)?"":sectionNumber+++". ")+section,section,pageNumbers));
+        property(source.get(25),"spacing").setAttributeNS(W,"w:before","1140");
+        result.add(source.get(25));
+        result.add(InstitutionalIndex.entry(source.get(27),"Tabla 1.- Matriz de actividades","MATRIZ DE ACTIVIDADES",pageNumbers));
+        result.add(source.get(28));
+        property(source.get(29),"spacing").setAttributeNS(W,"w:before","370");
+        property(source.get(30),"spacing").setAttributeNS(W,"w:after","60");
         keepWithNext(source.get(29));keepWithNext(source.get(30));result.add(source.get(29));result.add(source.get(30));
         for(String line:s.plan().justification().split("\\R",-1)) result.add(paragraph(source.get(31),line));
         keepWithNext(source.get(36));keepWithNext(source.get(37));result.add(source.get(36));result.add(source.get(37));
         String[] objective=s.plan().objective().split("\\R",-1);
         for(int i=0;i<objective.length;i++) { var p=paragraph(source.get(38),objective[i]);removeAll(p,"color");if(i<objective.length-1) removeAll(p,"sectPr");result.add(p); }
-        result.add(source.get(39));result.add(source.get(40));result.add(source.get(41));keepWithNext(source.get(41));
+        property(source.get(39),"spacing").setAttributeNS(W,"w:before","610");
+        result.add(source.get(39));
+        result.add(source.get(40));
+        var caption=(Element)source.get(41).cloneNode(true);
+        text(caption,"Tabla 1.- Matriz de actividades");
+        for(var r:children(caption,"r")) {
+            var rp=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(doc,"rPr");r.insertBefore(e,r.getFirstChild());return e;});
+            if(children(rp,"b").isEmpty()) rp.appendChild(element(doc,"b"));
+            if(children(rp,"i").isEmpty()) rp.appendChild(element(doc,"i"));
+            var sz=children(rp,"sz").stream().findFirst().orElseGet(()->{var e=element(doc,"sz");rp.appendChild(e);return e;});
+            sz.setAttributeNS(W,"w:val","18");
+        }
+        keepWithNext(caption);result.add(caption);
         var table=source.get(42);var rows=children(table,"tr");var rowTemplate=(Element)rows.get(2).cloneNode(true);
         for(int i=2;i<rows.size();i++) table.removeChild(rows.get(i));
         for(int i=0;i<2;i++) { var headerRow=rows.get(i);var trPr=children(headerRow,"trPr").stream().findFirst().orElseGet(()->{var e=element(doc,"trPr");headerRow.insertBefore(e,headerRow.getFirstChild());return e;});trPr.appendChild(element(doc,"tblHeader")); }
+        var headerCells=children(rows.get(0),"tc");
+        if(headerCells.size()>3) cell(headerCells.get(3),"Recursos","center");
+
+        for(var tc:headerCells) {
+            for(var p:children(tc,"p")) {
+                var pr=children(p,"pPr").stream().findFirst().orElseGet(()->{var e=element(doc,"pPr");p.insertBefore(e,p.getFirstChild());return e;});
+                var jc=children(pr,"jc").stream().findFirst().orElseGet(()->{var e=element(doc,"jc");pr.appendChild(e);return e;});
+                jc.setAttributeNS(W,"w:val","center");
+            }
+        }
         for(var a:s.activities()) {
             var row=(Element)rowTemplate.cloneNode(true);removeAll(row,"trHeight");removeAll(row,"cantSplit");var cells=children(row,"tc");
             List<String> values=List.of(a.title(),date(a.startsOn()),date(a.endsOn()),a.responsibleDisplay(),String.join("\n",a.resources()),String.join("\n",a.means()));
-            for(int i=0;i<6;i++) cell(cells.get(i),values.get(i));table.appendChild(row);
+            cell(cells.get(0),values.get(0),"left");
+            cell(cells.get(1),values.get(1),"center");
+            cell(cells.get(2),values.get(2),"center");
+            cell(cells.get(3),values.get(3),"center");
+            cell(cells.get(4),values.get(4),"left");
+            cell(cells.get(5),values.get(5),"left");
+            for(var tc:cells) {
+                var cp=children(tc,"tcPr").getFirst();
+                var va=children(cp,"vAlign").stream().findFirst().orElseGet(()->{var e=element(doc,"vAlign");cp.appendChild(e);return e;});va.setAttributeNS(W,"w:val","center");
+                for(var p:children(tc,"p")) for(var r:children(p,"r")) {
+                    var rp=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(doc,"rPr");r.insertBefore(e,r.getFirstChild());return e;});
+                    var font=children(rp,"rFonts").stream().findFirst().orElseGet(()->{var e=element(doc,"rFonts");rp.insertBefore(e,rp.getFirstChild());return e;});font.setAttributeNS(W,"w:ascii","Helvetica");font.setAttributeNS(W,"w:hAnsi","Helvetica");
+                    var size=children(rp,"sz").stream().findFirst().orElseGet(()->{var e=element(doc,"sz");rp.appendChild(e);return e;});size.setAttributeNS(W,"w:val","20");
+                }
+            }
+            table.appendChild(row);
         }
         // An unfinished draft still needs a body row beneath the merged institutional headers.
         // Completed documents keep the exact existing matrix composition.
@@ -110,7 +167,11 @@ public class T1Template {
             for(var blank:children(row,"tc")) cell(blank,"");
             table.appendChild(row);
         }
-        result.add(table);text(source.get(43),"Fuente: "+s.matrixSource());text(source.get(44),"Elaborado por: "+s.elaboratedBy());result.add(source.get(43));result.add(source.get(44));
+        // The filled official example gives both date columns enough room for dd/MM/yyyy.
+        int[] matrixWidths={3084,1220,1220,2320,2833,2642};
+        var matrixColumns=all(table,"gridCol");
+        for(int i=0;i<matrixColumns.size();i++)matrixColumns.get(i).setAttributeNS(W,"w:w",String.valueOf(matrixWidths[i]));
+        InstitutionalTables.apply(table);result.add(table);text(source.get(43),"Fuente: "+s.matrixSource());text(source.get(44),"Elaborado por: "+s.elaboratedBy());result.add(source.get(43));result.add(source.get(44));
         if(s.privacyNoticeEnabled()) result.add(paragraph(source.get(47),"Nota: Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales."));
         result.add(source.get(48));
         if(!s.attachments().isEmpty()) {
@@ -169,7 +230,7 @@ public class T1Template {
         for(var section:sections) {
             var p=sectionNodes.get(section);var start=element(doc,"bookmarkStart");start.setAttributeNS(W,"w:id",String.valueOf(bookmarkId));start.setAttributeNS(W,"w:name",anchor(section));
             p.insertBefore(start,children(p,"r").getFirst());var end=element(doc,"bookmarkEnd");end.setAttributeNS(W,"w:id",String.valueOf(bookmarkId++));p.appendChild(end);
-            for(var index:result) if("p".equals(index.getLocalName()) && all(index,"t").stream().anyMatch(t->t.getTextContent().startsWith(section+" ...."))) {
+            for(var index:result) if("p".equals(index.getLocalName()) && all(index,"t").stream().anyMatch(t->t.getTextContent().contains(section) && t.getTextContent().contains("...."))) {
                 var link=element(doc,"hyperlink");link.setAttributeNS(W,"w:anchor",anchor(section));for(var r:children(index,"r")) link.appendChild(r);index.appendChild(link);
             }
         }
@@ -177,6 +238,7 @@ public class T1Template {
             boolean landscape="landscape".equals(size.getAttributeNS(W,"orient"));size.setAttributeNS(W,"w:w",landscape?"16838":"11906");size.setAttributeNS(W,"w:h",landscape?"11906":"16838");
         }
         if(format.equals("A4")) { fitTable(signatures,9026);fitTable(history,9026); }
+        InstitutionalTables.apply(signatures);InstitutionalTables.apply(history);
     }
     public static String anchor(String section) { return "UTAPED_"+java.text.Normalizer.normalize(section,java.text.Normalizer.Form.NFD).replaceAll("\\p{M}","").replace(' ','_'); }
     private void header(Document doc,Snapshot s) {

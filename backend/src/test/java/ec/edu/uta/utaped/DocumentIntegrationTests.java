@@ -78,6 +78,7 @@ class DocumentIntegrationTests {
     @Test void previewHeaderKeepsAllHorizontalCellBordersVisible() throws Exception {
         var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"Justificación de prueba.","Objetivo de prueba.",-1,"JUSTIFICATION"));
         byte[] bytes=Base64.getDecoder().decode(preview.image());
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/header-borders-preview.png"),bytes);
         var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(bytes));
         int lines=0,firstLine=-1,lastLine=-1;boolean previous=false;
         for(int y=0;y<image.getHeight()/3;y++) {
@@ -96,7 +97,7 @@ class DocumentIntegrationTests {
             int rgb=image.getRGB(x,firstLine);
             if(((rgb>>16)&255)<190&&((rgb>>8)&255)<190&&(rgb&255)<190) { if(left<0) left=x;right=x; }
         }
-        int divider=left+(int)Math.round((right-left)*4426.0/8504.0);
+        int divider=left+(int)Math.round((right-left)*4957.0/9525.0);
         int dateRowY=lastLine-(int)Math.round((lastLine-firstLine)*0.15);
         boolean dateDivider=false;
         for(int x=divider-3;x<=divider+3;x++) {
@@ -158,9 +159,23 @@ class DocumentIntegrationTests {
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertThrows(ResponseStatusException.class,()->attachments.content(id,a.id(),email));
     }
+    void assertHeaderDateIsInTheRightCell(PDDocument document) throws Exception {
+        float[] x={Float.NaN,Float.NaN};
+        String date=plans.today().format(java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale.forLanguageTag("es-EC")));
+        new PDFTextStripper() {
+            @Override protected void writeString(String text,List<org.apache.pdfbox.text.TextPosition> positions) throws IOException {
+                if(Float.isNaN(x[0]) && text.contains("Fecha de elaboración:")) x[0]=positions.getFirst().getXDirAdj();
+                if(Float.isNaN(x[1]) && text.contains(date)) positions.stream().filter(p->p.getUnicode().matches("[0-9]")).findFirst().ifPresent(p->x[1]=p.getXDirAdj());
+                super.writeString(text,positions);
+            }
+        }.getText(document);
+        assertFalse(Float.isNaN(x[0]));assertFalse(Float.isNaN(x[1]));
+        assertTrue(x[1]>x[0]+100,"La fecha debe aparecer en la celda derecha, separada de su etiqueta: "+Arrays.toString(x));
+    }
     @Test void administrativeHeaderUsesCatalogueTypeAndPreservesThePreparedArtifactAfterRenaming() throws Exception {
         complete("Justificación administrativa.",1);
         UUID unit=UUID.randomUUID();
+        jdbc.update("DELETE FROM institutional_unit WHERE name IN ('Unidad administrativa documental','Unidad renombrada')");
         jdbc.update("INSERT INTO institutional_unit(id,name,unit_type) VALUES (?,'Unidad administrativa documental','ADMINISTRATIVE')",unit);
         var plan=plans.get(id,email);
         assertEquals(400,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),"Unidad inexistente","",plan.justification(),plan.objective()))).getStatusCode().value());
@@ -170,12 +185,17 @@ class DocumentIntegrationTests {
         try(var document=Loader.loadPDF(bytes)) {
             String text=new PDFTextStripper().getText(document).replaceAll("\\s+"," ");
             assertTrue(text.contains("Unidad administrativa: Unidad administrativa documental"),text);
+            assertTrue(text.contains("UNIDAD ADMINISTRATIVA: Unidad administrativa documental"),text);
+            assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
+            assertHeaderDateIsInTheRightCell(document);
             assertFalse(text.contains("Carrera: Ingeniería de Software"),text);
         }
+        jdbc.update("DELETE FROM institutional_unit WHERE name='Unidad renombrada'");
         jdbc.update("UPDATE institutional_unit SET name='Unidad renombrada' WHERE id=?",unit);
         assertArrayEquals(bytes,artifacts.content(id,artifact.id(),email));
         assertTrue(artifacts.list(id,email).getFirst().current());
         assertEquals("Unidad administrativa documental",plans.get(id,email).institutionalUnit());
+        jdbc.update("DELETE FROM institutional_unit WHERE id=?",unit);
     }
     @Test void immutableTemplatePdfActualPaginationAndHistoricalContent() throws Exception {
         complete("La comisión requiere planificar las actividades y conservar evidencias de cumplimiento.",2);
@@ -188,7 +208,18 @@ class DocumentIntegrationTests {
         assertEquals(before,version());assertEquals(artifact.id(),artifacts.generate(id,email,new ArtifactModels.Generate(before)).id());
         try(var document=Loader.loadPDF(original)) {
             assertEquals(document.getNumberOfPages(),artifact.pageCount());String text=new PDFTextStripper().getText(document);
+            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: FISEI"),text);
+            assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
+            assertHeaderDateIsInTheRightCell(document);
             assertTrue(text.contains("FISEI"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
+            int internalLinks=0;
+            for(var page:document.getPages()) for(var annotation:page.getAnnotations()) {
+                if(annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link && link.getAction() instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go && go.getDestination() instanceof org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination destination) {
+                    int target=document.getPages().indexOf(destination.getPage());
+                    assertTrue(target>0&&target<document.getNumberOfPages(),"El índice debe enlazar la página real ensamblada, no la portada.");internalLinks++;
+                }
+            }
+            assertTrue(internalLinks>=6,"El índice debe conservar sus enlaces internos.");
             assertFalse(text.contains("@@PN@@"));
             assertFalse(text.contains("vX.0"));assertFalse(text.contains("Revisado por:"));
             for(var page:artifact.pages()) { assertEquals(page.index()+1,page.number());assertTrue(Math.abs(Math.min(page.width(),page.height())-PDRectangle.A4.getWidth())<1);assertTrue(Math.abs(Math.max(page.width(),page.height())-PDRectangle.A4.getHeight())<1); }
@@ -208,7 +239,7 @@ class DocumentIntegrationTests {
         try(var pdf=Loader.loadPDF(bytes)) {
             assertTrue(pdf.getNumberOfPages()>7);var stripper=new PDFTextStripper();String text=stripper.getText(pdf);assertTrue(text.contains("Actividad 35."));
             int matrix=-1;for(int i=0;i<pdf.getNumberOfPages();i++) { stripper.setStartPage(i+1);stripper.setEndPage(i+1);if(stripper.getText(pdf).lines().anyMatch(l->l.trim().replaceAll("^\\d+[.\\s]*","").equals("MATRIZ DE ACTIVIDADES"))) matrix=i+1; }
-            assertTrue(matrix>0);assertTrue(text.matches("(?s).*MATRIZ DE ACTIVIDADES \\.{3,} "+matrix+".*"),text);
+            assertTrue(matrix>0);assertTrue(text.matches("(?s).*MATRIZ DE ACTIVIDADES\\s*\\.{3,}\\s*"+matrix+".*"),text);
             assertTrue(artifact.signatureSlots().getFirst().pageNumber()>matrix);
         }
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-long.pdf"),bytes);

@@ -13,6 +13,11 @@ final class StructuredSections {
         if(!changed(s)) return original;
         return s.structure().sections().stream().filter(section->original.contains(section.key())||section.key().startsWith("CUSTOM_")).map(DocumentStructures.Section::label).toList();
     }
+    private static boolean isContentIndex(Element p) {
+        String target=InstitutionalIndex.target(p);
+        String text=all(p,"t").stream().map(Node::getTextContent).collect(java.util.stream.Collectors.joining());
+        return (InstitutionalIndex.entry(p)||text.contains("...."))&&!text.startsWith("Tabla ")&&!target.startsWith("ÍNDICE");
+    }
     static void apply(Document doc,ArtifactModels.Snapshot s,Map<String,Integer> numbers) {
         if(!changed(s))return;
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var nodes=children(body,null);
@@ -40,10 +45,18 @@ final class StructuredSections {
         }
         // Rebuild the index with the configured order and the engine's real page numbers.
         Element indexPrototype=null;int insert=-1;
-        for(int i=0;i<prefix.size();i++) if(all(prefix.get(i),"t").stream().anyMatch(t->t.getTextContent().contains("...."))) { if(indexPrototype==null) {indexPrototype=prefix.get(i);insert=i;} }
+        for(int i=0;i<prefix.size();i++) if(isContentIndex(prefix.get(i))) { if(indexPrototype==null) {indexPrototype=prefix.get(i);insert=i;} }
         if(indexPrototype!=null) {
-            prefix.removeIf(p->all(p,"t").stream().anyMatch(t->t.getTextContent().contains("....")));
-            int offset=0;for(var label:ordered.keySet())prefix.add(insert+offset++,paragraph(indexPrototype,label+" ................................ "+numbers.getOrDefault(label,0)));
+            prefix.removeIf(StructuredSections::isContentIndex);
+            int offset=0;for(var label:ordered.keySet()) {prefix.add(insert+offset,InstitutionalIndex.entry(indexPrototype,(offset+1)+". "+label,label,numbers));offset++;}
+        }
+        // A renamed published section also changes the table index destination, not its caption.
+        for(int i=0;i<prefix.size();i++) {
+            var p=prefix.get(i);
+            if(!InstitutionalIndex.entry(p)||all(p,"t").isEmpty()||!all(p,"t").getFirst().getTextContent().startsWith("Tabla "))continue;
+            String target=InstitutionalIndex.target(p);
+            var section=s.structure().sections().stream().filter(item->item.key().equals(target)).findFirst();
+            if(section.isPresent())prefix.set(i,InstitutionalIndex.entry(p,all(p,"t").getFirst().getTextContent(),section.get().label(),numbers));
         }
         for(var n:children(body,null))body.removeChild(n);for(var n:prefix)body.appendChild(n);
         int ordinal=1,bookmark=2000,index=0;
