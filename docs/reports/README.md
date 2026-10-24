@@ -1,5 +1,13 @@
 # Reportes
 
+- [Firma sin generación duplicada y orden de documentos](2026-10-24-23-signing-step-and-document-ordering.md).
+
+- [Espacio interior del historial de cambios](2026-10-24-22-history-cell-padding.md).
+
+- [Control de historial conforme al ejemplo oficial](2026-10-24-21-official-change-history.md).
+
+- [Nombre institucional y navegación de la previsualización](2026-10-24-20-faculty-name-and-preview-keyboard.md).
+
 - [Revisión de navegación y planificación documental](2026-10-24-19-navigation-review-and-document-plan.md).
 
 - [Navegación persistente del Plan y acciones de anexos](2026-10-23-18-persistent-plan-wizard.md).

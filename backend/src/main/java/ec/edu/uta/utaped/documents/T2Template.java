@@ -20,7 +20,7 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine12"; }
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine14"; }
     static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
     static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
     static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
@@ -91,7 +91,8 @@ public class T2Template {
             if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null);
             else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null);
         }
-        result.add(signatures);heading(result,sectionNodes,source.get(67),"CONTROL DE HISTORIAL DE CAMBIOS");var history=source.get(69);var historyRows=children(history,"tr");for(int i=1;i<historyRows.size();i++) history.removeChild(historyRows.get(i));var entry=(Element)historyRows.getFirst().cloneNode(true);removeAll(entry,"b");var cells=children(entry,"tc");cell(cells.get(0),s.plan().formalVersion());cell(cells.get(1),"Elaboración del Informe");cell(cells.get(2),s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));history.appendChild(entry);result.add(history);
+        result.add(signatures);heading(result,sectionNodes,source.get(67),"CONTROL DE HISTORIAL DE CAMBIOS");var history=source.get(69);
+        InstitutionalHistory.fill(history,s.plan().formalVersion(),InstitutionalHistory.description("informe",s.plan().groupName()),s.plan().preparationDate());result.add(history);
         result.add(source.get(76));for(var node:children(body,null)) body.removeChild(node);for(var node:result) body.appendChild(node);removeAll(body,"bookmarkStart");removeAll(body,"bookmarkEnd");
         int bookmark=1000;for(var entryNode:sectionNodes.entrySet()) {
             var p=entryNode.getValue();var start=element(doc,"bookmarkStart");start.setAttributeNS(W,"w:id",String.valueOf(bookmark));start.setAttributeNS(W,"w:name",T1Template.anchor(entryNode.getKey()));p.insertBefore(start,children(p,"r").getFirst());var end=element(doc,"bookmarkEnd");end.setAttributeNS(W,"w:id",String.valueOf(bookmark++));p.appendChild(end);

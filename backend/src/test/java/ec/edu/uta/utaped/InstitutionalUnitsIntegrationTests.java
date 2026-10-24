@@ -11,6 +11,23 @@ import ec.edu.uta.utaped.planning.WorkPlanModels.*;
 class InstitutionalUnitsIntegrationTests extends WorkPlanIntegrationTests {
     @Autowired OrganizationService organization;
     @Autowired WorkPlanService plans;
+    @Test void facultyCorrectionUpdatesOnlyLegacyUnsignedDraftsAndLeavesOtherProvenanceUntouched() {
+        openPeriod();String email="user@example.invalid",legacy="FISEI — Universidad Técnica de Ambato";
+        var draft=plans.create(email,new Create(group,period,UUID.randomUUID(),"Borrador anterior"));
+        var approved=plans.create(email,new Create(group,period,UUID.randomUUID(),"Documento aprobado anterior"));
+        var other=plans.create(email,new Create(group,period,UUID.randomUUID(),"Otra unidad"));
+        jdbc.update("UPDATE work_plan SET institutional_unit=? WHERE id IN (?,?)",legacy,draft.id(),approved.id());
+        jdbc.update("UPDATE work_plan SET document_state='APPROVED' WHERE id=?",approved.id());
+        jdbc.update("UPDATE work_plan SET institutional_unit='Otra facultad' WHERE id=?",other.id());
+        jdbc.update("UPDATE institutional_unit SET name=? WHERE id=?",legacy,ec.edu.uta.utaped.institution.InstitutionalUnits.FISEI);
+        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(new org.springframework.core.io.ClassPathResource("db/migration/V35__full_faculty_name.sql")).execute(jdbc.getDataSource());
+        assertEquals(ec.edu.uta.utaped.institution.InstitutionalNames.FISEI,plans.get(draft.id(),email).institutionalUnit());
+        assertEquals(draft.rowVersion()+1,plans.get(draft.id(),email).rowVersion());
+        assertEquals(legacy,plans.get(approved.id(),email).institutionalUnit());
+        assertEquals("Otra facultad",plans.get(other.id(),email).institutionalUnit());
+        assertEquals(ec.edu.uta.utaped.institution.InstitutionalNames.FISEI,ec.edu.uta.utaped.institution.InstitutionalNames.forNewDocument(plans.get(approved.id(),email).institutionalUnit()));
+        assertEquals("Otra facultad",ec.edu.uta.utaped.institution.InstitutionalNames.forNewDocument("Otra facultad"));
+    }
     @Test void administrativeScopeFreezesItsProvenanceAndRejectsCareerSpoofing() {
         openPeriod();UUID unit=UUID.randomUUID();
         jdbc.update("INSERT INTO institutional_unit(id,name,unit_type) VALUES (?,'Unidad administrativa de prueba','ADMINISTRATIVE')",unit);

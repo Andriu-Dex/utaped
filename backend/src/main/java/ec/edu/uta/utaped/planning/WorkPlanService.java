@@ -103,11 +103,21 @@ public class WorkPlanService {
         return get(targetDocId,email);
     }
     public Page list(String email,int page,int size,UUID groupId,UUID periodId,String query) {
+        return list(email,page,size,groupId,periodId,query,"UPDATED_DESC");
+    }
+    public Page list(String email,int page,int size,UUID groupId,UUID periodId,String query,String sort) {
+        String order=switch(sort) {
+            case "UPDATED_DESC" -> "w.updated_at DESC,w.id";
+            case "UPDATED_ASC" -> "w.updated_at ASC,w.id";
+            case "TITLE_ASC" -> "lower(w.title) ASC,w.id";
+            case "TITLE_DESC" -> "lower(w.title) DESC,w.id";
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un orden válido.");
+        };
         var actor=accounts.current(email);
         String filters=" AND (?::uuid IS NULL OR w.group_id=?::uuid) AND (?::uuid IS NULL OR w.period_id=?::uuid) AND position(lower(?) in lower(w.title))>0";
         Object[] args={actor.id(),groupId,groupId,periodId,periodId,query};
         long total=jdbc.queryForObject("SELECT count(*) FROM ("+SELECT+filters+") plans",Long.class,args);
-        var items=jdbc.query(SELECT+filters+" ORDER BY w.updated_at DESC,w.id LIMIT ? OFFSET ?",(rs,n)->new Summary(rs.getObject("id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("document_state"),rs.getString("formal_version"),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getString("document_type"),rs.getObject("archived_at",OffsetDateTime.class),canManage(rs),rs.getLong("row_version")),actor.id(),groupId,groupId,periodId,periodId,query,size,(long)page*size);
+        var items=jdbc.query(SELECT+filters+" ORDER BY "+order+" LIMIT ? OFFSET ?",(rs,n)->new Summary(rs.getObject("id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("document_state"),rs.getString("formal_version"),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getString("document_type"),rs.getObject("archived_at",OffsetDateTime.class),canManage(rs),rs.getLong("row_version")),actor.id(),groupId,groupId,periodId,periodId,query,size,(long)page*size);
         return new Page(items,total,page,size);
     }
     @Transactional public Plan create(String email,Create data) {
@@ -120,7 +130,7 @@ public class WorkPlanService {
             if(!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(requestedTitle)) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
             return get((UUID)prior.get("id"),email);
         }
-        String career="",unitName="FISEI — Universidad Técnica de Ambato",unitType="ACADEMIC";
+        String career="",unitName=ec.edu.uta.utaped.institution.InstitutionalNames.FISEI,unitType="ACADEMIC";
         if(data.scopeId()!=null) {
             var scopes=jdbc.queryForList("""
                 SELECT s.*,c.name AS career_name,iu.name AS unit_name,iu.unit_type FROM organizational_scope s JOIN institutional_unit iu ON iu.id=s.institutional_unit_id AND iu.active

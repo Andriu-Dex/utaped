@@ -120,7 +120,7 @@ class DocumentIntegrationTests {
     }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
-        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI — Universidad Técnica de Ambato","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
+        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","Facultad de Ingeniería en Sistemas, Electrónica e Industrial","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
         var rows=new ArrayList<ActivityModels.Activity>();var date=LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
         for(int i=0;i<count;i++) rows.add(new ActivityModels.Activity(UUID.randomUUID(),null,"Actividad "+(i+1)+". Verificar el cumplimiento de la planificación institucional y registrar sus resultados.","OTHER",false,date,date,List.of(user),true,
             List.of(new ActivityModels.Choice(null,"Recursos institucionales",null)),List.of(new ActivityModels.Choice(null,"Acta de seguimiento",null))));
@@ -188,6 +188,9 @@ class DocumentIntegrationTests {
             assertTrue(text.contains("UNIDAD ADMINISTRATIVA: Unidad administrativa documental"),text);
             assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
             assertHeaderDateIsInTheRightCell(document);
+            String historyText=text.substring(text.lastIndexOf("CONTROL DE HISTORIAL DE CAMBIOS")).replaceAll("\\s+"," ");
+            assertTrue(historyText.contains("Elaboración del plan de trabajo de la Comisión de prueba"),historyText);
+            assertFalse(historyText.contains("v1.0"),historyText);
             assertFalse(text.contains("Carrera: Ingeniería de Software"),text);
         }
         jdbc.update("DELETE FROM institutional_unit WHERE name='Unidad renombrada'");
@@ -208,10 +211,10 @@ class DocumentIntegrationTests {
         assertEquals(before,version());assertEquals(artifact.id(),artifacts.generate(id,email,new ArtifactModels.Generate(before)).id());
         try(var document=Loader.loadPDF(original)) {
             assertEquals(document.getNumberOfPages(),artifact.pageCount());String text=new PDFTextStripper().getText(document);
-            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: FISEI"),text);
+            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: Facultad de Ingeniería en Sistemas, Electrónica e Industrial"),text);
             assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
             assertHeaderDateIsInTheRightCell(document);
-            assertTrue(text.contains("FISEI"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
+            assertTrue(text.contains("Ingeniería de Software"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
             int internalLinks=0;
             for(var page:document.getPages()) for(var annotation:page.getAnnotations()) {
                 if(annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link && link.getAction() instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go && go.getDestination() instanceof org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination destination) {
@@ -232,6 +235,27 @@ class DocumentIntegrationTests {
         assertFalse(artifacts.readiness(id,email).ready());
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-short.pdf"),original);
     }
+    @Test void compatibleTextFlowsWithoutEdgeBlankPagesWhileMatrixKeepsItsOrientation() throws Exception {
+        String justification="Organizar las actividades institucionales.";
+        complete(justification,1);
+        var first=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] original=artifacts.content(id,first.id(),email);
+        var plan=plans.get(id,email);
+        plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),plan.institutionalUnit(),plan.career(),"\n".repeat(80)+justification+"\n".repeat(80),plan.objective()+"\n".repeat(80)));
+        var second=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        assertEquals(first.pageCount(),second.pageCount(),"Los párrafos vacíos de los extremos no deben crear páginas adicionales.");
+        try(var pdf=Loader.loadPDF(artifacts.content(id,second.id(),email))) {
+            var stripper=new PDFTextStripper();int content=-1,matrix=-1;
+            for(int i=0;i<pdf.getNumberOfPages();i++) {
+                stripper.setStartPage(i+1);stripper.setEndPage(i+1);String text=stripper.getText(pdf);
+                if(text.contains(justification)) { content=i;assertTrue(text.contains(plan.objective()),"Justificación y objetivo cortos comparten página."); }
+                if(pdf.getPage(i).getMediaBox().getWidth()>pdf.getPage(i).getMediaBox().getHeight()) matrix=i;
+            }
+            assertTrue(content>=0);assertTrue(matrix>content,"La matriz conserva su sección apaisada.");
+        }
+        assertArrayEquals(original,artifacts.content(id,first.id(),email));
+    }
+
     @Test void longContentExpandsPagesAndIndexesFollowRealComposition() throws Exception {
         complete("Justificación académica de la planificación y seguimiento de las actividades institucionales. ".repeat(100),35);
         var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));byte[] bytes=artifacts.content(id,artifact.id(),email);
@@ -354,7 +378,7 @@ class DocumentIntegrationTests {
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
         UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
-        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI — Universidad Técnica de Ambato","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","Facultad de Ingeniería en Sistemas, Electrónica e Industrial","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
         assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);

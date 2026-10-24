@@ -29,3 +29,7 @@ Persistencia Flyway V4; auditoría `WORK_PLAN_CREATED` y `WORK_PLAN_DRAFT_SAVED`
 Cada resumen de `GET /work-plans` incluye `canManage` y `rowVersion`. El permiso procede de la misma comprobación utilizada por el detalle; la interfaz no lo infiere de `editable` ni del nombre del usuario.
 
 La tabla permite `Descartar borrador` en DRAFT y `Archivar` en APPROVED, únicamente con permiso de gestión y sin archivo previo. No ofrece estas acciones en IN_REVIEW. Ambas reutilizan `POST /work-plans/{targetDocId}/archive`, con `rowVersion` y `reason` obligatorio. El servidor conserva autorización, conflictos y restricciones por Informes asociados; no se añade una ruta de borrado físico.
+
+## Ordenación de la bandeja — 24/10/2026
+
+GET /work-plans admite sort: UPDATED_DESC (predeterminado), UPDATED_ASC, TITLE_ASC o TITLE_DESC. Los títulos se comparan sin distinguir mayúsculas; cada orden usa id como desempate estable. Se aplica sobre todos los resultados autorizados que cumplen query/groupId/periodId antes de paginar. No cambia total ni permisos. Un valor distinto devuelve 400. Los clientes anteriores que no envían sort conservan la ordenación por actualización descendente.

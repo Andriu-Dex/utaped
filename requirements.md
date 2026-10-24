@@ -1,5 +1,11 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-24): el paso 6 del T1 reutiliza la preparación del paso 5 sin botón de generación duplicado; ante preparación ausente/desactualizada en borrador editable, bloquear firma y volver a previsualización. La bandeja permite ordenar por actualización reciente/antigua y título A–Z/Z–A, conservando filtros, permisos y paginación. Sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-24): Control de historial de cambios conforme al ejemplo oficial: cabecera gris, fila de datos blanca y con altura suficiente, texto centrado, versión formal sin prefijo v, descripción que identifica al grupo/unidad y fecha real del documento. Conservar artefactos firmados y no copiar datos particulares del ejemplo. Sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-24): usar el nombre completo de la facultad FISEI conforme al ejemplo oficial; corregir la referencia y borradores antiguos sin firmas, conservando artefactos e historia firmada. En el paso 5, flechas izquierda/derecha dentro del visor enfocado sin interferir con formularios, listas o modales. Justificación/objetivo fluyen juntos cuando caben; conservar orientación apaisada de la matriz y saltos institucionales. Sin commit hasta revisión del propietario.
+
 CONFIRMADO-PROYECTO (2026-10-23): conservar la navegación de los seis pasos del T1 en una estructura persistente; Anterior secundario y Siguiente principal, acciones de anexos con iconos coherentes y controles accesibles para PC/tablet. Preservar borradores, confirmaciones de descarte, validación de matriz y requisitos previos a firma. Revisión y commit local autorizados por el propietario el 2026-10-24.
 
 CONFIRMADO-PROYECTO (2026-10-23): mostrar en la tabla documental «Descartar borrador» y «Archivar» para aprobados, con modal de confirmación, motivo y permisos del responsable. Mantener trazabilidad, artefactos firmados y restricciones de revisión; no introducir borrado físico.

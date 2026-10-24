@@ -10,7 +10,7 @@ interface SigningState {
   signingEnabled: boolean; signingBlockers: { section: string; message: string }[]; signed: Signed[]
   preparation: { rowVersion: number; pdfHash: string }
 }
-export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange, onBusyChange }: { targetDocId: string; artifactId: string; onSigned?: () => void; onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void }) {
+export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange, onBusyChange, disabled = false }: { targetDocId: string; artifactId: string; onSigned?: () => void; onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void; disabled?: boolean }) {
   const path = '/work-plans/' + targetDocId + '/artifacts/' + artifactId + '/signing'
   const [state, setState] = useState<SigningState | null>(null); const [error, setError] = useState('')
   const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const [refresh, setRefresh] = useState(0)
@@ -20,7 +20,7 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
   async function sign(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (!state?.signingEnabled || busy) return
+    event.preventDefault(); if (!state?.signingEnabled || busy || disabled) return
     const form = event.currentTarget; const certificate = form.elements.namedItem('certificate') as HTMLInputElement
     const credential = form.elements.namedItem('certificatePassword') as HTMLInputElement
     const file = certificate.files?.[0]; const password = credential.value; form.reset()
@@ -49,7 +49,7 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
       {signed && state.pendingAuthors.length > 0 && <p className="field-help">Recopilando firmas de elaboradores. El contenido está bloqueado; la revisión empezará al completar todas las firmas.</p>}
       {state.pendingAuthors.length > 0 && <p role="status">Pendientes de firma: {state.pendingAuthors.map(person => person.name).join(' → ')}.</p>}
       {state.signingBlockers.length > 0 && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
-      {!state.actorSigned && <ActionForm label="Preparar firma" onCancel={() => onDirtyChange?.(false)} disabled={busy || !state.signingEnabled}><form onChangeCapture={() => onDirtyChange?.(true)} onResetCapture={() => onDirtyChange?.(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || !state.signingEnabled}>
+      {!state.actorSigned && <ActionForm label="Preparar firma" onCancel={() => onDirtyChange?.(false)} disabled={busy || disabled || !state.signingEnabled}><form onChangeCapture={() => onDirtyChange?.(true)} onResetCapture={() => onDirtyChange?.(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || disabled || !state.signingEnabled}>
         <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? 'Firmando…' : 'Firmar'}</button>

@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine12"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine15"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -110,9 +110,11 @@ public class T1Template {
         property(source.get(29),"spacing").setAttributeNS(W,"w:before","370");
         property(source.get(30),"spacing").setAttributeNS(W,"w:after","60");
         keepWithNext(source.get(29));keepWithNext(source.get(30));result.add(source.get(29));result.add(source.get(30));
-        for(String line:s.plan().justification().split("\\R",-1)) result.add(paragraph(source.get(31),line));
+        // Edge blank paragraphs must not push compatible text onto an empty page.
+        // Interior paragraph breaks and the official orientation boundaries are preserved.
+        for(String line:s.plan().justification().strip().split("\\R",-1)) result.add(paragraph(source.get(31),line));
         keepWithNext(source.get(36));keepWithNext(source.get(37));result.add(source.get(36));result.add(source.get(37));
-        String[] objective=s.plan().objective().split("\\R",-1);
+        String[] objective=s.plan().objective().strip().split("\\R",-1);
         for(int i=0;i<objective.length;i++) { var p=paragraph(source.get(38),objective[i]);removeAll(p,"color");if(i<objective.length-1) removeAll(p,"sectPr");result.add(p); }
         property(source.get(39),"spacing").setAttributeNS(W,"w:before","610");
         result.add(source.get(39));
@@ -218,11 +220,8 @@ public class T1Template {
         for(var row:children(signatures,"tr")) { var pr=children(row,"trPr").stream().findFirst().orElseGet(()->{var e=element(doc,"trPr");row.insertBefore(e,row.getFirstChild());return e;});if(children(pr,"cantSplit").isEmpty()) pr.appendChild(element(doc,"cantSplit")); }
         result.add(signatures);
         result.add(source.get(57));result.add(source.get(58));keepWithNext(source.get(59));result.add(source.get(59));
-        var history=source.get(60);var historyRows=children(history,"tr");
-        // The reference merges the first two cells in its instructional example row.
-        // Use the three-column header grid for an actual history entry.
-        var historyRow=(Element)historyRows.getFirst().cloneNode(true);history.replaceChild(historyRow,historyRows.get(1));
-        removeAll(historyRow,"b");var historyCells=children(historyRow,"tc");cell(historyCells.get(0),"v"+s.plan().formalVersion());cell(historyCells.get(1),"Elaboración del Plan de Trabajo");cell(historyCells.get(2),s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));result.add(history);
+        var history=source.get(60);
+        InstitutionalHistory.fill(history,s.plan().formalVersion(),InstitutionalHistory.description("plan de trabajo",s.plan().groupName()),s.plan().preparationDate());result.add(history);
         result.add(source.get(64));for(var n:children(body,null)) body.removeChild(n);for(var n:result) body.appendChild(n);
         removeAll(body,"bookmarkStart");removeAll(body,"bookmarkEnd");
         var sectionNodes=Map.of("JUSTIFICACIÓN",source.get(29),"OBJETIVO",source.get(36),"MATRIZ DE ACTIVIDADES",source.get(39),"ANEXOS",source.get(50),"FIRMAS DE RESPONSABILIDAD",source.get(54),"CONTROL DE HISTORIAL DE CAMBIOS",source.get(59));

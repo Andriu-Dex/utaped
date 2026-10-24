@@ -1,5 +1,13 @@
 # Estado de implementación productiva
 
+Paso 6 sin generación duplicada y bandeja con ordenación global validada en servidor implementados. Verificado: 3 pruebas backend, 22 de aceptación y lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-23-signing-step-and-document-ordering.md).
+
+Historial T1/T2: margen interno vertical de 3 pt en las celdas de datos, conservando centrado y crecimiento automático de fila. Sin commit. [Reporte](docs/reports/2026-10-24-22-history-cell-padding.md).
+
+Historial T1/T2: fila de datos blanca, altura mínima tomada del template, versión sin prefijo y descripción del grupo. Verificado: 194 pruebas backend y revisión visual T1/T2. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-21-official-change-history.md).
+
+Nombre completo de FISEI, corrección de borradores sin firmas, nombres en documentos derivados nuevos, flechas locales del visor del paso 5 y normalización de párrafos vacíos extremos del T1 implementados y verificados: 193 pruebas backend y 21 de aceptación, lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-20-faculty-name-and-preview-keyboard.md).
+
 Flujo T1: navegación persistente de seis pasos, pie común, regreso desde matriz a Contenido y barra de acciones de anexos; conserva borrador entre Información general/Contenido y confirma salidas de otros editores. Revisado para commit local autorizado el 2026-10-24. [Reporte](docs/reports/2026-10-23-18-persistent-plan-wizard.md).
 
 Revisión de entrega: documentos institucionales, acciones de bandeja y mejoras de notificaciones verificados para cierre en commits locales. [Reporte](docs/reports/2026-10-23-17-staged-review-and-commits.md).

@@ -28,7 +28,7 @@ export function WorkPlans({
   const [result, setResult] = useState<PlanPage | null>(null)
   const [selected, setSelected] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false)
-  const [filters, setFilters] = useState({ groupId: '', periodId: '', query: '', page: 0 })
+  const [filters, setFilters] = useState({ groupId: '', periodId: '', query: '', sort: 'UPDATED_DESC', page: 0 })
   const [search, setSearch] = useState('')
   const [creationDirty, setCreationDirty] = useState(false); const [creationKey, setCreationKey] = useState(0)
   const creationChanged = useCallback((dirty: boolean) => { setCreationDirty(dirty) }, [])
@@ -61,7 +61,7 @@ export function WorkPlans({
 
   useEffect(() => {
     let cancelled = false
-    const query = new URLSearchParams({ page: String(filters.page), query: filters.query })
+    const query = new URLSearchParams({ page: String(filters.page), query: filters.query, sort: filters.sort })
     if (filters.groupId) query.set('groupId', filters.groupId)
     if (filters.periodId) query.set('periodId', filters.periodId)
     Promise.all([api<PlanOptions>('/work-plans/options'), api<PlanPage>('/work-plans?' + query)]).then(([o,p]) => {
@@ -152,10 +152,11 @@ export function WorkPlans({
             <h2 ref={listHeading} tabIndex={-1}>Mis documentos</h2>
           </div>
         </div>
-        <form className="filter-toolbar" onSubmit={e => { e.preventDefault(); setLoading(true); setFilters(f => ({ ...f, query: search, page: 0 })) }}>
+        <form className="filter-toolbar document-list-filters" onSubmit={e => { e.preventDefault(); setLoading(true); setFilters(f => ({ ...f, query: search, page: 0 })) }}>
           <label>Buscar por título<input maxLength={200} placeholder="Escriba palabras del título…" value={search} onChange={e => setSearch(e.target.value)} /></label>
           <label>Filtrar por grupo<select aria-label="Filtrar por grupo" value={filters.groupId} onChange={e => { setLoading(true); setFilters(f => ({ ...f, groupId: e.target.value, page: 0 })) }}><option value="">Todos mis grupos</option>{options?.groups.map(g => <option value={g.id} key={g.id}>{g.name}</option>)}</select></label>
           <label>Filtrar por período<select aria-label="Filtrar por período" value={filters.periodId} onChange={e => { setLoading(true); setFilters(f => ({ ...f, periodId: e.target.value, page: 0 })) }}><option value="">Todos los períodos</option>{options?.periods.map(p => <option value={p.id} key={p.id}>{p.name}{p.status === 'CLOSED' ? ' · Cerrado' : ''}</option>)}</select></label>
+          <label>Ordenar por<select aria-label="Ordenar por" value={filters.sort} onChange={e => { setLoading(true); setFilters(f => ({ ...f, sort: e.target.value, page: 0 })) }}><option value="UPDATED_DESC">Actualizados recientemente</option><option value="UPDATED_ASC">Actualizados hace más tiempo</option><option value="TITLE_ASC">Título: A–Z</option><option value="TITLE_DESC">Título: Z–A</option></select></label>
           <button><Icon name="refresh" size={16} />Buscar</button>
         </form>
         {options?.periods.find(p => p.id === filters.periodId)?.status === 'CLOSED' && <div className="notice"><p>Período cerrado: los documentos se conservan en solo lectura. El ZIP contiene únicamente los documentos que tiene autorizados en este período.</p><button type="button" className="secondary" disabled={busy} onClick={async () => { setBusy(true); try { await download('/periods/' + filters.periodId + '/archive', 'historial-utaped-' + filters.periodId + '.zip') } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo descargar el archivo.') } finally { setBusy(false) } }}><Icon name="document" size={16} />Descargar archivo del período</button></div>}

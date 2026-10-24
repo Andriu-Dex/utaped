@@ -10,6 +10,7 @@ import { SignaturePreparation } from './SignaturePreparation'
 import { AuthorSigning } from './AuthorSigning'
 import { Icon } from '../shared/Icon'
 import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
+import { navigatePdfWithArrow } from '../shared/pdf-keyboard'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
@@ -24,6 +25,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
   const [loadedImage, setLoadedImage] = useState(''), [imageAttempt, setImageAttempt] = useState(0)
   const label = documentType === 'T1' ? 'Plan' : 'Informe'
   const automaticPreview = mode === 'preview'
+  const signingNeedsPreview = mode === 'sign' && !!plan?.editable && plan.documentState === 'DRAFT' && (!selected?.current || !ready?.ready)
   const blockerSections: Record<string, 'general' | 'content' | 'matrix' | 'attachments'> = {
     'Información general': 'general', 'Contenido': 'content', 'Actividades y matriz': 'matrix', 'Anexos': 'attachments',
   }
@@ -68,25 +70,45 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     {error && <Toast message={error} onDismiss={() => setError('')} />}
     <FormalSubmission targetDocId={targetDocId} onDirtyChange={setFormalDirty} />
     <DocumentSections key={targetDocId + reload} targetDocId={targetDocId} disabled={busy} onDirtyChange={setSectionsDirty} onSaved={() => setReload(n => n + 1)} />
-    {automaticPreview ? <>
+    {mode === 'sign' ? <>
+      {busy && <p role="status">Consultando documento preparado…</p>}
+      {!busy && !ready && <button type="button" className="secondary" onClick={() => setReload(n => n + 1)}>Reintentar consulta del documento</button>}
+      {!busy && signingNeedsPreview && <section className="notice" aria-label="Previsualización pendiente"><h2>Actualice la previsualización antes de firmar</h2><p>Revise el contenido actual en el paso 5. La firma utilizará ese mismo documento preparado.</p>{onPrevious && <button type="button" className="secondary" disabled={signingBusy || sectionsDirty || formalDirty || signingDirty} onClick={() => void navigate(onPrevious)}>Volver a previsualización</button>}</section>}
+      {!busy && plan && !plan.editable && !selected && <p role="status">Este documento no tiene un artefacto preparado disponible para firmar.</p>}
+    </> : automaticPreview ? <>
       {busy && <p role="status">Preparando documento…</p>}
       {!busy && (!ready || (ready.ready && !selected && plan?.editable)) && <button type="button" className="secondary" onClick={() => setReload(n => n + 1)}>Reintentar previsualización</button>}
       {!busy && ready && !ready.ready && <section className="card" aria-label="Datos pendientes"><h2>Complete los datos pendientes</h2><ul>{ready.blockers.map((blocker, index) => <li key={index}><strong>{blocker.section}:</strong> {blocker.message}{onResolveSection && blockerSections[blocker.section] && <button type="button" className="link" disabled={formalDirty || sectionsDirty} onClick={() => void navigate(() => onResolveSection(blockerSections[blocker.section]))}>Ir a {blocker.section.toLowerCase()}</button>}</li>)}</ul></section>}
       {!busy && !error && plan && !plan.editable && !selected && <p role="status">Este documento de solo lectura todavía no tiene una previsualización conservada.</p>}
     </> : !ready ? <p role="status">Consultando preparación…</p> : <div className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PREPARACIÓN DOCUMENTAL</span><h2>Revisión del contenido</h2></div></div>{ready.ready ? <p role="status">Contenido completo para previsualizar.</p> : <ul>{ready.blockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}{plan?.editable ? <button disabled={busy || formalDirty || sectionsDirty || !ready.ready} onClick={() => void generate()}>{busy ? 'Generando PDF…' : 'Generar previsualización'}</button> : <p className="field-help">Documento de solo lectura. Consulte su artefacto conservado y las rondas de revisión.</p>}</div>}
-    {artifacts.length > (automaticPreview ? 1 : 0) && <label>Previsualizaciones guardadas<select value={selected?.id ?? ''} disabled={busy} onChange={e => { setSelected(artifacts.find(a => a.id === e.target.value) ?? null); setPage(0); setImageError(false) }}>{artifacts.map(a => <option value={a.id} key={a.id}>{new Date(a.createdAt).toLocaleString('es-EC')} · {a.pageCount} páginas · {a.current ? 'Contenido actual' : 'Artefacto conservado'}</option>)}</select></label>}
-    {selected && <div className="card">
+    {selected && <div className="card document-keyboard-viewer" role="region" aria-label="Previsualización del documento" tabIndex={automaticPreview ? 0 : undefined} aria-keyshortcuts={automaticPreview ? 'ArrowLeft ArrowRight' : undefined} aria-describedby={automaticPreview ? 'pdf-keyboard-help' : undefined} onKeyDown={event => { if (automaticPreview) navigatePdfWithArrow(event, page, selected.pages.length, busy || (!imageError && loadedImage !== selected.id + '-' + page), target => { setPage(target); setImageError(false); setImageAttempt(0) }) }}>
+      {automaticPreview && <p id="pdf-keyboard-help" className="field-help">Con el visor seleccionado, usa ← → para cambiar de página.</p>}
       <div className="review-summary">
-        <span className={'status-badge ' + (selected.current ? 'active' : '')}>
-          {selected.current ? 'Coincide con el contenido actual' : 'Artefacto conservado'}
-        </span>
-        <span className="muted">
-          Espacios de firma: {selected.signatureSlots.map(s => s.label + ', página ' + s.pageNumber).join('; ')}.
-        </span>
+        <div className="review-summary-meta">
+          <span className={'status-badge ' + (selected.current ? 'active' : '')}>
+            {selected.current ? 'Coincide con el contenido actual' : 'Artefacto conservado'}
+          </span>
+          <span className="muted">
+            Espacios de firma: {selected.signatureSlots.map(s => s.label + ', página ' + s.pageNumber).join('; ')}.
+          </span>
+        </div>
+        {artifacts.length > (automaticPreview ? 1 : 0) && (
+          <label className="review-artifact-picker">
+            <span className="sr-only">Previsualizaciones guardadas</span>
+            <select
+              aria-label="Previsualizaciones guardadas"
+              value={selected.id}
+              disabled={busy}
+              onChange={e => { setSelected(artifacts.find(a => a.id === e.target.value) ?? null); setPage(0); setImageError(false) }}
+            >
+              {artifacts.map(a => <option value={a.id} key={a.id}>{new Date(a.createdAt).toLocaleString('es-EC')} · {a.pageCount} págs. · {a.current ? 'Contenido actual' : 'Artefacto conservado'}</option>)}
+            </select>
+          </label>
+        )}
       </div>
       {!selected.current && <p className="field-help">Artefacto conservado de una preparación anterior. Consulte las rondas para ver los bytes firmados.</p>}
-      {mode !== 'preview' && <SignaturePreparation key={targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} />}
-      {mode !== 'preview' && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} onDirtyChange={setSigningDirty} onBusyChange={setSigningBusy} onSigned={() => { setReload(n => n + 1) }} />}
+      {mode !== 'preview' && !signingNeedsPreview && !busy && ready && <SignaturePreparation key={targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} />}
+      {mode !== 'preview' && !signingNeedsPreview && !busy && ready && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} disabled={sectionsDirty || formalDirty} onDirtyChange={setSigningDirty} onBusyChange={setSigningBusy} onSigned={() => { setReload(n => n + 1) }} />}
       <DocumentPageNavigator key={selected.id} page={page} pageCount={selected.pageCount} disabled={busy || (!imageError && loadedImage !== selected.id + '-' + page)} onChange={target => { setPage(target); setImageError(false);setImageAttempt(0) }} references={[...selected.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })), ...selected.pages.filter((item, index) => item.kind === 'ANNEX' && selected.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' }))]} />
       {imageError && <><Toast message="No se pudo cargar la página. Pulse Reintentar página." /><button type="button" className="secondary" onClick={() => { setImageError(false);setLoadedImage('');setImageAttempt(n => n + 1) }}>Reintentar página</button></>}
       {!imageError && loadedImage !== selected.id + '-' + page && <p role="status" className="field-help">Cargando página {page + 1}…</p>}

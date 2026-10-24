@@ -62,7 +62,7 @@ class WorkPlanIntegrationTests {
         jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Current',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
     }
     String createBody(UUID key) { return "{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"title\":\"Plan inicial\"}"; }
-    String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"FISEI — Universidad Técnica de Ambato\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
+    String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"Facultad de Ingeniería en Sistemas, Electrónica e Industrial\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
     @Test void draftPersistenceIsolationIdempotencyAndConcurrency() throws Exception {
         openPeriod();Browser b=new Browser();b.login("user@example.invalid",PASSWORD);
         UUID key=UUID.randomUUID();String body=createBody(key);
@@ -81,6 +81,26 @@ class WorkPlanIntegrationTests {
         assertEquals("1.0",JsonPath.read(persisted.body(),"$.formalVersion"));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='WORK_PLAN_DRAFT_SAVED'",Integer.class));
         assertEquals(1,JsonPath.<Integer>read(b.request("GET","/api/work-plans?query=corregido&size=1",null,false).body(),"$.total"));
+    }
+    @Test void documentOrderingIsValidatedAndAppliedBeforePagination() throws Exception {
+        openPeriod();Browser browser=new Browser();browser.login("user@example.invalid",PASSWORD);
+        var ids=new java.util.ArrayList<String>();
+        for(String title:java.util.List.of("Orden Gamma","Orden Alpha","Orden Beta")) {
+            String id=JsonPath.read(browser.request("POST","/api/work-plans",createBody(UUID.randomUUID()),true).body(),"$.id");ids.add(id);
+            jdbc.update("UPDATE work_plan SET title=? WHERE id=?::uuid",title,id);
+        }
+        jdbc.update("UPDATE work_plan SET updated_at='2026-01-01'::timestamptz WHERE id=?::uuid",ids.get(0));
+        jdbc.update("UPDATE work_plan SET updated_at='2026-01-02'::timestamptz WHERE id=?::uuid",ids.get(1));
+        jdbc.update("UPDATE work_plan SET updated_at='2026-01-03'::timestamptz WHERE id=?::uuid",ids.get(2));
+        String base="/api/work-plans?size=1&query=Orden&groupId="+group+"&periodId="+period;
+        assertEquals(ids.get(1),JsonPath.read(browser.request("GET",base+"&sort=TITLE_ASC",null,false).body(),"$.items[0].id"));
+        assertEquals(ids.get(2),JsonPath.read(browser.request("GET",base+"&sort=TITLE_ASC&page=1",null,false).body(),"$.items[0].id"));
+        assertEquals(ids.get(0),JsonPath.read(browser.request("GET",base+"&sort=TITLE_DESC",null,false).body(),"$.items[0].id"));
+        assertEquals(ids.get(0),JsonPath.read(browser.request("GET",base+"&sort=UPDATED_ASC",null,false).body(),"$.items[0].id"));
+        assertEquals(ids.get(2),JsonPath.read(browser.request("GET",base+"&sort=UPDATED_DESC",null,false).body(),"$.items[0].id"));
+        assertEquals(400,browser.request("GET",base+"&sort=INVALID",null,false).statusCode());
+        Browser outsiderBrowser=new Browser();outsiderBrowser.login("other@example.invalid",PASSWORD);
+        assertEquals(0,JsonPath.<Integer>read(outsiderBrowser.request("GET",base+"&sort=TITLE_ASC",null,false).body(),"$.total"));
     }
     @Test void authorizationWindowAndValidation() throws Exception {
         openPeriod(); Browser b=new Browser();b.login("user@example.invalid",PASSWORD);

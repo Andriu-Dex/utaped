@@ -81,7 +81,7 @@ public class ExecutionReportService {
         jdbc.update("""
             INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,document_type,base_plan_id,justification,objective)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'T3',?,?,?)
-            """,id,actor.id(),actor.id(),parent.scopeId(),parent.groupId(),parent.periodId(),UUID.randomUUID(),title,parent.title(),LocalDate.now(zone),parent.institutionalUnit(),parent.career(),base,parent.justification(),parent.objective());
+            """,id,actor.id(),actor.id(),parent.scopeId(),parent.groupId(),parent.periodId(),UUID.randomUUID(),title,parent.title(),LocalDate.now(zone),ec.edu.uta.utaped.institution.InstitutionalNames.forNewDocument(parent.institutionalUnit()),parent.career(),base,parent.justification(),parent.objective());
         jdbc.update("UPDATE work_plan SET institutional_unit_type=? WHERE id=?",parent.institutionalUnitType(),id);
         jdbc.update("INSERT INTO work_plan_matrix(work_plan_id,source,activities) SELECT ?,source,activities FROM work_plan_matrix WHERE work_plan_id=?",id,base);
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM document_access WHERE work_plan_id=?",id,actor.id(),base);
