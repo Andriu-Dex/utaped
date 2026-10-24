@@ -1,5 +1,15 @@
 # Reportes
 
+- [Revisión y commits de cambios acumulados](2026-10-23-17-staged-review-and-commits.md).
+
+- [Descarte y archivo visibles en documentos](2026-10-23-16-document-list-lifecycle-actions.md).
+
+- [Fidelidad documental y revisión de cambios](2026-10-23-15-institutional-document-fidelity-review.md).
+
+- [Comparación del encabezado con el ejemplo institucional](2026-10-23-14-example-header-comparison.md).
+
+- [Valor de fecha y etiqueta de unidad](2026-10-23-13-header-date-value-and-unit-label.md).
+
 - [Celdas de fecha del encabezado y commits](2026-10-23-12-header-date-cells-and-commits.md).
 
 - [Catálogo y procedencia institucional](2026-10-23-11-institutional-provenance-catalog.md).

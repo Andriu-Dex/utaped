@@ -1,5 +1,13 @@
 # Estado de implementación productiva
 
+Revisión de entrega: documentos institucionales, acciones de bandeja y mejoras de notificaciones verificados para cierre en commits locales. [Reporte](docs/reports/2026-10-23-17-staged-review-and-commits.md).
+
+Acciones documentales visibles: descarte de borradores y archivo de aprobados desde la tabla, modal con motivo, control de concurrencia y permisos derivados del servidor. [Reporte](docs/reports/2026-10-23-16-document-list-lifecycle-actions.md).
+
+Fidelidad documental: revisión de staged/worktree, encabezado institucional, índices con páginas y enlaces reales, matriz T1 completa y previsualización nítida. T1/T2 engine12 y T3 engine8 para composiciones nuevas. [Reporte](docs/reports/2026-10-23-15-institutional-document-fidelity-review.md).
+
+Encabezado T1/T2: etiqueta de fecha a la izquierda y valor a la derecha; portada con un único tipo de unidad según procedencia, engine10. [Reporte](docs/reports/2026-10-23-13-header-date-value-and-unit-label.md).
+
 Encabezado T1/T2: Fecha de elaboración conserva dos celdas y divisor vertical según el original; engine9 para composición nueva, sin reescribir firmados. [Reporte](docs/reports/2026-10-23-12-header-date-cells-and-commits.md).
 
 Procedencia institucional: catálogo académico/administrativo, carreras y ámbitos asociados, selección de catálogo e información heredada bloqueada en Planes/Informes; V34 preserva registros y artefactos. [Reporte](docs/reports/2026-10-23-11-institutional-provenance-catalog.md).

@@ -1,5 +1,11 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-23): mostrar en la tabla documental «Descartar borrador» y «Archivar» para aprobados, con modal de confirmación, motivo y permisos del responsable. Mantener trazabilidad, artefactos firmados y restricciones de revisión; no introducir borrado físico.
+
+CONFIRMADO-PROYECTO (2026-10-23): contrastar la composición completa con los templates oficiales y el ejemplo firmado: encabezado con etiquetas/valores separados, índices dinámicos y matriz con todas sus líneas. Conservar los datos propios de cada documento, formato A4 y bytes firmados.
+
+CONFIRMADO-PROYECTO (2026-10-23): en la fila de fecha, etiqueta a la izquierda y fecha a la derecha. La portada muestra únicamente Unidad académica o Unidad administrativa según el documento, no ambas alternativas.
+
 CONFIRMADO-PROYECTO (2026-10-23): conservar en el encabezado la celda de Fecha de elaboración y la celda gris independiente a su derecha, con división vertical conforme al documento original.
 
 CONFIRMADO-PROYECTO (2026-10-23): completar catálogo de unidades académicas/administrativas y selección por opciones administradas. La procedencia del ámbito o del Plan base se hereda y se muestra bloqueada; el encabezado refleja unidad y tipo correspondientes.
