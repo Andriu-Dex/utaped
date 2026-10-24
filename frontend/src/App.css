@@ -709,3 +709,27 @@ tbody tr.row-selected { background: var(--blue-100) !important; }
 }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @media print { .sidebar, .topbar, .workspace-footer, .skip-link { display: none; } .workspace main { padding: 0; } }
+
+/* Document lifecycle actions remain discoverable beside Edit/View. */
+.documents-table .doc-col-action { width: 104px; min-width: 96px; text-align: center; }
+.document-row-actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: nowrap; }
+.document-row-actions .document-discard-action {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 25%, var(--border));
+}
+.document-row-actions .document-discard-action:hover:not(:disabled) {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #cf1322;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.action-form-dialog.document-archive-dialog[open] { width: min(600px, calc(100vw - 64px)); }
+.document-archive-dialog .action-form-heading h2 { margin: 0; font-size: 1.35rem; }
+.document-archive-title { margin-top: 0; display: flex; gap: 10px; align-items: flex-start; overflow-wrap: anywhere; }
+.document-archive-title svg { flex-shrink: 0; margin-top: 4px; }
+.document-archive-dialog form { margin-bottom: 0; }
+
+.document-archive-dialog .document-discard-confirm { background: var(--danger); border-color: var(--danger); color: #fff; }
+:root[data-theme='dark'] .document-row-actions .document-discard-action { color: #ff7875; border-color: rgba(255, 77, 79, 0.3); }
+:root[data-theme='dark'] .document-row-actions .document-discard-action:hover:not(:disabled) { background: rgba(255, 77, 79, 0.15); border-color: rgba(255, 77, 79, 0.45); color: #ffa39e; }

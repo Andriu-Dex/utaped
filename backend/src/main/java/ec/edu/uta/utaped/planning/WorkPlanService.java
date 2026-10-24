@@ -60,11 +60,14 @@ public class WorkPlanService {
         return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
             &&(!enforceWindow||within(rs.getObject(!rs.getString("document_type").equals("T1")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(!rs.getString("document_type").equals("T1")?"ends_on":"preparation_effective_ends_on",LocalDate.class)));
     }
+    private boolean canManage(ResultSet rs) throws SQLException {
+        return rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE");
+    }
     private Plan map(ResultSet rs,int index) throws SQLException {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
             rs.getObject("period_id",UUID.class),rs.getString("period_name"),rs.getString("title"),rs.getString("institutional_unit"),rs.getString("career"),rs.getString("justification"),rs.getString("objective"),
             rs.getString("document_state"),rs.getString("formal_version"),rs.getLong("row_version"),rs.getObject("preparation_date",LocalDate.class),
-            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE"),rs.getString("institutional_unit_type"));
+            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),canManage(rs),rs.getString("institutional_unit_type"));
     }
     public Options options(String email) {
         var actor=accounts.current(email);
@@ -104,7 +107,7 @@ public class WorkPlanService {
         String filters=" AND (?::uuid IS NULL OR w.group_id=?::uuid) AND (?::uuid IS NULL OR w.period_id=?::uuid) AND position(lower(?) in lower(w.title))>0";
         Object[] args={actor.id(),groupId,groupId,periodId,periodId,query};
         long total=jdbc.queryForObject("SELECT count(*) FROM ("+SELECT+filters+") plans",Long.class,args);
-        var items=jdbc.query(SELECT+filters+" ORDER BY w.updated_at DESC,w.id LIMIT ? OFFSET ?",(rs,n)->new Summary(rs.getObject("id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("document_state"),rs.getString("formal_version"),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getString("document_type"),rs.getObject("archived_at",OffsetDateTime.class)),actor.id(),groupId,groupId,periodId,periodId,query,size,(long)page*size);
+        var items=jdbc.query(SELECT+filters+" ORDER BY w.updated_at DESC,w.id LIMIT ? OFFSET ?",(rs,n)->new Summary(rs.getObject("id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("document_state"),rs.getString("formal_version"),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getString("document_type"),rs.getObject("archived_at",OffsetDateTime.class),canManage(rs),rs.getLong("row_version")),actor.id(),groupId,groupId,periodId,periodId,query,size,(long)page*size);
         return new Page(items,total,page,size);
     }
     @Transactional public Plan create(String email,Create data) {

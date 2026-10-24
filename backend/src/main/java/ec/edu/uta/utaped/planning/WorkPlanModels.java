@@ -30,7 +30,7 @@ public final class WorkPlanModels {
         }
     }
     public record Summary(UUID id,String title,String groupName,String periodName,String documentState,
-        String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt) {}
+        String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt,boolean canManage,long rowVersion) {}
     public record Page(List<Summary> items,long total,int page,int size) {}
     public record GroupOption(UUID id,String name) {}
     public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}

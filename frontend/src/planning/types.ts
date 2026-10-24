@@ -13,4 +13,4 @@ export interface PlanOptions {
   scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean; suggestedTitle: string; institutionalUnit?: string; institutionalUnitType?: string }[]
   defaultJustification?: string
 }
-export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt'>[]; total: number; page: number; size: number }
+export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt' | 'canManage' | 'rowVersion'>[]; total: number; page: number; size: number }

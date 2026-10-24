@@ -23,3 +23,9 @@ Sin pertenencia activa, GET/PUT devuelven 404 y POST 403. Fuera de ventana de el
 Configuración: `PLANNING_SINGLE_PLAN_PER_SCOPE=false` provisional mientras Q-002 esté pendiente; `true` limita un Plan por docente/grupo/período. `PLANNING_ENFORCE_PREPARATION_WINDOW=true`; `PLANNING_TIME_ZONE=America/Guayaquil`. No se interpreta esta configuración como aprobación institucional de reglas pendientes.
 
 Persistencia Flyway V4; auditoría `WORK_PLAN_CREATED` y `WORK_PLAN_DRAFT_SAVED`, sin copiar contenido documental al evento. No hay eliminación, firma, artefactos PDF, envío a revisión, actividades ni T2 en esta entrega.
+
+## Acciones de ciclo desde la lista — 23/10/2026
+
+Cada resumen de `GET /work-plans` incluye `canManage` y `rowVersion`. El permiso procede de la misma comprobación utilizada por el detalle; la interfaz no lo infiere de `editable` ni del nombre del usuario.
+
+La tabla permite `Descartar borrador` en DRAFT y `Archivar` en APPROVED, únicamente con permiso de gestión y sin archivo previo. No ofrece estas acciones en IN_REVIEW. Ambas reutilizan `POST /work-plans/{targetDocId}/archive`, con `rowVersion` y `reason` obligatorio. El servidor conserva autorización, conflictos y restricciones por Informes asociados; no se añade una ruta de borrado físico.
