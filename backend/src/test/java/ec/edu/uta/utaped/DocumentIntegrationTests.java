@@ -135,6 +135,65 @@ class DocumentIntegrationTests {
         }
     }
     AttachmentModels.State upload(String title,UUID key,byte[] bytes,long version) { return attachments.upload(id,email,version,key,title,new MockMultipartFile("file","../../original.pdf","application/pdf",bytes)); }
+    @Test void nativeLiteralMarkerTextIsPreservedWithoutChangingActualPageNumbersOrSignatureSlots() throws Exception {
+        String literal="Texto literal @@PN@@ y @@SIGTOP@@ y @@SIGBOTTOM@@ del documento de prueba.";
+        complete(literal+"\n@@PN@@\n@@SIGTOP@@\n@@SIGBOTTOM@@",1);
+        attachments.settings(id,email,new AttachmentModels.Settings(version(),false,false));
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] bytes=artifacts.content(id,artifact.id(),email);
+        try(var pdf=Loader.loadPDF(bytes)) {
+            String text=new PDFTextStripper().getText(pdf);
+            assertTrue(text.replaceAll("\\s+"," ").contains(literal),text);
+            for(String token:List.of("@@PN@@","@@SIGTOP@@","@@SIGBOTTOM@@")) assertEquals(2,text.split(java.util.regex.Pattern.quote(token),-1).length-1,"Conservar tanto el literal dentro del párrafo como el de una línea propia.");
+            var reader=new PDFTextStripper();
+            for(int i=0;i<pdf.getNumberOfPages();i++) {
+                reader.setStartPage(i+1);reader.setEndPage(i+1);
+                assertTrue(reader.getText(pdf).strip().endsWith(String.valueOf(i+1)),"La numeración real continúa al final de la página "+(i+1));
+                final int pageNumber=i+1;boolean[] footerNumberFound={false};
+                var footerReader=new PDFTextStripper() {
+                    @Override protected void writeString(String value,List<org.apache.pdfbox.text.TextPosition> positions) throws java.io.IOException {
+                        if(value.strip().endsWith(String.valueOf(pageNumber))&&!positions.isEmpty()
+                            &&positions.getLast().getYDirAdj()>pdf.getPage(pageNumber-1).getMediaBox().getHeight()-80) {
+                            footerNumberFound[0]=true;
+                        }
+                        super.writeString(value,positions);
+                    }
+                };
+                footerReader.setStartPage(pageNumber);footerReader.setEndPage(pageNumber);footerReader.getText(pdf);
+                assertTrue(footerNumberFound[0],"Número visible en el pie de la página "+pageNumber);
+            }
+            for(var slot:artifact.signatureSlots()) {
+                assertEquals(slot.pageIndex()+1,slot.pageNumber());
+                assertTrue(slot.bounds().width()>60&&slot.bounds().height()>30);
+                assertTrue(slot.pageIndex()>=0&&slot.pageIndex()<pdf.getNumberOfPages());
+            }
+        }
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-native-literals.pdf"),bytes);
+    }
+    @Test void annexPagesKeepTheirLiteralContentAndRenderingEvenWhenItLooksLikeTemplateMarkers() throws Exception {
+        complete("Conservar íntegramente el documento adjunto.",1);
+        attachments.settings(id,email,new AttachmentModels.Settings(version(),true,false));
+        byte[] original;
+        try(var source=Loader.loadPDF(pdf(1,false,false))) {
+            try(var stream=new PDPageContentStream(source,source.getPage(0),PDPageContentStream.AppendMode.APPEND,true,true)) {
+                stream.beginText();stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA),12);stream.newLineAtOffset(60,710);
+                stream.showText("Contenido literal: @@PN@@ @@SIGTOP@@ @@SIGBOTTOM@@");stream.endText();
+            }
+            var output=new ByteArrayOutputStream();source.save(output);original=output.toByteArray();
+        }
+        var uploaded=upload("Documento con texto literal",UUID.randomUUID(),original,version()).items().getFirst();
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        int annex=artifact.pages().stream().filter(page->uploaded.id().equals(page.attachmentId())).findFirst().orElseThrow().index();
+        try(var source=Loader.loadPDF(original);var composed=Loader.loadPDF(artifacts.content(id,artifact.id(),email))) {
+            var text=new PDFTextStripper();text.setStartPage(annex+1);text.setEndPage(annex+1);
+            assertTrue(text.getText(composed).contains("@@PN@@ @@SIGTOP@@ @@SIGBOTTOM@@"));
+            var before=new org.apache.pdfbox.rendering.PDFRenderer(source).renderImage(0,0.7f);
+            var after=new org.apache.pdfbox.rendering.PDFRenderer(composed).renderImage(annex,0.7f);
+            assertEquals(before.getWidth(),after.getWidth());assertEquals(before.getHeight(),after.getHeight());
+            assertArrayEquals(before.getRGB(0,0,before.getWidth(),before.getHeight(),null,0,before.getWidth()),after.getRGB(0,0,after.getWidth(),after.getHeight(),null,0,after.getWidth()));
+        }
+        assertArrayEquals(original,attachments.content(id,uploaded.id(),email));
+    }
     @Test void attachmentValidationOrderingIsolationIdempotenceAndConcurrency() throws Exception {
         assertFalse(artifacts.readiness(id,email).ready());
         attachments.settings(id,email,new AttachmentModels.Settings(version(),true,false));

@@ -8,6 +8,11 @@ import ec.edu.uta.utaped.planning.DocumentStructures;
 /** Applies only explicitly published structural versions; historical/default packages retain their original layout. */
 final class StructuredSections {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private static boolean numbered(String label) { return !List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS").contains(label); }
+    private static boolean emphasized(Element paragraph) {
+        return java.util.stream.Stream.concat(all(paragraph,"b").stream(),all(paragraph,"i").stream())
+            .anyMatch(value->!List.of("0","false","off").contains(value.getAttributeNS(W,"val")));
+    }
     static boolean changed(ArtifactModels.Snapshot s) { return s.structure()!=null&&s.structure().revision()>0; }
     static List<String> sections(ArtifactModels.Snapshot s,List<String> original) {
         if(!changed(s)) return original;
@@ -32,7 +37,9 @@ final class StructuredSections {
         }
         if(groups.isEmpty()||finalSection==null)throw new IllegalStateException("No se identificó la estructura institucional.");
         var heading=groups.values().iterator().next().getFirst();Element plain=null;
-        for(var block:groups.values()) for(var n:block) if(n.getLocalName().equals("p")&&all(n,"bookmarkStart").isEmpty()&&!all(n,"t").isEmpty()) {plain=n;break;}
+        // Select body typography once. Later captions/source notes may be smaller,
+        // bold or italic and must not become the style of an additional section.
+        bodyStyle: for(var block:groups.values()) for(var n:block) if(n.getLocalName().equals("p")&&all(n,"bookmarkStart").isEmpty()&&!all(n,"t").isEmpty()&&!emphasized(n)) {plain=n;break bodyStyle;}
         if(plain==null)plain=heading;
         var ordered=new LinkedHashMap<String,List<Element>>();
         for(var section:s.structure().sections()) {
@@ -48,7 +55,7 @@ final class StructuredSections {
         for(int i=0;i<prefix.size();i++) if(isContentIndex(prefix.get(i))) { if(indexPrototype==null) {indexPrototype=prefix.get(i);insert=i;} }
         if(indexPrototype!=null) {
             prefix.removeIf(StructuredSections::isContentIndex);
-            int offset=0;for(var label:ordered.keySet()) {prefix.add(insert+offset,InstitutionalIndex.entry(indexPrototype,(offset+1)+". "+label,label,numbers));offset++;}
+            int offset=0,ordinal=1;for(var label:ordered.keySet()) {prefix.add(insert+offset,InstitutionalIndex.entry(indexPrototype,(numbered(label)?ordinal+++". ":"")+label,label,numbers));offset++;}
         }
         // A renamed published section also changes the table index destination, not its caption.
         for(int i=0;i<prefix.size();i++) {
@@ -61,7 +68,7 @@ final class StructuredSections {
         for(var n:children(body,null))body.removeChild(n);for(var n:prefix)body.appendChild(n);
         int ordinal=1,bookmark=2000,index=0;
         for(var item:ordered.entrySet()) {
-            var block=item.getValue();var h=block.getFirst();text(h,ordinal+++". "+item.getKey());
+            var block=item.getValue();var h=block.getFirst();text(h,(numbered(item.getKey())?ordinal+++". ":"")+item.getKey());
             for(var n:block) { removeAll(n,"bookmarkStart");removeAll(n,"bookmarkEnd");removeAll(n,"sectPr"); }
             removeAll(h,"numPr");var numbering=property(h,"numPr");var noNumber=element(doc,"numId");noNumber.setAttributeNS(W,"w:val","0");numbering.appendChild(noNumber);
             removeAll(h,"pageBreakBefore");if(index==0||item.getKey().equals("FIRMAS DE RESPONSABILIDAD"))property(h,"pageBreakBefore");
@@ -76,6 +83,12 @@ final class StructuredSections {
                 var type=children(sp,"type").stream().findFirst().orElseGet(()->{var e=element(doc,"type");sp.insertBefore(e,sp.getFirstChild());return e;});type.setAttributeNS(W,"w:val","continuous");pp.appendChild(sp);p.appendChild(pp);body.appendChild(p);
             }
         }
+        // The final section starts the history block. A default next-page section
+        // needlessly separated it from a short signatures table in the same portrait layout.
+        var finalTypes=children(finalSection,"type");Element finalType;
+        if(finalTypes.isEmpty()) { finalType=element(doc,"type");finalSection.insertBefore(finalType,finalSection.getFirstChild()); }
+        else finalType=finalTypes.getFirst();
+        finalType.setAttributeNS(W,"w:val","continuous");
         body.appendChild(finalSection);
     }
 }

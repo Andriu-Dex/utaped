@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine15"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine16"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -68,6 +68,9 @@ public class T1Template {
         for(var indent:all(table,"tblInd")) indent.setAttributeNS(W,"w:w","0");
     }
     public byte[] compose(Snapshot s,Map<String,Integer> indexPages) {
+        return compose(s,indexPages,CompositionMarkers.forSnapshot(s));
+    }
+    byte[] compose(Snapshot s,Map<String,Integer> indexPages,CompositionMarkers markers) {
         try {
             var input=new ZipInputStream(new ByteArrayInputStream(reference));var buffer=new ByteArrayOutputStream();var out=new ZipOutputStream(buffer);
             for(ZipEntry entry;(entry=input.getNextEntry())!=null;) {
@@ -75,9 +78,9 @@ public class T1Template {
                 if(entry.getName().equals("word/document.xml") || entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,indexPages);StructuredSections.apply(doc,s,indexPages);InstitutionalIndex.finish(doc); }
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,indexPages,markers);StructuredSections.apply(doc,s,indexPages);InstitutionalIndex.finish(doc); }
                     else if(entry.getName().startsWith("word/header")) header(doc,s);
-                    else footer(doc);
+                    else footer(doc,markers);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
                     var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
@@ -86,7 +89,7 @@ public class T1Template {
             out.close();input.close();return buffer.toByteArray();
         } catch(Exception e) { throw new IllegalStateException("No se pudo componer la plantilla T1.",e); }
     }
-    private void body(Document doc,Snapshot s,Map<String,Integer> pageNumbers) {
+    private void body(Document doc,Snapshot s,Map<String,Integer> pageNumbers,CompositionMarkers compositionMarkers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);
         // Fixed source-node positions are a versioned template binding, never PDF page numbers.
         text(source.get(4),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());
@@ -183,7 +186,7 @@ public class T1Template {
         property(source.get(54),"pageBreakBefore");keepWithNext(source.get(54));result.add(source.get(54));result.add(source.get(55));
         var signatures=source.get(56);var signatureRows=children(signatures,"tr");for(int i=2;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
         var signatureCells=children(signatureRows.get(1),"tc");cell(signatureCells.get(0),"Elaborado por:");cell(signatureCells.get(1),s.plan().teacherName());cell(signatureCells.get(2),s.resolvedAuthors().getFirst().position());
-        cell(signatureCells.get(3),"@@SIGTOP@@\n@@SIGBOTTOM@@");
+        cell(signatureCells.get(3),compositionMarkers.top("")+"\n"+compositionMarkers.bottom(""));
         var markers=children(signatureCells.get(3),"p");
         for(int i=0;i<markers.size();i++) {
             var p=markers.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");
@@ -196,7 +199,7 @@ public class T1Template {
         for(int authorIndex=1;authorIndex<s.resolvedAuthors().size();authorIndex++) {
             var author=s.resolvedAuthors().get(authorIndex);var row=(Element)signatureRows.get(1).cloneNode(true);var cells=children(row,"tc");
             cell(cells.get(1),author.name());cell(cells.get(2),author.position());
-            for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace("@@SIGTOP@@","@@SIGTOPA"+authorIndex+"@@").replace("@@SIGBOTTOM@@","@@SIGBOTTOMA"+authorIndex+"@@"));
+            for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace(compositionMarkers.top(""),compositionMarkers.top("A"+authorIndex)).replace(compositionMarkers.bottom(""),compositionMarkers.bottom("A"+authorIndex)));
             signatures.appendChild(row);
         }
         if(s.workflow()!=null) {
@@ -210,7 +213,7 @@ public class T1Template {
                 cell(cells.get(0),stage.label()+":");cell(cells.get(1),person.name());cell(cells.get(2),person.position()==null?"":person.position());
                 if(stage.requiresSignature()) {
                     // Preserve marker layout while making each slot independently discoverable.
-                    for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace("@@SIGTOP@@","@@SIGTOP"+slot+"@@").replace("@@SIGBOTTOM@@","@@SIGBOTTOM"+slot+"@@"));
+                    for(var t:all(cells.get(3),"t")) t.setTextContent(t.getTextContent().replace(compositionMarkers.top(""),compositionMarkers.top(String.valueOf(slot))).replace(compositionMarkers.bottom(""),compositionMarkers.bottom(String.valueOf(slot))));
                     slot++;
                 } else cell(cells.get(3),"");
                 signatures.appendChild(row);
@@ -244,7 +247,7 @@ public class T1Template {
         InstitutionalHeader.apply(doc,s);
     }
 
-    private void footer(Document doc) {
+    private void footer(Document doc,CompositionMarkers markers) {
         var root=doc.getDocumentElement();for(var p:all(root,"p")) if(all(p,"instrText").stream().anyMatch(n->n.getTextContent().contains("PAGE"))) {
             boolean field=false;var remove=new ArrayList<Element>();
             for(var run:children(p,"r")) {
@@ -253,7 +256,8 @@ public class T1Template {
                 if(!all(run,"fldChar").isEmpty() && "end".equals(all(run,"fldChar").getFirst().getAttributeNS(W,"fldCharType"))) field=false;
             }
             for(var r:remove) p.removeChild(r);
-            var run=element(doc,"r");var t=element(doc,"t");t.setTextContent("@@PN@@");run.appendChild(t);p.appendChild(run);
+            var run=element(doc,"r");var properties=element(doc,"rPr");var size=element(doc,"sz");size.setAttributeNS(W,"w:val","4");properties.appendChild(size);run.appendChild(properties);
+            var t=element(doc,"t");t.setTextContent(markers.page());run.appendChild(t);p.appendChild(run);
         }
         if(format.equals("A4")) for(var table:all(root,"tbl")) fitTable(table,8504);
     }

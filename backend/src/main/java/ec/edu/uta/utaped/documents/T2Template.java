@@ -20,7 +20,7 @@ public class T2Template {
     private static final String W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private final byte[] reference;
     public T2Template() throws IOException { try(var in=new ClassPathResource("document-templates/t2-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine14"; }
+    public String version() { return "T2-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine15"; }
     static List<Element> children(Node n,String local) { var result=new ArrayList<Element>();for(Node c=n.getFirstChild();c!=null;c=c.getNextSibling()) if(c instanceof Element e&&(local==null||local.equals(e.getLocalName()))) result.add(e);return result; }
     static List<Element> all(Node n,String local) { var nodes=((Element)n).getElementsByTagNameNS(W,local);var result=new ArrayList<Element>();for(int i=0;i<nodes.getLength();i++) result.add((Element)nodes.item(i));return result; }
     static Element element(Document doc,String name) { return doc.createElementNS(W,"w:"+name); }
@@ -43,13 +43,16 @@ public class T2Template {
         if(!s.attachments().isEmpty()||(s.externalReferences()!=null&&!s.externalReferences().isEmpty())) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));return List.copyOf(sections);
     }
     public byte[] compose(Snapshot s,Map<String,Integer> pageNumbers) {
+        return compose(s,pageNumbers,CompositionMarkers.forSnapshot(s));
+    }
+    byte[] compose(Snapshot s,Map<String,Integer> pageNumbers,CompositionMarkers markers) {
         try(var input=new ZipInputStream(new ByteArrayInputStream(reference));var buffer=new ByteArrayOutputStream();var out=new ZipOutputStream(buffer)) {
             for(ZipEntry entry;(entry=input.getNextEntry())!=null;) {
                 byte[] bytes=input.readAllBytes();
                 if(entry.getName().equals("word/document.xml")||entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers);InstitutionalIndex.finish(doc); }else furniture(doc,s);
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers,markers);StructuredSections.apply(doc,s,pageNumbers);InstitutionalIndex.finish(doc); }else furniture(doc,s,markers);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
                 out.putNextEntry(new ZipEntry(entry.getName()));out.write(bytes);out.closeEntry();
@@ -57,7 +60,7 @@ public class T2Template {
             out.finish();return buffer.toByteArray();
         } catch(Exception e) { throw new IllegalStateException("No se pudo componer la plantilla T2.",e); }
     }
-    private void body(Document doc,Snapshot s,Map<String,Integer> numbers) {
+    private void body(Document doc,Snapshot s,Map<String,Integer> numbers,CompositionMarkers markers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);var result=new ArrayList<Element>();var sectionNodes=new LinkedHashMap<String,Element>();
         text(source.get(5),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());text(source.get(7),"INFORME DE: "+InstitutionalHeader.title(s));text(source.get(9),"PERÍODO: "+s.plan().periodName());
         result.addAll(source.subList(0,20));
@@ -86,10 +89,10 @@ public class T2Template {
         if(!s.attachments().isEmpty()||(s.externalReferences()!=null&&!s.externalReferences().isEmpty())) { heading(result,sectionNodes,source.get(58),"ANEXOS");for(var a:s.attachments()) { result.add(paragraph(source.get(34),a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(source.get(34),a.description())); } }
         if(s.externalReferences()!=null&&!s.externalReferences().isEmpty()) { for(var reference:s.externalReferences()) { result.add(paragraph(source.get(34),"Referencia externa · "+reference.activity()+" · "+reference.medium()+" · v"+reference.version()+".0")); result.add(paragraph(source.get(34),reference.title()+": "+reference.url())); } }
         heading(result,sectionNodes,source.get(63),"FIRMAS DE RESPONSABILIDAD");property(sectionNodes.get("FIRMAS DE RESPONSABILIDAD"),"pageBreakBefore");var signatures=source.get(65);var signatureRows=children(signatures,"tr");var signaturePrototype=(Element)signatureRows.get(1).cloneNode(true);for(int i=1;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
-        for(int i=0;i<s.resolvedAuthors().size();i++) { var author=s.resolvedAuthors().get(i);signature(signatures,signaturePrototype,"Elaborado por:",author.name(),author.position(),i==0?"":"A"+i); }int slot=1;
+        for(int i=0;i<s.resolvedAuthors().size();i++) { var author=s.resolvedAuthors().get(i);signature(signatures,signaturePrototype,"Elaborado por:",author.name(),author.position(),i==0?"":"A"+i,markers); }int slot=1;
         if(s.workflow()!=null) for(var stage:s.workflow().stages()) {
-            if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null);
-            else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null);
+            if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null,markers);
+            else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null,markers);
         }
         result.add(signatures);heading(result,sectionNodes,source.get(67),"CONTROL DE HISTORIAL DE CAMBIOS");var history=source.get(69);
         InstitutionalHistory.fill(history,s.plan().formalVersion(),InstitutionalHistory.description("informe",s.plan().groupName()),s.plan().preparationDate());result.add(history);
@@ -102,13 +105,13 @@ public class T2Template {
         for(var t:all(body,"tbl")) {fit(t,9026);InstitutionalTables.apply(t);}
     }
     static void heading(List<Element> result,Map<String,Element> nodes,Element source,String label) { var p=paragraph(source,label);property(p,"keepNext");result.add(p);nodes.put(label,p); }
-    static void signature(Element table,Element prototype,String label,String name,String position,String suffix) {
-        var row=(Element)prototype.cloneNode(true);removeAll(row,"trHeight");var cells=children(row,"tc");cell(cells.get(0),label);cell(cells.get(1),name);cell(cells.get(2),position);cell(cells.get(3),suffix==null?"":"@@SIGTOP"+suffix+"@@\n@@SIGBOTTOM"+suffix+"@@");
-        if(suffix!=null) { var markers=children(cells.get(3),"p");for(int i=0;i<markers.size();i++) { var p=markers.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");var spacing=property(p,"spacing");spacing.setAttributeNS(W,"w:before","0");spacing.setAttributeNS(W,"w:after",i==0?"1000":"0");spacing.setAttributeNS(W,"w:line","40");spacing.setAttributeNS(W,"w:lineRule","exact");for(var r:children(p,"r")) { var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"rPr");r.insertBefore(e,r.getFirstChild());return e;});var size=element(p.getOwnerDocument(),"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size); } } }
+    static void signature(Element table,Element prototype,String label,String name,String position,String suffix,CompositionMarkers markers) {
+        var row=(Element)prototype.cloneNode(true);removeAll(row,"trHeight");var cells=children(row,"tc");cell(cells.get(0),label);cell(cells.get(1),name);cell(cells.get(2),position);cell(cells.get(3),suffix==null?"":markers.top(suffix)+"\n"+markers.bottom(suffix));
+        if(suffix!=null) { var markerParagraphs=children(cells.get(3),"p");for(int i=0;i<markerParagraphs.size();i++) { var p=markerParagraphs.get(i);property(p,"jc").setAttributeNS(W,"w:val",i==0?"left":"right");var spacing=property(p,"spacing");spacing.setAttributeNS(W,"w:before","0");spacing.setAttributeNS(W,"w:after",i==0?"1000":"0");spacing.setAttributeNS(W,"w:line","40");spacing.setAttributeNS(W,"w:lineRule","exact");for(var r:children(p,"r")) { var pr=children(r,"rPr").stream().findFirst().orElseGet(()->{var e=element(p.getOwnerDocument(),"rPr");r.insertBefore(e,r.getFirstChild());return e;});var size=element(p.getOwnerDocument(),"sz");size.setAttributeNS(W,"w:val","2");pr.appendChild(size); } } }
         var pr=children(row,"trPr").stream().findFirst().orElseGet(()->{var e=element(row.getOwnerDocument(),"trPr");row.insertBefore(e,row.getFirstChild());return e;});if(children(pr,"cantSplit").isEmpty()) pr.appendChild(element(row.getOwnerDocument(),"cantSplit"));
         table.appendChild(row);
     }
-    private void furniture(Document doc,Snapshot s) {
+    private void furniture(Document doc,Snapshot s,CompositionMarkers markers) {
         var root=doc.getDocumentElement();
         if(root.getLocalName().equals("hdr")) { InstitutionalHeader.apply(doc,s);return; }
         for(var p:all(root,"p")) {
@@ -118,7 +121,7 @@ public class T2Template {
             else if(value.startsWith("Fecha de elaboración:")) text(p,"Fecha de elaboración: "+s.plan().preparationDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
             if(value.contains("Formato N")) text(p,"Formato N°: UTA-SGC-A-2-1-P7-T2");
             if(all(p,"instrText").stream().anyMatch(n->n.getTextContent().contains("PAGE"))) {
-                text(p,"@@PN@@");property(p,"jc").setAttributeNS(W,"w:val","right");
+                text(p,markers.page());property(p,"jc").setAttributeNS(W,"w:val","right");
                 for(var run:children(p,"r")) for(var size:all(run,"sz")) size.setAttributeNS(W,"w:val","4");
             }
         }

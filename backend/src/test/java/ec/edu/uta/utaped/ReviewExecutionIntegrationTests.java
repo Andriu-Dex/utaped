@@ -383,6 +383,9 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var artifact=artifacts.generate(first.id(),email,new Generate(plans.get(first.id(),email).rowVersion()));assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
         try(var pdf=org.apache.pdfbox.Loader.loadPDF(artifacts.content(first.id(),artifact.id(),email))) {
             String text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).replaceAll("\\s+"," ");
+            assertTrue(text.contains("UNIDAD ACADÉMICA: "+plans.get(first.id(),email).institutionalUnit()),text);
+            assertTrue(text.contains("Unidad académica: "+plans.get(first.id(),email).institutionalUnit()),text);
+            assertFalse(text.contains("Académica / Administrativa"),text);assertFalse(text.contains("ACADÉMICA / ADMINISTRATIVA"),text);
             for(String expected:List.of("INFORME DE EJECUCIÓN I","RESULTADOS DEL PLAN DE ACCIÓN","ANÁLISIS FODA","Compromiso del equipo.","75 %","Calendario de carga semanal","https://repositorio.example.invalid/evidencias","UTA-SGC-A-1-1-P4-T2","FIRMAS DE RESPONSABILIDAD"))
                 assertTrue(text.contains(expected),expected);
             assertFalse(text.contains("@@"));
