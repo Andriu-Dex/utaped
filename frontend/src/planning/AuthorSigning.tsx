@@ -16,6 +16,8 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
   const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const [refresh, setRefresh] = useState(0)
   const [requestKey] = useState(() => crypto.randomUUID()); const [page, setPage] = useState<number | null>(null)
   const [imageError, setImageError] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  function markPending(value: boolean) { setDirty(value); onDirtyChange?.(value) }
   useEffect(() => { let active = true; api<SigningState>(path).then(value => { if (active) setState(value) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [path, refresh])
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
@@ -45,11 +47,11 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
     </div>
     <p>{state?.automaticSubmission ? 'Cada elaborador firma el mismo artefacto. Al completarse la última firma se activa automáticamente la revisión.' : 'La firma se aplica al artefacto conservado. Este documento anterior necesita reconciliación con un ámbito para iniciar el flujo.'}</p>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
-    {!state ? <p role="status">Consultando requisitos de firma…</p> : <>
+    {!state ? (error ? <button type="button" className="secondary" disabled={busy || disabled} onClick={() => { setError(''); setRefresh(value => value + 1) }}>Reintentar requisitos de firma</button> : <p role="status">Consultando requisitos de firma…</p>) : <>
       {signed && state.pendingAuthors.length > 0 && <p className="field-help">Recopilando firmas de elaboradores. El contenido está bloqueado; la revisión empezará al completar todas las firmas.</p>}
       {state.pendingAuthors.length > 0 && <p role="status">Pendientes de firma: {state.pendingAuthors.map(person => person.name).join(' → ')}.</p>}
       {state.signingBlockers.length > 0 && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
-      {!state.actorSigned && <ActionForm label="Preparar firma" onCancel={() => onDirtyChange?.(false)} disabled={busy || disabled || !state.signingEnabled}><form onChangeCapture={() => onDirtyChange?.(true)} onResetCapture={() => onDirtyChange?.(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || disabled || !state.signingEnabled}>
+      {!state.actorSigned && <ActionForm label="Preparar firma" dirty={dirty} onCancel={() => markPending(false)} disabled={busy || disabled || !state.signingEnabled}><form onChangeCapture={() => markPending(true)} onResetCapture={() => markPending(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || disabled || !state.signingEnabled}>
         <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? 'Firmando…' : 'Firmar'}</button>
@@ -76,6 +78,6 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
         </div>
       </>}
     </>}
-    <button className="secondary" disabled={busy} onClick={() => { setError(''); setRefresh(value => value + 1) }}>Actualizar estado de firma</button>
+    <button className="secondary" disabled={busy || dirty} onClick={() => { setError(''); setRefresh(value => value + 1) }}>Actualizar estado de firma</button>
   </section>
 }

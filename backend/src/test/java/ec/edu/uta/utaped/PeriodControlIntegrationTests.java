@@ -22,6 +22,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
     @Autowired PeriodArchiveService archives;
     @Autowired PositionService positions;
     @Autowired ec.edu.uta.utaped.identity.PasswordService passwords;
+    @Autowired EvidenceService executionEvidence;
     @Autowired ec.edu.uta.utaped.documents.DocumentWorkflowSnapshot snapshots;
     UUID scope,reviewer;
     void configuredScope() {
@@ -72,6 +73,17 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         UUID current=UUID.randomUUID();jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) SELECT ?,'Período de autoridad vigente',starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on FROM academic_period WHERE id=?",current,period);
         UUID position=positions.create(email,new PositionService.PositionInput("HISTORY_"+UUID.randomUUID().toString().substring(0,8).toUpperCase(),"Autoridad con historial",false));
         positions.historyPermission(position,email,new PositionService.HistoryPermission(true,0L));positions.assign(current,email,new PositionService.AssignmentInput(position,null,user));
+    }
+    @Test void executionIndicatorsRespectClosureWithoutDependingOnTheArchiveMarker() {
+        complete("Historial de ejecución",1);configuredScope();
+        jdbc.update("UPDATE scope_member SET membership_role='COORDINATOR' WHERE scope_id=? AND user_id=?",scope,user);
+        jdbc.update("UPDATE work_plan SET document_state='APPROVED' WHERE id=?",id);
+        assertTrue(executionEvidence.get(id,email).coordinator());
+        assertTrue(executionEvidence.get(id,email).activities().getFirst().canUpload());
+        jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);grantCurrentHistory();
+        var state=executionEvidence.get(id,email);
+        assertFalse(state.coordinator());assertTrue(state.activities().stream().noneMatch(EvidenceService.Execution::canUpload));
+        assertFalse(state.activities().isEmpty(),"El cierre conserva la consulta de las actividades históricas.");
     }
     @Test void closurePreservesBytesStatesAndHistoryAndBlocksEveryDocumentWrite() throws Exception {
         complete("Archivo histórico",1);signingAdmin();attachments.settings(id,email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(version(),true,false));var upload=upload("Anexo conservado",UUID.randomUUID(),pdf(1,false,false),version());

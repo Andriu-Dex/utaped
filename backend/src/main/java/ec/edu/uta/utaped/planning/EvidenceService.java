@@ -44,7 +44,8 @@ public class EvidenceService {
     }
     public State get(UUID doc,String email) {
         var plan=plans.get(doc,email);var actor=accounts.current(email);var matrix=activities.get(doc,email);var evidence=evidence(doc);var submission=submissions.state(doc,email);boolean pendingSubmission=submission.required()&&!submission.registered();
-        boolean coordinator=plan.documentType().equals("T1")&&plan.archivedAt()==null&&plan.scopeId()!=null&&jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active AND membership_role='COORDINATOR'",Integer.class,plan.scopeId(),actor.id())>0;
+        boolean periodActive="ACTIVE".equals(jdbc.queryForObject("SELECT status FROM academic_period WHERE id=?",String.class,plan.periodId()));
+        boolean coordinator=periodActive&&plan.documentType().equals("T1")&&plan.archivedAt()==null&&plan.scopeId()!=null&&jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active AND membership_role='COORDINATOR'",Integer.class,plan.scopeId(),actor.id())>0;
         var rows=new ArrayList<Execution>();int required=0,covered=0,completed=0;
         for(var activity:matrix.activities()) {
             var extension=jdbc.queryForList("SELECT ends_on,row_version FROM deadline_extension WHERE work_plan_id=? AND activity_id=? AND user_id=?",doc,activity.id(),actor.id());
@@ -62,7 +63,7 @@ public class EvidenceService {
                 String name=jdbc.queryForObject("SELECT display_name FROM app_user WHERE id=?",String.class,user);
                 responsible.add(new Responsible(user,name,extra.isEmpty()?activity.endsOn():((java.sql.Date)extra.getFirst().get("ends_on")).toLocalDate(),extra.isEmpty()?0:((Number)extra.getFirst().get("row_version")).longValue()));
             }
-            rows.add(new Execution(activity.id(),activity.title(),activity.startsOn(),activity.endsOn(),deadline,extension.isEmpty()?0:((Number)extension.getFirst().get("row_version")).longValue(),plan.documentType().equals("T1")&&plan.documentState().equals("APPROVED")&&plan.archivedAt()==null&&!pendingSubmission&&activity.responsibleIds().contains(actor.id())&&open,complete,List.copyOf(media),List.copyOf(responsible)));
+            rows.add(new Execution(activity.id(),activity.title(),activity.startsOn(),activity.endsOn(),deadline,extension.isEmpty()?0:((Number)extension.getFirst().get("row_version")).longValue(),periodActive&&plan.documentType().equals("T1")&&plan.documentState().equals("APPROVED")&&plan.archivedAt()==null&&!pendingSubmission&&activity.responsibleIds().contains(actor.id())&&open,complete,List.copyOf(media),List.copyOf(responsible)));
         }
         return new State(doc,plan.documentState(),coordinator,required,covered,completed,List.copyOf(rows),maxBytes,pendingSubmission);
     }
