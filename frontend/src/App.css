@@ -631,6 +631,14 @@ td button { padding: 7px 12px; font-size: .78rem; border-radius: 8px; }
   color: var(--teal-700);
   border: 1px solid rgba(23, 115, 105, 0.25);
 }
+.doc-type-t3 {
+  background: var(--canvas);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+:root[data-theme='dark'] .doc-type-t1 { color: #a6d4f8; border-color: #466b89; }
+:root[data-theme='dark'] .doc-type-t2 { color: #83dfcc; border-color: #397366; }
+:root[data-theme='dark'] .doc-type-t3 { background: #203449; color: #c9d9e8; border-color: #466078; }
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -664,6 +672,16 @@ td button { padding: 7px 12px; font-size: .78rem; border-radius: 8px; }
   background: #edf2f7;
   color: var(--muted);
   border: 1px solid var(--border);
+}
+:root[data-theme='dark'] .status-badge.status-approved { background: #173d38; color: #a3e7d4; border-color: #386858; }
+:root[data-theme='dark'] .status-badge.status-draft { background: #1d3a53; color: #a6d4f8; border-color: #466b89; }
+:root[data-theme='dark'] .status-badge.status-in_review { background: #382f1d; color: #e9bf76; border-color: #826a37; }
+:root[data-theme='dark'] .status-badge.status-archived { background: #243748; color: #c3ceda; border-color: #496073; }
+.documents-scroll-help { display: none; }
+@media (min-width: 768px) and (max-width: 1100px) {
+  .documents-table { min-width: 840px; }
+  .documents-table td:first-child { min-width: 240px; }
+  .documents-scroll-help { display: block; margin: 10px 0 0; }
 }
 .admin-navigation { position: sticky; top: 0; z-index: 2; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: #fffffff5; backdrop-filter: blur(8px); }
 .admin-navigation a { padding: 8px 12px; text-decoration: none; border-radius: 7px; color: var(--blue-800); font-size: .78rem; font-weight: 600; }

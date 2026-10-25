@@ -12,6 +12,7 @@ interface State { rowVersion: number; groupActive: boolean; draft: Definition; c
 export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyChange }: { groups: Group[]; users: User[]; suggestedQuery: string; onDirtyChange: (dirty: boolean) => void }) {
   const [group, setGroup] = useState(''); const [type, setType] = useState('T1'); const [state, setState] = useState<State | null>(null)
   const [draft, setDraft] = useState<Definition>({ name: '', stages: [] }); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false), [refresh, setRefresh] = useState(0)
   const [revision, setRevision] = useState<Revision | null>(null)
   const [positions, setPositions] = useState<{ id: string; name: string; active: boolean }[]>([])
   useEffect(() => { let active = true; api<{ id: string; name: string; active: boolean }[]>('/admin/positions').then(p => { if (active) setPositions(p) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [])
@@ -24,8 +25,8 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
   const path = '/admin/groups/' + group + '/workflows/' + type
   const dirty = state !== null && JSON.stringify(draft) !== JSON.stringify(state.draft)
   useEffect(() => { onDirtyChange(dirty); const prevent = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = '' } }; window.addEventListener('beforeunload', prevent); return () => { window.removeEventListener('beforeunload', prevent); onDirtyChange(false) } }, [dirty, onDirtyChange])
-  useEffect(() => { let active = true; if (group) api<State>(path).then(s => { if (active) { setState(s); setDraft(s.draft); setRevision(null) } }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [group, path])
-  async function choose(nextGroup: string, nextType: string) { if (!dirty || (await confirmAction('¿Descartar los cambios del flujo sin guardar?'))) { setGroup(nextGroup); setType(nextType); setState(null); setError(''); setNotice(''); setRevision(null) } }
+  useEffect(() => { let active = true; if (group) api<State>(path).then(s => { if (active) { setState(s); setDraft(s.draft); setRevision(null); setLoadFailed(false) } }).catch(e => { if (active) { setError(e.message); setLoadFailed(true) } }); return () => { active = false } }, [group, path, refresh])
+  async function choose(nextGroup: string, nextType: string) { if (!dirty || (await confirmAction('¿Descartar los cambios del flujo sin guardar?'))) { setGroup(nextGroup); setType(nextType); setState(null); setLoadFailed(false); setError(''); setNotice(''); setRevision(null) } }
   function change(id: string, values: Partial<Stage>) { setDraft(d => ({ ...d, stages: d.stages.map(s => s.id === id ? { ...s, ...values } : s) })); setNotice('') }
   function move(index: number, delta: number) { setDraft(d => { const stages = [...d.stages]; [stages[index], stages[index + delta]] = [stages[index + delta], stages[index]]; return { ...d, stages } }) }
   async function operation(suffix: string, method: string, body?: unknown) {
@@ -48,7 +49,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
-    {group && !state && <p role="status">Cargando flujo…</p>}
+    {group && !state && (loadFailed ? <div className="empty-state"><p>No se pudo cargar la configuración del flujo.</p><button type="button" className="secondary" onClick={() => { setLoadFailed(false); setError(''); setRefresh(n => n + 1) }}>Reintentar configuración del flujo</button></div> : <p role="status">Cargando flujo…</p>)}
     {state && <>
       <div className="workflow-status-card">
         <p className="workflow-status-badge">{state.current ? 'Revisión de configuración vigente: ' + state.current.revisionNumber : 'Sin configuración vigente.'}</p>
@@ -76,9 +77,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button className="secondary" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}>↑</button>
-                  <button className="secondary" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}>↓</button>
-                  <button className="danger" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}>×</button>
+                  <button className="secondary" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={16} /></button>
+                  <button className="secondary" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}><Icon name="arrowDown" size={16} /></button>
+                  <button className="danger" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}><Icon name="trash" size={16} /></button>
                 </div>
               </div>
               <div className="grid">

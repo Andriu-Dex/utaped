@@ -29,12 +29,12 @@ export function AuditViewer({ targetDocId, onBack }: { targetDocId?: string; onB
     try { await download('/admin/audit-events/export?' + params, 'utaped-auditoria.csv') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo exportar.') } finally { setExporting(false) }
   }
-  return <section className="card" aria-label={targetDocId ? 'Historial del Plan' : 'Auditoría administrativa'}>
-    {onBack && <button className="secondary" onClick={onBack}>Volver al Plan</button>}
+  return <section className="card" aria-label={targetDocId ? 'Historial del documento' : 'Auditoría administrativa'}>
+    {onBack && <button className="secondary" onClick={onBack}>Volver al documento</button>}
     <div className="section-heading">
       <div className="section-heading-icon" aria-hidden="true"><Icon name="eye" size={24} /></div>
       <div>
-        <h2>{targetDocId ? 'Historial del Plan' : 'Auditoría administrativa'}</h2>
+        <h2>{targetDocId ? 'Historial del documento' : 'Auditoría administrativa'}</h2>
         <p className="muted">Registro de acciones realizadas. No representa firmas, aprobaciones ni una nueva versión formal del documento.</p>
       </div>
     </div>

@@ -27,6 +27,7 @@ export function PeriodControl({ periods, onChange, onDirtyChange }: { periods: P
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [reload, setReload] = useState(0)
+  const [controlFailed, setControlFailed] = useState(false)
   const scope = scopes.find(s => s.id === scopeId)
   const dirty = custodyDirty || executionFlowDirty || Boolean(reason) || Boolean(purgeReason) || ['T1', 'T2'].some(type => (chosen[type] ?? '') !== (assignments.find(a => a.document_type === type)?.revision_id ?? ''))
   useEffect(() => {
@@ -38,8 +39,8 @@ export function PeriodControl({ periods, onChange, onDirtyChange }: { periods: P
   useEffect(() => {
     let active = true
     if (selected) Promise.all([api<Control>('/admin/periods/' + selected + '/control'), api<Scope[]>('/organization/scopes')])
-      .then(([data, list]) => { if (active) { setControl(data); setScopes(list.filter(s => s.period_id === selected)) } })
-      .catch(e => { if (active) setError(e.message) })
+      .then(([data, list]) => { if (active) { setControl(data); setScopes(list.filter(s => s.period_id === selected)); setControlFailed(false) } })
+      .catch(e => { if (active) { setError(e.message); setControlFailed(true) } })
     return () => { active = false }
   }, [selected, reload])
   useEffect(() => {
@@ -65,8 +66,9 @@ export function PeriodControl({ periods, onChange, onDirtyChange }: { periods: P
     <div className="section-heading"><span className="section-icon amber"><Icon name="calendar" /></span><div><span className="section-kicker">CONTINUIDAD INSTITUCIONAL</span><h2>Flujos y cierre del período</h2></div></div>
     <p className="muted">Asigne flujos por carrera y comisión, actívelos para fijar sus participantes y conserve el historial al cerrar. El cierre nunca equivale a aprobar documentos.</p>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
-    <label className="period-selector">Período a administrar<select value={selected} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if ((await discard())) { setSelected(nextValue); setControl(null); setScopeId(''); setAssignments([]); setChosen({}); setReason(''); setError(''); setNotice('') } }}><option value="">Seleccione un período</option>{periods.map(p => <option key={p.id} value={p.id}>{p.name} · {p.status === 'CLOSED' ? 'Cerrado' : p.is_current ? 'Actual' : 'Activo'}</option>)}</select></label>
-    {!selected ? <div className="card empty-state"><Icon name="calendar" size={32} /><p>Seleccione un período para ver su organización, los flujos asignados y el estado de sus documentos.</p></div> : !control ? <p role="status">Consultando período…</p> : <>
+    <label className="period-selector">Período a administrar<select value={selected} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if ((await discard())) { setSelected(nextValue); setControl(null); setControlFailed(false); setScopeId(''); setAssignments([]); setChosen({}); setReason(''); setError(''); setNotice('') } }}><option value="">Seleccione un período</option>{periods.map(p => <option key={p.id} value={p.id}>{p.name} · {p.status === 'CLOSED' ? 'Cerrado' : p.is_current ? 'Actual' : 'Activo'}</option>)}</select></label>
+    {!selected ? <div className="card empty-state"><Icon name="calendar" size={32} /><p>Seleccione un período para ver su organización, los flujos asignados y el estado de sus documentos.</p></div> : !control ? (controlFailed ? <div className="card empty-state"><p>No se pudo consultar el control del período.</p><button type="button" className="secondary" onClick={() => { setControlFailed(false); setError(''); setReload(n => n + 1) }}>Reintentar control del período</button></div> : <p role="status">Consultando período…</p>) : <>
+      {controlFailed && <div className="notice"><p>No se pudo actualizar el control del período. Se conserva la información anterior y sus cambios locales.</p><button type="button" className="secondary" disabled={busy || dirty} onClick={() => { setControlFailed(false); setError(''); setReload(n => n + 1) }}>Reintentar control del período</button>{dirty && <p className="field-help">Guarde o cancele los cambios pendientes antes de reintentar.</p>}</div>}
       <div className="period-overview"><div className="card"><span className="section-kicker">ESTADO DEL CICLO</span><h3>{control.name}</h3><p>{control.starts_on} — {control.ends_on}</p><span className={'status-badge ' + (closed ? '' : 'active')}>{closed ? 'Cerrado · Solo lectura' : 'Activo'}</span><p className="field-help">{closed ? (control.purged_at ? 'La documentación del período fue eliminada; se conservan el inventario y la auditoría.' : 'El archivo conserva todas las versiones y PDFs hasta que administración elimine la documentación tras descargar la copia de custodia. No hay reapertura.') : locked ? 'Flujos activados: sus revisiones y participantes están fijados para este período.' : 'Configuración de flujos pendiente de activación. Los documentos aún no pueden firmarse.'}</p></div><div className="card period-totals"><div><strong>{total}</strong><span>Documentos conservados</span></div><div><strong>{pending}</strong><span>Sin aprobación final</span></div></div></div>
       <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">ASIGNACIÓN POR ÁMBITO</span><h3>Flujos de Plan e Informe</h3></div></div>
         <label>Ámbito del flujo del período<select value={scopeId} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; if ((await discard())) { setScopeId(nextValue); setAssignments([]); setChosen({}); setRevisions({}); setReason('') } }}><option value="">Seleccione comisión y carrera</option>{scopes.map(s => <option key={s.id} value={s.id}>{s.group_name} · {s.career_name ?? 'Facultad'}{!s.active ? ' · Inactivo' : ''}</option>)}</select></label>

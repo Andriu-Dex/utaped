@@ -1933,6 +1933,9 @@ details.document-lifecycle li {
   padding: 2px 8px;
   border-radius: 6px;
 }
+:root[data-theme='dark'] .is-active-badge { background: #1d3a53; color: #a6d4f8; border-color: #466b89; }
+:root[data-theme='dark'] .activity-tags .doc-type-pill { background: #1d3a53; color: #a6d4f8; border-color: #466b89; }
+:root[data-theme='dark'] .activity-tags .doc-type-pill.is-mandatory { background: #392b15; color: #e9bf76; border-color: #6a5323; }
 .matrix-summary-table .status-badge {
   white-space: normal !important;
   display: inline-block;

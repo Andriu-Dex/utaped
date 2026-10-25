@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Icon } from './Icon'
 import './document-page-navigator.css'
 
@@ -6,6 +6,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
   page: number; pageCount: number; onChange: (page: number) => void; disabled?: boolean; references?: { page: number; label: string }[]; compact?: boolean
 }) {
   const [input, setInput] = useState<string | null>(null)
+  const errorId = useId()
   const candidate = Number(input ?? page + 1)
   const valid = Number.isInteger(candidate) && candidate >= 1 && candidate <= pageCount
   const shortcuts = references.filter(reference => reference.page >= 0 && reference.page < pageCount)
@@ -37,6 +38,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
               value={input ?? page + 1}
               disabled={disabled}
               aria-invalid={!valid}
+              aria-describedby={!valid ? errorId : undefined}
               onChange={event => setInput(event.target.value)}
               onKeyDown={event => {
                 if (event.key === 'Enter') {
@@ -47,7 +49,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
               onBlur={() => {
                 if (valid && candidate - 1 !== page) {
                   go(candidate - 1)
-                } else {
+                } else if (valid) {
                   setInput(null)
                 }
               }}
@@ -67,6 +69,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
           <Icon name="chevronRight" size={15} />
         </button>
       </div>
+      {!valid && <p id={errorId} className="field-help navigator-error">Introduce una página entre 1 y {pageCount}.</p>}
       {shortcuts.length > 0 && <div className="navigator-compact-chips">
         <span className="compact-chips-label">Secciones:</span>
         <div className="compact-chips-list">
@@ -124,6 +127,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
             value={input ?? page + 1}
             disabled={disabled}
             aria-invalid={!valid}
+            aria-describedby={!valid ? errorId : undefined}
             onChange={event => setInput(event.target.value)}
             onKeyDown={event => {
               if (event.key === 'Enter') {
@@ -134,7 +138,7 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
             onBlur={() => {
               if (valid && candidate - 1 !== page) {
                 go(candidate - 1)
-              } else {
+              } else if (valid) {
                 setInput(null)
               }
             }}
@@ -168,6 +172,6 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
         </select>
       </div>}
     </div>
-    {!valid && <p className="field-help navigator-error">Introduce una página entre 1 y {pageCount}.</p>}
+    {!valid && <p id={errorId} className="field-help navigator-error">Introduce una página entre 1 y {pageCount}.</p>}
   </nav>
 }

@@ -124,7 +124,6 @@
 
 .navigator-page-capsule input:focus {
   border-color: var(--blue-700);
-  outline: none;
   background: var(--surface);
 }
 
@@ -385,8 +384,9 @@
 }
 .compact-page-jump input:focus {
   border-color: var(--blue-700);
-  outline: none;
 }
+.navigator-page-capsule input:focus-visible,
+.compact-page-jump input:focus-visible { outline: 3px solid var(--amber-700); outline-offset: 2px; }
 .compact-page-jump input[aria-invalid="true"] {
   border-color: var(--danger, #c53030);
 }
