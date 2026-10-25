@@ -1,5 +1,7 @@
 # Reportes
 
+- [Auditoría integral de flujos, documentos e interfaces](2026-10-25-24-project-audit.md).
+
 - [Firma sin generación duplicada y orden de documentos](2026-10-24-23-signing-step-and-document-ordering.md).
 
 - [Espacio interior del historial de cambios](2026-10-24-22-history-cell-padding.md).

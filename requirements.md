@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-25): guardar el estado previo en commit local y auditar/corregir consistencia del flujo, UI PC/tablet y documentos conforme a las fuentes vigentes. Las correcciones quedaron inicialmente sin commit para revisión; tras revisarlas, el propietario autorizó los commits locales el 2026-10-25. No se autoriza publicación. No inventar reglas o integraciones institucionales pendientes.
+
 CONFIRMADO-PROYECTO (2026-10-24): el paso 6 del T1 reutiliza la preparación del paso 5 sin botón de generación duplicado; ante preparación ausente/desactualizada en borrador editable, bloquear firma y volver a previsualización. La bandeja permite ordenar por actualización reciente/antigua y título A–Z/Z–A, conservando filtros, permisos y paginación. Sin commit hasta revisión.
 
 CONFIRMADO-PROYECTO (2026-10-24): Control de historial de cambios conforme al ejemplo oficial: cabecera gris, fila de datos blanca y con altura suficiente, texto centrado, versión formal sin prefijo v, descripción que identifica al grupo/unidad y fecha real del documento. Conservar artefactos firmados y no copiar datos particulares del ejemplo. Sin commit hasta revisión.

@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+Auditoría integral tras el checkpoint local 422b5c3: correcciones de documentos, navegación T2/T3, protección de firmas, estados de carga, contraste y accesibilidad. Verificado: 209 pruebas backend generales, 71 regresiones documentales repetidas tras el último ajuste, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; cierre autorizado en commits locales 6061b71, 99e3fcf y 9bf18ee, sin push. [Reporte y cobertura](docs/reports/2026-10-25-24-project-audit.md).
+
 Paso 6 sin generación duplicada y bandeja con ordenación global validada en servidor implementados. Verificado: 3 pruebas backend, 22 de aceptación y lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-23-signing-step-and-document-ordering.md).
 
 Historial T1/T2: margen interno vertical de 3 pt en las celdas de datos, conservando centrado y crecimiento automático de fila. Sin commit. [Reporte](docs/reports/2026-10-24-22-history-cell-padding.md).
