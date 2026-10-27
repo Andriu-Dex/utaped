@@ -109,7 +109,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   else if (signed) status = signed.approvedReviewId ? 'Documento aprobado' : 'Documento firmado'
   else if (dirty) status = 'Documento preparado · cambios pendientes'
   else if (artifact?.current) status = 'Documento preparado para revisión y firma'
-  return <aside id={'document-preview-' + plan.id} tabIndex={-1} className="plan-preview card" aria-label="Previsualización simultánea del Plan">
+  return <aside id={'document-preview-' + plan.id} tabIndex={-1} className="plan-preview card" aria-label={plan.documentType === 'T1' ? 'Previsualización simultánea del Plan' : 'Previsualización del Informe'}>
     <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : sectionLabels[section]} · A4</span></div><div className="plan-preview-actions">
       {editing && <button type="button" className="secondary icon-only" title="Actualizar vista" aria-label="Actualizar vista" disabled={busy} onClick={() => setRetry(value => value + 1)}><Icon name="refresh" size={16} /></button>}
       <button type="button" className="secondary icon-only" title="Ampliar página" aria-label="Ampliar página" disabled={!image || !!loading || imageError === image} onClick={expand}><Icon name="maximize" size={16} /></button>
@@ -125,7 +125,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
       {loadedImage !== image && imageError !== image && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className={'document-reading-desk' + (stale ? ' is-stale' : '')} aria-busy={!!loading}>
         <button type="button" className="document-page-wrapper plan-preview-paper" onClick={expand} disabled={!!loading || imageError === image} title="Ampliar documento" aria-label="Ampliar documento">
-          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : signed ? ' del PDF firmado' : ' del Plan T1')} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
+          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : signed ? ' del PDF firmado' : ' del ' + (plan.documentType === 'T1' ? 'Plan T1' : 'Informe ' + plan.documentType))} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
         </button>
       </div>
     </div> : <div className="plan-preview-empty" role="status"><Icon name="document" size={36} /><strong>{loading || editing ? 'Preparando su documento…' : 'Sin documento preparado'}</strong><p>{finalStep ? 'Revise la preparación y los pendientes de este paso.' : 'Puede continuar trabajando mientras se prepara la vista.'}</p></div>}

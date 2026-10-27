@@ -1,5 +1,7 @@
 # Reportes
 
+- [Consulta y revisión separadas de elaboración](2026-10-27-33-document-consultation-and-review.md).
+
 - [Apartado de anexos sin archivos](2026-10-27-32-empty-annex-section.md).
 
 - [Revisión dividida, finalización y descarga aprobada](2026-10-27-31-signing-completion-and-approved-download.md).

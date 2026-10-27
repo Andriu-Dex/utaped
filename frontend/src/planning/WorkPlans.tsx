@@ -2,6 +2,7 @@ import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, download } from '../shared/api'
+import { DocumentConsultation } from './DocumentConsultation'
 import { WorkPlanEditor } from './WorkPlanEditor'
 import type { WorkPlan, PlanOptions, PlanPage } from './types'
 import { Icon } from '../shared/Icon'
@@ -12,12 +13,14 @@ import { ActionForm } from '../shared/ActionForm'
 import { DocumentArchiveDialog } from './DocumentArchiveDialog'
 
 export function WorkPlans({
+  accountId,
   onDirtyChange,
   initialDocId,
   initialStep,
   onDocumentSelect,
   onStepChange,
 }: {
+  accountId: string
   onDirtyChange: (dirty: boolean) => void
   initialDocId?: string | null
   initialStep?: string | null
@@ -83,6 +86,7 @@ export function WorkPlans({
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir el Plan.') } finally { setBusy(false) }
   }
 
+  if (selected && selected.teacherId !== accountId) return <DocumentConsultation key={selected.id} initial={selected} accountId={accountId} initialStep={initialStep} onStepChange={onStepChange} onDirtyChange={onDirtyChange} onBack={() => { setSelected(null); setLoading(true); setReload(value => value + 1); onDocumentSelect?.(null) }} />
   if (selected?.documentType === 'T3') return <ExecutionReportEditor key={selected.id} initial={selected} initialStep={initialStep} onStepChange={onStepChange} onDirtyChange={onDirtyChange} onBack={() => { setSelected(null); setReload(n => n + 1); onDocumentSelect?.(null) }} />
   if (selected?.documentType === 'T2') {
     return (

@@ -39,7 +39,7 @@ export function ReviewWorkspace({ accountId, onDirtyChange }: { accountId: strin
   </section>
 }
 
-export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange }: { id: string; accountId: string; title: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
+export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, backLabel = 'Volver' }: { backLabel?: string; id: string; accountId: string; title: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [state, setState] = useState<ReviewState | null>(null); const [page, setPage] = useState(0); const [message, setMessage] = useState(''); const [region, setRegion] = useState<Region | null>(null)
   const [signingDirty, setSigningDirty] = useState(false)
   const anchor = useRef<{ x: number; y: number } | null>(null)
@@ -76,7 +76,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange }:
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo firmar.') } finally { form.reset(); setBusy(false) }
   }
   const changePage = async (index: number) => { if (region && !(await confirmAction('¿Descartar la zona seleccionada para cambiar de página?'))) return; setPage(index); setRegion(null); setImageError(false) }
-  return <section><button type="button" className="secondary" disabled={busy} onClick={back}>Volver</button><span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span><h1>{title}</h1>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
+  return <section><button type="button" className="secondary" disabled={busy} onClick={back}>{backLabel}</button><span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span><h1>{title}</h1>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {!state ? <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
     {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}
     <div className="review-layout"><section className="card review-document"><DocumentPageNavigator page={page} pageCount={state.pageCount} disabled={busy} onChange={changePage} references={state.observations.filter(observation => observation.page_index !== null).map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))} />{task && <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>}{imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}

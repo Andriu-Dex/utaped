@@ -25,7 +25,10 @@ test('seven roles preserve scope permissions, immutable access and revocation in
     await expect(admin.getByRole('button', { name: 'Usuarios', exact: true })).toBeVisible(); await expect(principal.getByRole('button', { name: 'Usuarios', exact: true })).toHaveCount(0)
     for (const page of [coordinator, member]) {
       await page.reload(); await page.getByRole('button', { name: 'Documentos', exact: true }).click(); await page.getByRole('button', { name: 'Ver ' + title, exact: false }).click()
-      await expect(page.getByLabel('Título del Plan')).toBeDisabled(); await expect(page.getByRole('button', { name: 'Guardar borrador', exact: true })).toBeDisabled()
+      await expect(page.getByRole('heading', { name: 'Información del documento', exact: true })).toBeVisible()
+      await expect(page.getByRole('navigation', { name: 'Pasos del Plan', exact: true })).toHaveCount(0)
+      await expect(page.getByLabel('Título del Plan')).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Guardar borrador', exact: true })).toHaveCount(0)
       const csrf = await api(page, '/auth/csrf'); const response = await page.request.put('/api/work-plans/' + doc.id, { headers: { [csrf.headerName]: csrf.token }, data: { rowVersion: 0, title: 'Intrusión', institutionalUnit: 'FISEI', career: '', justification: '', objective: '' } }); expect(response.status()).toBe(403)
     }
     for (const page of [admin, reviewer, approver, outsider]) {
