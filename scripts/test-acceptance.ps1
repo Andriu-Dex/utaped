@@ -1,5 +1,16 @@
 ﻿param([switch]$KeepOnFailure)
 $ErrorActionPreference = 'Stop'
+# The fixed acceptance project and ports must have only one owner at a time.
+$taskAcceptanceMutex = New-Object System.Threading.Mutex($false, 'Local\UTAPED-Acceptance')
+$taskOwnsAcceptanceMutex = $false
+try {
+    try {
+        $taskOwnsAcceptanceMutex = $taskAcceptanceMutex.WaitOne(0)
+        if (-not $taskOwnsAcceptanceMutex) {
+            Write-Output 'Esperando a que termine la otra ejecución de aceptación...'
+            $taskOwnsAcceptanceMutex = $taskAcceptanceMutex.WaitOne()
+        }
+    } catch [System.Threading.AbandonedMutexException] { $taskOwnsAcceptanceMutex = $true }
 $root = Split-Path $PSScriptRoot -Parent
 $failed = $true
 $previous = @{}
@@ -61,4 +72,8 @@ SIGNING_ALLOW_HTTP=true
     }
     foreach ($key in $previous.Keys) { [Environment]::SetEnvironmentVariable($key, $previous[$key], 'Process') }
     Pop-Location
+}
+} finally {
+    if ($taskOwnsAcceptanceMutex) { $taskAcceptanceMutex.ReleaseMutex() }
+    $taskAcceptanceMutex.Dispose()
 }
