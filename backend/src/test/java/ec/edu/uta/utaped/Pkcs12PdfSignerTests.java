@@ -140,4 +140,12 @@ class Pkcs12PdfSignerTests {
         var second=container(rsaKey,rsa,false);
         assertThrows(Pkcs12PdfSigner.SigningException.class,()->signer.sign(signed,second.container(),second.password(),fingerprint(rsa),anchors(),NOW));cleared(second);
     }
+    @Test void inspectionReturnsCertificateHolderAndAlwaysClearsCredentials() throws Exception {
+        var material=container(rsaKey,rsa,false);var details=signer.inspect(material.container(),material.password(),NOW);
+        assertEquals("Test signer",details.holder());assertEquals(fingerprint(rsa),details.fingerprint());assertEquals(rsa.getSubjectX500Principal().getName(),details.subject());cleared(material);
+        var bad=container(rsaKey,rsa,false);Arrays.fill(bad.password(),'x');assertThrows(Pkcs12PdfSigner.SigningException.class,()->signer.inspect(bad.container(),bad.password(),NOW));cleared(bad);
+        var expired=certificate(rsaKey,"Expired inspection",false,KeyUsage.digitalSignature,NOW.minusSeconds(120),NOW.minusSeconds(60),false);var old=container(rsaKey,expired,false);
+        assertThrows(Pkcs12PdfSigner.SigningException.class,()->signer.inspect(old.container(),old.password(),NOW));cleared(old);
+    }
+
 }

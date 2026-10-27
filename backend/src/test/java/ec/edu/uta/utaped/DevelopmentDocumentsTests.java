@@ -42,7 +42,7 @@ class DevelopmentDocumentsTests {
             UUID id=(UUID)row.get("id");var artifact=artifacts.list(id,"principal@utaped.example.invalid").getFirst();
             try(var pdf=org.apache.pdfbox.Loader.loadPDF(artifacts.content(id,artifact.id(),"principal@utaped.example.invalid"))) {
                 assertEquals(pdf.getNumberOfPages(),artifact.pageCount());
-                assertTrue(new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).contains("Ejemplo"));
+                assertTrue(new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).toUpperCase(java.util.Locale.ROOT).contains("EJEMPLO"));
             }
         }
         UUID editable=jdbc.queryForObject("SELECT id FROM work_plan WHERE document_type='T1' AND document_state='DRAFT'",UUID.class);

@@ -1,5 +1,63 @@
 # Reportes
 
+- [Consulta y revisión separadas de elaboración](2026-10-27-33-document-consultation-and-review.md).
+
+- [Apartado de anexos sin archivos](2026-10-27-32-empty-annex-section.md).
+
+- [Revisión dividida, finalización y descarga aprobada](2026-10-27-31-signing-completion-and-approved-download.md).
+
+- [Un solo visor del documento firmado](2026-10-27-30-single-signed-preview.md).
+
+- [Recuperación de la confirmación de firma](2026-10-27-29-signing-confirmation-recovery.md).
+
+- [Cinco pasos y firma con certificado aportado](2026-10-27-28-five-steps-and-provided-certificate.md).
+
+- [Preparación de firma y revisión final](2026-10-27-27-signature-preparation-and-final-review.md).
+
+- [Previsualización persistente del Plan T1](2026-10-26-26-persistent-plan-preview.md).
+
+- [Portada T1 conforme al ejemplo oficial](2026-10-25-25-t1-cover-layout.md).
+
+- [Auditoría integral de flujos, documentos e interfaces](2026-10-25-24-project-audit.md).
+
+- [Firma sin generación duplicada y orden de documentos](2026-10-24-23-signing-step-and-document-ordering.md).
+
+- [Espacio interior del historial de cambios](2026-10-24-22-history-cell-padding.md).
+
+- [Control de historial conforme al ejemplo oficial](2026-10-24-21-official-change-history.md).
+
+- [Nombre institucional y navegación de la previsualización](2026-10-24-20-faculty-name-and-preview-keyboard.md).
+
+- [Revisión de navegación y planificación documental](2026-10-24-19-navigation-review-and-document-plan.md).
+
+- [Navegación persistente del Plan y acciones de anexos](2026-10-23-18-persistent-plan-wizard.md).
+
+- [Revisión y commits de cambios acumulados](2026-10-23-17-staged-review-and-commits.md).
+
+- [Descarte y archivo visibles en documentos](2026-10-23-16-document-list-lifecycle-actions.md).
+
+- [Fidelidad documental y revisión de cambios](2026-10-23-15-institutional-document-fidelity-review.md).
+
+- [Comparación del encabezado con el ejemplo institucional](2026-10-23-14-example-header-comparison.md).
+
+- [Valor de fecha y etiqueta de unidad](2026-10-23-13-header-date-value-and-unit-label.md).
+
+- [Celdas de fecha del encabezado y commits](2026-10-23-12-header-date-cells-and-commits.md).
+
+- [Catálogo y procedencia institucional](2026-10-23-11-institutional-provenance-catalog.md).
+
+- [Previsualización automática T1](2026-10-23-10-automatic-plan-preview.md).
+
+- [Badge único de responsables](2026-10-23-09-single-responsibles-badge.md).
+
+- [Presentación compacta de columnas de matriz](2026-10-23-08-matrix-column-presentation.md).
+
+- [Responsables colectivos y revisión de interfaz](2026-10-23-07-collective-responsibility-and-ui-review.md).
+
+
+- [Navegación secuencial T1](2026-10-23-06-plan-step-navigation.md).
+
+
 - [2026-10-23 — Revisión de interfaz y estabilidad](2026-10-23-05-ui-review-and-hardening.md).
 
 - [2026-10-23 — Validación para continuar desde la matriz](2026-10-23-04-matrix-step-validation.md).

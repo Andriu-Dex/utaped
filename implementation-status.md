@@ -1,5 +1,59 @@
 # Estado de implementación productiva
 
+Consulta y revisión separadas del editor: lectores y revisores entran desde Documentos sin pasos de creación; las rondas reutilizan el inspector del PDF firmado y sus permisos. El responsable conserva su editor y los coautores su firma ordenada, confirmación y protección de cambios. Conservados historial, observaciones, ejecución y evidencias. Verificado: lint, TypeScript, build y 24 pruebas de aceptación finales, con revisión visual de escritorio y tablet en tema oscuro. Cierre en commit local, sin push. [Reporte](docs/reports/2026-10-27-33-document-consultation-and-review.md).
+
+Documentos sin anexos: conservan el apartado y muestran «(No aplica)» debajo del título; T1 mantiene «4. ANEXOS», índice y navegación, con numeración del mismo estilo que las demás secciones. Aplicado también a informes vacíos, conservando las referencias/enlaces cuando existen. Versiones técnicas de plantillas actualizadas; artefactos firmados intactos. Verificado: 57 pruebas documentales/de revisión, PDFs T1/T2/T3 revisados visualmente y frontend lint/build/TypeScript. Entorno local actualizado y cierre en commit local, sin push. [Reporte](docs/reports/2026-10-27-32-empty-annex-section.md).
+
+Paso 5 T1 con distribución dividida PC/tablet, visor único y «Finalizar y volver a Documentos» tras firmar, sin cambiar estado. Eliminado enlace redundante; descarga solo del PDF de la ronda aprobada y ruta preliminar bloqueada incluso en documentos anteriores. Visor aprobado conserva todas las firmas; no muestra controles de nueva firma en solo lectura. Verificado: 214 pruebas backend, 24 de aceptación finales, lint/TypeScript/build, descarga comparada por SHA-256 y revisión visual. Lanzador de aceptación protegido contra ejecuciones simultáneas; entorno manual actualizado con datos conservados. Cierre de todos los cambios pendientes mediante commits locales autorizados, sin push. [Reporte](docs/reports/2026-10-27-31-signing-completion-and-approved-download.md).
+
+Unificado el visor de preparación y firma: T1 muestra el PDF firmado real en su visor persistente, con navegación/ampliación y página de firma dinámica; T2/T3 reutilizan su visor. Eliminada la segunda imagen del bloque de firma, conservando resultado, historial y descarga. Comprobado manualmente y con TypeScript, lint, build y 24 pruebas de aceptación. Cambios staged del propietario preservados; sin commit. [Reporte](docs/reports/2026-10-27-30-single-signed-preview.md).
+
+Corregida la espera de firma con confirmación fuera de pantalla: modal centrado y recuperable, foco/cancelación conservados y estados de comprobación, confirmación y firma diferenciados. Pantalla manual desbloqueada sin registrar firmas nuevas. Lint, TypeScript, build y 24 pruebas de aceptación correctos; sin commit. [Reporte](docs/reports/2026-10-27-29-signing-confirmation-recovery.md).
+
+T1 reducido a cinco pasos con «Revisar y firmar» y preparación automática. Firma real con .p12/.pfx, inspección/confirmación de titular y sin vínculo administrativo obligatorio para autor/revisor; V36 separa usuario ejecutor y metadatos públicos del certificado. Firmas históricas conservadas; límites de atribución y confianza solo en docs/. Backend verificado: 214 casos finales sin fallos, con regresión de 9 tras ajustar una aserción histórica. Frontend lint/TypeScript/build y 24 pruebas de aceptación correctos; entorno local actualizado. Estado anterior en e778dd6; implementación actual sin commit. [Reporte](docs/reports/2026-10-27-28-five-steps-and-provided-certificate.md).
+
+T1: paso 5 Preparación de firma (elaboradores, cargos, páginas y flujo, sin firmar); paso 6 Revisión final y firma a ancho completo, confirmación del artefacto y acciones después del visor. Distribución en orden DOM sin reordenamiento CSS de revisión. Verificado: lint/TypeScript/build y 24 pruebas de aceptación; entorno local actualizado. Cambios visuales previos en d93be48; esta implementación sin commit. [Reporte](docs/reports/2026-10-27-27-signature-preparation-and-final-review.md).
+
+T1: visor persistente en los seis pasos, basado en el diseño de revisión final, con navegación contextual, ampliación, distribución PC/tablet y avisos de cambios pendientes. Revisión/firma conservan el artefacto preparado. Verificado: 33 pruebas documentales, repetidas 16 sobre la última revisión, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; implementación sin commit. Ajuste anterior de portada cerrado en 60889c7. [Reporte](docs/reports/2026-10-26-26-persistent-plan-preview.md).
+
+Portada T1: unidad y carrera justificadas y agrupadas, mayúsculas, separación del título y posición vertical según el PDF oficial. 33 pruebas documentales, TypeScript/build y revisión visual correctos. Entorno local actualizado; sin commit. [Reporte](docs/reports/2026-10-25-25-t1-cover-layout.md).
+
+Auditoría integral tras el checkpoint local 422b5c3: correcciones de documentos, navegación T2/T3, protección de firmas, estados de carga, contraste y accesibilidad. Verificado: 209 pruebas backend generales, 71 regresiones documentales repetidas tras el último ajuste, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; cierre autorizado en commits locales 6061b71, 99e3fcf y 9bf18ee, sin push. [Reporte y cobertura](docs/reports/2026-10-25-24-project-audit.md).
+
+Paso 6 sin generación duplicada y bandeja con ordenación global validada en servidor implementados. Verificado: 3 pruebas backend, 22 de aceptación y lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-23-signing-step-and-document-ordering.md).
+
+Historial T1/T2: margen interno vertical de 3 pt en las celdas de datos, conservando centrado y crecimiento automático de fila. Sin commit. [Reporte](docs/reports/2026-10-24-22-history-cell-padding.md).
+
+Historial T1/T2: fila de datos blanca, altura mínima tomada del template, versión sin prefijo y descripción del grupo. Verificado: 194 pruebas backend y revisión visual T1/T2. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-21-official-change-history.md).
+
+Nombre completo de FISEI, corrección de borradores sin firmas, nombres en documentos derivados nuevos, flechas locales del visor del paso 5 y normalización de párrafos vacíos extremos del T1 implementados y verificados: 193 pruebas backend y 21 de aceptación, lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-20-faculty-name-and-preview-keyboard.md).
+
+Flujo T1: navegación persistente de seis pasos, pie común, regreso desde matriz a Contenido y barra de acciones de anexos; conserva borrador entre Información general/Contenido y confirma salidas de otros editores. Revisado para commit local autorizado el 2026-10-24. [Reporte](docs/reports/2026-10-23-18-persistent-plan-wizard.md).
+
+Revisión de entrega: documentos institucionales, acciones de bandeja y mejoras de notificaciones verificados para cierre en commits locales. [Reporte](docs/reports/2026-10-23-17-staged-review-and-commits.md).
+
+Acciones documentales visibles: descarte de borradores y archivo de aprobados desde la tabla, modal con motivo, control de concurrencia y permisos derivados del servidor. [Reporte](docs/reports/2026-10-23-16-document-list-lifecycle-actions.md).
+
+Fidelidad documental: revisión de staged/worktree, encabezado institucional, índices con páginas y enlaces reales, matriz T1 completa y previsualización nítida. T1/T2 engine12 y T3 engine8 para composiciones nuevas. [Reporte](docs/reports/2026-10-23-15-institutional-document-fidelity-review.md).
+
+Encabezado T1/T2: etiqueta de fecha a la izquierda y valor a la derecha; portada con un único tipo de unidad según procedencia, engine10. [Reporte](docs/reports/2026-10-23-13-header-date-value-and-unit-label.md).
+
+Encabezado T1/T2: Fecha de elaboración conserva dos celdas y divisor vertical según el original; engine9 para composición nueva, sin reescribir firmados. [Reporte](docs/reports/2026-10-23-12-header-date-cells-and-commits.md).
+
+Procedencia institucional: catálogo académico/administrativo, carreras y ámbitos asociados, selección de catálogo e información heredada bloqueada en Planes/Informes; V34 preserva registros y artefactos. [Reporte](docs/reports/2026-10-23-11-institutional-provenance-catalog.md).
+
+Paso 5 T1: previsualización automática con reutilización del artefacto vigente, pendientes y reintento; conserva documentos no editables y bloquea avance incompleto a firma. [Reporte](docs/reports/2026-10-23-10-automatic-plan-preview.md).
+
+Responsables del resumen: nombres agrupados en un único badge por celda; representación colectiva conservada. [Reporte](docs/reports/2026-10-23-09-single-responsibles-badge.md).
+
+Ajuste visual de matriz: Plazo en una línea y responsables con etiquetas compactas; detalle colectivo en tooltip. [Reporte](docs/reports/2026-10-23-08-matrix-column-presentation.md).
+
+Responsables colectivos: etiquetas de ejemplo según tipo de grupo, reparación limitada de semillas antiguas y trazabilidad individual visible en resumen. Revisión de mejoras visuales y navegación secuencial. [Reporte](docs/reports/2026-10-23-07-collective-responsibility-and-ui-review.md).
+
+
+Navegación secuencial T1: Anexos → Preparación → Firma con regreso al paso anterior y protección de cambios. Compilación/lint y recorrido interactivo mediante Playwright aprobados. [Reporte](docs/reports/2026-10-23-06-plan-step-navigation.md).
+
+
 ## Revisión de interfaz — 2026-10-23
 
 Mejoras del propietario en documentos, matriz, formularios y notificaciones revisadas e integradas con correcciones de teclado/foco/solo lectura, filtros, tokens de color y protección de la selección de elaboradores. [Reporte](docs/reports/2026-10-23-05-ui-review-and-hardening.md).

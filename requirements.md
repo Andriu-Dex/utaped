@@ -1,5 +1,43 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): separar la consulta y revisión del recorrido de elaboración. El responsable principal conserva el editor; los demás usuarios autorizados consultan sin pasos ni formularios de creación. Cuando existe una ronda, mostrar su PDF firmado conservado, observaciones y acciones habilitadas para la etapa asignada. Los coautores mantienen la firma ordenada desde consulta; conservar rondas, historial, ejecución y evidencias, sin ampliar permisos del servidor.
+
+CONFIRMADO-PROYECTO (2026-10-27): cuando no existan anexos, conservar el apartado numerado «ANEXOS» y mostrar debajo «(No aplica)» en texto normal, como en la referencia visual del propietario. Mantener el índice y las referencias de páginas; no modificar artefactos ya firmados. Las referencias externas y enlaces de evidencia existentes no se presentan como anexos inexistentes.
+
+CONFIRMADO-PROYECTO (2026-10-27): paso 5 «Revisar y firmar» con distribución dividida como los demás pasos (acciones a la izquierda y visor único a la derecha), ajuste de ancho y modos para tablet. Quitar el enlace redundante «Ver documento firmado»; descarga exclusivamente desde el PDF final aprobado. Tras registrar su firma, el usuario puede «Finalizar y volver a Documentos» sin cambiar estado ni aprobar. Revisión de cambios pendientes y commits locales autorizados para esta entrega.
+
+CONFIRMADO-PROYECTO (2026-10-27): evitar duplicar la previsualización después de firmar. Mantener un solo visor que pase del documento preparado al PDF firmado conservado, con navegación y consulta de firmas; el resultado de firma no debe añadir otro visor.
+
+CONFIRMADO-PROYECTO (2026-10-27, decisión posterior): sistema final con firma criptográfica real. El T1 usa cinco pasos, terminando en «Revisar y firmar» con preparación automática. No exigir vinculación administrativa previa: inspeccionar el .p12/.pfx, comprobar contraseña/clave, vigencia y uso de firma; mostrar titular y emisor y pedir confirmación antes de firmar. Registrar usuario ejecutor separado del titular/huella del certificado, conservar firmas y bytes anteriores. Las limitaciones de correspondencia de identidad y confianza se documentan únicamente en docs/, sin avisos en UI ni afirmaciones falsas de identidad vinculada. Cambios anteriores en e778dd6; nueva implementación sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-27): cerrar los cambios visuales actuales en commit local y separar preparación de firma (paso 5) de revisión final y firma (paso 6). El paso 5 comprueba elaboradores, cargos, ubicación y circuito, sin certificados ni aplicación de firmas. El paso 6 muestra el documento a ancho completo y permite firmar después de confirmar su revisión. Conservar los mismos artefactos y la activación de revisión al completar las firmas. Nueva implementación sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-26): cerrar los ajustes anteriores de portada en commit local y mantener sin commit la nueva previsualización persistente del T1. Reutilizar el diseño del visor del paso 5 en los seis pasos, con foco en la sección correspondiente, modos de distribución PC/tablet, estados de actualización y conservación de validaciones. El paso 5 pasa a Revisión final; revisión y firma usan el artefacto preparado, distinto del borrador transitorio.
+
+CONFIRMADO-PROYECTO (2026-10-25): ajustar la portada T1 al ejemplo oficial TI-JD2026-UTIT-PLAN-V01-signed.pdf: unidad y carrera justificadas y agrupadas, bloques en mayúsculas, título y período centrados con separación propia. Conservar A4, datos del documento y artefactos firmados. Sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-25): guardar el estado previo en commit local y auditar/corregir consistencia del flujo, UI PC/tablet y documentos conforme a las fuentes vigentes. Las correcciones quedaron inicialmente sin commit para revisión; tras revisarlas, el propietario autorizó los commits locales el 2026-10-25. No se autoriza publicación. No inventar reglas o integraciones institucionales pendientes.
+
+CONFIRMADO-PROYECTO (2026-10-24): el paso 6 del T1 reutiliza la preparación del paso 5 sin botón de generación duplicado; ante preparación ausente/desactualizada en borrador editable, bloquear firma y volver a previsualización. La bandeja permite ordenar por actualización reciente/antigua y título A–Z/Z–A, conservando filtros, permisos y paginación. Sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-24): Control de historial de cambios conforme al ejemplo oficial: cabecera gris, fila de datos blanca y con altura suficiente, texto centrado, versión formal sin prefijo v, descripción que identifica al grupo/unidad y fecha real del documento. Conservar artefactos firmados y no copiar datos particulares del ejemplo. Sin commit hasta revisión.
+
+CONFIRMADO-PROYECTO (2026-10-24): usar el nombre completo de la facultad FISEI conforme al ejemplo oficial; corregir la referencia y borradores antiguos sin firmas, conservando artefactos e historia firmada. En el paso 5, flechas izquierda/derecha dentro del visor enfocado sin interferir con formularios, listas o modales. Justificación/objetivo fluyen juntos cuando caben; conservar orientación apaisada de la matriz y saltos institucionales. Sin commit hasta revisión del propietario.
+
+CONFIRMADO-PROYECTO (2026-10-23): conservar la navegación de los seis pasos del T1 en una estructura persistente; Anterior secundario y Siguiente principal, acciones de anexos con iconos coherentes y controles accesibles para PC/tablet. Preservar borradores, confirmaciones de descarte, validación de matriz y requisitos previos a firma. Revisión y commit local autorizados por el propietario el 2026-10-24.
+
+CONFIRMADO-PROYECTO (2026-10-23): mostrar en la tabla documental «Descartar borrador» y «Archivar» para aprobados, con modal de confirmación, motivo y permisos del responsable. Mantener trazabilidad, artefactos firmados y restricciones de revisión; no introducir borrado físico.
+
+CONFIRMADO-PROYECTO (2026-10-23): contrastar la composición completa con los templates oficiales y el ejemplo firmado: encabezado con etiquetas/valores separados, índices dinámicos y matriz con todas sus líneas. Conservar los datos propios de cada documento, formato A4 y bytes firmados.
+
+CONFIRMADO-PROYECTO (2026-10-23): en la fila de fecha, etiqueta a la izquierda y fecha a la derecha. La portada muestra únicamente Unidad académica o Unidad administrativa según el documento, no ambas alternativas.
+
+CONFIRMADO-PROYECTO (2026-10-23): conservar en el encabezado la celda de Fecha de elaboración y la celda gris independiente a su derecha, con división vertical conforme al documento original.
+
+CONFIRMADO-PROYECTO (2026-10-23): completar catálogo de unidades académicas/administrativas y selección por opciones administradas. La procedencia del ámbito o del Plan base se hereda y se muestra bloqueada; el encabezado refleja unidad y tipo correspondientes.
+
+CONFIRMADO-PROYECTO (2026-10-23): el paso 5 T1 muestra directamente la previsualización, con generación automática cuando corresponde, carga, pendientes y reintento. Se conservan las validaciones y no se regeneran documentos firmados.
+
 ## Avance desde la matriz — 2026-10-23
 
 CONFIRMADO-PROYECTO por el propietario: el botón Siguiente: Anexos del T1 exige al menos una actividad con fechas, responsables, recursos y medios completos, aunque no existan cambios pendientes. Conservar guardado de matriz vacía, borrador y salida protegida; informar mediante toast y foco contextual. No sustituye las validaciones finales del servidor ni cambia las reglas existentes de guardado de actividades.

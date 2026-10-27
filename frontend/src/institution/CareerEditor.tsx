@@ -5,7 +5,7 @@ import { api } from '../shared/api'
 import { Toast } from '../shared/Toast'
 import { Icon } from '../shared/Icon'
 
-export type Career = { id: string; code: string; name: string; active: boolean; row_version: number }
+export type Career = { id: string; code: string; name: string; active: boolean; row_version: number; institutional_unit_id: string }
 export function CareerEditor({ careers, onSaved, onDirtyChange }: { careers: Career[]; onSaved: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [selected, setSelected] = useState(''), [dirty, setDirty] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const career = careers.find(c => c.id === selected)

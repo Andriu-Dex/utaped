@@ -46,19 +46,28 @@ public class T1PdfEngine {
     }
     public Map<String,Integer> contentSections(byte[] bytes) {
         try(var pdf=Loader.loadPDF(bytes)) {
-            return Map.of("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"),"OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
+            var sections=new LinkedHashMap<String,Integer>();
+            sections.put("COVER",0);
+            sections.put("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"));
+            sections.put("OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
+            sections.put("MATRIX",sectionPage(pdf,"MATRIZ DE ACTIVIDADES"));
+            sections.put("ANNEXES",sectionPage(pdf,"ANEXOS"));
+            sections.put("SIGNATURES",sectionPage(pdf,"FIRMAS DE RESPONSABILIDAD"));
+            return Collections.unmodifiableMap(sections);
         } catch(IOException error) { throw new IllegalStateException("No se localizaron las secciones del borrador.",error); }
     }
     public Generated generate(Snapshot snapshot) {
         try {
+            var markers=CompositionMarkers.forSnapshot(snapshot);
             Map<String,Integer> numbers=new LinkedHashMap<>();byte[] nativeBytes=null;
             var sections=snapshot.execution()!=null?new ArrayList<>(executions.sections(snapshot)):snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
-            if(snapshot.report()==null&&snapshot.execution()==null) { if(!snapshot.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
+            if(snapshot.report()==null&&snapshot.execution()==null) { sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
             sections=new ArrayList<>(StructuredSections.sections(snapshot,sections));
+            if(snapshot.execution()==null&&snapshot.report()==null) sections.addAll(List.of("ÍNDICE DE CONTENIDO","ÍNDICE DE TABLAS"));
             int insertedPages=snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum();
             boolean stable=false;
             for(int attempt=0;attempt<4;attempt++) {
-                nativeBytes=export(snapshot.execution()!=null?executions.compose(snapshot,numbers):snapshot.report()!=null?reports.compose(snapshot,numbers):template.compose(snapshot,numbers));var actual=new LinkedHashMap<String,Integer>();
+                nativeBytes=export(snapshot.execution()!=null?executions.compose(snapshot,numbers,markers):snapshot.report()!=null?reports.compose(snapshot,numbers,markers):template.compose(snapshot,numbers,markers));var actual=new LinkedHashMap<String,Integer>();
                 try(var nativePdf=Loader.loadPDF(nativeBytes)) {
                     int insertion=sectionPage(nativePdf,"FIRMAS DE RESPONSABILIDAD");
                     for(String section:sections) { int page=sectionPage(nativePdf,section);actual.put(section,page+1+(page>=insertion?insertedPages:0)); }
@@ -85,52 +94,68 @@ public class T1PdfEngine {
                         if(stripper.getText(composed).replaceAll("\\s+","").contains(snapshot.plan().teacherName().replaceAll("\\s+",""))) { namePage=p;break; }
                     }
                     if(namePage<0) throw new IOException("No se encontró la fila del elaborador.");
-                    var location=signatureBounds(composed,namePage);
+                    var location=signatureBounds(composed,namePage,"",markers);
                     var slots=new ArrayList<SignatureSlot>();
                     slots.add(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",snapshot.plan().teacherId(),namePage,namePage+1,location));
                     for(int authorIndex=1;authorIndex<snapshot.resolvedAuthors().size();authorIndex++) {
                         var author=snapshot.resolvedAuthors().get(authorIndex);String suffix="A"+authorIndex;int found=-1;
-                        for(int p=signaturePage;p<composed.getNumberOfPages();p++) { stripper.setStartPage(p+1);stripper.setEndPage(p+1);if(stripper.getText(composed).contains("@@SIGTOP"+suffix+"@@")) { found=p;break; } }
+                        for(int p=signaturePage;p<composed.getNumberOfPages();p++) { stripper.setStartPage(p+1);stripper.setEndPage(p+1);if(stripper.getText(composed).contains(markers.top(suffix))) { found=p;break; } }
                         if(found<0) throw new IOException("No se encontró la ubicación del coautor.");
-                        slots.add(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",author.id(),found,found+1,signatureBounds(composed,found,suffix)));
+                        slots.add(new SignatureSlot("DOCENTE","ELABORADO_POR","Elaborado por",author.id(),found,found+1,signatureBounds(composed,found,suffix,markers)));
                     }
                     if(snapshot.workflow()!=null) {
                         int slotNumber=1;
                         for(var stage:snapshot.workflow().stages()) if(stage.requiresSignature()) for(var person:stage.participants()) {
-                            String marker="@@SIGTOP"+slotNumber+"@@";int found=-1;
+                            String marker=markers.top(String.valueOf(slotNumber));int found=-1;
                             for(int p=signaturePage;p<composed.getNumberOfPages();p++) {
                                 stripper.setStartPage(p+1);stripper.setEndPage(p+1);
                                 if(stripper.getText(composed).contains(marker)) { found=p;break; }
                             }
                             if(found<0) throw new IOException("No se encontró la ubicación de firma de la etapa.");
-                            slots.add(new SignatureSlot("REVIEWER",DocumentWorkflowSnapshot.signatureAction(stage.action()),stage.label(),person.id(),found,found+1,signatureBounds(composed,found,String.valueOf(slotNumber))));
+                            slots.add(new SignatureSlot("REVIEWER",DocumentWorkflowSnapshot.signatureAction(stage.action()),stage.label(),person.id(),found,found+1,signatureBounds(composed,found,String.valueOf(slotNumber),markers)));
                             slotNumber++;
                         }
                     }
-                    stampPageNumbers(composed);
+                    rebindIndexLinks(nativePdf,composed,insertion,insertedPages);
+                    stampPageNumbers(composed,pages,markers);
                     var out=new ByteArrayOutputStream();composed.save(out);
                     return new Generated(out.toByteArray(),List.copyOf(pages),List.copyOf(slots));
                 } finally { for(var source:sources) source.close(); }
             }
         } catch(Exception e) { throw new IllegalStateException("No se pudo generar el documento T1.",e); }
     }
+    private static void rebindIndexLinks(PDDocument original,PDDocument composed,int insertion,int insertedPages) throws IOException {
+        for(int page=0;page<original.getNumberOfPages();page++) {
+            int finalPage=page+(page>=insertion?insertedPages:0);
+            for(var annotation:composed.getPage(finalPage).getAnnotations()) {
+                if(!(annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link))continue;
+                org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDestination destination=link.getDestination();
+                var action=link.getAction();
+                if(action instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go) destination=go.getDestination();
+                if(destination instanceof PDNamedDestination named)destination=original.getDocumentCatalog().findNamedDestinationPage(named);
+                if(!(destination instanceof org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination target))continue;
+                int index=target.getPage()==null?target.getPageNumber():original.getPages().indexOf(target.getPage());
+                if(index<0||index>=original.getNumberOfPages())continue;
+                target.setPage(composed.getPage(index+(index>=insertion?insertedPages:0)));
+                if(action instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go)go.setDestination(target);else link.setDestination(target);
+            }
+        }
+    }
     private static Page metadata(PDPage page,int index,String kind,UUID attachmentId) { return new Page(index,index+1,page.getMediaBox().getWidth(),page.getMediaBox().getHeight(),kind,attachmentId); }
     private static class SignatureMarkers extends PDFTextStripper {
         TextPosition top,bottom,last;
         final String suffix;
-        SignatureMarkers(String suffix) throws IOException { this.suffix=suffix; }
+        final CompositionMarkers markers;
+        SignatureMarkers(String suffix,CompositionMarkers markers) throws IOException { this.suffix=suffix;this.markers=markers; }
         @Override protected void writeString(String text,List<TextPosition> positions) {
             text=positions.stream().map(TextPosition::getUnicode).collect(java.util.stream.Collectors.joining());
-            int first=text.indexOf("@@SIGTOP"+suffix+"@@"),end=text.indexOf("@@SIGBOTTOM"+suffix+"@@");
+            int first=text.indexOf(markers.top(suffix)),end=text.indexOf(markers.bottom(suffix));
             if(first>=0) top=positions.get(first);
-            if(end>=0) { bottom=positions.get(end);last=positions.get(Math.min(end+12+suffix.length(),positions.size()-1)); }
+            if(end>=0) { bottom=positions.get(end);last=positions.get(Math.min(end+markers.bottom(suffix).length()-1,positions.size()-1)); }
         }
     }
-    private static Bounds signatureBounds(PDDocument pdf,int index) throws IOException {
-        return signatureBounds(pdf,index,"");
-    }
-    private static Bounds signatureBounds(PDDocument pdf,int index,String suffix) throws IOException {
-        var marker=new SignatureMarkers(suffix);marker.setStartPage(index+1);marker.setEndPage(index+1);marker.getText(pdf);
+    private static Bounds signatureBounds(PDDocument pdf,int index,String suffix,CompositionMarkers markers) throws IOException {
+        var marker=new SignatureMarkers(suffix,markers);marker.setStartPage(index+1);marker.setEndPage(index+1);marker.getText(pdf);
         if(marker.top==null || marker.bottom==null) throw new IOException("Signature bounds not found.");
         float x=marker.top.getXDirAdj(),y=pdf.getPage(index).getMediaBox().getHeight()-marker.bottom.getYDirAdj();
         float width=marker.last.getXDirAdj()+marker.last.getWidthDirAdj()-x,height=marker.bottom.getYDirAdj()-marker.top.getYDirAdj();
@@ -139,31 +164,45 @@ public class T1PdfEngine {
     }
     private static class NumberMarker extends PDFTextStripper {
         final List<TextPosition> positions=new ArrayList<>();
-        NumberMarker() throws IOException {}
+        final CompositionMarkers markers;
+        NumberMarker(CompositionMarkers markers) throws IOException { this.markers=markers; }
         @Override protected void writeString(String text,List<TextPosition> positions) throws IOException {
             text=positions.stream().map(TextPosition::getUnicode).collect(java.util.stream.Collectors.joining());
-            int start=text.indexOf("@@PN@@");if(start>=0) this.positions.addAll(positions.subList(start,Math.min(start+6,positions.size())));
+            for(int start=text.indexOf(markers.page());start>=0;start=text.indexOf(markers.page(),start+markers.page().length())) {
+                // Signature commands contain the same composition context, but are not page counters.
+                String prefix=text.substring(0,start);
+                if(prefix.endsWith("@@SIGTOP")||prefix.endsWith("@@SIGBOTTOM")) continue;
+                this.positions.addAll(positions.subList(start,Math.min(start+markers.page().length(),positions.size())));
+            }
         }
     }
-    private static void stampPageNumbers(PDDocument pdf) throws IOException {
+    private static void stampPageNumbers(PDDocument pdf,List<Page> pages,CompositionMarkers markers) throws IOException {
         for(int i=0;i<pdf.getNumberOfPages();i++) {
-            var marker=new NumberMarker();marker.setStartPage(i+1);marker.setEndPage(i+1);marker.getText(pdf);
+            // Imported annex/evidence pages are source documents, not template commands.
+            // Their text (even marker-like literals), numbering and content streams stay intact.
+            if(pages.get(i).attachmentId()!=null) continue;
+            var marker=new NumberMarker(markers);marker.setStartPage(i+1);marker.setEndPage(i+1);marker.getText(pdf);
             // Remove composition markers on every page, including pages without a page-number marker.
             var page=pdf.getPage(i);var parser=new PDFStreamParser(page);var tokens=parser.parse();parser.close();
             for(var token:tokens) {
-                if(token instanceof COSString value) clearMarker(value);
-                if(token instanceof COSArray values) for(var value:values) if(value instanceof COSString string) clearMarker(string);
+                if(token instanceof COSString value) clearMarker(value,markers);
+                if(token instanceof COSArray values) for(var value:values) if(value instanceof COSString string) clearMarker(string,markers);
             }
             var rewritten=new PDStream(pdf);try(var output=rewritten.createOutputStream(COSName.FLATE_DECODE)) { new ContentStreamWriter(output).writeTokens(tokens); }page.setContents(rewritten);
             if(marker.positions.isEmpty()) continue;
-            var first=marker.positions.getFirst();var last=marker.positions.getLast();float x=first.getXDirAdj(),y=page.getMediaBox().getHeight()-first.getYDirAdj();
+            var first=marker.positions.getFirst();var last=marker.positions.getLast();
+            var font=new PDType1Font(Standard14Fonts.FontName.HELVETICA);float size=Math.max(8,first.getFontSizeInPt());String number=String.valueOf(i+1);
+            // T1's source field is centered; T2/T3 explicitly align it right.
+            // The visible number follows that anchor, never the random token's left edge.
+            float right=last.getXDirAdj()+last.getWidthDirAdj(),numberWidth=font.getStringWidth(number)*size/1000f;
+            float x=pages.get(i).kind().equals("T1")?(first.getXDirAdj()+right-numberWidth)/2:right-numberWidth,y=page.getMediaBox().getHeight()-first.getYDirAdj();
             try(var stream=new PDPageContentStream(pdf,page,PDPageContentStream.AppendMode.APPEND,true,true)) {
-                stream.setNonStrokingColor(Color.BLACK);stream.beginText();stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA),Math.max(8,first.getFontSizeInPt()));stream.newLineAtOffset(x,y);stream.showText(String.valueOf(i+1));stream.endText();
+                stream.setNonStrokingColor(Color.BLACK);stream.beginText();stream.setFont(font,size);stream.newLineAtOffset(x,y);stream.showText(number);stream.endText();
             }
         }
     }
-    private static void clearMarker(COSString value) {
+    private static void clearMarker(COSString value,CompositionMarkers markers) {
         byte[] bytes=value.getBytes();String text=new String(bytes,java.nio.charset.StandardCharsets.ISO_8859_1);
-        if(text.contains("@@")) value.setValue(text.replace("@@PN@@","").replaceAll("@@SIG(?:TOP|BOTTOM)[A0-9]*@@","").getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
+        if(text.contains(markers.page())) value.setValue(markers.clear(text).getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
     }
 }

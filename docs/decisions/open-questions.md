@@ -1,5 +1,9 @@
 # Decisiones pendientes y contradicciones
 
+## Firma — precisión del propietario, 2026-10-27
+
+La firma real usa el certificado aportado y confirmado en la operación, sin vinculación administrativa obligatoria. No existe una fuente institucional confiable que permita demostrar la correspondencia entre cuenta y titular: se registran por separado y no se afirma equivalencia. Cadena emisora, revocación y tiempo confiable siguen pendientes de contrato institucional. Esta decisión sustituye el requisito anterior de pin administrativo, preservando su historia. [Contrato vigente](../api/author-signing.md).
+
 ## Precisiones de implementación — 2026-10-21
 
 - La copia local de custodia debe verificarse realmente por SHA-256; una respuesta HTTP de descarga no prueba su conservación. Sigue siendo necesaria la custodia fuera del servidor, antes de cualquier purga manual.

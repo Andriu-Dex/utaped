@@ -1,0 +1,11 @@
+.consultation-actions { margin: 20px 0; }
+.document-consultation-layout { display:grid; grid-template-columns:minmax(280px,.85fr) minmax(0,1.4fr); gap:24px; align-items:start; }
+.document-consultation-layout > * { min-width:0; }
+.document-consultation-layout .card { margin-top:0; }
+.document-consultation-layout dt { font-size:.85rem; color:var(--muted); margin-top:14px; }
+.document-consultation-layout dd { margin:4px 0 0; overflow-wrap:anywhere; }
+.consultation-confirmation { padding:18px; margin:20px 0; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+@media (max-width:1199px) {
+  .document-consultation-layout { grid-template-columns:minmax(0,1fr); }
+  .document-consultation-layout .plan-preview.card { position:static; max-height:none; }
+}

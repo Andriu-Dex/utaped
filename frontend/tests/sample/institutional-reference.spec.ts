@@ -1,3 +1,4 @@
+import { returnToPlan } from '../plan-navigation'
 import { randomUUID } from 'node:crypto'
 import { withConfirmation } from '../confirmation'
 import { test, expect } from '@playwright/test'
@@ -68,10 +69,16 @@ test('fictional people have realistic names in the profile and activity responsi
   }
   await expect(people).not.toContainText('Desarrollo')
   const matrix = await api(page, '/work-plans/' + plan.id + '/matrix')
+  expect(matrix.collectiveLabel).toBe('Responsable de la unidad')
   for (const person of matrix.members) await people.getByRole('checkbox', { name: person.name, exact: true }).check()
   await expect(people.getByText('En el documento aparecerá: ' + matrix.collectiveLabel + '.', { exact: false })).toBeVisible()
   await people.getByRole('checkbox', { name: matrix.members[0].name, exact: true }).uncheck()
   await expect(people.getByText('En el documento aparecerá:', { exact: false })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Listo', exact: true }).click()
+  const partialSummary = page.getByRole('region', { name: 'Resumen de actividades', exact: true })
+  await expect(partialSummary).not.toContainText(matrix.collectiveLabel)
+  for (const member of matrix.members.slice(1)) await expect(partialSummary).toContainText(member.name)
+  await page.getByRole('button', { name: 'Ver detalle de la actividad 1', exact: true }).click()
   await people.getByRole('button', { name: 'Seleccionar todos', exact: true }).click()
   await activity.getByLabel('Desde', { exact: true }).fill(matrix.periodStartsOn)
   await activity.getByLabel('Hasta', { exact: true }).fill(matrix.periodEndsOn)
@@ -87,6 +94,8 @@ test('fictional people have realistic names in the profile and activity responsi
   await page.getByRole('button', { name: 'Listo', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Resumen de la matriz', exact: true })).toBeVisible()
   const summary = page.getByRole('region', { name: 'Resumen de actividades', exact: true })
+  await expect(summary).toContainText('Responsable de la unidad')
+  await expect(summary.locator('.matrix-collective-badge')).toHaveAttribute('title', /Todos seleccionados/)
   await summary.screenshot({ path: 'test-results/matrix-summary-tablet-dark.png', animations: 'disabled' })
   await page.getByLabel('Fuente de la matriz', { exact: false }).fill(matrix.elaboratedBy)
   await page.getByRole('button', { name: 'Guardar matriz', exact: true }).click()
@@ -110,10 +119,16 @@ test('fictional people have realistic names in the profile and activity responsi
   await page.unroute('**/api/work-plans/' + plan.id + '/matrix')
   await page.getByRole('button', { name: 'Siguiente: Anexos', exact: true }).click()
   await expect(page.getByRole('heading', { name: /Anexos/ }).first()).toBeVisible()
+  await page.getByRole('button', { name: /Siguiente: Revisar y firmar/ }).click()
+  await expect(page.getByRole('heading', { name: 'Revisar y firmar', exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Datos pendientes', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Preparar firma', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: /Anterior: Anexos y opciones/ }).click()
+  await expect(page.getByRole('heading', { name: /Anexos/ }).first()).toBeVisible()
   const continued = await api(page, '/work-plans/' + plan.id + '/matrix')
   expect(continued.source).toBe('Fuente ajustada antes de Anexos')
   expect(continued.activities[0].responsibleIds).toHaveLength(matrix.members.length)
-  await page.getByRole('button', { name: 'Volver al Plan', exact: true }).click()
+  await returnToPlan(page)
   await page.route('**/api/work-plans/' + plan.id + '/matrix', route => route.fulfill({ json: { ...continued, editable: false } }))
   await page.getByRole('button', { name: /3\s*Actividades y matriz/ }).click()
   await page.getByRole('button', { name: 'Ver detalle de la actividad 1', exact: true }).click()

@@ -23,17 +23,20 @@ public class T3Template {
     private static final DateTimeFormatter PRESENTATION=DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy",Locale.forLanguageTag("es-EC"));
     private final byte[] reference;
     public T3Template() throws IOException { try(var in=new ClassPathResource("document-templates/t3-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine7"; }
+    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine10"; }
     public List<String> sections(Snapshot s) { return SECTIONS; }
     private static String title(Snapshot s) { return "INFORME DE EJECUCIÓN "+ec.edu.uta.utaped.planning.ExecutionReportService.roman(s.execution().sequenceNumber())+": "+s.plan().groupName().toUpperCase(Locale.ROOT); }
     public byte[] compose(Snapshot s,Map<String,Integer> pageNumbers) {
+        return compose(s,pageNumbers,CompositionMarkers.forSnapshot(s));
+    }
+    byte[] compose(Snapshot s,Map<String,Integer> pageNumbers,CompositionMarkers markers) {
         try(var input=new ZipInputStream(new ByteArrayInputStream(reference));var buffer=new ByteArrayOutputStream();var out=new ZipOutputStream(buffer)) {
             for(ZipEntry entry;(entry=input.getNextEntry())!=null;) {
                 byte[] bytes=input.readAllBytes();
                 if(entry.getName().equals("word/document.xml")||entry.getName().matches("word/(header|footer)\\d+\\.xml")) {
                     var factory=DocumentBuilderFactory.newInstance();factory.setNamespaceAware(true);factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA,"");
                     var doc=factory.newDocumentBuilder().parse(new ByteArrayInputStream(bytes));
-                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers);StructuredSections.apply(doc,s,pageNumbers); }else furniture(doc,s);
+                    if(entry.getName().equals("word/document.xml")) { body(doc,s,pageNumbers,markers);StructuredSections.apply(doc,s,pageNumbers);InstitutionalIndex.finish(doc); }else furniture(doc,s,markers);
                     var transformers=TransformerFactory.newDefaultInstance();transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"");transformers.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET,"");
                     var xml=new ByteArrayOutputStream();transformers.newTransformer().transform(new DOMSource(doc),new StreamResult(xml));bytes=xml.toByteArray();
                 }
@@ -44,9 +47,10 @@ public class T3Template {
     }
     private static List<String> items(String value) { return Arrays.stream(value.split("\\R")).map(String::strip).filter(line->!line.isEmpty()).toList(); }
     private static void list(List<Element> out,Element prototype,String value) { var lines=items(value);for(String line:lines.isEmpty()?List.of("No aplica."):lines) out.add(paragraph(prototype,line)); }
-    private void body(Document doc,Snapshot s,Map<String,Integer> numbers) {
+    private void body(Document doc,Snapshot s,Map<String,Integer> numbers,CompositionMarkers markers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);var result=new ArrayList<Element>();var sectionNodes=new LinkedHashMap<String,Element>();
         var data=s.execution();var plain=source.get(36);
+        text(source.get(11),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());
         text(source.get(13),title(s));text(source.get(15),"PERÍODO: "+s.plan().periodName().toUpperCase(Locale.ROOT));
         // Blank paragraphs in the Word cover have opaque white shading over a floating logo.
         // Keep the original graphic and positioning, but let it remain visible in the PDF renderer.
@@ -55,7 +59,7 @@ public class T3Template {
         result.addAll(source.subList(0,21));
         // The template's static table of contents is rebuilt with the real page numbers.
         var tocPrototype=all(source.get(21),"p").stream().filter(p->all(p,"pStyle").stream().anyMatch(st->st.getAttributeNS(W,"val").equals("TDC1"))).findFirst().orElseThrow();
-        for(int i=0;i<SECTIONS.size();i++) result.add(paragraph(tocPrototype,(i+1)+". "+SECTIONS.get(i)+" ................................ "+numbers.getOrDefault(SECTIONS.get(i),0)));
+        for(int i=0;i<SECTIONS.size();i++) result.add(InstitutionalIndex.entry(tocPrototype,(i+1)+". "+SECTIONS.get(i),SECTIONS.get(i),numbers));
         result.addAll(source.subList(22,27));
         heading(result,sectionNodes,source.get(27),SECTIONS.get(0));result.add(source.get(28));
         lines(result,plain,s.plan().objective().isBlank()?"No registrado en el Plan.":s.plan().objective());
@@ -85,16 +89,17 @@ public class T3Template {
         }
         result.add(actions);
         heading(result,sectionNodes,source.get(71),SECTIONS.get(4));
-        result.add(paragraph(source.get(73),"Enlace de evidencias: "+(data.evidenceLink().isBlank()?"No aplica.":data.evidenceLink())));
+        if(s.attachments().isEmpty()&&(s.externalReferences()==null||s.externalReferences().isEmpty())&&data.evidenceLink().isBlank()) result.add(paragraph(plain,"(No aplica)"));
+        else result.add(paragraph(source.get(73),"Enlace de evidencias: "+(data.evidenceLink().isBlank()?"No aplica.":data.evidenceLink())));
         for(var a:s.attachments()) { result.add(paragraph(plain,a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(plain,a.description())); }
         if(s.externalReferences()!=null) for(var reference:s.externalReferences()) result.add(paragraph(plain,"Referencia externa · "+reference.activity()+" · "+reference.medium()+": "+reference.url()));
         heading(result,sectionNodes,source.get(76),SECTIONS.get(5));property(sectionNodes.get(SECTIONS.get(5)),"pageBreakBefore");
         var signatures=source.get(79);var signatureRows=children(signatures,"tr");var signaturePrototype=(Element)signatureRows.get(1).cloneNode(true);for(int i=1;i<signatureRows.size();i++) signatures.removeChild(signatureRows.get(i));
-        for(int i=0;i<s.resolvedAuthors().size();i++) { var author=s.resolvedAuthors().get(i);signature(signatures,signaturePrototype,"Elaborado por:",author.name(),author.position(),i==0?"":"A"+i); }
+        for(int i=0;i<s.resolvedAuthors().size();i++) { var author=s.resolvedAuthors().get(i);signature(signatures,signaturePrototype,"Elaborado por:",author.name(),author.position(),i==0?"":"A"+i,markers); }
         int slot=1;
         if(s.workflow()!=null) for(var stage:s.workflow().stages()) {
-            if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null);
-            else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null);
+            if(stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) signature(signatures,signaturePrototype,stage.label()+":",stage.recipientLabel(),"",null,markers);
+            else for(var person:stage.participants()) signature(signatures,signaturePrototype,stage.label()+":",person.name(),person.position()==null?"":person.position(),stage.requiresSignature()?String.valueOf(slot++):null,markers);
         }
         result.add(signatures);
         heading(result,sectionNodes,source.get(82),SECTIONS.get(6));
@@ -116,15 +121,16 @@ public class T3Template {
         for(var cell:all(table,"tc")) { var cp=children(cell,"tcPr").stream().findFirst().orElseGet(()->{var e=element(doc,"tcPr");cell.insertBefore(e,cell.getFirstChild());return e;});removeAll(cp,"tcBorders");var edges=element(doc,"tcBorders");cp.appendChild(edges);targets.add(edges); }
         for(var target:targets)for(String edge:target==outer?List.of("top","left","bottom","right","insideH","insideV"):List.of("top","left","bottom","right")) {var border=element(doc,edge);border.setAttributeNS(W,"w:val","single");border.setAttributeNS(W,"w:sz","4");border.setAttributeNS(W,"w:color","000000");target.appendChild(border);}
     }
-    private void furniture(Document doc,Snapshot s) {
+    private void furniture(Document doc,Snapshot s,CompositionMarkers markers) {
         var root=doc.getDocumentElement();
         for(var p:all(root,"p")) {
             String value=String.join("",all(p,"t").stream().map(Element::getTextContent).toList());
             if(value.startsWith("INFORME DE EJECUCI")) text(p,title(s));
             else if(value.startsWith("Período:")) text(p,"Período: "+s.plan().periodName());
+            else if(value.startsWith("Unidad Académica / Administrativa:")) text(p,("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"Unidad administrativa: ":"Unidad académica: ")+s.plan().institutionalUnit());
             else if(value.startsWith("Fecha de Presentación:")) text(p,"Fecha de Presentación: "+s.plan().preparationDate().format(PRESENTATION));
             if(all(p,"instrText").stream().anyMatch(n->n.getTextContent().contains("PAGE"))) {
-                text(p,"Página: @@PN@@");property(p,"jc").setAttributeNS(W,"w:val","right");
+                text(p,"Página: "+markers.page());property(p,"jc").setAttributeNS(W,"w:val","right");
             }
         }
         for(var table:all(root,"tbl")) fit(table,8504);

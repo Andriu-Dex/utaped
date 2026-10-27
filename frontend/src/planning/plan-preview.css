@@ -1,0 +1,374 @@
+/* The document stays mounted while the editor changes steps. */
+.plan-preview-controls { display:flex; align-items:center; justify-content:flex-start; gap:16px; flex-wrap:wrap; margin:16px 0; }
+.plan-preview-controls .live-preview-tabs { display:flex; gap:4px; padding:4px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.plan-preview-controls .preview-tab-btn { display:inline-flex; gap:8px; align-items:center; background:transparent; color:var(--muted); border:1px solid transparent; padding:9px 12px; border-radius:8px; min-height:40px; }
+.plan-preview-controls .preview-tab-btn[aria-pressed='true'] { color:var(--blue-900); background:var(--blue-100); border-color:var(--border); }
+.plan-preview-width { display:none; }
+.plan-persistent-workspace { display:grid; grid-template-columns:minmax(0,var(--editor-width,46%)) 10px minmax(0,1fr); align-items:start; gap:0; }
+.plan-persistent-workspace > * { min-width:0; }
+/* Preparation and wizard steps share the standard 3-column split workspace with resizer. */
+.plan-review-confirmation { padding:18px 22px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.plan-review-confirmation label { margin:0; }
+.signature-placement-list { display:grid; gap:12px; padding-left:22px; }
+.signature-placement-list li span { display:block; color:var(--muted); font-size:.85rem; margin-top:4px; }
+.plan-persistent-workspace[data-pane='edit'], .plan-persistent-workspace[data-pane='preview'] { grid-template-columns:minmax(0,1fr); gap:0; }
+.plan-persistent-workspace[data-pane='edit'][data-step='preparation'],
+.plan-persistent-workspace[data-pane='preview'][data-step='preparation'] { grid-template-columns:minmax(0,1fr); }
+.plan-persistent-workspace[data-pane='edit'] > .plan-preview,
+.plan-persistent-workspace[data-pane='preview'] > .plan-editor-pane,
+.plan-persistent-workspace[data-pane='edit'] > .plan-workspace-resizer,
+.plan-persistent-workspace[data-pane='preview'] > .plan-workspace-resizer { display:none; }
+.plan-persistent-workspace.is-resizing,
+.plan-persistent-workspace.is-resizing * { cursor:col-resize !important; user-select:none !important; }
+.plan-editor-pane > .card, .plan-editor-pane .plan-step-panel > .card { padding:24px; }
+.plan-editor-pane .plan-metadata { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.plan-editor-pane .plan-metadata dd { overflow-wrap:anywhere; }
+.plan-preview.card { position:sticky; top:calc(var(--plan-topbar-height,90px) + 72px); margin:0; padding:12px 14px; max-height:calc(100dvh - var(--plan-topbar-height,90px) - 92px); overflow:auto; scrollbar-gutter:stable; }
+.plan-preview-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:8px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+.plan-preview-state { display:inline-flex; align-items:center; gap:8px; font-size:.78rem; flex-wrap:wrap; }
+.plan-preview-state .status-badge { white-space:normal; }
+.plan-preview-section-tag { color:var(--muted); font-size:.75rem; font-weight:500; }
+.plan-preview-actions { display:flex; gap:6px; flex-shrink:0; }
+.plan-preview .document-reading-desk { padding:12px; margin-bottom:0; min-height:240px; }
+.plan-preview .document-reading-desk.is-stale { opacity:.65; }
+.plan-preview-paper { padding:0; border:1px solid var(--border); width:100%; cursor:zoom-in; background:#fff; }
+.plan-preview-paper:hover:not(:disabled) { transform:none; background:#fff; }
+.plan-preview .document-page { width:100%; }
+.plan-preview-empty { display:grid; place-items:center; text-align:center; gap:14px; padding:48px 24px; background:var(--canvas); border:1px dashed var(--border); border-radius:12px; color:var(--muted); }
+.plan-preview-dialog { width:min(1280px,94vw); max-width:94vw; max-height:94dvh; padding:24px; border:1px solid var(--border); border-radius:16px; background:var(--surface); color:var(--text); }
+.plan-preview-dialog::backdrop { background:rgb(5 24 42 / .65); }
+.plan-preview-dialog > header { display:flex; justify-content:space-between; align-items:center; gap:20px; }
+.plan-preview-dialog h2 { font-size:1.2rem; }
+.plan-preview-expanded-paper { overflow:auto; max-height:68dvh; background:var(--canvas); padding:24px; text-align:center; }
+.plan-preview-expanded-paper img { width:auto; max-width:none; min-width:min(100%,800px); background:#fff; box-shadow:var(--shadow); }
+:root[data-theme='dark'] .plan-preview-controls .preview-tab-btn[aria-pressed='true'] { background:#183f60; color:#d9efff; }
+
+/* Split view adaptations for Step 3 Matrix */
+.matrix-summary-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.matrix-summary-heading-text { flex:1; min-width:0; }
+.matrix-heading-actions { flex-shrink:0; }
+.matrix-toggle-split-btn { display:inline-flex !important; align-items:center !important; gap:6px !important; font-size:.78rem !important; padding:6px 12px !important; white-space:nowrap !important; border-radius:8px !important; }
+
+/* Card layout elements: hidden by default in full-width table view */
+.matrix-card-field-label { display:none; }
+.matrix-cell-content { display:contents; }
+
+/* In split mode, transform matrix table into readable compact cards */
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table {
+  overflow-x:hidden !important;
+  max-height:none !important;
+  padding:0;
+  border:none;
+  background:transparent;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table table {
+  display:block;
+  width:100% !important;
+  min-width:0 !important;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table thead,
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table caption {
+  display:none !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table tbody {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  grid-template-areas:
+    "title actions"
+    "dates dates"
+    "responsibles responsibles"
+    "coverage coverage" !important;
+  row-gap:8px !important;
+  column-gap:12px !important;
+  padding:14px 16px !important;
+  background:var(--surface) !important;
+  border:1px solid var(--border) !important;
+  border-radius:12px !important;
+  box-shadow:0 1px 3px rgba(0,0,0,.04) !important;
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr:hover {
+  border-color:var(--blue-300, #90cdf4) !important;
+  box-shadow:0 2px 6px rgba(0,0,0,.08) !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr.is-selected-row {
+  border-color:var(--blue-700) !important;
+  background:rgba(23,95,148,.06) !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-summary-table th[scope='row'] {
+  grid-area:title;
+  min-width:0 !important;
+  padding:0 !important;
+  border:none !important;
+  background:transparent !important;
+  text-align:left !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-activity-title-cell {
+  gap:10px;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-activity-title-content strong {
+  font-size:.88rem;
+  line-height:1.4;
+  color:var(--text);
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-action-cell {
+  grid-area:actions;
+  padding:0 !important;
+  border:none !important;
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:flex-end !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-row-actions {
+  display:flex;
+  gap:6px;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-dates,
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-responsibles,
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-coverage {
+  padding:0 !important;
+  border:none !important;
+  display:flex !important;
+  align-items:center !important;
+  text-align:left !important;
+  gap:8px !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-dates {
+  grid-area:dates;
+  border-top:1px solid color-mix(in srgb, var(--border) 60%, transparent) !important;
+  padding-top:8px !important;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-responsibles {
+  grid-area:responsibles;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-coverage {
+  grid-area:coverage;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-card-field-label {
+  display:inline-block;
+  min-width:96px;
+  width:96px;
+  flex-shrink:0;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--muted);
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-cell-content {
+  display:flex;
+  align-items:center;
+  flex:1;
+  min-width:0;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-date-range-badge {
+  padding:3px 8px;
+  font-size:.75rem;
+  gap:5px;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-coverage-badge,
+.plan-persistent-workspace[data-pane='split'] .matrix-collective-badge {
+  padding:3px 8px;
+  font-size:.75rem;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+
+.plan-persistent-workspace[data-pane='split'] .matrix-pending-badge {
+  padding:3px 8px;
+  font-size:.75rem;
+}
+
+:root[data-theme='dark'] .plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr {
+  background:var(--surface) !important;
+  border-color:var(--border) !important;
+}
+
+:root[data-theme='dark'] .plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr:hover {
+  border-color:var(--blue-600, #3182ce) !important;
+}
+
+:root[data-theme='dark'] .plan-persistent-workspace[data-pane='split'] .matrix-summary-table tr.is-selected-row {
+  border-color:#4386b8 !important;
+  background:rgba(23,95,148,.18) !important;
+}
+
+/* Workspace Resizer (Draggable Splitter) */
+.plan-workspace-resizer {
+  position: relative;
+  align-self: stretch;
+  min-height: 480px;
+  width: 10px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-workspace-resizer .plan-resizer-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--border);
+  transition: background 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: none;
+}
+
+.plan-workspace-resizer:hover .plan-resizer-line,
+.plan-workspace-resizer.is-dragging .plan-resizer-line,
+.plan-workspace-resizer:focus-within .plan-resizer-line {
+  background: var(--blue-700);
+  width: 2px;
+  box-shadow: 0 0 6px rgba(23, 95, 148, 0.35);
+}
+
+/* Badge showing percentage ONLY while actively dragging or keyboard-focused */
+.plan-workspace-resizer .plan-resizer-badge {
+  position: sticky;
+  top: calc(var(--plan-topbar-height, 90px) + 160px);
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  background: var(--blue-900, #0c2d48);
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  width: max-content;
+  height: auto;
+  z-index: 5;
+}
+
+.plan-workspace-resizer.is-dragging .plan-resizer-badge,
+.plan-workspace-resizer:focus-within .plan-resizer-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.plan-resizer-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:root[data-theme='dark'] .plan-workspace-resizer .plan-resizer-line {
+  background: var(--border);
+}
+
+:root[data-theme='dark'] .plan-workspace-resizer:hover .plan-resizer-line,
+:root[data-theme='dark'] .plan-workspace-resizer.is-dragging .plan-resizer-line,
+:root[data-theme='dark'] .plan-workspace-resizer:focus-within .plan-resizer-line {
+  background: #3989c6;
+  box-shadow: 0 0 8px rgba(57, 137, 198, 0.4);
+}
+
+:root[data-theme='dark'] .plan-workspace-resizer .plan-resizer-badge {
+  background: #102436;
+  color: #bce0fc;
+  border: 1px solid #2b5579;
+}
+
+@media (max-width:1199px) {
+  .plan-persistent-workspace,
+  .plan-persistent-workspace[data-step='signing'] { grid-template-columns:minmax(0,1fr); }
+  .plan-persistent-workspace[data-pane='split'] > .plan-preview { display:none; }
+  .plan-preview.card { position:static; max-height:none; }
+  .plan-preview-width { display:none; }
+  .plan-workspace-resizer { display:none !important; }
+}
+
+.template-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--blue-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.template-action-btn:hover:not(:disabled) {
+  background: rgba(23, 95, 148, 0.08);
+  border-color: var(--blue-700);
+  color: var(--blue-800);
+}
+
+:root[data-theme='dark'] .template-action-btn {
+  color: #8ec3ea;
+  border-color: #244360;
+  background: #102436;
+}
+
+:root[data-theme='dark'] .template-action-btn:hover:not(:disabled) {
+  background: #173752;
+  border-color: #4386b8;
+  color: #bce0fc;
+}
+
+.plan-wizard .plan-preview-controls .plan-preview-width { display:inline-flex; align-items:center; margin:0; }
+:root[data-theme='dark'] .plan-preview button.secondary,
+:root[data-theme='dark'] .plan-preview-dialog button.secondary { background:#173752; color:#d9efff; border-color:#416680; }
+:root[data-theme='dark'] .plan-preview button.secondary:disabled,
+:root[data-theme='dark'] .plan-preview-dialog button.secondary:disabled { background:#132d43; color:#9cb4c6; }
+
+.plan-preview-viewer > .document-page-navigator { position:sticky; top:0; z-index:2; background:var(--surface); margin:6px 0 10px; }
+
+@media (max-width:1199px) {
+  .plan-persistent-workspace[data-step='preparation'] { grid-template-columns:minmax(0,1fr); }
+}
+
+.plan-preview { scroll-margin-top: calc(var(--plan-topbar-height, 88px) + 100px); }

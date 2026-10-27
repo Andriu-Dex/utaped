@@ -31,6 +31,40 @@ public final class Pkcs12PdfSigner {
         SigningException(String message) { super(message); }
     }
 
+    public record CertificateDetails(String fingerprint,String holder,String subject,String issuer,String serial,Instant validFrom,Instant validUntil) {}
+    /** Reads only public metadata, proves key usability, and consumes all sensitive input. */
+    public CertificateDetails inspect(byte[] container,char[] password,Instant now) {
+        PrivateKey key=null;
+        try {
+            if(container==null||container.length==0||container.length>MAX_CONTAINER_BYTES||password==null||password.length==0||now==null) fail("Archivo o contraseña de firma no válidos.");
+            var store=KeyStore.getInstance("PKCS12");store.load(new ByteArrayInputStream(container),password);
+            var aliases=Collections.list(store.aliases()).stream().filter(alias->{try { return store.isKeyEntry(alias); } catch(KeyStoreException e) { throw new SigningException("No se pudo leer el contenedor."); }}).toList();
+            if(aliases.size()!=1) fail("El contenedor debe incluir exactamente una clave de firma.");
+            key=(PrivateKey)store.getKey(aliases.getFirst(),password);
+            var certificates=store.getCertificateChain(aliases.getFirst());
+            if(key==null||certificates==null||certificates.length==0) fail("El archivo no contiene certificado y clave de firma.");
+            var leaf=(X509Certificate)certificates[0];
+            String fingerprint=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(leaf.getEncoded()));
+            validateCertificate(leaf,List.of(leaf),fingerprint,null,now);
+            var proof=Signature.getInstance(algorithm(key,leaf));var challenge=new byte[32];new SecureRandom().nextBytes(challenge);
+            proof.initSign(key);proof.update(challenge);var signature=proof.sign();proof.initVerify(leaf.getPublicKey());proof.update(challenge);
+            if(!proof.verify(signature)) fail("La clave no corresponde al certificado del archivo.");
+            String subject=leaf.getSubjectX500Principal().getName(),holder=subject;
+            for(var rdn:new javax.naming.ldap.LdapName(subject).getRdns()) if(rdn.getType().equalsIgnoreCase("CN")) holder=String.valueOf(rdn.getValue());
+            String issuer=leaf.getIssuerX500Principal().getName();
+            if(holder.isBlank()) fail("El certificado no incluye un titular identificable.");
+            if(holder.length()>512||subject.length()>4096||issuer.length()>4096) fail("Los datos del certificado exceden el límite técnico permitido.");
+            return new CertificateDetails(fingerprint,holder,subject,issuer,leaf.getSerialNumber().toString(16),leaf.getNotBefore().toInstant(),leaf.getNotAfter().toInstant());
+        } catch(SigningException e) { throw e; }
+        catch(CertificateExpiredException e) { throw new SigningException("El certificado ha caducado."); }
+        catch(CertificateNotYetValidException e) { throw new SigningException("El certificado todavía no está vigente."); }
+        catch(Exception e) { throw new SigningException("No se pudo abrir el certificado. Revise el archivo y la contraseña."); }
+        finally { if(container!=null) Arrays.fill(container,(byte)0);if(password!=null) Arrays.fill(password,'\0');if(key!=null) try { key.destroy(); } catch(DestroyFailedException ignored) {} }
+    }
+    public byte[] signProvided(byte[] original,byte[] container,char[] password,CertificateDetails certificate,Instant now,SignatureSlot slot,boolean additional) {
+        return sign(original,container,password,certificate.fingerprint(),Set.of(),now,slot,certificate.holder(),true,additional);
+    }
+
     /** Consumes and clears caller-owned container/password arrays, including on failure. */
     public byte[] sign(byte[] original,byte[] container,char[] password,String boundFingerprint,
         Set<TrustAnchor> anchors,Instant now) {

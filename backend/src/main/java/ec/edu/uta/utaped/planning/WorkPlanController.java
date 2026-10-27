@@ -19,8 +19,9 @@ public class WorkPlanController {
     @GetMapping("/options") public Options options(Principal principal) { return service.options(principal.getName()); }
     @GetMapping public Page list(Principal principal,@RequestParam(defaultValue="0") @Min(0) @Max(100000) int page,
         @RequestParam(defaultValue="20") @Min(1) @Max(50) int size,@RequestParam(required=false) UUID groupId,
-        @RequestParam(required=false) UUID periodId,@RequestParam(defaultValue="") @Size(max=200) String query) {
-        return service.list(principal.getName(),page,size,groupId,periodId,query.trim());
+        @RequestParam(required=false) UUID periodId,@RequestParam(defaultValue="") @Size(max=200) String query,
+        @RequestParam(defaultValue="UPDATED_DESC") @Size(max=30) String sort) {
+        return service.list(principal.getName(),page,size,groupId,periodId,query.trim(),sort);
     }
     @PostMapping public Plan create(Principal principal,@Valid @RequestBody Create data) { return service.create(principal.getName(),data); }
     @GetMapping("/{targetDocId}") public Plan get(@PathVariable UUID targetDocId,Principal principal) { return service.get(targetDocId,principal.getName()); }

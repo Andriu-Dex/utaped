@@ -13,7 +13,7 @@ export const adminPages = [
   { id: 'workflows', label: 'Flujos de aprobación', title: 'Flujos de aprobación', icon: 'settings' },
   { id: 'reporting', label: 'Reportes de gestión', title: 'Reportes de gestión', icon: 'document' },
   { id: 'audit', label: 'Auditoría', title: 'Auditoría administrativa', icon: 'eye' },
-  { id: 'certificates', label: 'Certificados', title: 'Vinculación de certificados', icon: 'lock' },
+  { id: 'certificates', label: 'Certificados', title: 'Historial de certificados', icon: 'lock' },
 ] as const satisfies readonly { id: string; label: string; title: string; icon: IconName }[]
 export type AdminPage = typeof adminPages[number]['id']
 export function isAdminPage(value: string): value is AdminPage { return adminPages.some(page => page.id === value) }

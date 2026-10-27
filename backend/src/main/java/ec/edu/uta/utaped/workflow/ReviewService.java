@@ -29,10 +29,10 @@ public class ReviewService {
         boolean requiresSignature,String status,long rowVersion,int roundNumber,int position) {}
     public record State(Map<String,Object> review,List<Map<String,Object>> tasks,List<Map<String,Object>> observations,int pageCount,String pdfHash,boolean canAct) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final WorkPlanService plans;private final ArtifactService artifacts;
-    private final StoredFiles files;private final AuditService audit;private final CertificateBindings bindings;private final boolean allowHttp;
+    private final StoredFiles files;private final AuditService audit;private final boolean allowHttp;
     private final JsonMapper json=JsonMapper.builder().build();private final Semaphore signing=new Semaphore(1);
-    public ReviewService(JdbcTemplate jdbc,Accounts accounts,WorkPlanService plans,ArtifactService artifacts,StoredFiles files,AuditService audit,CertificateBindings bindings,@Value("${app.signing.allow-http:false}") boolean allowHttp) {
-        this.jdbc=jdbc;this.accounts=accounts;this.plans=plans;this.artifacts=artifacts;this.files=files;this.audit=audit;this.bindings=bindings;this.allowHttp=allowHttp;
+    public ReviewService(JdbcTemplate jdbc,Accounts accounts,WorkPlanService plans,ArtifactService artifacts,StoredFiles files,AuditService audit,@Value("${app.signing.allow-http:false}") boolean allowHttp) {
+        this.jdbc=jdbc;this.accounts=accounts;this.plans=plans;this.artifacts=artifacts;this.files=files;this.audit=audit;this.allowHttp=allowHttp;
     }
     private ResponseStatusException conflict(String message) { return new ResponseStatusException(HttpStatus.CONFLICT,message); }
     private Snapshot frozen(UUID doc,UUID artifact) {
@@ -176,6 +176,9 @@ public class ReviewService {
         audit.record(accounts.current(email).id(),"REVIEW_TASK_COMPLETED",(UUID)record.get("work_plan_id"));
     }
     @Transactional public void sign(UUID task,String email,long rowVersion,String inputHash,UUID key,byte[] body,boolean secure) {
+        sign(task,email,rowVersion,inputHash,key,body,secure,null);
+    }
+    @Transactional public void sign(UUID task,String email,long rowVersion,String inputHash,UUID key,byte[] body,boolean secure,String certificateFingerprint) {
         try(var material=new SigningMaterial(body)) {
             if(!secure&&!allowHttp) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La firma requiere HTTPS.");
             if(idempotent(task,email,key,"COMPLETE")) return;
@@ -183,14 +186,18 @@ public class ReviewService {
             if(!(boolean)record.get("requires_signature")) throw conflict("Esta etapa no requiere firma.");
             requireNoObservations(record);
             var meta=files.metadata((UUID)record.get("current_file_id"));if(!meta.sha256().equals(inputHash)) throw conflict("El PDF cambió. Recargue antes de firmar.");
-            var binding=bindings.current(accounts.current(email).id());if(binding==null) throw conflict("Administración debe vincular su certificado público.");
+            Pkcs12PdfSigner.CertificateDetails certificate;
+            try { certificate=material.certificate(certificateFingerprint); }
+            catch(Pkcs12PdfSigner.SigningException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage()); }
             var source=jdbc.queryForObject("SELECT signature_slots::text FROM document_artifact WHERE id=?",String.class,record.get("artifact_id"));
             var slot=Arrays.stream(json.readValue(source,SignatureSlot[].class)).filter(s->accounts.current(email).id().equals(s.actorId())&&record.get("signature_action").equals(s.action())).findFirst().orElseThrow(()->conflict("Artefacto sin ubicación válida de firma."));
             if(!signing.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra firma en curso. Intente nuevamente.");
             byte[] output;
-            try { output=new Pkcs12PdfSigner().signPinnedAdditional(files.read(meta.id()),material.container,material.password,binding.fingerprint(),Instant.now(),slot,accounts.current(email).displayName()); }
+            try { output=new Pkcs12PdfSigner().signProvided(files.read(meta.id()),material.container,material.password,certificate,Instant.now(),slot,true); }
             catch(Pkcs12PdfSigner.SigningException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage()); } finally { signing.release(); }
-            var file=files.put(output,"documento-firmado.pdf",meta.pageCount());advance(record,task,email,key,file.id(),binding.id());
+            var file=files.put(output,"documento-firmado.pdf",meta.pageCount());advance(record,task,email,key,file.id(),null);
+            jdbc.update("UPDATE review_task SET signature_actor_name=?,certificate_subject=?,certificate_issuer=?,certificate_serial=?,certificate_fingerprint=?,certificate_valid_until=? WHERE id=?",
+                accounts.current(email).displayName(),certificate.subject(),certificate.issuer(),certificate.serial(),certificate.fingerprint(),OffsetDateTime.ofInstant(certificate.validUntil(),ZoneOffset.UTC),task);
         }
     }
 }

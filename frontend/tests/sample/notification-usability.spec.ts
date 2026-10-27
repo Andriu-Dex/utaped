@@ -8,7 +8,7 @@ test('notification popover supports keyboard, reading filters and unavailable ta
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/unread-count')) return route.fulfill({ json: { unread: read ? 0 : 1 } })
     if (route.request().method() === 'POST') { read = true; return route.fulfill({ json: { type: 'ACCOUNT', id: actor.id } }) }
-    const items = [{ id: 'fixture', kind: 'ACCOUNT_PASSWORD_CHANGED', targetType: 'ACCOUNT', targetId: actor.id, title: 'Seguridad de la cuenta', message: 'Revise su contraseña institucional.', createdAt: new Date().toISOString(), readAt: read ? new Date().toISOString() : null, targetAvailable: true }, { id: 'removed', kind: 'DOCUMENT_RETURNED', targetType: 'WORK_PLAN', targetId: actor.id, title: 'Documento no disponible', message: 'Documento de ejemplo retirado.', createdAt: new Date().toISOString(), readAt: new Date().toISOString(), targetAvailable: false }]
+    const items = [{ id: 'fixture', kind: 'ACCOUNT_PASSWORD_CHANGED', targetType: 'ACCOUNT', targetId: actor.id, title: 'Seguridad de la cuenta', message: 'Revise su contraseña institucional.', createdAt: new Date().toISOString(), readAt: read ? new Date().toISOString() : null, targetAvailable: true }, { id: 'removed', kind: 'DOCUMENT_RETURNED', targetType: 'WORK_PLAN', targetId: actor.id, title: 'Documento no disponible', message: 'Documento de ejemplo retirado.', createdAt: new Date().toISOString(), readAt: new Date().toISOString(), targetAvailable: false }, { id: 'long-title', kind: 'DOCUMENT_APPROVED', targetType: 'WORK_PLAN', targetId: actor.id, title: 'Seguimiento_institucional_'.repeat(18), message: 'Título extenso de comprobación.', createdAt: new Date(Date.now() - 59 * 60000).toISOString(), readAt: new Date().toISOString(), targetAvailable: true }]
     const filter = url.searchParams.get('read')
     const filtered = items.filter(item => filter === null || (filter === 'true' ? !!item.readAt : !item.readAt))
     return route.fulfill({ json: { items: filtered, total: filtered.length, unread: read ? 0 : 1, page: 0, size: 20 } })
@@ -18,6 +18,13 @@ test('notification popover supports keyboard, reading filters and unavailable ta
   const panel = page.getByRole('dialog', { name: 'Notificaciones', exact: true })
   await expect(panel).toBeVisible()
   await expect(panel.getByRole('button', { name: 'Abrir Documento no disponible', exact: true })).toBeDisabled()
+  await expect(panel.getByText('Seguimiento_institucional_'.repeat(18), { exact: true })).toBeVisible()
+  const item = panel.locator('.notification-item').last()
+  expect(await item.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+  const titleBox = await item.locator('.notification-title').boundingBox()
+  const actionsBox = await item.locator('.notification-header-actions').boundingBox()
+  expect(titleBox).not.toBeNull(); expect(actionsBox).not.toBeNull()
+  expect(titleBox!.x + titleBox!.width).toBeLessThanOrEqual(actionsBox!.x - 4)
   await panel.getByRole('button', { name: 'Sin leer', exact: true }).click()
   await expect(panel.getByRole('button', { name: 'Abrir Seguridad de la cuenta', exact: true })).toBeVisible()
   await expect(panel.getByText('Documento no disponible', { exact: true })).toHaveCount(0)

@@ -1,5 +1,18 @@
 # Firma visible del elaborador T1
 
+## Política vigente — 2026-10-27
+
+Por decisión expresa del propietario, la firma de elaboradores y revisores NO requiere una vinculación administrativa previa. El sistema es el producto final, con firma criptográfica real.
+
+1. POST `/api/signing/certificate-preview` (sesión, CSRF, HTTPS; excepción de HTTP únicamente en desarrollo configurado): contenedor binario con longitud de contraseña UTF-8 en 4 bytes big-endian, contraseña y archivo PKCS#12. Máximo 1 MB de contenedor. Devuelve exclusivamente holder, subject, issuer, serial, fingerprint SHA-256 y fechas de vigencia. Comprueba apertura, clave única, uso de firma, fortaleza admitida, vigencia y correspondencia criptográfica clave/certificado; no guarda el material.
+2. El usuario confirma el titular mostrado. POST de firma de autor o etapa incorpora además `certificateFingerprint` como parámetro requerido, junto con rowVersion, inputHash y requestKey. El servidor reabre el material y exige que la huella coincida con la confirmada; vuelve a comprobar permiso, turno, estado, hash y ubicación.
+3. V36 permite binding_id nulo y guarda el nombre de la cuenta que ejecutó la acción separado del titular/subject, emisor, serie, huella y vigencia del certificado. La apariencia PDF usa el titular real del certificado. Las firmas previas y sus bytes permanecen intactos; su política histórica no se reetiqueta.
+
+**Límite de atribución:** sin un identificador institucional confiable, el sistema NO demuestra que la cuenta autenticada y el titular del certificado sean la misma persona. La posesión de clave y contraseña prueba control de esa clave, no esa asociación. El CN no se compara con el nombre de cuenta ni se usa como evidencia independiente. La auditoría debe distinguir ambos actores/datos. Tampoco se afirma confianza de cadena emisora, revocación o sello de tiempo: permanecen como NOT_CHECKED/no integrados. La aceptación institucional de esos aspectos requiere validación específica.
+
+Las rutas administrativas de certificados se conservan para compatibilidad e historia; el historial visible no registra nuevas vinculaciones ni condiciona la firma. Retirar una vinculación antigua no impide el nuevo flujo ni altera firmas anteriores. Las secciones de entrega 2026-10-05 que siguen describen la implementación histórica y no son requisitos actuales.
+
+
 Actualización 2026-10-12: en nuevos documentos por ámbito, firmar inicia automáticamente la revisión secuencial y permite firmas posteriores. Los documentos individuales anteriores conservan su comportamiento histórico. El contrato actual y las condiciones de descarga están en [circuito documental](document-circuit.md).
 
 Entrega 2026-10-05. Sesión JDBC/CSRF, propietario activo y pertenencia vigente; ADMIN no obtiene acceso documental por su rol. Todas las respuestas privadas llevan no-store. No hay transición desde DRAFT ni acceso de revisores.
@@ -18,7 +31,7 @@ Base `/api/work-plans/{targetDocId}`:
 |---|---|
 | GET /artifacts/{artifactId}/signing | preparation, signingEnabled, signingBlockers, signed. Condiciones de firma del elaborador independientes de las de finalización. |
 | POST /artifacts/{artifactId}/signing?rowVersion=…&inputHash=…&requestKey=… | Firma única del elaborador sobre artefacto vigente, con hash/contador exactos. |
-| GET /signed-artifacts/{signedId}/content | PDF firmado exacto, verificado por hash y descarga privada. |
+| GET /signed-artifacts/{signedId}/content | Ruta preliminar bloqueada (403), también para documentos anteriores sin ámbito. La descarga final autorizada usa `GET /reviews/{id}/content` tras aprobación. |
 | GET /signed-artifacts/{signedId}/pages/{pageIndex} | PNG del mismo PDF, índice base cero. |
 
 POST usa Content-Type application/octet-stream y cabecera CSRF. Cuerpo: 4 bytes big-endian con longitud UTF-8 de contraseña, contraseña (1–512 bytes), contenedor PKCS12 (hasta 1 MiB). Máximo cuerpo: 1,049,092 bytes. La interfaz limita contraseña a 128 caracteres y limpia campos al iniciar/terminar. No enviar secretos en parámetros, JSON, logs, almacenamiento del navegador o multipart. HTTPS por defecto. SIGNING_ALLOW_HTTP=true solo en entorno local aislado; el Compose E2E lo configura expresamente.

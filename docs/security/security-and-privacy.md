@@ -1,5 +1,12 @@
 # Seguridad y privacidad
 
+## Firma con certificado aportado — 2026-10-27
+
+Ya no se exige aprobación administrativa de una huella antes de firmar. Se mantienen autenticación, autorización por documento/etapa, turno, hash, idempotencia, firma incremental e integridad. La inspección y firma consumen y borran buffers privados; la UI no almacena archivos ni contraseñas y los utiliza solo mientras se confirma la operación.
+
+La huella confirmada se compara de nuevo contra el archivo realmente recibido. Solo se conservan metadatos públicos y los PDF firmados. Se distinguen cuenta ejecutora y titular certificado: no existe evidencia suficiente para afirmar que sean la misma persona. No se comprueba cadena emisora/revocación/TSA. Esos límites se documentan aquí y en el contrato de firma; no deben reemplazarse por afirmaciones de identidad vinculada o confianza integral en la interfaz.
+
+
 Propuesta de producto para revisión institucional; no certifica cumplimiento legal.
 
 Entrega 2026-10-06: [acceso productivo](../api/local-access.md) con Argon2id, migración de bcrypt, CAPTCHA servidor con sesión/TTL/consumo único, CSRF, throttling y reset ADMIN auditado con revocación. Se mantienen los límites de autorización actuales; coordinadores esperan sus ámbitos. No hay bypass de CAPTCHA por entorno ni respuestas en texto en la API.

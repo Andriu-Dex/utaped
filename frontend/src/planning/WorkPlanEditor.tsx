@@ -1,8 +1,11 @@
+import { StepPagination } from './StepPagination'
+import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
-import { DraftPreview } from './DraftPreview'
+import { PlanPreview, type PreparedPreview } from './PlanPreview'
+import { WorkspaceResizer } from './WorkspaceResizer'
 import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { api, ApiError } from '../shared/api'
 import type { WorkPlan } from './types'
 import { MatrixEditor } from './MatrixEditor'
@@ -15,6 +18,7 @@ import { ReportEditor } from './ReportEditor'
 import { DocumentLifecycle } from './DocumentLifecycle'
 import { WritingAssistant } from './WritingAssistant'
 import { Icon } from '../shared/Icon'
+import { PlanStepNavigationContext, planSteps, type PlanStep, type PlanStepGuard } from './PlanStepNavigation'
 import './document-workspace.css'
 
 type DraftFields = Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
@@ -53,10 +57,10 @@ export function WorkPlanEditor({
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
   const [section, setSectionState] = useState<WorkPlanSection>(() => {
-    return validSections.find(value => value === initialSection) ?? 'general'
+    return validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general'
   })
   const [previousSection, setPreviousSection] = useState(initialSection)
-  if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === initialSection) ?? 'general') }
+  if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general') }
   function setSection(next: WorkPlanSection) {
     setSectionState(next)
     onSectionChange?.(next)
@@ -64,6 +68,9 @@ export function WorkPlanEditor({
   const [previewFocus, setPreviewFocus] = useState<'JUSTIFICATION' | 'OBJECTIVE'>('JUSTIFICATION')
   const [previewPane, setPreviewPane] = useState<'split' | 'edit' | 'preview'>('split')
   const [editorWidth, setEditorWidth] = useState(46)
+  const [isResizing, setIsResizing] = useState(false)
+  const [preparedPreview, setPreparedPreview] = useState<PreparedPreview | null>(null)
+  const previewPrepared = useCallback((value: PreparedPreview) => setPreparedPreview(previous => value.busy && !value.artifact && previous?.artifact ? { ...value, artifact: previous.artifact, signed: previous.signed } : value), [])
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
@@ -71,8 +78,28 @@ export function WorkPlanEditor({
   const [lifecycleDirty, setLifecycleDirty] = useState(false)
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
   const [authorsDirty, setAuthorsDirty] = useState(false)
-  const dirty = contentDirty || lifecycleDirty || authorsDirty
+  const [stepDirty, setStepDirty] = useState(false), [stepBusy, setStepBusy] = useState(false), [navigating, setNavigating] = useState(false)
+  const stepGuard = useRef<PlanStepGuard | null>(null), navigationLock = useRef(false)
+  const stepHeading = useRef<HTMLDivElement>(null)
+  const registerStep = useCallback((guard: PlanStepGuard, pending: boolean) => {
+    stepGuard.current = guard; setStepBusy(pending)
+    return () => { if (stepGuard.current === guard) { stepGuard.current = null; setStepBusy(false) } }
+  }, [])
+  const refreshPlan = useCallback(async () => {
+    try { const current = await api<WorkPlan>('/work-plans/' + initial.id); setPlan(current); setDraft(fields(current)) }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista del Plan.') }
+  }, [initial.id])
+  const synchronizePlan = useCallback((current: WorkPlan) => { setPlan(current); setDraft(fields(current)) }, [])
+  const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty
 
+  useEffect(() => {
+    const topbar = document.querySelector('.topbar'), navigation = stepHeading.current
+    if (!topbar || !navigation) return
+    const measure = () => { const height = Math.ceil(topbar.getBoundingClientRect().height) + 'px'; navigation.style.setProperty('--plan-topbar-height', height); navigation.closest<HTMLElement>('.plan-wizard')?.style.setProperty('--plan-topbar-height', height) }
+    measure(); const observer = new ResizeObserver(measure); observer.observe(topbar, { box: 'border-box' })
+    window.addEventListener('resize', measure)
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
+  }, [section])
   async function restoreJustification() {
     const template = defaultJustification?.trim() || INSTITUTIONAL_JUSTIFICATION
     if (draft.justification.trim() && draft.justification.trim() !== template.trim()) {
@@ -111,112 +138,102 @@ export function WorkPlanEditor({
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
   async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
-  async function returnToPlan() {
-    try {
+  async function navigateStep(next: WorkPlanSection) {
+    if (next === 'preparation') next = 'signing'
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
-    setPlan(current); setDraft(fields(current)); setSection('general'); setConflict(false); setError(''); setNotice('')
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.'); setSection('general') }
+    if (current.editable && ['attachments', 'signing'].includes(next)) {
+      const readiness = await api<{ ready: boolean; blockers: { section: string; message: string }[] }>('/work-plans/' + plan.id + '/artifacts/readiness')
+      const blockers = next === 'attachments' ? readiness.blockers.filter(item => item.section === 'Actividades y matriz') : []
+      if (blockers.length) throw new Error(blockers.map(item => item.message).join(' '))
+    }
+    if (next === 'signing') setPreviewPane('split')
+    setPlan(current); setDraft(fields(current)); setSection(next); setConflict(false); setError(''); setNotice('')
+    requestAnimationFrame(() => stepHeading.current?.focus())
   }
-  if (section === 'matrix') return <MatrixEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} onNext={async () => {
-    const current = await api<WorkPlan>('/work-plans/' + plan.id)
-    setPlan(current); setDraft(fields(current)); setConflict(false); setError(''); setNotice(''); setSection('attachments')
-  }} />
-  if (section === 'attachments') return <AttachmentEditor targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'preparation' || section === 'signing') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={plan.id} mode={section === 'signing' ? 'sign' : 'preview'} onBack={returnToPlan} />
-  if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={returnToPlan} />
-  if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={returnToPlan} />
+  async function requestStep(next: PlanStep) {
+    if (next === section || navigationLock.current || busy || stepBusy) return
+    navigationLock.current = true; setNavigating(true); setError('')
+    try {
+      // These two views share the same draft: changing tabs must retain unsaved writing.
+      if (['general', 'content'].includes(section) && ['general', 'content'].includes(next)) {
+        if ((authorsDirty || lifecycleDirty) && !(await confirmAction('Hay cambios de configuración sin guardar. ¿Cambiar de paso y descartarlos?'))) return
+        setSection(next); requestAnimationFrame(() => stepHeading.current?.focus()); return
+      }
+      if (stepGuard.current) { if (!(await stepGuard.current(next))) return }
+      else if (dirty && !(await confirmAction('Hay cambios sin guardar. ¿Cambiar de paso y descartarlos?'))) return
+      await navigateStep(next)
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.') }
+    finally { navigationLock.current = false; setNavigating(false) }
+  }
+  async function returnToPlan() {
+    try { await navigateStep('general') }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
+  }
+  if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
+  if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
+  if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={() => void returnToPlan()} />
   if (report) return <ReportEditor initial={report} onDirtyChange={onDirtyChange} onBack={() => setReport(null)} />
   async function createReport() {
     setBusy(true); setError('')
     try { const next = await api<WorkPlan>('/work-plans/' + plan.id + '/report', 'POST'); if (onDocumentOpen) onDocumentOpen(next); else setReport(next) }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear el Informe.') } finally { setBusy(false) }
   }
-  return <section>
-    <button type="button" className="secondary" onClick={back} disabled={busy}>Volver a documentos</button>
-    <span className="section-kicker review-kicker">PLAN DE TRABAJO · T1</span>
-    <h1>{plan.title}</h1><div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span></div>
-    <DocumentLifecycle plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
-    <p role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}</p>
-    <nav className="document-steps" aria-label="Pasos del Plan"><button className="secondary" type="button" aria-current={section === 'general' ? 'step' : undefined} onClick={() => setSection('general')}><span>1</span>Información general</button><button className="secondary" type="button" aria-current={section === 'content' ? 'step' : undefined} onClick={() => setSection('content')}><span>2</span>Contenido</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('matrix')}><span>3</span>Actividades y matriz</button>
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('attachments')}><span>4</span>Anexos y opciones</button>
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('preparation')}><span>5</span>Preparación y previsualización</button>
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('signing')}><span>6</span>Firma y Finalización</button></nav>
+  const childStep = section === 'matrix' || section === 'attachments' || section === 'preparation' || section === 'signing'
+  return <PlanStepNavigationContext.Provider value={registerStep}><section className="plan-wizard">
+    <header className="plan-wizard-header">
+      <span className="section-kicker">PLAN DE TRABAJO · T1</span>
+      <div className="plan-header-title-row">
+        <button
+          type="button"
+          className="plan-back-btn"
+          onClick={back}
+          disabled={busy || stepBusy || navigating}
+          title="Volver a documentos"
+          aria-label="Volver a documentos"
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">Volver a documentos</span>
+        </button>
+        <h1>{plan.title}</h1>
+      </div>
+      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+    </header>
+    <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
+      <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
+    </div>
+    <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de {planSteps.length} · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
+    {error && <Toast message={error} onDismiss={() => setError('')} />}
+    <div className="plan-preview-controls" role="group" aria-label="Distribución del espacio de trabajo">
+        <div className="live-preview-tabs">
+          {([{ key: 'split', label: 'Vista dividida', icon: 'columns' }, { key: 'edit', label: section === 'signing' ? 'Revisión y firma' : 'Editar contenido', icon: 'edit' }, { key: 'preview', label: 'Previsualizar documento', icon: 'document' }] as const).map(view => <button key={view.key} type="button" className={'preview-tab-btn' + (previewPane === view.key ? ' is-active' : '')} aria-pressed={previewPane === view.key} onClick={() => setPreviewPane(view.key)}><Icon name={view.icon} size={15} />{view.label}</button>)}
+        </div>
+      </div>
+    {section === 'matrix' && previewPane === 'split' && <p className="field-help">Puede ampliar la matriz con «Ver matriz completa» o consultar el documento en paralelo.</p>}
+    <div className={'plan-persistent-workspace' + (isResizing ? ' is-resizing' : '')} data-step={section} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}>
+    <div className="plan-wizard-workspace plan-editor-pane live-preview-editor">
+    {childStep ? <>
+      {section === 'matrix' && <MatrixEditor onSaved={refreshPlan} targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={returnToPlan} onPrevious={() => navigateStep('content')} onNext={() => navigateStep('attachments')} isSplitView={previewPane === 'split'} onToggleSplit={() => setPreviewPane(current => current === 'split' ? 'edit' : 'split')} />}
+      {section === 'attachments' && <AttachmentEditor onSaved={refreshPlan} nextLabel="Revisar y firmar" targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('signing')} />}
+      {(section === 'preparation' || section === 'signing') && <DocumentPreparation externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onFinish={async () => onBack()} onPrevious={() => navigateStep('attachments')} />}
+    </> : <>
+    <DocumentLifecycle key={section} plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
     <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
     <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button></div>
-    {dirty && <p>Guarde los cambios del Plan antes de abrir otra sección.</p>}
+    {dirty && <p className="field-help">{contentDirty ? 'Puede alternar entre Información general y Contenido sin perder lo escrito. Guarde el borrador para conservarlo antes de avanzar.' : 'Guarde la configuración pendiente o confirme su descarte al cambiar de paso.'}</p>}
     <div className="card">
       <div className="step-card-header">
         <span className="section-icon"><Icon name="document" /></span>
         <div>
-          <span className="section-kicker">PASO {section === 'general' ? '1 DE 6' : '2 DE 6'}</span>
+          <span className="section-kicker">PASO {section === 'general' ? '1 DE 5' : '2 DE 5'}</span>
           <h2>{section === 'general' ? 'Información general del Plan' : 'Contenido y redacción académica'}</h2>
         </div>
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.documentState === 'DRAFT' ? 'Se fija al preparar la firma' : plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
-      {section === 'content' && plan.editable && (
-        <div className="live-preview-controls">
-          <div className="live-preview-tabs" role="group" aria-label="Vista del contenido">
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'split' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'split'}
-              onClick={() => setPreviewPane('split')}
-              title="Ver editor y documento lado a lado"
-            >
-              <Icon name="columns" size={15} />
-              <span>Vista dividida</span>
-            </button>
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'edit' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'edit'}
-              onClick={() => setPreviewPane('edit')}
-              title="Ampliar editor a ancho completo para redactar cómodamente"
-            >
-              <Icon name="edit" size={15} />
-              <span>Editar contenido</span>
-            </button>
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'preview' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'preview'}
-              onClick={() => setPreviewPane('preview')}
-              title="Ver el documento A4 generado"
-            >
-              <Icon name="document" size={15} />
-              <span>Previsualizar documento</span>
-            </button>
-          </div>
-          {previewPane === 'split' && (
-            <div className="live-preview-width-wrapper">
-              <label className="live-preview-width" htmlFor={'editor-width-' + plan.id}>
-                <span className="live-preview-width-label">
-                  <Icon name="columns" size={14} />
-                  <span>Ancho del formulario:</span>
-                  <strong>{editorWidth}%</strong>
-                </span>
-                <input
-                  id={'editor-width-' + plan.id}
-                  aria-label="Ancho del formulario"
-                  type="range"
-                  min="38"
-                  max="58"
-                  value={editorWidth}
-                  onChange={e => setEditorWidth(Number(e.target.value))}
-                />
-              </label>
-            </div>
-          )}
-        </div>
-      )}
-      <div className={section === 'content' && plan.editable ? 'live-preview-layout' : undefined} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}><div className="live-preview-editor">
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
-          <label>Unidad institucional<input maxLength={200} readOnly={!!plan.scopeId} value={draft.institutionalUnit} onChange={e => change('institutionalUnit', e.target.value)} /></label>
-          <label>Carrera, cuando corresponda<input maxLength={200} readOnly={!!plan.scopeId} value={draft.career} onChange={e => change('career', e.target.value)} /></label>
+          <InstitutionalProvenance key={plan.id + ':' + plan.rowVersion} unit={draft.institutionalUnit} career={draft.career} unitType={plan.institutionalUnitType} inherited={!!plan.scopeId || !!plan.basePlanId} disabled={busy || authorsDirty || lifecycleDirty || !plan.editable} onChange={(unit, career) => { change('institutionalUnit', unit); change('career', career) }} />
           <div className="step-save-row">
             <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
               {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
@@ -256,7 +273,7 @@ export function WorkPlanEditor({
             </div>
           </div>
           <textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
-          <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
+          <p className="field-help">El borrador admite contenido incompleto. La revisión final comprueba los campos antes de preparar el documento para firma.</p>
           <div className="document-step-actions">
             <div className="step-save-row">
               <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
@@ -270,48 +287,28 @@ export function WorkPlanEditor({
                 <span>{busy ? 'Guardando…' : 'Guardar borrador'}</span>
               </button>
             </div>
-            <div className="step-pagination-row">
-              <button
-                type="button"
-                className="secondary step-prev-btn"
-                disabled={busy}
-                onClick={() => setSection('general')}
-              >
-                ← Información general
-              </button>
-              <button
-                type="button"
-                className="secondary step-next-btn"
-                disabled={dirty || busy}
-                onClick={() => setSection('matrix')}
-                title={dirty ? 'Guarda el borrador antes de continuar al siguiente paso' : undefined}
-              >
-                Siguiente: Actividades y matriz →
-              </button>
-            </div>
           </div>
         </>}
-      </fieldset></form></div>
-      {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>
+      </fieldset></form>
       {section === 'general' && <>
         <DocumentAuthorsEditor targetDocId={plan.id} version={plan.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { const current = await api<WorkPlan>('/work-plans/' + plan.id); setPlan(current); setDraft(fields(current)) }} />
-        <div className="step-pagination-row general-pagination-row">
-          <span className="step-nav-spacer" />
-          <button
-            type="button"
-            className="secondary step-next-btn"
-            disabled={busy || dirty}
-            onClick={() => setSection('content')}
-            title={dirty ? 'Guarde los cambios pendientes antes de continuar' : undefined}
-          >
-            Siguiente: Contenido →
-          </button>
-        </div>
       </>}
-      {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+      {notice && <Toast tone="success" message={notice} />}
       {conflict && <div className="conflict"><p>Sus cambios locales se conservan. Consulte la versión del servidor antes de decidir cómo resolver el conflicto.</p><button type="button" className="secondary" onClick={compare}>Consultar versión actual</button>
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}
       </div>}
     </div>
-  </section>
+    <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || navigating} nextDisabled={dirty} />
+    </>}
+    </div>
+    {previewPane === 'split' && (
+      <WorkspaceResizer
+        value={editorWidth}
+        onChange={setEditorWidth}
+        onResizingChange={setIsResizing}
+      />
+    )}
+    <PlanPreview plan={plan} draft={draft} step={section as PlanStep} focus={previewFocus} dirty={dirty} textDirty={contentDirty} prepared={preparedPreview} />
+    </div>
+  </section></PlanStepNavigationContext.Provider>
 }

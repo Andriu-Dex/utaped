@@ -19,5 +19,11 @@ public final class SigningMaterial implements AutoCloseable {
             container=Arrays.copyOfRange(body,4+length,body.length);
         } catch(Exception e) { close();throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Material de firma no válido."); }
     }
+    public Pkcs12PdfSigner.CertificateDetails certificate(String expectedFingerprint) {
+        var certificate=new Pkcs12PdfSigner().inspect(container.clone(),password.clone(),java.time.Instant.now());
+        if(expectedFingerprint!=null && (!expectedFingerprint.matches("[a-fA-F0-9]{64}") || !java.security.MessageDigest.isEqual(certificate.fingerprint().getBytes(StandardCharsets.US_ASCII),expectedFingerprint.toLowerCase(java.util.Locale.ROOT).getBytes(StandardCharsets.US_ASCII))))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El certificado seleccionado cambió. Vuelva a comprobarlo.");
+        return certificate;
+    }
     @Override public void close() { if(body!=null) Arrays.fill(body,(byte)0);if(password!=null) Arrays.fill(password,'\0');if(container!=null) Arrays.fill(container,(byte)0); }
 }

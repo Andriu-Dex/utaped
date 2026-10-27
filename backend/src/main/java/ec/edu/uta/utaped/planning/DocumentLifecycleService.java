@@ -44,6 +44,7 @@ public class DocumentLifecycleService {
             INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,document_type,base_plan_id,justification,objective,formal_version,previous_version_id,version_reason,attachments_enabled,privacy_notice_enabled)
             SELECT ?,?,?,scope_id,group_id,period_id,?,title,title,?,institutional_unit,career,document_type,base_plan_id,justification,objective,?,?,?,attachments_enabled,privacy_notice_enabled FROM work_plan WHERE id=?
             """,id,actor,actor,UUID.randomUUID(),today,number+".0",doc,data.reason().trim(),doc);
+        jdbc.update("UPDATE work_plan SET institutional_unit_type=?,institutional_unit=? WHERE id=?",plan.institutionalUnitType(),ec.edu.uta.utaped.institution.InstitutionalNames.forNewDocument(plan.institutionalUnit()),id);
         jdbc.update("INSERT INTO document_structure(work_plan_id,revision,sections,contents) SELECT ?,revision,sections,contents FROM document_structure WHERE work_plan_id=?",id,doc);
         jdbc.update("INSERT INTO document_author(work_plan_id,user_id,sort_order) SELECT ?,user_id,sort_order FROM document_author WHERE work_plan_id=?",id,doc);
         jdbc.update("INSERT INTO work_plan_matrix(work_plan_id,source,activities) SELECT ?,source,activities FROM work_plan_matrix WHERE work_plan_id=?",id,doc);

@@ -1,5 +1,10 @@
 # Contrato de firma del elaborador y revisión T1
 
+## Decisión posterior del propietario — 2026-10-27
+
+Se sustituye la exigencia previa de vinculación administrativa por certificado aportado en cada operación y confirmado tras inspección. El actor autenticado/asignado sigue siendo autorizado por servidor; se registra separado del titular del certificado. No hay fuente confiable para afirmar su equivalencia ni se infiere de nombres. El control de posesión de clave, vigencia e integridad es real; confianza de CA, revocación y correspondencia de identidad no se declaran verificadas. Ver el [contrato actual](../api/author-signing.md). El T1 termina en un único paso 5 «Revisar y firmar».
+
+
 ## Entrega actual — 2026-10-05
 
 El propietario acepta el flujo sencillo de archivo .p12/.pfx + contraseña + Firmar y las comprobaciones básicas. La firma visible del elaborador se habilita para un artefacto vigente y autorizado, independiente de la finalización institucional. Administración vincula la huella SHA-256 del certificado público a la cuenta tras verificar identidad y registrar una referencia de comprobación. Es confianza directa en ese certificado; no se confía automáticamente en las raíces contenidas en el .p12 ni en su CN. La comprobación manual y la custodia administrativa siguen siendo responsabilidades operativas.

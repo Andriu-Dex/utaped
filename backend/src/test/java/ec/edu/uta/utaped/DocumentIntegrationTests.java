@@ -41,6 +41,7 @@ class DocumentIntegrationTests {
         jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,'Comisión de prueba','COMMISSION','Responsable de la comisión')",group);
         jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,'MEMBER')",user,group);
         jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período de prueba',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
+        jdbc.update("INSERT INTO academic_career(id,code,name) VALUES (?,'DOC-SW','Ingeniería de Software') ON CONFLICT(name) DO NOTHING",UUID.randomUUID());
         id=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan de Trabajo de prueba")).id();
     }
     @Test void editingPreviewAllowsIncompleteUnsavedContentWithoutPersistingArtifacts() throws Exception {
@@ -57,6 +58,14 @@ class DocumentIntegrationTests {
         assertFalse(artifacts.readiness(id,email).ready());
         var first=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),0,"JUSTIFICATION"));
         assertEquals(preview.pages(),first.pages());assertEquals(0,first.pageIndex());
+        assertEquals(0,preview.sections().get("COVER"));
+        assertTrue(preview.sections().containsKey("ANNEXES"));
+        for(String section:List.of("COVER","MATRIX","SIGNATURES","ANNEXES")) {
+            var focused=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),-1,section));
+            assertEquals(preview.sections().getOrDefault(section,preview.sections().get("SIGNATURES")),focused.pageIndex());
+            if(section.equals("MATRIX")) assertTrue(focused.pages().get(focused.pageIndex()).width()>focused.pages().get(focused.pageIndex()).height());
+        }
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact WHERE work_plan_id=?",Integer.class,id));
         assertTrue(Math.abs(first.pages().getFirst().width()-595.3)<2);
         assertTrue(Math.abs(first.pages().getFirst().height()-841.9)<2);
         assertEquals(409,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(id,email,
@@ -77,6 +86,7 @@ class DocumentIntegrationTests {
     @Test void previewHeaderKeepsAllHorizontalCellBordersVisible() throws Exception {
         var preview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),"Justificación de prueba.","Objetivo de prueba.",-1,"JUSTIFICATION"));
         byte[] bytes=Base64.getDecoder().decode(preview.image());
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/header-borders-preview.png"),bytes);
         var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(bytes));
         int lines=0,firstLine=-1,lastLine=-1;boolean previous=false;
         for(int y=0;y<image.getHeight()/3;y++) {
@@ -89,6 +99,20 @@ class DocumentIntegrationTests {
             if(line&&!previous) { lines++;if(firstLine<0) firstLine=y;lastLine=y; }previous=line;
         }
         assertTrue(lines>=5,"El encabezado debe conservar borde superior, divisiones de filas y borde inferior: "+lines);
+        // The date row retains the same vertical divider as the unit/career row above it.
+        int left=-1,right=-1;
+        for(int x=0;x<image.getWidth();x++) {
+            int rgb=image.getRGB(x,firstLine);
+            if(((rgb>>16)&255)<190&&((rgb>>8)&255)<190&&(rgb&255)<190) { if(left<0) left=x;right=x; }
+        }
+        int divider=left+(int)Math.round((right-left)*4957.0/9525.0);
+        int dateRowY=lastLine-(int)Math.round((lastLine-firstLine)*0.15);
+        boolean dateDivider=false;
+        for(int x=divider-3;x<=divider+3;x++) {
+            int rgb=image.getRGB(x,dateRowY);
+            dateDivider|=((rgb>>16)&255)<130&&((rgb>>8)&255)<130&&(rgb&255)<130;
+        }
+        assertTrue(dateDivider,"La fila de fecha debe conservar la división vertical de sus dos celdas.");
         double headerFraction=(lastLine-firstLine)/(double)image.getHeight();
         assertTrue(headerFraction>0.09&&headerFraction<0.16,"El encabezado debe conservar su altura institucional proporcional en A4: "+headerFraction);
         int firstBodyInk=-1;
@@ -104,7 +128,7 @@ class DocumentIntegrationTests {
     }
     long version() { return plans.get(id,email).rowVersion(); }
     void complete(String justification,int count) {
-        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","FISEI","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
+        plans.update(id,email,new WorkPlanModels.Update(version(),"Plan de Trabajo de prueba","Facultad de Ingeniería en Sistemas, Electrónica e Industrial","Ingeniería de Software",justification,"Cumplir las actividades académicas planificadas."));
         var rows=new ArrayList<ActivityModels.Activity>();var date=LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
         for(int i=0;i<count;i++) rows.add(new ActivityModels.Activity(UUID.randomUUID(),null,"Actividad "+(i+1)+". Verificar el cumplimiento de la planificación institucional y registrar sus resultados.","OTHER",false,date,date,List.of(user),true,
             List.of(new ActivityModels.Choice(null,"Recursos institucionales",null)),List.of(new ActivityModels.Choice(null,"Acta de seguimiento",null))));
@@ -119,6 +143,65 @@ class DocumentIntegrationTests {
         }
     }
     AttachmentModels.State upload(String title,UUID key,byte[] bytes,long version) { return attachments.upload(id,email,version,key,title,new MockMultipartFile("file","../../original.pdf","application/pdf",bytes)); }
+    @Test void nativeLiteralMarkerTextIsPreservedWithoutChangingActualPageNumbersOrSignatureSlots() throws Exception {
+        String literal="Texto literal @@PN@@ y @@SIGTOP@@ y @@SIGBOTTOM@@ del documento de prueba.";
+        complete(literal+"\n@@PN@@\n@@SIGTOP@@\n@@SIGBOTTOM@@",1);
+        attachments.settings(id,email,new AttachmentModels.Settings(version(),false,false));
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] bytes=artifacts.content(id,artifact.id(),email);
+        try(var pdf=Loader.loadPDF(bytes)) {
+            String text=new PDFTextStripper().getText(pdf);
+            assertTrue(text.replaceAll("\\s+"," ").contains(literal),text);
+            for(String token:List.of("@@PN@@","@@SIGTOP@@","@@SIGBOTTOM@@")) assertEquals(2,text.split(java.util.regex.Pattern.quote(token),-1).length-1,"Conservar tanto el literal dentro del párrafo como el de una línea propia.");
+            var reader=new PDFTextStripper();
+            for(int i=0;i<pdf.getNumberOfPages();i++) {
+                reader.setStartPage(i+1);reader.setEndPage(i+1);
+                assertTrue(reader.getText(pdf).strip().endsWith(String.valueOf(i+1)),"La numeración real continúa al final de la página "+(i+1));
+                final int pageNumber=i+1;boolean[] footerNumberFound={false};
+                var footerReader=new PDFTextStripper() {
+                    @Override protected void writeString(String value,List<org.apache.pdfbox.text.TextPosition> positions) throws java.io.IOException {
+                        if(value.strip().endsWith(String.valueOf(pageNumber))&&!positions.isEmpty()
+                            &&positions.getLast().getYDirAdj()>pdf.getPage(pageNumber-1).getMediaBox().getHeight()-80) {
+                            footerNumberFound[0]=true;
+                        }
+                        super.writeString(value,positions);
+                    }
+                };
+                footerReader.setStartPage(pageNumber);footerReader.setEndPage(pageNumber);footerReader.getText(pdf);
+                assertTrue(footerNumberFound[0],"Número visible en el pie de la página "+pageNumber);
+            }
+            for(var slot:artifact.signatureSlots()) {
+                assertEquals(slot.pageIndex()+1,slot.pageNumber());
+                assertTrue(slot.bounds().width()>60&&slot.bounds().height()>30);
+                assertTrue(slot.pageIndex()>=0&&slot.pageIndex()<pdf.getNumberOfPages());
+            }
+        }
+        Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-native-literals.pdf"),bytes);
+    }
+    @Test void annexPagesKeepTheirLiteralContentAndRenderingEvenWhenItLooksLikeTemplateMarkers() throws Exception {
+        complete("Conservar íntegramente el documento adjunto.",1);
+        attachments.settings(id,email,new AttachmentModels.Settings(version(),true,false));
+        byte[] original;
+        try(var source=Loader.loadPDF(pdf(1,false,false))) {
+            try(var stream=new PDPageContentStream(source,source.getPage(0),PDPageContentStream.AppendMode.APPEND,true,true)) {
+                stream.beginText();stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA),12);stream.newLineAtOffset(60,710);
+                stream.showText("Contenido literal: @@PN@@ @@SIGTOP@@ @@SIGBOTTOM@@");stream.endText();
+            }
+            var output=new ByteArrayOutputStream();source.save(output);original=output.toByteArray();
+        }
+        var uploaded=upload("Documento con texto literal",UUID.randomUUID(),original,version()).items().getFirst();
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        int annex=artifact.pages().stream().filter(page->uploaded.id().equals(page.attachmentId())).findFirst().orElseThrow().index();
+        try(var source=Loader.loadPDF(original);var composed=Loader.loadPDF(artifacts.content(id,artifact.id(),email))) {
+            var text=new PDFTextStripper();text.setStartPage(annex+1);text.setEndPage(annex+1);
+            assertTrue(text.getText(composed).contains("@@PN@@ @@SIGTOP@@ @@SIGBOTTOM@@"));
+            var before=new org.apache.pdfbox.rendering.PDFRenderer(source).renderImage(0,0.7f);
+            var after=new org.apache.pdfbox.rendering.PDFRenderer(composed).renderImage(annex,0.7f);
+            assertEquals(before.getWidth(),after.getWidth());assertEquals(before.getHeight(),after.getHeight());
+            assertArrayEquals(before.getRGB(0,0,before.getWidth(),before.getHeight(),null,0,before.getWidth()),after.getRGB(0,0,after.getWidth(),after.getHeight(),null,0,after.getWidth()));
+        }
+        assertArrayEquals(original,attachments.content(id,uploaded.id(),email));
+    }
     @Test void attachmentValidationOrderingIsolationIdempotenceAndConcurrency() throws Exception {
         assertFalse(artifacts.readiness(id,email).ready());
         attachments.settings(id,email,new AttachmentModels.Settings(version(),true,false));
@@ -143,9 +226,56 @@ class DocumentIntegrationTests {
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
         assertThrows(ResponseStatusException.class,()->attachments.content(id,a.id(),email));
     }
+    void assertHeaderDateIsInTheRightCell(PDDocument document) throws Exception {
+        float[] x={Float.NaN,Float.NaN};
+        String date=plans.today().format(java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale.forLanguageTag("es-EC")));
+        new PDFTextStripper() {
+            @Override protected void writeString(String text,List<org.apache.pdfbox.text.TextPosition> positions) throws IOException {
+                if(Float.isNaN(x[0]) && text.contains("Fecha de elaboración:")) x[0]=positions.getFirst().getXDirAdj();
+                if(Float.isNaN(x[1]) && text.contains(date)) positions.stream().filter(p->p.getUnicode().matches("[0-9]")).findFirst().ifPresent(p->x[1]=p.getXDirAdj());
+                super.writeString(text,positions);
+            }
+        }.getText(document);
+        assertFalse(Float.isNaN(x[0]));assertFalse(Float.isNaN(x[1]));
+        assertTrue(x[1]>x[0]+100,"La fecha debe aparecer en la celda derecha, separada de su etiqueta: "+Arrays.toString(x));
+    }
+    @Test void administrativeHeaderUsesCatalogueTypeAndPreservesThePreparedArtifactAfterRenaming() throws Exception {
+        complete("Justificación administrativa.",1);
+        UUID unit=UUID.randomUUID();
+        jdbc.update("DELETE FROM institutional_unit WHERE name IN ('Unidad administrativa documental','Unidad renombrada')");
+        jdbc.update("INSERT INTO institutional_unit(id,name,unit_type) VALUES (?,'Unidad administrativa documental','ADMINISTRATIVE')",unit);
+        var plan=plans.get(id,email);
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),"Unidad inexistente","",plan.justification(),plan.objective()))).getStatusCode().value());
+        plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),"Unidad administrativa documental","",plan.justification(),plan.objective()));
+        var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] bytes=artifacts.content(id,artifact.id(),email);
+        try(var document=Loader.loadPDF(bytes)) {
+            String text=new PDFTextStripper().getText(document).replaceAll("\\s+"," ");
+            assertTrue(text.contains("Unidad administrativa: Unidad administrativa documental"),text);
+            assertTrue(text.contains("UNIDAD ADMINISTRATIVA: UNIDAD ADMINISTRATIVA DOCUMENTAL"),text);
+            assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
+            assertHeaderDateIsInTheRightCell(document);
+            String historyText=text.substring(text.lastIndexOf("CONTROL DE HISTORIAL DE CAMBIOS")).replaceAll("\\s+"," ");
+            assertTrue(historyText.contains("Elaboración del plan de trabajo de la Comisión de prueba"),historyText);
+            assertFalse(historyText.contains("v1.0"),historyText);
+            assertFalse(text.contains("Carrera: Ingeniería de Software"),text);
+        }
+        jdbc.update("DELETE FROM institutional_unit WHERE name='Unidad renombrada'");
+        jdbc.update("UPDATE institutional_unit SET name='Unidad renombrada' WHERE id=?",unit);
+        assertArrayEquals(bytes,artifacts.content(id,artifact.id(),email));
+        assertTrue(artifacts.list(id,email).getFirst().current());
+        assertEquals("Unidad administrativa documental",plans.get(id,email).institutionalUnit());
+        jdbc.update("DELETE FROM institutional_unit WHERE id=?",unit);
+    }
     @Test void immutableTemplatePdfActualPaginationAndHistoricalContent() throws Exception {
         complete("La comisión requiere planificar las actividades y conservar evidencias de cumplimiento.",2);
         attachments.settings(id,email,new AttachmentModels.Settings(version(),true,true));var state=upload("Actas",UUID.randomUUID(),pdf(2,false,false),version());
+        var savedPreviewPlan=plans.get(id,email);
+        var annexPreview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),savedPreviewPlan.justification(),savedPreviewPlan.objective(),-1,"ANNEXES"));
+        assertNotNull(annexPreview.sections().get("ANNEXES"));
+        assertEquals(annexPreview.sections().get("ANNEXES"),annexPreview.pageIndex());
+        assertTrue(annexPreview.pageIndex()<annexPreview.sections().get("SIGNATURES"));
+        assertTrue(artifacts.list(id,email).isEmpty(),"La vista simultánea de anexos no debe preparar un artefacto de firma.");
         assertTrue(artifacts.readiness(id,email).ready());long before=version();
         jdbc.update("UPDATE work_plan SET preparation_date=preparation_date-30 WHERE id=?",id);
         var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(before));byte[] original=artifacts.content(id,artifact.id(),email);
@@ -154,7 +284,38 @@ class DocumentIntegrationTests {
         assertEquals(before,version());assertEquals(artifact.id(),artifacts.generate(id,email,new ArtifactModels.Generate(before)).id());
         try(var document=Loader.loadPDF(original)) {
             assertEquals(document.getNumberOfPages(),artifact.pageCount());String text=new PDFTextStripper().getText(document);
-            assertTrue(text.contains("FISEI"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
+            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: FACULTAD DE INGENIERÍA EN SISTEMAS, ELECTRÓNICA E INDUSTRIAL"),text);
+            assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
+            assertHeaderDateIsInTheRightCell(document);
+            var coverLines=new java.util.HashMap<String,float[]>();
+            var coverReader=new PDFTextStripper() {
+                @Override protected void writeString(String line,List<org.apache.pdfbox.text.TextPosition> positions) throws IOException {
+                    for(String label:List.of("UNIDAD ACADÉMICA:","CARRERA:","PLAN DE TRABAJO DE:","PERÍODO:")) {
+                        if(line.startsWith(label)&&!positions.isEmpty()&&positions.getFirst().getYDirAdj()>200) {
+                            var first=positions.getFirst();var last=positions.getLast();
+                            coverLines.put(label,new float[]{first.getXDirAdj(),first.getYDirAdj(),last.getXDirAdj()+last.getWidthDirAdj()});
+                        }
+                    }
+                    super.writeString(line,positions);
+                }
+            };
+            coverReader.setStartPage(1);coverReader.setEndPage(1);coverReader.getText(document);
+            assertEquals(4,coverLines.size(),"Los cuatro bloques deben permanecer en la portada.");
+            var unitLine=coverLines.get("UNIDAD ACADÉMICA:");var careerLine=coverLines.get("CARRERA:");
+            var titleLine=coverLines.get("PLAN DE TRABAJO DE:");
+            assertEquals(unitLine[0],careerLine[0],1,"Unidad y carrera comparten margen izquierdo.");
+            assertTrue(unitLine[2]>500,"La primera línea de unidad debe justificarse hasta el margen derecho.");
+            assertTrue(titleLine[1]-careerLine[1]>40,"El título necesita separación visible después de carrera.");
+            assertTrue(careerLine[1]-unitLine[1]<90,"Unidad y carrera deben mantenerse agrupadas.");
+            assertTrue(text.contains("Ingeniería de Software"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
+            int internalLinks=0;
+            for(var page:document.getPages()) for(var annotation:page.getAnnotations()) {
+                if(annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink link && link.getAction() instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo go && go.getDestination() instanceof org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination destination) {
+                    int target=document.getPages().indexOf(destination.getPage());
+                    assertTrue(target>0&&target<document.getNumberOfPages(),"El índice debe enlazar la página real ensamblada, no la portada.");internalLinks++;
+                }
+            }
+            assertTrue(internalLinks>=6,"El índice debe conservar sus enlaces internos.");
             assertFalse(text.contains("@@PN@@"));
             assertFalse(text.contains("vX.0"));assertFalse(text.contains("Revisado por:"));
             for(var page:artifact.pages()) { assertEquals(page.index()+1,page.number());assertTrue(Math.abs(Math.min(page.width(),page.height())-PDRectangle.A4.getWidth())<1);assertTrue(Math.abs(Math.max(page.width(),page.height())-PDRectangle.A4.getHeight())<1); }
@@ -167,6 +328,40 @@ class DocumentIntegrationTests {
         assertFalse(artifacts.readiness(id,email).ready());
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-short.pdf"),original);
     }
+    @Test void compatibleTextFlowsWithoutEdgeBlankPagesWhileMatrixKeepsItsOrientation() throws Exception {
+        String justification="Organizar las actividades institucionales.";
+        complete(justification,1);
+        var first=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        byte[] original=artifacts.content(id,first.id(),email);
+        try(var pdf=Loader.loadPDF(original)) {
+            var text=new PDFTextStripper().getText(pdf);
+            assertTrue(text.matches("(?s).*4[.]?\\s+ANEXOS.*"),text);
+            assertTrue(text.contains("(No aplica)"),text);
+            int annex=-1;var reader=new PDFTextStripper();
+            for(int page=0;page<pdf.getNumberOfPages();page++) {reader.setStartPage(page+1);reader.setEndPage(page+1);if(reader.getText(pdf).contains("(No aplica)"))annex=page;}
+            assertTrue(annex>=0);assertTrue(annex<first.signatureSlots().getFirst().pageIndex());
+            assertEquals(0,first.pages().stream().filter(page->page.kind().equals("ANNEX")).count());
+            Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-no-annex.pdf"),original);
+            Files.write(Path.of("target/document-qa/t1-no-annex.png"),artifacts.renderPage(original,annex));
+        }
+        var draftPreview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),justification,plans.get(id,email).objective(),-1,"ANNEXES"));
+        assertNotNull(draftPreview.sections().get("ANNEXES"));assertEquals(draftPreview.sections().get("ANNEXES"),draftPreview.pageIndex());
+        var plan=plans.get(id,email);
+        plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),plan.institutionalUnit(),plan.career(),"\n".repeat(80)+justification+"\n".repeat(80),plan.objective()+"\n".repeat(80)));
+        var second=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
+        assertEquals(first.pageCount(),second.pageCount(),"Los párrafos vacíos de los extremos no deben crear páginas adicionales.");
+        try(var pdf=Loader.loadPDF(artifacts.content(id,second.id(),email))) {
+            var stripper=new PDFTextStripper();int content=-1,matrix=-1;
+            for(int i=0;i<pdf.getNumberOfPages();i++) {
+                stripper.setStartPage(i+1);stripper.setEndPage(i+1);String text=stripper.getText(pdf);
+                if(text.contains(justification)) { content=i;assertTrue(text.contains(plan.objective()),"Justificación y objetivo cortos comparten página."); }
+                if(pdf.getPage(i).getMediaBox().getWidth()>pdf.getPage(i).getMediaBox().getHeight()) matrix=i;
+            }
+            assertTrue(content>=0);assertTrue(matrix>content,"La matriz conserva su sección apaisada.");
+        }
+        assertArrayEquals(original,artifacts.content(id,first.id(),email));
+    }
+
     @Test void longContentExpandsPagesAndIndexesFollowRealComposition() throws Exception {
         complete("Justificación académica de la planificación y seguimiento de las actividades institucionales. ".repeat(100),35);
         var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));byte[] bytes=artifacts.content(id,artifact.id(),email);
@@ -174,7 +369,7 @@ class DocumentIntegrationTests {
         try(var pdf=Loader.loadPDF(bytes)) {
             assertTrue(pdf.getNumberOfPages()>7);var stripper=new PDFTextStripper();String text=stripper.getText(pdf);assertTrue(text.contains("Actividad 35."));
             int matrix=-1;for(int i=0;i<pdf.getNumberOfPages();i++) { stripper.setStartPage(i+1);stripper.setEndPage(i+1);if(stripper.getText(pdf).lines().anyMatch(l->l.trim().replaceAll("^\\d+[.\\s]*","").equals("MATRIZ DE ACTIVIDADES"))) matrix=i+1; }
-            assertTrue(matrix>0);assertTrue(text.matches("(?s).*MATRIZ DE ACTIVIDADES \\.{3,} "+matrix+".*"),text);
+            assertTrue(matrix>0);assertTrue(text.matches("(?s).*MATRIZ DE ACTIVIDADES\\s*\\.{3,}\\s*"+matrix+".*"),text);
             assertTrue(artifact.signatureSlots().getFirst().pageNumber()>matrix);
         }
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-long.pdf"),bytes);
@@ -273,6 +468,7 @@ class DocumentIntegrationTests {
         byte[] original=artifacts.content(id,artifact.id(),email),body=signingBody(fixture,"Test-only-signing-password");UUID key=UUID.randomUUID();long version=version();
         var signed=signatures.sign(id,artifact.id(),email,version,state.preparation().pdfHash(),key,body,true);assertArrayEquals(new byte[body.length],body);
         byte[] bytes=signatures.content(id,signed.id(),email);assertArrayEquals(original,Arrays.copyOf(bytes,original.length));assertArrayEquals(original,artifacts.content(id,artifact.id(),email));
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->signatures.export(id,signed.id(),email)).getStatusCode().value());
         assertEquals("NOT_CHECKED",signed.revocationCheck());assertEquals("DRAFT",plans.get(id,email).documentState());
         assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
         try(var pdf=Loader.loadPDF(bytes)) {
@@ -289,7 +485,7 @@ class DocumentIntegrationTests {
         Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-signed.pdf"),bytes);Files.write(Path.of("target/document-qa/t1-signed-page.png"),signatures.page(id,signed.id(),signed.signaturePageIndex(),email));
         UUID other=plans.create(email,new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Other Plan")).id();
         assertEquals(404,assertThrows(ResponseStatusException.class,()->signatures.content(other,signed.id(),email)).getStatusCode().value());
-        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","FISEI","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->plans.update(id,email,new WorkPlanModels.Update(version(),"Borrador modificado","Facultad de Ingeniería en Sistemas, Electrónica e Industrial","Ingeniería de Software","Nueva justificación","Nuevo objetivo"))).getStatusCode().value());
         assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         bindings.revoke(user,binding.id(),email);assertArrayEquals(bytes,signatures.content(id,signed.id(),email));
         jdbc.update("DELETE FROM membership WHERE user_id=? AND group_id=?",user,group);
@@ -297,14 +493,23 @@ class DocumentIntegrationTests {
     }
     @Test void signatureFailuresNeverPersistSecretsArtifactsOrAdvanceState() throws Exception {
         complete("Controles de firma.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();signingAdmin();
-        assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
+        assertTrue(signatures.state(id,artifact.id(),email,true).signingEnabled());
         var bound=bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test public identity",null));
         var state=signatures.state(id,artifact.id(),email,true);long filesBefore=jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class);
         var invalid=signingBody(fixture,"Wrong password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),invalid,true)).getStatusCode().value());assertArrayEquals(new byte[invalid.length],invalid);
-        var other=signingBody(signingFixture(),"Test-only-signing-password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),other,true)).getStatusCode().value());assertArrayEquals(new byte[other.length],other);
+        var other=signingBody(signingFixture(),"Test-only-signing-password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),other,true,fingerprint(fixture))).getStatusCode().value());assertArrayEquals(new byte[other.length],other);
         var insecure=signingBody(fixture,"Test-only-signing-password");assertEquals(403,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),insecure,false)).getStatusCode().value());assertArrayEquals(new byte[insecure.length],insecure);
         var stale=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version()+1,state.preparation().pdfHash(),UUID.randomUUID(),stale,true)).getStatusCode().value());assertArrayEquals(new byte[stale.length],stale);
-        bindings.revoke(user,bound.id(),email);var revoked=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),revoked,true)).getStatusCode().value());assertArrayEquals(new byte[revoked.length],revoked);
+        bindings.revoke(user,bound.id(),email);assertTrue(signatures.state(id,artifact.id(),email,true).signingEnabled());var revoked=signingBody(fixture,"Wrong password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),revoked,true)).getStatusCode().value());assertArrayEquals(new byte[revoked.length],revoked);
         assertEquals(filesBefore,jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class));assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact",Integer.class));assertEquals("DRAFT",plans.get(id,email).documentState());
     }
+    @Test void unboundCertificateRecordsActualHolderSeparatelyFromAuthenticatedActor() throws Exception {
+        complete("Firma sin registro administrativo.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();
+        assertNull(bindings.current(user));var state=signatures.state(id,artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
+        var signed=signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true,fingerprint(fixture));
+        assertEquals("CERTIFICATE_PROVIDED",signed.identityCheck());assertEquals("Test-only signer",signed.signerName());assertEquals(user,signed.actorId());
+        assertEquals(plans.get(id,email).teacherName(),signed.actorName());assertTrue(signed.certificateSubject().contains("Test-only signer"));assertEquals(fingerprint(fixture),signed.certificateFingerprint());
+        assertNull(jdbc.queryForObject("SELECT binding_id FROM signed_document_artifact WHERE id=?",UUID.class,signed.id()));assertNull(bindings.current(user));
+    }
+
 }

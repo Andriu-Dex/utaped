@@ -56,8 +56,12 @@ public class ArtifactService {
                 if(draft.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum()>450)
                     throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Los anexos superan el límite de 450 páginas.");
                 var generated=engine.generate(draft);
-                if(generated.pdf().length>12*1024*1024) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El borrador es demasiado grande para la vista simultánea. Use Preparación y previsualización.");
-                cached=new PreviewCache(generated,engine.contentSections(generated.pdf()),System.currentTimeMillis()+120000);
+                if(generated.pdf().length>12*1024*1024) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El borrador es demasiado grande para la vista simultánea. Use la revisión final del documento.");
+                var sections=new LinkedHashMap<>(engine.contentSections(generated.pdf()));
+                for(int index=0;index<generated.pages().size();index++) {
+                    if(generated.pages().get(index).kind().equals("ANNEX")) { sections.putIfAbsent("ANNEXES",index);break; }
+                }
+                cached=new PreviewCache(generated,Collections.unmodifiableMap(sections),System.currentTimeMillis()+120000);
                 synchronized(draftPreviews) {
                     if(draftPreviews.size()>=2) draftPreviews.remove(draftPreviews.keySet().iterator().next());
                     draftPreviews.put(key,cached);
@@ -65,7 +69,7 @@ public class ArtifactService {
             } catch(IllegalStateException error) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo actualizar la vista. Sus datos siguen en el formulario; intente nuevamente.",error); }
             finally { generation.release(); }
         }
-        int page=input.pageIndex()<0?cached.sections().get(input.section()):input.pageIndex();
+        int page=input.pageIndex()<0?cached.sections().getOrDefault(input.section(),cached.sections().get("SIGNATURES")):input.pageIndex();
         if(page>=cached.document().pages().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
         return new DraftView(plan.rowVersion(),cached.document().pages(),cached.sections(),page,Base64.getEncoder().encodeToString(renderPage(cached.document().pdf(),page)));
     }
@@ -164,6 +168,8 @@ public class ArtifactService {
         var tree=(tools.jackson.databind.node.ObjectNode)json.valueToTree(snapshot);
         ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("editable");
         ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("canManage");
+        // Academic is the historical implicit type; retain hashes of existing signed snapshots.
+        if(snapshot.plan().institutionalUnitType()==null || snapshot.plan().institutionalUnitType().equals("ACADEMIC")) ((tools.jackson.databind.node.ObjectNode)tree.get("plan")).remove("institutionalUnitType");
         return StoredFiles.hash(json.writeValueAsString(tree).getBytes(StandardCharsets.UTF_8));
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
@@ -247,7 +253,8 @@ public class ArtifactService {
         try(var pdf=Loader.loadPDF(bytes)) {
             if(pageIndex<0 || pageIndex>=pdf.getNumberOfPages()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Página no disponible.");
             // Bound raster dimensions independently of uploaded PDF media boxes.
-            var box=pdf.getPage(pageIndex).getCropBox();float scale=Math.min(1.5f,1800f/Math.max(box.getWidth(),box.getHeight()));
+            var box=pdf.getPage(pageIndex).getCropBox();float scale=Math.min(2f,1800f/Math.max(box.getWidth(),box.getHeight()));
+            // Two pixels per PDF point preserve thin template borders at normal preview sizes.
             var out=new ByteArrayOutputStream();ImageIO.write(new PDFRenderer(pdf).renderImage(pageIndex,scale),"png",out);return out.toByteArray();
         } catch(IOException e) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"No se pudo visualizar la página."); }
         finally { rendering.release(); }

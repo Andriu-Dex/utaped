@@ -26,9 +26,9 @@ public class ReviewController {
     @PostMapping("/reviews/tasks/{id}/observations") public void observe(@PathVariable UUID id,@Valid @RequestBody ReviewService.Observation data,Principal p) { service.observe(id,p.getName(),data); }
     @PostMapping("/reviews/tasks/{id}/decisions") public void decide(@PathVariable UUID id,@Valid @RequestBody ReviewService.Decision data,Principal p) { service.decide(id,p.getName(),data); }
     @PostMapping(value="/reviews/tasks/{id}/signing",consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public void sign(@PathVariable UUID id,@RequestParam long rowVersion,@RequestParam String inputHash,@RequestParam UUID requestKey,Principal p,HttpServletRequest request) throws IOException {
+    public void sign(@PathVariable UUID id,@RequestParam long rowVersion,@RequestParam String inputHash,@RequestParam UUID requestKey,@RequestParam String certificateFingerprint,Principal p,HttpServletRequest request) throws IOException {
         if(request.getContentLengthLong()>1049092) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Material de firma demasiado grande.");
         byte[] body=request.getInputStream().readNBytes(1049093);
-        try { service.sign(id,p.getName(),rowVersion,inputHash,requestKey,body,request.isSecure()); } finally { Arrays.fill(body,(byte)0); }
+        try { service.sign(id,p.getName(),rowVersion,inputHash,requestKey,body,request.isSecure(),certificateFingerprint); } finally { Arrays.fill(body,(byte)0); }
     }
 }

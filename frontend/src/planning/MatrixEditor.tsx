@@ -1,3 +1,5 @@
+import { StepPagination } from './StepPagination'
+import { usePlanStepGuard } from './PlanStepNavigation'
 import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
@@ -8,7 +10,7 @@ import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
-export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
+export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved, isSplitView, onToggleSplit }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void; isSplitView?: boolean; onToggleSplit?: () => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
@@ -62,7 +64,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     setAddKey(k => k + 1)
     setEditingActivityId(activity.id)
     setError('')
-    setNotice('Actividad agregada al Plan. Configure sus opciones a continuación.')
+    setNotice('')
     requestAnimationFrame(() => {
       document.getElementById('activity-' + activity.id)?.focus()
     })
@@ -84,18 +86,19 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     setBusy(true)
     try {
       const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion })
-      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
+      setSaved(m); setDraft(selection(m)); await onSaved?.(); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true); return false }
     finally { setBusy(false) }
   }
   async function save(e: FormEvent) { e.preventDefault(); await persist() }
-  async function next() {
-    if (!saved || !draft || busy || conflict) return
+  async function canContinue(): Promise<boolean> {
+    if (!saved || !draft || busy || conflict) return false
+    if (!saved.editable) return true
     setError(''); setNotice('')
     if (!draft.activities.length) {
       setError('Agregue al menos una actividad para continuar.')
       formRef.current?.querySelector<HTMLButtonElement>('button[aria-expanded]')?.focus()
-      return
+      return false
     }
     setAttempted(true)
     const incomplete = draft.activities.find(a => !a.title.trim() || !a.startsOn || !a.endsOn ||
@@ -106,14 +109,24 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     if (incomplete) {
       setError('Complete fechas válidas, responsables, recursos y medios de verificación de la actividad ' + (draft.activities.indexOf(incomplete) + 1) + ' para continuar.')
       showActivity(incomplete.id)
-      return
+      return false
     }
     if (formRef.current && !formRef.current.checkValidity()) {
       setError('Revise los campos obligatorios de la matriz antes de continuar.')
       formRef.current.querySelector<HTMLElement>(':invalid')?.focus()
-      return
+      return false
     }
-    if (dirty && !(await persist())) return
+    if (dirty && !(await persist())) return false
+    return true
+  }
+  const embedded = usePlanStepGuard(async target => {
+    if (busy) return false
+    if (!saved || !draft) return ['general', 'content'].includes(target)
+    if (['attachments', 'preparation', 'signing'].includes(target)) return canContinue()
+    return !dirty || await confirmAction('Hay cambios sin guardar en la matriz. ¿Cambiar de paso y descartarlos?')
+  }, busy || (!saved && !error))
+  async function next() {
+    if (!(await canContinue())) return
     setBusy(true)
     try { await onNext() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo abrir Anexos.'); setBusy(false) }
   }
@@ -128,12 +141,17 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
     setBusy(true)
     try { await onBack() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo volver.'); setBusy(false) }
   }
+  async function previous() {
+    if (busy || (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Volver al contenido y descartarlos?')))) return
+    setBusy(true)
+    try { await (onPrevious ?? onBack)() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.'); setBusy(false) }
+  }
   async function compare() { try { setLatest(await api<Matrix>('/work-plans/' + targetDocId + '/matrix')) } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo consultar.') } }
   async function reload() {
     if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
     setEditingActivityId(null); setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
-  if (!saved || !draft) return <section><button className="secondary" onClick={back}>Volver al Plan</button>{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
+  if (!saved || !draft) return <section>{!embedded && <button className="secondary" onClick={back}>Volver al Plan</button>}{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
     if (!saved) return null
     const available = saved.catalogs.filter(c => c.kind === (key === 'resources' ? 'RESOURCE' : 'MEANS') && (c.active || row[key].some(v => v.catalogId === c.id)))
@@ -212,14 +230,14 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
   const activeIndex = activeActivity ? draft.activities.indexOf(activeActivity) : -1
 
   return (
-    <section className="matrix-workspace">
+    <section className={'matrix-workspace' + (embedded ? ' plan-step-panel' : '')}>
       <div className="matrix-topbar">
-        <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
+        {!embedded && <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
           <Icon name="arrow" size={14} style={{ transform: 'rotate(180deg)' }} />
           <span>Volver al Plan</span>
-        </button>
+        </button>}
         <div className="matrix-topbar-meta">
-          <span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span>
+          <span className="section-kicker review-kicker">PASO 3 DE 5 · PLAN OPERATIVO</span>
           <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
             {dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}
           </span>
@@ -228,7 +246,7 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
 
       <header className="matrix-main-header">
         <div className="matrix-title-group">
-          <h1>Actividades y matriz T1</h1>
+          {embedded ? <h2 className="plan-step-title">Actividades y matriz T1</h2> : <h1>Actividades y matriz T1</h1>}
           <p className="matrix-subtitle">
             Planificación operativa y articulación institucional: configure actividades, cronograma, integrantes responsables, recursos y medios de verificación.
           </p>
@@ -244,76 +262,140 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
       {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
 
     {!!draft.activities.length && <section className="card matrix-summary-card">
-      <div className="section-heading">
+      <div className="section-heading matrix-summary-heading">
         <span className="section-icon"><Icon name="document" /></span>
         <div>
           <span className="section-kicker">CONSOLIDADO T1</span>
           <h2>Resumen de la matriz</h2>
           <p className="field-help">Revise la planificación completa y abra el detalle de una actividad para ajustarla.</p>
         </div>
+        {onToggleSplit && (
+          <div className="matrix-heading-actions">
+            <button
+              type="button"
+              className="secondary matrix-toggle-split-btn"
+              onClick={onToggleSplit}
+              title={isSplitView ? 'Ver matriz a ancho completo' : 'Volver a vista dividida con previsualización'}
+              aria-label={isSplitView ? 'Ver matriz a ancho completo' : 'Volver a vista dividida'}
+            >
+              <Icon name={isSplitView ? 'maximize' : 'columns'} size={14} />
+              <span>{isSplitView ? 'Ver matriz completa' : 'Vista dividida'}</span>
+            </button>
+          </div>
+        )}
       </div>
       <p className="matrix-summary-state" role="status">{dirty ? 'Vista de sus cambios locales · Pendiente de guardar' : 'Información guardada en el servidor'}</p>
       <div className="table-scroll matrix-summary-table" role="region" aria-label="Resumen de actividades" tabIndex={0}>
         <table>
-          <caption className="matrix-table-caption">Planificación de actividades, fechas, responsables, recursos y medios de verificación</caption>
+          <caption className="matrix-table-caption">Planificación de actividades, plazo, responsables y estado de configuración</caption>
           <thead>
             <tr>
               <th scope="col">Actividad</th>
-              <th scope="col">Desde</th>
-              <th scope="col">Hasta</th>
+              <th scope="col" className="matrix-col-center">Plazo</th>
               <th scope="col">Responsables</th>
-              <th scope="col">Recursos</th>
-              <th scope="col">Medios de verificación</th>
+              <th scope="col" className="matrix-col-center">Configuración</th>
               <th scope="col" className="matrix-col-action">Acción</th>
             </tr>
           </thead>
           <tbody>
-            {draft.activities.map((a, index) => <tr key={a.id} className={editingActivityId === a.id ? 'is-selected-row' : ''}>
-              <th scope="row">
-                <div className="matrix-activity-title-cell">
-                  <span className="matrix-row-number">#{index + 1}</span>
-                  <div className="matrix-activity-title-content">
-                    <strong>{a.title}</strong>
-                    <small>{categoryLabels[a.category]}{a.mandatory ? ' · Obligatoria' : ''}</small>
-                  </div>
-                </div>
-              </th>
-              <td>{a.startsOn ? <span className="matrix-date-cell">{a.startsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.endsOn ? <span className="matrix-date-cell">{a.endsOn.split('-').reverse().join('/')}</span> : <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.collective ? <span className="status-badge">{saved.collectiveLabel}</span> : a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.resources.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td>{a.means.map(c => c.label || c.other || saved.catalogs.find(v => v.id === c.catalogId)?.label).filter(Boolean).join(', ') || <span className="matrix-pending-badge">Pendiente</span>}</td>
-              <td className="matrix-action-cell">
-                <div className="matrix-row-actions">
-                  <button
-                    type="button"
-                    className="secondary matrix-icon-btn matrix-edit-btn"
-                    onClick={() => showActivity(a.id)}
-                    title={saved.editable ? 'Configurar actividad ' + (index + 1) : 'Ver detalle de la actividad ' + (index + 1)}
-                    aria-label={'Ver detalle de la actividad ' + (index + 1)}
-                  >
-                    <Icon name={saved.editable ? 'edit' : 'eye'} size={15} />
-                  </button>
-                  {saved.editable && !a.mandatory && (
-                    <button
-                      type="button"
-                      className="secondary danger-btn matrix-icon-btn matrix-delete-btn"
-                      title={'Quitar actividad ' + (index + 1)}
-                      aria-label={'Quitar ' + a.title}
-                      onClick={async () => {
-                        if (await confirmAction(`¿Quitar la actividad «${a.title}» del borrador?`)) {
-                          if (editingActivityId === a.id) setEditingActivityId(null)
-                          setDraft({ ...draft, activities: draft.activities.filter(item => item.id !== a.id) })
-                          setNotice('Actividad quitada del borrador.')
-                        }
-                      }}
-                    >
-                      <Icon name="trash" size={15} />
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>)}
+            {draft.activities.map((a, index) => {
+              const resourcesCount = a.resources.filter(c => c.catalogId !== null || c.other?.trim()).length
+              const meansCount = a.means.filter(c => c.catalogId !== null || c.other?.trim()).length
+              const hasConfig = resourcesCount > 0 && meansCount > 0
+              const dateRange = (a.startsOn && a.endsOn)
+                ? `${a.startsOn.split('-').reverse().join('/')} — ${a.endsOn.split('-').reverse().join('/')}`
+                : a.startsOn
+                  ? `Desde ${a.startsOn.split('-').reverse().join('/')}`
+                  : a.endsOn
+                    ? `Hasta ${a.endsOn.split('-').reverse().join('/')}`
+                    : null
+
+              return (
+                <tr key={a.id} className={editingActivityId === a.id ? 'is-selected-row' : ''}>
+                  <th scope="row">
+                    <div className="matrix-activity-title-cell">
+                      <span className="matrix-row-number">#{index + 1}</span>
+                      <div className="matrix-activity-title-content">
+                        <strong>{a.title}</strong>
+                        <div className="matrix-table-tags">
+                          <small className="status-badge doc-type-pill">{categoryLabels[a.category]}</small>
+                          {a.mandatory && <small className="status-badge is-mandatory">Obligatoria</small>}
+                        </div>
+                      </div>
+                    </div>
+                  </th>
+                  <td className="matrix-col-center matrix-cell-dates">
+                    <span className="matrix-card-field-label" aria-hidden="true">Plazo:</span>
+                    <div className="matrix-cell-content">
+                      {dateRange ? (
+                        <span className="matrix-date-range-badge">
+                          <Icon name="calendar" size={12} />
+                          <span>{dateRange}</span>
+                        </span>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="matrix-cell-responsibles">
+                    <span className="matrix-card-field-label" aria-hidden="true">Responsables:</span>
+                    <div className="matrix-cell-content">
+                      {a.collective ? (
+                        <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.length + ' integrantes · Todos seleccionados: ' + a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span></div>
+                      ) : a.responsibleIds.length > 0 ? (
+                        <div className="matrix-responsibles-cell">
+                          <span className="matrix-collective-badge">{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
+                        </div>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="matrix-col-center matrix-cell-coverage">
+                    <span className="matrix-card-field-label" aria-hidden="true">Configuración:</span>
+                    <div className="matrix-cell-content">
+                      {hasConfig ? (
+                        <span className="matrix-coverage-badge">
+                          {resourcesCount} {resourcesCount === 1 ? 'recurso' : 'recursos'} · {meansCount} {meansCount === 1 ? 'medio' : 'medios'}
+                        </span>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="matrix-action-cell">
+                    <div className="matrix-row-actions">
+                      <button
+                        type="button"
+                        className="secondary matrix-icon-btn matrix-edit-btn"
+                        onClick={() => showActivity(a.id)}
+                        title={saved.editable ? 'Configurar actividad ' + (index + 1) : 'Ver detalle de la actividad ' + (index + 1)}
+                        aria-label={'Ver detalle de la actividad ' + (index + 1)}
+                      >
+                        <Icon name={saved.editable ? 'edit' : 'eye'} size={15} />
+                      </button>
+                      {saved.editable && !a.mandatory && (
+                        <button
+                          type="button"
+                          className="secondary danger-btn matrix-icon-btn matrix-delete-btn"
+                          title={'Quitar actividad ' + (index + 1)}
+                          aria-label={'Quitar ' + a.title}
+                          onClick={async () => {
+                            if (await confirmAction(`¿Quitar la actividad «${a.title}» del borrador?`)) {
+                              if (editingActivityId === a.id) setEditingActivityId(null)
+                              setDraft({ ...draft, activities: draft.activities.filter(item => item.id !== a.id) })
+                              setNotice('Actividad quitada del borrador.')
+                            }
+                          }}
+                        >
+                          <Icon name="trash" size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -418,36 +500,16 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                 <header className="activity-modal-header">
                   <div className="activity-modal-title-group">
                     <span className="activity-index-pill">#{activeIndex + 1}</span>
-                    <div>
-                      <div className="activity-title-row">
-                        <h2 id={`activity-${activeActivity.id}-title`}>{activeIndex + 1}. {activeActivity.title}</h2>
-                        <span className="status-badge is-active-badge">En configuración</span>
-                      </div>
+                    <div className="activity-modal-header-text">
+                      <h2 id={`activity-${activeActivity.id}-title`}>{activeIndex + 1}. {activeActivity.title}</h2>
                       <div className="activity-tags">
                         <span className="status-badge doc-type-pill">{categoryLabels[activeActivity.category]}</span>
                         {activeActivity.mandatory && <span className="status-badge is-mandatory">Obligatoria</span>}
+                        <span className="status-badge is-active-badge">En configuración</span>
                       </div>
                     </div>
                   </div>
                   <div className="activity-modal-header-actions">
-                    {!activeActivity.mandatory && saved.editable && (
-                      <button
-                        type="button"
-                        className="secondary danger-btn"
-                        title="Quitar actividad"
-                        aria-label={'Quitar ' + activeActivity.title}
-                        onClick={async () => {
-                          if (await confirmAction(`¿Quitar la actividad «${activeActivity.title}» del borrador?`)) {
-                            setEditingActivityId(null)
-                            setDraft({ ...draft, activities: draft.activities.filter(a => a.id !== activeActivity.id) })
-                            setNotice('Actividad quitada del borrador.')
-                          }
-                        }}
-                      >
-                        <Icon name="trash" size={14} />
-                        <span>Quitar</span>
-                      </button>
-                    )}
                     <button
                       type="button"
                       className="secondary matrix-icon-btn modal-close-btn"
@@ -601,13 +663,12 @@ export function MatrixEditor({ targetDocId, onBack, onNext, onDirtyChange }: { t
                   <Icon name="check" size={15} />
                   <span>{busy ? 'Guardando…' : 'Guardar matriz'}</span>
                 </button>
-                <button type="button" disabled={busy || conflict} onClick={next} className="matrix-next-button">
-                  <span>{busy ? 'Procesando…' : 'Siguiente: Anexos'}</span><Icon name="arrow" size={16} />
-                </button>
+
               </div>
             </div>
           )}
       </form>
+    <StepPagination previous={{ label: 'Contenido', action: () => void previous() }} next={{ label: 'Anexos', action: () => void next() }} disabled={busy} nextDisabled={conflict} />
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>
