@@ -10,7 +10,7 @@ import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
-export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
+export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved, isSplitView, onToggleSplit }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void; isSplitView?: boolean; onToggleSplit?: () => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
@@ -262,13 +262,27 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
       {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
 
     {!!draft.activities.length && <section className="card matrix-summary-card">
-      <div className="section-heading">
+      <div className="section-heading matrix-summary-heading">
         <span className="section-icon"><Icon name="document" /></span>
         <div>
           <span className="section-kicker">CONSOLIDADO T1</span>
           <h2>Resumen de la matriz</h2>
           <p className="field-help">Revise la planificación completa y abra el detalle de una actividad para ajustarla.</p>
         </div>
+        {onToggleSplit && (
+          <div className="matrix-heading-actions">
+            <button
+              type="button"
+              className="secondary matrix-toggle-split-btn"
+              onClick={onToggleSplit}
+              title={isSplitView ? 'Ver matriz a ancho completo' : 'Volver a vista dividida con previsualización'}
+              aria-label={isSplitView ? 'Ver matriz a ancho completo' : 'Volver a vista dividida'}
+            >
+              <Icon name={isSplitView ? 'maximize' : 'columns'} size={14} />
+              <span>{isSplitView ? 'Ver matriz completa' : 'Vista dividida'}</span>
+            </button>
+          </div>
+        )}
       </div>
       <p className="matrix-summary-state" role="status">{dirty ? 'Vista de sus cambios locales · Pendiente de guardar' : 'Información guardada en el servidor'}</p>
       <div className="table-scroll matrix-summary-table" role="region" aria-label="Resumen de actividades" tabIndex={0}>
@@ -310,35 +324,44 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
                       </div>
                     </div>
                   </th>
-                  <td className="matrix-col-center">
-                    {dateRange ? (
-                      <span className="matrix-date-range-badge">
-                        <Icon name="calendar" size={12} />
-                        <span>{dateRange}</span>
-                      </span>
-                    ) : (
-                      <span className="matrix-pending-badge">Pendiente</span>
-                    )}
+                  <td className="matrix-col-center matrix-cell-dates">
+                    <span className="matrix-card-field-label" aria-hidden="true">Plazo:</span>
+                    <div className="matrix-cell-content">
+                      {dateRange ? (
+                        <span className="matrix-date-range-badge">
+                          <Icon name="calendar" size={12} />
+                          <span>{dateRange}</span>
+                        </span>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
                   </td>
-                  <td>
-                    {a.collective ? (
-                      <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.length + ' integrantes · Todos seleccionados: ' + a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span></div>
-                    ) : a.responsibleIds.length > 0 ? (
-                      <div className="matrix-responsibles-cell">
-                        <span className="matrix-collective-badge">{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
-                      </div>
-                    ) : (
-                      <span className="matrix-pending-badge">Pendiente</span>
-                    )}
+                  <td className="matrix-cell-responsibles">
+                    <span className="matrix-card-field-label" aria-hidden="true">Responsables:</span>
+                    <div className="matrix-cell-content">
+                      {a.collective ? (
+                        <div className="matrix-responsibles-cell"><span className="matrix-collective-badge" title={a.responsibleIds.length + ' integrantes · Todos seleccionados: ' + a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}>{saved.collectiveLabel}</span></div>
+                      ) : a.responsibleIds.length > 0 ? (
+                        <div className="matrix-responsibles-cell">
+                          <span className="matrix-collective-badge">{a.responsibleIds.map(id => saved.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</span>
+                        </div>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
                   </td>
-                  <td className="matrix-col-center">
-                    {hasConfig ? (
-                      <span className="matrix-coverage-badge">
-                        {resourcesCount} {resourcesCount === 1 ? 'recurso' : 'recursos'} · {meansCount} {meansCount === 1 ? 'medio' : 'medios'}
-                      </span>
-                    ) : (
-                      <span className="matrix-pending-badge">Pendiente</span>
-                    )}
+                  <td className="matrix-col-center matrix-cell-coverage">
+                    <span className="matrix-card-field-label" aria-hidden="true">Configuración:</span>
+                    <div className="matrix-cell-content">
+                      {hasConfig ? (
+                        <span className="matrix-coverage-badge">
+                          {resourcesCount} {resourcesCount === 1 ? 'recurso' : 'recursos'} · {meansCount} {meansCount === 1 ? 'medio' : 'medios'}
+                        </span>
+                      ) : (
+                        <span className="matrix-pending-badge">Pendiente</span>
+                      )}
+                    </div>
                   </td>
                   <td className="matrix-action-cell">
                     <div className="matrix-row-actions">

@@ -94,26 +94,18 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
 
   return <nav className="document-page-navigator" aria-label="Páginas del PDF">
     <div className="navigator-dock">
-      <div className="navigator-dock-info">
-        <span className="navigator-dock-icon" aria-hidden="true"><Icon name="document" size={15} /></span>
-        <strong className="navigator-dock-title">Vista del documento</strong>
-        <span className="sr-only" role="status">Página {page + 1} de {pageCount}</span>
-        <div className="document-page-progress" aria-hidden="true">
-          <span style={{ width: ((page + 1) / pageCount * 100) + '%' }} />
-        </div>
-      </div>
+      <span className="sr-only" role="status">Página {page + 1} de {pageCount}</span>
 
       <div className="navigator-dock-controls">
         <button
           type="button"
-          className="secondary navigator-nav-btn"
+          className="secondary navigator-nav-btn icon-only"
           disabled={disabled || page === 0}
           onClick={() => go(page - 1)}
           aria-label="Página anterior"
           title="Página anterior"
         >
-          <Icon name="chevronLeft" size={14} />
-          <span>Anterior</span>
+          <Icon name="chevronLeft" size={15} />
         </button>
 
         <div className="navigator-page-capsule">
@@ -148,14 +140,13 @@ export function DocumentPageNavigator({ page, pageCount, onChange, disabled = fa
 
         <button
           type="button"
-          className="secondary navigator-nav-btn"
+          className="secondary navigator-nav-btn icon-only"
           disabled={disabled || page + 1 === pageCount}
           onClick={() => go(page + 1)}
           aria-label="Página siguiente"
           title="Página siguiente"
         >
-          <span>Siguiente</span>
-          <Icon name="chevronRight" size={14} />
+          <Icon name="chevronRight" size={15} />
         </button>
       </div>
 

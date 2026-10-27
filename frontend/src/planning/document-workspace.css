@@ -2392,8 +2392,69 @@ dialog.activity-modal-overlay::backdrop { background: transparent; }
 
 /* One persistent workspace for the six Plan steps. */
 .plan-wizard { min-width: 0; }
-.plan-wizard-header { margin: 22px 0 18px; }
+.plan-wizard-header { margin: 16px 0 16px; }
 .plan-wizard-header h1 { margin: 6px 0 12px; overflow-wrap: anywhere; }
+.plan-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 12px;
+}
+.plan-header-title-row h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.plan-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--blue-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.plan-back-btn:hover:not(:disabled) {
+  background: rgba(23, 95, 148, 0.08);
+  border-color: var(--blue-700);
+  color: var(--blue-800);
+  transform: translateX(-2px);
+}
+.plan-back-btn:focus-visible {
+  outline: 2px solid var(--blue-700);
+  outline-offset: 2px;
+}
+.plan-back-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+:root[data-theme='dark'] .plan-back-btn {
+  background: #102436;
+  border-color: #244360;
+  color: #8ec3ea;
+  box-shadow: none;
+}
+:root[data-theme='dark'] .plan-back-btn:hover:not(:disabled) {
+  background: #173752;
+  border-color: #4386b8;
+  color: #bce0fc;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .plan-wizard-navigation { position: sticky; top: calc(var(--plan-topbar-height, 88px) + 8px); z-index: 9; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px; margin: 18px 0 12px; box-shadow: var(--shadow-sm); scroll-margin-top: 110px; }
 .plan-wizard-navigation .document-steps { margin: 0; padding: 0; border: 0; box-shadow: none; background: transparent; gap: 6px; }
 .plan-wizard-navigation .document-steps button { min-height: 48px; padding: 8px 10px; gap: 8px; font-size: .78rem; }

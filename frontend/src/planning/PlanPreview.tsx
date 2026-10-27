@@ -106,17 +106,17 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   else if (dirty) status = 'Documento preparado · cambios pendientes'
   else if (artifact?.current) status = 'Documento preparado para revisión y firma'
   return <aside className="plan-preview card" aria-label="Previsualización simultánea del Plan">
-    <header className="plan-preview-heading"><div><span className="section-kicker">DOCUMENTO INSTITUCIONAL · T1</span><h2>Vista del documento</h2></div><div className="plan-preview-actions">
+    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{sectionLabels[section]} · A4</span></div><div className="plan-preview-actions">
       {editing && <button type="button" className="secondary icon-only" title="Actualizar vista" aria-label="Actualizar vista" disabled={busy} onClick={() => setRetry(value => value + 1)}><Icon name="refresh" size={16} /></button>}
       <button type="button" className="secondary icon-only" title="Ampliar página" aria-label="Ampliar página" disabled={!image || !!loading || imageError === image} onClick={expand}><Icon name="maximize" size={16} /></button>
     </div></header>
-    <div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="muted">{sectionLabels[section]} · A4</span></div>
+
     {editing && dirty && !textDirty && <p className="field-help">La vista muestra lo guardado. Guarde los cambios de este paso para actualizarla.</p>}
     {editing && step === 'attachments' && result && !result.value.sections.ANNEXES && <p className="field-help">No hay anexos incorporados. Se muestra la sección de firmas que los seguirá.</p>}
     {viewError && <><Toast message={viewError} onDismiss={() => setError('')} /><p className="field-help">Sus datos permanecen en el formulario. La última vista se conserva mientras reintenta.</p>{!finalStep && <button type="button" className="secondary" disabled={busy} onClick={() => setRetry(value => value + 1)}>Reintentar vista</button>}</>}
     {image && pages?.length ? <div className="plan-preview-viewer document-keyboard-viewer" role="region" aria-label="Previsualización del documento" tabIndex={0} aria-keyshortcuts="ArrowLeft ArrowRight" aria-describedby={helpId} onKeyDown={event => navigatePdfWithArrow(event, page, pages.length, !!loading || loadedImage !== image && imageError !== image, go)}>
       <DocumentPageNavigator page={page} pageCount={pages.length} onChange={go} disabled={!!loading || loadedImage !== image && imageError !== image} references={references} />
-      <p id={helpId} className="field-help plan-preview-keyboard">Seleccione el visor y use ← → para cambiar de página.</p>
+      <span id={helpId} className="sr-only">Seleccione el visor y use las teclas de flecha para cambiar de página.</span>
       {imageError === image && <div className="notice"><p>No se pudo cargar la página.</p><button type="button" className="secondary" onClick={() => { setImageError(''); if (editing) setRetry(value => value + 1); else setImageRetry(value => value + 1) }}>Reintentar página</button></div>}
       {loadedImage !== image && imageError !== image && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className={'document-reading-desk' + (stale ? ' is-stale' : '')} aria-busy={!!loading}>

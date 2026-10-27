@@ -43,8 +43,25 @@ export function ExecutionReportEditor({ initial, initialStep, onStepChange, onBa
   if (panel === 'rounds') return <ReviewHistory documentId={initial.id} title={title} onBack={back} onDirtyChange={onDirtyChange} />
   if (panel === 'history') return <AuditViewer targetDocId={initial.id} onBack={back} />
   function result(id: string, patch: Partial<Result>) { setDraft(current => current && ({ ...current, results: current.results.some(r => r.activityId === id) ? current.results.map(r => r.activityId === id ? { ...r, ...patch } : r) : [...current.results, { activityId: id, percentage: null, observations: '', ...patch }] })) }
-  return <section><button type="button" className="secondary" disabled={busy} onClick={async () => { if (!dirty || await confirmAction('Hay cambios sin guardar. ¿Salir del Informe?')) onBack() }}>Volver a documentos</button>
-    <span className="section-kicker review-kicker">INFORME DE EJECUCIÓN · CORTE DEL PLAN</span><h1>{title}</h1><p className="muted">Documente avances, analice resultados y proponga mejoras. Este corte conserva el Plan aprobado y no reemplaza al Informe final.</p>
+  return <section>
+    <header className="plan-wizard-header">
+      <span className="section-kicker review-kicker">INFORME DE EJECUCIÓN · CORTE DEL PLAN</span>
+      <div className="plan-header-title-row">
+        <button
+          type="button"
+          className="plan-back-btn"
+          disabled={busy}
+          title="Volver a documentos"
+          aria-label="Volver a documentos"
+          onClick={async () => { if (!dirty || await confirmAction('Hay cambios sin guardar. ¿Salir del Informe?')) onBack() }}
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">Volver a documentos</span>
+        </button>
+        <h1>{title}</h1>
+      </div>
+    </header>
+    <p className="muted">Documente avances, analice resultados y proponga mejoras. Este corte conserva el Plan aprobado y no reemplaza al Informe final.</p>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {!state || !draft ? loadFailed ? <div className="notice"><p>No se pudo cargar el Informe de ejecución.</p><button type="button" className="secondary" onClick={() => { setError(''); setLoadFailed(false); setReload(value => value + 1) }}>Reintentar carga del Informe</button></div> : <p role="status">Cargando Informe de ejecución…</p> : <>
       <div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Ronda {state.document.reviewRound} · Corte {draft.sequenceNumber}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div>
