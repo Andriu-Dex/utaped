@@ -5,7 +5,7 @@ export type PlanStepGuard = (target: PlanStep) => Promise<boolean>
 export const planSteps: { key: PlanStep; label: string }[] = [
   { key: 'general', label: 'Información general' }, { key: 'content', label: 'Contenido' },
   { key: 'matrix', label: 'Actividades y matriz' }, { key: 'attachments', label: 'Anexos y opciones' },
-  { key: 'preparation', label: 'Revisión final' }, { key: 'signing', label: 'Firma y Finalización' },
+  { key: 'preparation', label: 'Preparación de firma' }, { key: 'signing', label: 'Revisión final y firma' },
 ]
 export const PlanStepNavigationContext = createContext<null | ((guard: PlanStepGuard, busy: boolean) => () => void)>(null)
 export function usePlanStepGuard(guard: PlanStepGuard, busy: boolean) {

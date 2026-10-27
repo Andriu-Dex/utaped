@@ -1,5 +1,7 @@
 # Reportes
 
+- [Preparación de firma y revisión final](2026-10-27-27-signature-preparation-and-final-review.md).
+
 - [Previsualización persistente del Plan T1](2026-10-26-26-persistent-plan-preview.md).
 
 - [Portada T1 conforme al ejemplo oficial](2026-10-25-25-t1-cover-layout.md).

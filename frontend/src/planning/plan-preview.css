@@ -6,26 +6,28 @@
 .plan-preview-width { display:none; }
 .plan-persistent-workspace { display:grid; grid-template-columns:minmax(0,var(--editor-width,46%)) 10px minmax(0,1fr); align-items:start; gap:0; }
 .plan-persistent-workspace > * { min-width:0; }
-.plan-persistent-workspace[data-step='signing'] { grid-template-columns:minmax(340px,380px) minmax(0,1fr); gap:20px; }
-.plan-persistent-workspace[data-step='preparation'] { display:flex !important; flex-direction:column !important; gap:14px !important; width:100% !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-editor-pane { display:contents !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-step-panel { display:contents !important; }
-.plan-persistent-workspace[data-step='preparation'] .review-kicker { order:1 !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-step-title { order:2 !important; margin:0 0 4px 0 !important; }
-.plan-persistent-workspace[data-step='preparation'] .preparation-status-card { order:3 !important; padding:14px 20px !important; margin:0 !important; border-radius:12px !important; background:var(--surface) !important; border:1px solid var(--border) !important; }
-.plan-persistent-workspace[data-step='preparation'] .preparation-status-card .review-summary { margin:0 !important; padding:0 !important; border-bottom:none !important; display:flex !important; justify-content:space-between !important; align-items:center !important; gap:16px !important; flex-wrap:wrap !important; }
-.plan-persistent-workspace[data-step='preparation'] section[aria-label="Datos pendientes"] { order:4 !important; margin:0 !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-preview.card { order:5 !important; position:static !important; max-height:none !important; width:100% !important; padding:20px !important; box-sizing:border-box !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-preview .document-reading-desk { padding:28px 20px !important; background:color-mix(in srgb, var(--blue-900) 4%, var(--canvas)) !important; border-radius:12px !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-preview-paper { width:auto !important; max-width:860px !important; margin:0 auto !important; }
-.plan-persistent-workspace[data-step='preparation'] .plan-step-pagination { order:6 !important; width:100% !important; margin-top:10px !important; padding-top:18px !important; border-top:1px solid var(--border) !important; }
+/* Preparation and wizard steps share the standard 3-column split workspace with resizer. */
+.plan-persistent-workspace[data-step='signing'] { display:flex; flex-direction:column; gap:18px; }
+.plan-persistent-workspace[data-step='signing'] > .plan-editor-pane,
+.plan-persistent-workspace[data-step='signing'] > .plan-preview,
+.plan-persistent-workspace[data-step='signing'] > .plan-final-actions { width:100%; }
+.plan-persistent-workspace[data-step='signing'] .plan-preview.card { position:static; max-height:none; }
+.plan-persistent-workspace[data-step='signing'] .plan-preview-paper { max-width:900px; margin:auto; }
+.plan-persistent-workspace[data-step='signing'] .plan-preview .document-reading-desk { padding:24px; }
+.plan-persistent-workspace[data-step='signing'] .preparation-status-card { padding:16px 20px; }
+.plan-persistent-workspace[data-step='signing'] .review-summary { margin:0; padding:0; border-bottom:none; }
+.plan-final-actions { display:grid; gap:16px; }
+.plan-review-confirmation { padding:18px 22px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.plan-review-confirmation label { margin:0; }
+.signature-placement-list { display:grid; gap:12px; padding-left:22px; }
+.signature-placement-list li span { display:block; color:var(--muted); font-size:.85rem; margin-top:4px; }
 .plan-persistent-workspace[data-pane='edit'], .plan-persistent-workspace[data-pane='preview'] { grid-template-columns:minmax(0,1fr); gap:0; }
-.plan-persistent-workspace[data-pane='edit'][data-step='signing'],
-.plan-persistent-workspace[data-pane='preview'][data-step='signing'] { grid-template-columns:minmax(0,1fr); }
+.plan-persistent-workspace[data-pane='edit'][data-step='preparation'],
+.plan-persistent-workspace[data-pane='preview'][data-step='preparation'] { grid-template-columns:minmax(0,1fr); }
 .plan-persistent-workspace[data-pane='edit'] > .plan-preview,
 .plan-persistent-workspace[data-pane='preview'] > .plan-editor-pane,
 .plan-persistent-workspace[data-pane='edit'] > .plan-workspace-resizer,
-.plan-persistent-workspace[data-pane='preview'] > .plan-workspace-resizer { display:none !important; }
+.plan-persistent-workspace[data-pane='preview'] > .plan-workspace-resizer { display:none; }
 .plan-persistent-workspace.is-resizing,
 .plan-persistent-workspace.is-resizing * { cursor:col-resize !important; user-select:none !important; }
 .plan-editor-pane > .card, .plan-editor-pane .plan-step-panel > .card { padding:24px; }
@@ -375,3 +377,10 @@
 :root[data-theme='dark'] .plan-preview-dialog button.secondary:disabled { background:#132d43; color:#9cb4c6; }
 
 .plan-preview-viewer > .document-page-navigator { position:sticky; top:0; z-index:2; background:var(--surface); margin:6px 0 10px; }
+
+/* Final review is always full width, irrespective of the preceding editing mode. */
+.plan-persistent-workspace[data-step='signing'][data-pane] > .plan-editor-pane,
+.plan-persistent-workspace[data-step='signing'][data-pane] > .plan-preview { display:block; }
+@media (max-width:1199px) {
+  .plan-persistent-workspace[data-step='preparation'] { grid-template-columns:minmax(0,1fr); }
+}

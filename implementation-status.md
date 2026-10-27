@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+T1: paso 5 Preparación de firma (elaboradores, cargos, páginas y flujo, sin firmar); paso 6 Revisión final y firma a ancho completo, confirmación del artefacto y acciones después del visor. Distribución en orden DOM sin reordenamiento CSS de revisión. Verificado: lint/TypeScript/build y 24 pruebas de aceptación; entorno local actualizado. Cambios visuales previos en d93be48; esta implementación sin commit. [Reporte](docs/reports/2026-10-27-27-signature-preparation-and-final-review.md).
+
 T1: visor persistente en los seis pasos, basado en el diseño de revisión final, con navegación contextual, ampliación, distribución PC/tablet y avisos de cambios pendientes. Revisión/firma conservan el artefacto preparado. Verificado: 33 pruebas documentales, repetidas 16 sobre la última revisión, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; implementación sin commit. Ajuste anterior de portada cerrado en 60889c7. [Reporte](docs/reports/2026-10-26-26-persistent-plan-preview.md).
 
 Portada T1: unidad y carrera justificadas y agrupadas, mayúsculas, separación del título y posición vertical según el PDF oficial. 33 pruebas documentales, TypeScript/build y revisión visual correctos. Entorno local actualizado; sin commit. [Reporte](docs/reports/2026-10-25-25-t1-cover-layout.md).

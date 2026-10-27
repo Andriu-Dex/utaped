@@ -35,12 +35,12 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   const helpId = useId(), titleId = useId()
   const finalStep = step === 'preparation' || step === 'signing'
   const editing = plan.editable && plan.documentState === 'DRAFT' && !finalStep
-  const section: Focus = step === 'general' ? 'COVER' : step === 'content' ? focus : step === 'matrix' ? 'MATRIX' : step === 'attachments' ? 'ANNEXES' : step === 'signing' ? 'SIGNATURES' : 'COVER'
+  const section: Focus = step === 'general' ? 'COVER' : step === 'content' ? focus : step === 'matrix' ? 'MATRIX' : step === 'attachments' ? 'ANNEXES' : step === 'preparation' ? 'SIGNATURES' : 'COVER'
   const fingerprint = JSON.stringify([plan.id, plan.rowVersion, draft])
   const [previous, setPrevious] = useState({ fingerprint, section, step })
   if (previous.fingerprint !== fingerprint || previous.section !== section || previous.step !== step) {
     setPrevious({ fingerprint, section, step }); setRequestedPage(-1)
-    setArtifactPage(step === 'signing' ? Math.max(0, (prepared?.artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
+    setArtifactPage(step === 'preparation' ? Math.max(0, (prepared?.artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
   }
   useEffect(() => {
     if (!editing) return
@@ -74,7 +74,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   const [previousArtifact, setPreviousArtifact] = useState<string | undefined>(undefined)
   if (previousArtifact !== artifact?.id) {
     setPreviousArtifact(artifact?.id)
-    setArtifactPage(step === 'signing' ? Math.max(0, (artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
+    setArtifactPage(step === 'preparation' ? Math.max(0, (artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
   }
   const pages = editing ? result?.value.pages : artifact?.pages
   const page = editing ? result?.value.pageIndex ?? 0 : Math.min(artifactPage, Math.max(0, (pages?.length ?? 1) - 1))

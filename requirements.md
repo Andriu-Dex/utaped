@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): cerrar los cambios visuales actuales en commit local y separar preparación de firma (paso 5) de revisión final y firma (paso 6). El paso 5 comprueba elaboradores, cargos, ubicación y circuito, sin certificados ni aplicación de firmas. El paso 6 muestra el documento a ancho completo y permite firmar después de confirmar su revisión. Conservar los mismos artefactos y la activación de revisión al completar las firmas. Nueva implementación sin commit hasta revisión.
+
 CONFIRMADO-PROYECTO (2026-10-26): cerrar los ajustes anteriores de portada en commit local y mantener sin commit la nueva previsualización persistente del T1. Reutilizar el diseño del visor del paso 5 en los seis pasos, con foco en la sección correspondiente, modos de distribución PC/tablet, estados de actualización y conservación de validaciones. El paso 5 pasa a Revisión final; revisión y firma usan el artefacto preparado, distinto del borrador transitorio.
 
 CONFIRMADO-PROYECTO (2026-10-25): ajustar la portada T1 al ejemplo oficial TI-JD2026-UTIT-PLAN-V01-signed.pdf: unidad y carrera justificadas y agrupadas, bloques en mayúsculas, título y período centrados con separación propia. Conservar A4, datos del documento y artefactos firmados. Sin commit hasta revisión.

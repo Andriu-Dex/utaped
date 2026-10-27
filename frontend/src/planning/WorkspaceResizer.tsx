@@ -68,6 +68,7 @@ export function WorkspaceResizer({
       onPointerMove={handlePointerMove}
       onPointerUp={stopDragging}
       onPointerCancel={stopDragging}
+      onLostPointerCapture={stopDragging}
       onDoubleClick={handleDoubleClick}
       title="Arrastre para ajustar el ancho · Doble clic para restablecer (46%)"
       role="separator"
@@ -93,4 +94,3 @@ export function WorkspaceResizer({
     </div>
   )
 }
-
