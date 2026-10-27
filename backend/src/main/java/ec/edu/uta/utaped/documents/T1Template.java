@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine16"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine17"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -92,10 +92,19 @@ public class T1Template {
     private void body(Document doc,Snapshot s,Map<String,Integer> pageNumbers,CompositionMarkers compositionMarkers) {
         var body=(Element)doc.getElementsByTagNameNS(W,"body").item(0);var source=children(body,null);
         // Fixed source-node positions are a versioned template binding, never PDF page numbers.
-        text(source.get(4),("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit());
-        text(source.get(6),"PLAN DE TRABAJO DE: "+InstitutionalHeader.title(s));text(source.get(9),"PERÍODO: "+s.plan().periodName());
-        var result=new ArrayList<Element>();result.addAll(source.subList(0,10));
-        if(!s.plan().career().isBlank()) result.add(6,paragraph(source.get(4),"CARRERA: "+s.plan().career()));
+        text(source.get(4),(("ADMINISTRATIVE".equals(s.plan().institutionalUnitType())?"UNIDAD ADMINISTRATIVA: ":"UNIDAD ACADÉMICA: ")+s.plan().institutionalUnit()).toUpperCase(Locale.ROOT));
+        property(source.get(4),"jc").setAttributeNS(W,"w:val","both");
+        text(source.get(6),("PLAN DE TRABAJO DE: "+InstitutionalHeader.title(s)).toUpperCase(Locale.ROOT));
+        text(source.get(9),("PERÍODO: "+s.plan().periodName()).toUpperCase(Locale.ROOT));
+        // The filled official cover groups unit/career before the separated, centered title.
+        // Omit the extra leading blank; retain the source inter-block and period spacing.
+        var result=new ArrayList<Element>(source.subList(1,5));
+        keepWithNext(source.get(4));
+        if(!s.plan().career().isBlank()) {
+            var career=paragraph(source.get(4),("CARRERA: "+s.plan().career()).toUpperCase(Locale.ROOT));
+            result.add(career);
+        }
+        result.addAll(source.subList(5,10));
         property(source.get(14),"pageBreakBefore");
         var indexSpacing=property(source.get(14),"spacing");indexSpacing.setAttributeNS(W,"w:before","130");indexSpacing.setAttributeNS(W,"w:after","680");
         result.add(source.get(14));

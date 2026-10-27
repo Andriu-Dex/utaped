@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+Portada T1: unidad y carrera justificadas y agrupadas, mayúsculas, separación del título y posición vertical según el PDF oficial. 33 pruebas documentales, TypeScript/build y revisión visual correctos. Entorno local actualizado; sin commit. [Reporte](docs/reports/2026-10-25-25-t1-cover-layout.md).
+
 Auditoría integral tras el checkpoint local 422b5c3: correcciones de documentos, navegación T2/T3, protección de firmas, estados de carga, contraste y accesibilidad. Verificado: 209 pruebas backend generales, 71 regresiones documentales repetidas tras el último ajuste, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; cierre autorizado en commits locales 6061b71, 99e3fcf y 9bf18ee, sin push. [Reporte y cobertura](docs/reports/2026-10-25-24-project-audit.md).
 
 Paso 6 sin generación duplicada y bandeja con ordenación global validada en servidor implementados. Verificado: 3 pruebas backend, 22 de aceptación y lint/TypeScript/build. Entorno local actualizado, sin commit. [Reporte](docs/reports/2026-10-24-23-signing-step-and-document-ordering.md).

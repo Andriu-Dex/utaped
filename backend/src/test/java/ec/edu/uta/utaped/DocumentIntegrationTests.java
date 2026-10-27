@@ -244,7 +244,7 @@ class DocumentIntegrationTests {
         try(var document=Loader.loadPDF(bytes)) {
             String text=new PDFTextStripper().getText(document).replaceAll("\\s+"," ");
             assertTrue(text.contains("Unidad administrativa: Unidad administrativa documental"),text);
-            assertTrue(text.contains("UNIDAD ADMINISTRATIVA: Unidad administrativa documental"),text);
+            assertTrue(text.contains("UNIDAD ADMINISTRATIVA: UNIDAD ADMINISTRATIVA DOCUMENTAL"),text);
             assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
             assertHeaderDateIsInTheRightCell(document);
             String historyText=text.substring(text.lastIndexOf("CONTROL DE HISTORIAL DE CAMBIOS")).replaceAll("\\s+"," ");
@@ -270,9 +270,29 @@ class DocumentIntegrationTests {
         assertEquals(before,version());assertEquals(artifact.id(),artifacts.generate(id,email,new ArtifactModels.Generate(before)).id());
         try(var document=Loader.loadPDF(original)) {
             assertEquals(document.getNumberOfPages(),artifact.pageCount());String text=new PDFTextStripper().getText(document);
-            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: Facultad de Ingeniería en Sistemas, Electrónica e Industrial"),text);
+            assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: FACULTAD DE INGENIERÍA EN SISTEMAS, ELECTRÓNICA E INDUSTRIAL"),text);
             assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"),text);
             assertHeaderDateIsInTheRightCell(document);
+            var coverLines=new java.util.HashMap<String,float[]>();
+            var coverReader=new PDFTextStripper() {
+                @Override protected void writeString(String line,List<org.apache.pdfbox.text.TextPosition> positions) throws IOException {
+                    for(String label:List.of("UNIDAD ACADÉMICA:","CARRERA:","PLAN DE TRABAJO DE:","PERÍODO:")) {
+                        if(line.startsWith(label)&&!positions.isEmpty()&&positions.getFirst().getYDirAdj()>200) {
+                            var first=positions.getFirst();var last=positions.getLast();
+                            coverLines.put(label,new float[]{first.getXDirAdj(),first.getYDirAdj(),last.getXDirAdj()+last.getWidthDirAdj()});
+                        }
+                    }
+                    super.writeString(line,positions);
+                }
+            };
+            coverReader.setStartPage(1);coverReader.setEndPage(1);coverReader.getText(document);
+            assertEquals(4,coverLines.size(),"Los cuatro bloques deben permanecer en la portada.");
+            var unitLine=coverLines.get("UNIDAD ACADÉMICA:");var careerLine=coverLines.get("CARRERA:");
+            var titleLine=coverLines.get("PLAN DE TRABAJO DE:");
+            assertEquals(unitLine[0],careerLine[0],1,"Unidad y carrera comparten margen izquierdo.");
+            assertTrue(unitLine[2]>500,"La primera línea de unidad debe justificarse hasta el margen derecho.");
+            assertTrue(titleLine[1]-careerLine[1]>40,"El título necesita separación visible después de carrera.");
+            assertTrue(careerLine[1]-unitLine[1]<90,"Unidad y carrera deben mantenerse agrupadas.");
             assertTrue(text.contains("Ingeniería de Software"),text);assertTrue(text.contains("Actas"),text);assertTrue(text.replaceAll("\\s+"," ").contains("Responsable de la comisión"),text);assertTrue(text.contains("1.0"),text);
             int internalLinks=0;
             for(var page:document.getPages()) for(var annotation:page.getAnnotations()) {
