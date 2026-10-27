@@ -366,6 +366,31 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         byte[] pdf=reviews.content(reportReview,email);java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-approved.pdf"),pdf);
         try(var rendered=org.apache.pdfbox.Loader.loadPDF(pdf)) { String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertFalse(text.contains("INFORME DE: Informe:"));assertHeaderDateIsInTheRightCell(rendered);assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: Facultad de Ingeniería en Sistemas, Electrónica e Industrial"));assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"));assertTrue(text.contains("ANTECEDENTES"));assertTrue(text.contains("CONCLUSIONES"));assertFalse(text.contains("@@SIG"));for(int i=0;i<rendered.getNumberOfPages();i++) java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-page-"+i+".png"),artifacts.renderPage(pdf,i)); }
     }
+    @Test void emptyReportAnnexesKeepTheirHeadingAndNotApplicableText() throws Exception {
+        UUID review=submit(false);approve(review);var activity=activities.get(id,email).activities().getFirst();
+        var result=new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.ZERO,"No se adjunta evidencia porque la actividad no se ejecutó en este corte.");
+        var report=reports.create(id,email);
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Antecedentes del período.","La actividad permanece pendiente.","Reprogramar el seguimiento.",List.of(result),List.of()));
+        assertEmptyAnnexes(report.id(),"t2-no-annex");
+        var execution=executions.create(id,email);
+        executions.save(execution.id(),email,new ec.edu.uta.utaped.planning.ExecutionReportService.Save(execution.rowVersion(),execution.title(),List.of(activity.id()),List.of(result),
+            "La actividad no se ejecutó.","Equipo organizado.","Tiempo limitado.","Mejorar coordinación.","Cambios de calendario.","La actividad sigue pendiente.","Planificar un nuevo seguimiento.",List.of(),""));
+        assertEmptyAnnexes(execution.id(),"t3-no-annex");
+    }
+    private void assertEmptyAnnexes(UUID document,String name) throws Exception {
+        var artifact=artifacts.generate(document,email,new Generate(plans.get(document,email).rowVersion()));
+        var bytes=artifacts.content(document,artifact.id(),email);int annex=-1;
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(bytes)) {
+            var stripper=new org.apache.pdfbox.text.PDFTextStripper();String text=stripper.getText(pdf);
+            assertTrue(text.contains("ANEXOS"));assertTrue(text.contains("(No aplica)"),text);
+            assertEquals(0,artifact.pages().stream().filter(page->page.kind().equals("ANNEX")).count());
+            for(int page=0;page<pdf.getNumberOfPages();page++) {stripper.setStartPage(page+1);stripper.setEndPage(page+1);if(stripper.getText(pdf).contains("(No aplica)"))annex=page;}
+            assertTrue(annex>=0);assertTrue(annex<artifact.signatureSlots().getFirst().pageIndex());
+        }
+        java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));
+        java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/"+name+".pdf"),bytes);
+        java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/"+name+".png"),artifacts.renderPage(bytes,annex));
+    }
     @Test void executionReportsCutThePlanAreNumberedAndProduceTheirOwnOfficialPdf() throws Exception {
         UUID review=submit(false);approve(review);var activity=activities.get(id,email).activities().getFirst();
         evidence.upload(id,activity.id(),0,0,email,new org.springframework.mock.web.MockMultipartFile("file","evidencia.pdf","application/pdf",pdf(1,false,false)));

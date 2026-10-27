@@ -59,7 +59,7 @@ class DocumentIntegrationTests {
         var first=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),0,"JUSTIFICATION"));
         assertEquals(preview.pages(),first.pages());assertEquals(0,first.pageIndex());
         assertEquals(0,preview.sections().get("COVER"));
-        assertFalse(preview.sections().containsKey("ANNEXES"));
+        assertTrue(preview.sections().containsKey("ANNEXES"));
         for(String section:List.of("COVER","MATRIX","SIGNATURES","ANNEXES")) {
             var focused=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),-1,section));
             assertEquals(preview.sections().getOrDefault(section,preview.sections().get("SIGNATURES")),focused.pageIndex());
@@ -333,6 +333,19 @@ class DocumentIntegrationTests {
         complete(justification,1);
         var first=artifacts.generate(id,email,new ArtifactModels.Generate(version()));
         byte[] original=artifacts.content(id,first.id(),email);
+        try(var pdf=Loader.loadPDF(original)) {
+            var text=new PDFTextStripper().getText(pdf);
+            assertTrue(text.matches("(?s).*4[.]?\\s+ANEXOS.*"),text);
+            assertTrue(text.contains("(No aplica)"),text);
+            int annex=-1;var reader=new PDFTextStripper();
+            for(int page=0;page<pdf.getNumberOfPages();page++) {reader.setStartPage(page+1);reader.setEndPage(page+1);if(reader.getText(pdf).contains("(No aplica)"))annex=page;}
+            assertTrue(annex>=0);assertTrue(annex<first.signatureSlots().getFirst().pageIndex());
+            assertEquals(0,first.pages().stream().filter(page->page.kind().equals("ANNEX")).count());
+            Files.createDirectories(Path.of("target/document-qa"));Files.write(Path.of("target/document-qa/t1-no-annex.pdf"),original);
+            Files.write(Path.of("target/document-qa/t1-no-annex.png"),artifacts.renderPage(original,annex));
+        }
+        var draftPreview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),justification,plans.get(id,email).objective(),-1,"ANNEXES"));
+        assertNotNull(draftPreview.sections().get("ANNEXES"));assertEquals(draftPreview.sections().get("ANNEXES"),draftPreview.pageIndex());
         var plan=plans.get(id,email);
         plans.update(id,email,new WorkPlanModels.Update(version(),plan.title(),plan.institutionalUnit(),plan.career(),"\n".repeat(80)+justification+"\n".repeat(80),plan.objective()+"\n".repeat(80)));
         var second=artifacts.generate(id,email,new ArtifactModels.Generate(version()));

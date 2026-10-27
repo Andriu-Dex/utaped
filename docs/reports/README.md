@@ -1,5 +1,7 @@
 # Reportes
 
+- [Apartado de anexos sin archivos](2026-10-27-32-empty-annex-section.md).
+
 - [Revisión dividida, finalización y descarga aprobada](2026-10-27-31-signing-completion-and-approved-download.md).
 
 - [Un solo visor del documento firmado](2026-10-27-30-single-signed-preview.md).

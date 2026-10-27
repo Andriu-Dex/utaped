@@ -23,7 +23,7 @@ public class T3Template {
     private static final DateTimeFormatter PRESENTATION=DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy",Locale.forLanguageTag("es-EC"));
     private final byte[] reference;
     public T3Template() throws IOException { try(var in=new ClassPathResource("document-templates/t3-reference.docx").getInputStream()) { reference=in.readAllBytes(); } }
-    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine9"; }
+    public String version() { return "T3-"+StoredFiles.hash(reference).substring(0,16)+"-A4-engine10"; }
     public List<String> sections(Snapshot s) { return SECTIONS; }
     private static String title(Snapshot s) { return "INFORME DE EJECUCIÓN "+ec.edu.uta.utaped.planning.ExecutionReportService.roman(s.execution().sequenceNumber())+": "+s.plan().groupName().toUpperCase(Locale.ROOT); }
     public byte[] compose(Snapshot s,Map<String,Integer> pageNumbers) {
@@ -89,7 +89,8 @@ public class T3Template {
         }
         result.add(actions);
         heading(result,sectionNodes,source.get(71),SECTIONS.get(4));
-        result.add(paragraph(source.get(73),"Enlace de evidencias: "+(data.evidenceLink().isBlank()?"No aplica.":data.evidenceLink())));
+        if(s.attachments().isEmpty()&&(s.externalReferences()==null||s.externalReferences().isEmpty())&&data.evidenceLink().isBlank()) result.add(paragraph(plain,"(No aplica)"));
+        else result.add(paragraph(source.get(73),"Enlace de evidencias: "+(data.evidenceLink().isBlank()?"No aplica.":data.evidenceLink())));
         for(var a:s.attachments()) { result.add(paragraph(plain,a.label()+". "+a.title()));if(!a.description().isBlank()) result.add(paragraph(plain,a.description())); }
         if(s.externalReferences()!=null) for(var reference:s.externalReferences()) result.add(paragraph(plain,"Referencia externa · "+reference.activity()+" · "+reference.medium()+": "+reference.url()));
         heading(result,sectionNodes,source.get(76),SECTIONS.get(5));property(sectionNodes.get(SECTIONS.get(5)),"pageBreakBefore");

@@ -23,7 +23,7 @@ public class T1Template {
         if(!Set.of("A4","REFERENCE").contains(format)) throw new IllegalArgumentException("DOCUMENT_PAGE_FORMAT must be A4 or REFERENCE.");
         this.format=format;try(var input=new ClassPathResource("document-templates/t1-reference.docx").getInputStream()) { this.reference=input.readAllBytes(); }
     }
-    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine17"; }
+    public String version() { return "T1-"+StoredFiles.hash(reference).substring(0,16)+"-"+format+"-engine18"; }
     private static List<Element> children(Node node,String local) {
         var result=new ArrayList<Element>();for(Node n=node.getFirstChild();n!=null;n=n.getNextSibling()) if(n instanceof Element e && (local==null || local.equals(e.getLocalName()))) result.add(e);return result;
     }
@@ -109,7 +109,7 @@ public class T1Template {
         var indexSpacing=property(source.get(14),"spacing");indexSpacing.setAttributeNS(W,"w:before","130");indexSpacing.setAttributeNS(W,"w:after","680");
         result.add(source.get(14));
         var sections=new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
-        if(!s.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));
+        sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS"));
         result.add(InstitutionalIndex.entry(source.get(16),"ÍNDICE DE CONTENIDO","ÍNDICE DE CONTENIDO",pageNumbers));
         result.add(InstitutionalIndex.entry(source.get(16),"ÍNDICE DE TABLAS","ÍNDICE DE TABLAS",pageNumbers));
         int sectionNumber=1;
@@ -188,8 +188,15 @@ public class T1Template {
         InstitutionalTables.apply(table);result.add(table);text(source.get(43),"Fuente: "+s.matrixSource());text(source.get(44),"Elaborado por: "+s.elaboratedBy());result.add(source.get(43));result.add(source.get(44));
         if(s.privacyNoticeEnabled()) result.add(paragraph(source.get(47),"Nota: Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales."));
         result.add(source.get(48));
-        if(!s.attachments().isEmpty()) {
-            property(source.get(50),"pageBreakBefore");result.add(source.get(50));
+        // The source's optional-annex numbering has placeholder color/size.
+        // Use the same paragraph-mark typography as the other institutional headings.
+        var annexNumberStyle=property(source.get(50),"rPr");
+        annexNumberStyle.getParentNode().replaceChild(property(source.get(29),"rPr").cloneNode(true),annexNumberStyle);
+        property(source.get(50),"pageBreakBefore");keepWithNext(source.get(50));result.add(source.get(50));
+        if(s.attachments().isEmpty()) {
+            var notApplicable=paragraph(source.get(31),"(No aplica)");
+            property(notApplicable,"jc").setAttributeNS(W,"w:val","left");result.add(notApplicable);
+        } else {
             for(var a:s.attachments()) { var p=paragraph(source.get(51),a.label()+". "+a.title());removeAll(p,"color");keepWithNext(p);result.add(p);if(!a.description().isBlank()) result.add(paragraph(source.get(52),a.description())); }
         }
         property(source.get(54),"pageBreakBefore");keepWithNext(source.get(54));result.add(source.get(54));result.add(source.get(55));

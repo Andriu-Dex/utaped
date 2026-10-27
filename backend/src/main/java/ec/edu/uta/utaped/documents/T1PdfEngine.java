@@ -51,9 +51,8 @@ public class T1PdfEngine {
             sections.put("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"));
             sections.put("OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
             sections.put("MATRIX",sectionPage(pdf,"MATRIZ DE ACTIVIDADES"));
+            sections.put("ANNEXES",sectionPage(pdf,"ANEXOS"));
             sections.put("SIGNATURES",sectionPage(pdf,"FIRMAS DE RESPONSABILIDAD"));
-            if(pdf.getDocumentCatalog().findNamedDestinationPage(new PDNamedDestination(T1Template.anchor("ANEXOS")))!=null)
-                sections.put("ANNEXES",sectionPage(pdf,"ANEXOS"));
             return Collections.unmodifiableMap(sections);
         } catch(IOException error) { throw new IllegalStateException("No se localizaron las secciones del borrador.",error); }
     }
@@ -62,7 +61,7 @@ public class T1PdfEngine {
             var markers=CompositionMarkers.forSnapshot(snapshot);
             Map<String,Integer> numbers=new LinkedHashMap<>();byte[] nativeBytes=null;
             var sections=snapshot.execution()!=null?new ArrayList<>(executions.sections(snapshot)):snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
-            if(snapshot.report()==null&&snapshot.execution()==null) { if(!snapshot.attachments().isEmpty()) sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
+            if(snapshot.report()==null&&snapshot.execution()==null) { sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
             sections=new ArrayList<>(StructuredSections.sections(snapshot,sections));
             if(snapshot.execution()==null&&snapshot.report()==null) sections.addAll(List.of("ÍNDICE DE CONTENIDO","ÍNDICE DE TABLAS"));
             int insertedPages=snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum();

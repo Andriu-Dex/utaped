@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): cuando no existan anexos, conservar el apartado numerado «ANEXOS» y mostrar debajo «(No aplica)» en texto normal, como en la referencia visual del propietario. Mantener el índice y las referencias de páginas; no modificar artefactos ya firmados. Las referencias externas y enlaces de evidencia existentes no se presentan como anexos inexistentes.
+
 CONFIRMADO-PROYECTO (2026-10-27): paso 5 «Revisar y firmar» con distribución dividida como los demás pasos (acciones a la izquierda y visor único a la derecha), ajuste de ancho y modos para tablet. Quitar el enlace redundante «Ver documento firmado»; descarga exclusivamente desde el PDF final aprobado. Tras registrar su firma, el usuario puede «Finalizar y volver a Documentos» sin cambiar estado ni aprobar. Revisión de cambios pendientes y commits locales autorizados para esta entrega.
 
 CONFIRMADO-PROYECTO (2026-10-27): evitar duplicar la previsualización después de firmar. Mantener un solo visor que pase del documento preparado al PDF firmado conservado, con navegación y consulta de firmas; el resultado de firma no debe añadir otro visor.
