@@ -237,7 +237,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
           <span>Volver al Plan</span>
         </button>}
         <div className="matrix-topbar-meta">
-          <span className="section-kicker review-kicker">PASO 3 DE 6 · PLAN OPERATIVO</span>
+          <span className="section-kicker review-kicker">PASO 3 DE 5 · PLAN OPERATIVO</span>
           <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
             {dirty ? 'Tiene cambios sin guardar.' : 'Sin cambios pendientes.'}
           </span>

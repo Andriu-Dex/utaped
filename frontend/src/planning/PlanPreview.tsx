@@ -5,6 +5,7 @@ import { Toast } from '../shared/Toast'
 import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import { navigatePdfWithArrow } from '../shared/pdf-keyboard'
 import { containDialogFocus } from '../shared/dialog-focus'
+import type { SignedArtifact } from './AuthorSigning'
 import type { WorkPlan } from './types'
 import type { PlanStep } from './PlanStepNavigation'
 import './plan-preview.css'
@@ -14,7 +15,7 @@ export interface PreviewArtifact {
   pages: { number: number; width: number; height: number; kind: string }[]
   signatureSlots: { label: string; pageNumber: number }[]
 }
-export interface PreparedPreview { artifact: PreviewArtifact | null; busy: boolean; error: string }
+export interface PreparedPreview { artifact: PreviewArtifact | null; signed?: SignedArtifact | null; busy: boolean; error: string }
 type Focus = 'COVER' | 'JUSTIFICATION' | 'OBJECTIVE' | 'MATRIX' | 'ANNEXES' | 'SIGNATURES'
 interface DraftView { sourceRowVersion: number; pages: PreviewArtifact['pages']; sections: Partial<Record<Focus, number>>; pageIndex: number; image: string }
 const sectionLabels: Record<Focus, string> = { COVER: 'Portada', JUSTIFICATION: 'Justificación', OBJECTIVE: 'Objetivo', MATRIX: 'Matriz de actividades', ANNEXES: 'Anexos', SIGNATURES: 'Firmas' }
@@ -71,17 +72,19 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
     return () => { active = false }
   }, [plan.id, plan.rowVersion, editing, finalStep, retry])
   const artifact = finalStep ? prepared?.artifact : retained
+  const signed = finalStep ? prepared?.signed : null
+  const viewId = signed?.id ?? artifact?.id
   const [previousArtifact, setPreviousArtifact] = useState<string | undefined>(undefined)
-  if (previousArtifact !== artifact?.id) {
-    setPreviousArtifact(artifact?.id)
-    setArtifactPage(step === 'preparation' ? Math.max(0, (artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
+  if (previousArtifact !== viewId) {
+    setPreviousArtifact(viewId)
+    setArtifactPage(signed?.signaturePageIndex ?? (step === 'preparation' ? Math.max(0, (artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0))
   }
   const pages = editing ? result?.value.pages : artifact?.pages
   const page = editing ? result?.value.pageIndex ?? 0 : Math.min(artifactPage, Math.max(0, (pages?.length ?? 1) - 1))
   const stale = editing && result?.fingerprint !== fingerprint
   const awaitingSection = editing && requestedPage < 0 && !!result && result.value.pageIndex !== (result.value.sections[section] ?? result.value.sections.SIGNATURES)
   const loading = editing ? busy || stale || awaitingSection : finalStep && (!prepared || prepared.busy)
-  const image = editing ? result ? 'data:image/png;base64,' + result.value.image : '' : artifact ? '/api/work-plans/' + plan.id + '/artifacts/' + artifact.id + '/pages/' + page + '?attempt=' + imageRetry : ''
+  const image = editing ? result ? 'data:image/png;base64,' + result.value.image : '' : signed?.approvedReviewId ? '/api/reviews/' + signed.approvedReviewId + '/pages/' + page + '?attempt=' + imageRetry : signed ? '/api/work-plans/' + plan.id + '/signed-artifacts/' + signed.id + '/pages/' + page + '?attempt=' + imageRetry : artifact ? '/api/work-plans/' + plan.id + '/artifacts/' + artifact.id + '/pages/' + page + '?attempt=' + imageRetry : ''
   const references = editing ? Object.entries(result?.value.sections ?? {}).map(([key, value]) => ({ page: value!, label: sectionLabels[key as Focus] })) : [
     { page: 0, label: 'Portada' }, ...(artifact?.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })) ?? []),
     ...(artifact?.pages.filter((item, index) => item.kind === 'ANNEX' && artifact.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' })) ?? []),
@@ -103,10 +106,11 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   let status = 'Artefacto conservado'
   if (loading) status = 'Actualizando vista…'
   else if (editing) status = dirty ? textDirty ? 'Vista actualizada · cambios sin guardar' : 'Vista guardada · cambios pendientes' : 'Vista del contenido guardado'
+  else if (signed) status = signed.approvedReviewId ? 'Documento aprobado' : 'Documento firmado'
   else if (dirty) status = 'Documento preparado · cambios pendientes'
   else if (artifact?.current) status = 'Documento preparado para revisión y firma'
-  return <aside className="plan-preview card" aria-label="Previsualización simultánea del Plan">
-    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{sectionLabels[section]} · A4</span></div><div className="plan-preview-actions">
+  return <aside id={'document-preview-' + plan.id} tabIndex={-1} className="plan-preview card" aria-label="Previsualización simultánea del Plan">
+    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : sectionLabels[section]} · A4</span></div><div className="plan-preview-actions">
       {editing && <button type="button" className="secondary icon-only" title="Actualizar vista" aria-label="Actualizar vista" disabled={busy} onClick={() => setRetry(value => value + 1)}><Icon name="refresh" size={16} /></button>}
       <button type="button" className="secondary icon-only" title="Ampliar página" aria-label="Ampliar página" disabled={!image || !!loading || imageError === image} onClick={expand}><Icon name="maximize" size={16} /></button>
     </div></header>
@@ -121,12 +125,12 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
       {loadedImage !== image && imageError !== image && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className={'document-reading-desk' + (stale ? ' is-stale' : '')} aria-busy={!!loading}>
         <button type="button" className="document-page-wrapper plan-preview-paper" onClick={expand} disabled={!!loading || imageError === image} title="Ampliar documento" aria-label="Ampliar documento">
-          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : ' del Plan T1')} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
+          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : signed ? ' del PDF firmado' : ' del Plan T1')} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
         </button>
       </div>
     </div> : <div className="plan-preview-empty" role="status"><Icon name="document" size={36} /><strong>{loading || editing ? 'Preparando su documento…' : 'Sin documento preparado'}</strong><p>{finalStep ? 'Revise la preparación y los pendientes de este paso.' : 'Puede continuar trabajando mientras se prepara la vista.'}</p></div>}
     <dialog ref={dialog} className="plan-preview-dialog" aria-labelledby={titleId}>
-      <header><h2 id={titleId}>{editing ? 'Borrador A4' : 'Documento preparado'} · Página {page + 1} de {pages?.length ?? 0}</h2><button type="button" className="secondary" onClick={() => dialog.current?.close()}>Cerrar vista ampliada</button></header>
+      <header><h2 id={titleId}>{editing ? 'Borrador A4' : signed ? 'Documento firmado' : 'Documento preparado'} · Página {page + 1} de {pages?.length ?? 0}</h2><button type="button" className="secondary" onClick={() => dialog.current?.close()}>Cerrar vista ampliada</button></header>
       {expanded && <><DocumentPageNavigator page={page} pageCount={pages?.length ?? 1} onChange={go} disabled={!!loading || loadedImage !== image && imageError !== image} references={references} />
       <div className="plan-preview-expanded-paper">{image && <img src={image} alt={'Página ampliada ' + (page + 1)} />}</div></>}
     </dialog>

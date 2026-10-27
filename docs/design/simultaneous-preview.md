@@ -1,5 +1,9 @@
 # Edición con previsualización simultánea
 
+Actualización posterior 2026-10-27: «Revisar y firmar» comparte la vista dividida y los modos PC/tablet de los otros pasos. Acciones a la izquierda y un visor a la derecha; al firmar muestra el archivo conservado y al aprobar la ronda muestra su PDF final. Finalizar vuelve a Documentos sin aprobar. No se ofrecen descargas preliminares ni un enlace redundante al mismo visor. Sustituye la presentación final a ancho completo de la entrega anterior.
+
+Actualización 2026-10-27: el Plan T1 tiene cinco pasos. Se fusionan preparación, revisión final y firma en el último; las opciones de elaboradores/circuito se despliegan sin añadir otro paso. La previsualización de edición sigue siendo transitoria y el último paso prepara automáticamente un artefacto estable. Las referencias anteriores a seis pasos describen el diseño previo.
+
 Decisión del propietario: 2026-10-17. Primera entrega: **Contenido del Plan T1**. Se mantienen los pasos de edición y la preparación/firma existentes. Matriz como editor simultáneo y T2 quedan para una extensión posterior.
 
 En PC, formulario y documento A4 se muestran juntos; un control de ancho permite repartir el espacio. En tablet se alterna Editar contenido / Previsualizar documento. La página puede ampliarse en un diálogo accesible con Escape y retorno de foco. Se respetan los temas de la aplicación; el documento conserva sus colores institucionales. No se añaden estilos para celulares.

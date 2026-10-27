@@ -261,17 +261,10 @@ nav:not(.primary-nav) button[aria-current] { background: var(--blue-800); color:
   right: 7px;
   margin-left: 0;
 }
-.shell.sidebar-collapsed .sidebar-institution {
-  padding: 10px 4px;
-  justify-content: center;
-  margin: auto 0 14px;
-}
-.shell.sidebar-collapsed .sidebar-institution div {
-  display: none;
-}
 .shell.sidebar-collapsed .sidebar-account {
   justify-content: center;
   padding: 12px 0 8px;
+  margin-top: auto;
 }
 .shell.sidebar-collapsed .sidebar-account div {
   display: none;
@@ -333,34 +326,13 @@ nav:not(.primary-nav) button[aria-current] { background: var(--blue-800); color:
   box-shadow: 0 0 8px rgba(140, 219, 202, 0.9);
   margin-left: auto;
 }
-.sidebar-institution {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: auto 8px 18px;
-  padding: 16px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-}
-.institution-mark {
-  font-size: .7rem;
-  font-weight: 800;
-  padding: 6px 8px;
-  background: rgba(23, 95, 148, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #e1ebf4;
-  letter-spacing: 0.05em;
-}
-.sidebar-institution strong { font-size: .76rem; font-weight: 700; color: #fff; }
-.sidebar-institution small { display: block; font-size: .62rem; max-width: 125px; color: #a0b8ca; line-height: 1.35; }
 .sidebar-account {
   display: flex;
   align-items: center;
   gap: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 16px 8px 12px;
+  margin-top: auto;
 }
 .sidebar-account > div { min-width: 0; }
 .sidebar-account strong { display: block; font-size: .76rem; color: #eaf1f7; font-weight: 650; overflow-wrap: anywhere; }
@@ -724,7 +696,7 @@ tbody tr.row-selected { background: var(--blue-100) !important; }
 @media (max-width:700px) {
   .access { display: block; background: #fafcfe; } .access-story { display: none; } .access-form-pane { min-height: 100vh; padding: 32px 24px 20px; } .access-mobile-brand { display: block; width: min(100%,415px); } .access-card { padding: 36px 0 20px; } .access-card h1 { font-size: 1.85rem; }
   .shell { flex-direction: column; } .sidebar { width: 100%; height: auto; position: relative; padding: 17px 16px 12px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; overflow: visible; }
-  .sidebar > .brand-lockup { padding: 0; } .sidebar-section-label, .sidebar-institution, .sidebar-account { display: none; }
+  .sidebar > .brand-lockup { padding: 0; } .sidebar-section-label, .sidebar-account { display: none; }
   .primary-nav { grid-column: 1/-1; grid-row: 2; flex-direction: row; flex-wrap: wrap; gap: 5px; }
   .primary-nav button { flex: 1 1 auto; min-height: 42px; padding: 10px; font-size: .7rem; gap: 6px; }
   .primary-nav button svg { width: 17px; height: 17px; } .nav-active-dot { display: none; }

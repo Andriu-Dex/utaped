@@ -233,7 +233,6 @@ export default function App() {
         {navButton('password','Mi contraseña','lock')}
       </nav>}
       {!account.mustChangePassword && account.systemRole === 'ADMIN' && canUseDocuments && <label className="workspace-context">Espacio de trabajo<select aria-label="Espacio de trabajo" value={administrative ? 'administration' : 'documents'} onChange={event => switchWorkspace(event.target.value as 'administration' | 'documents')}><option value="administration">Administración</option><option value="documents">Espacio documental</option></select></label>}
-      <div className="sidebar-institution"><span className="institution-mark">UTA</span><div><strong>FISEI</strong><small>Universidad Técnica de Ambato</small></div></div>
       <div className="sidebar-account"><span className="avatar">{account.displayName.trim().split(/\s+/).slice(0,2).map(word => word[0]).join('')}</span><div><strong>{account.displayName}</strong><small>{account.systemRole === 'ADMIN' ? 'Administrador' : 'Usuario institucional'}</small></div></div>
       <button className="logout-button" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={logout}><Icon name="logout" /><span>Cerrar sesión</span></button>
     </aside>

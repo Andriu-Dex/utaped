@@ -19,7 +19,7 @@ export function SignaturePlacement({ targetDocId, artifactId, slots, onEditAutho
   }, [targetDocId, artifactId, retry, current])
   return <section className="card" aria-label="Firmantes y ubicación">
     <h3>Elaboradores y ubicación de las firmas</h3>
-    <p className="field-help">Los espacios proceden del documento institucional. Compruebe los nombres, cargos y páginas antes de la revisión final. Aquí todavía no se aplica ninguna firma.</p>
+    <p className="field-help">Los espacios proceden del documento institucional. Compruebe los nombres, cargos y páginas antes de firmar. Aquí todavía no se aplica ninguna firma.</p>
     {error && <><Toast message={error} /><button type="button" className="secondary" onClick={() => setRetry(value => value + 1)}>Reintentar elaboradores</button></>}
     {current && !authors && !error && <p role="status">Consultando elaboradores…</p>}
     {current && authors && <ol className="signature-placement-list">{authors.map(person => {

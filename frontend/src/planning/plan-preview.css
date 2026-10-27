@@ -7,16 +7,6 @@
 .plan-persistent-workspace { display:grid; grid-template-columns:minmax(0,var(--editor-width,46%)) 10px minmax(0,1fr); align-items:start; gap:0; }
 .plan-persistent-workspace > * { min-width:0; }
 /* Preparation and wizard steps share the standard 3-column split workspace with resizer. */
-.plan-persistent-workspace[data-step='signing'] { display:flex; flex-direction:column; gap:18px; }
-.plan-persistent-workspace[data-step='signing'] > .plan-editor-pane,
-.plan-persistent-workspace[data-step='signing'] > .plan-preview,
-.plan-persistent-workspace[data-step='signing'] > .plan-final-actions { width:100%; }
-.plan-persistent-workspace[data-step='signing'] .plan-preview.card { position:static; max-height:none; }
-.plan-persistent-workspace[data-step='signing'] .plan-preview-paper { max-width:900px; margin:auto; }
-.plan-persistent-workspace[data-step='signing'] .plan-preview .document-reading-desk { padding:24px; }
-.plan-persistent-workspace[data-step='signing'] .preparation-status-card { padding:16px 20px; }
-.plan-persistent-workspace[data-step='signing'] .review-summary { margin:0; padding:0; border-bottom:none; }
-.plan-final-actions { display:grid; gap:16px; }
 .plan-review-confirmation { padding:18px 22px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
 .plan-review-confirmation label { margin:0; }
 .signature-placement-list { display:grid; gap:12px; padding-left:22px; }
@@ -332,7 +322,6 @@
   .plan-persistent-workspace[data-step='signing'] { grid-template-columns:minmax(0,1fr); }
   .plan-persistent-workspace[data-pane='split'] > .plan-preview { display:none; }
   .plan-preview.card { position:static; max-height:none; }
-  .plan-persistent-workspace[data-pane='split']:is([data-step='preparation'],[data-step='signing']) > .plan-preview { display:block; }
   .plan-preview-width { display:none; }
   .plan-workspace-resizer { display:none !important; }
 }
@@ -378,9 +367,8 @@
 
 .plan-preview-viewer > .document-page-navigator { position:sticky; top:0; z-index:2; background:var(--surface); margin:6px 0 10px; }
 
-/* Final review is always full width, irrespective of the preceding editing mode. */
-.plan-persistent-workspace[data-step='signing'][data-pane] > .plan-editor-pane,
-.plan-persistent-workspace[data-step='signing'][data-pane] > .plan-preview { display:block; }
 @media (max-width:1199px) {
   .plan-persistent-workspace[data-step='preparation'] { grid-template-columns:minmax(0,1fr); }
 }
+
+.plan-preview { scroll-margin-top: calc(var(--plan-topbar-height, 88px) + 100px); }

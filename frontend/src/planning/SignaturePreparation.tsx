@@ -150,7 +150,7 @@ export function SignaturePreparation({ targetDocId, artifactId }: { targetDocId:
           ) : (
             <div className="signing-ready-card">
               <Icon name="check" size={16} />
-              <span>Flujo preparado. La sección de firma comprueba también el certificado vinculado al elaborador.</span>
+              <span>Flujo preparado. La sección de firma comprueba también el certificado seleccionado por el elaborador.</span>
             </div>
           )}
         </>

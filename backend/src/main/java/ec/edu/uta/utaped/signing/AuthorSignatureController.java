@@ -17,10 +17,10 @@ public class AuthorSignatureController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(signatures.state(targetDocId,artifactId,p.getName(),request.isSecure()));
     }
     @PostMapping(value="/artifacts/{artifactId}/signing",consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<AuthorSignatureService.Signed> sign(@PathVariable UUID targetDocId,@PathVariable UUID artifactId,@RequestParam long rowVersion,@RequestParam String inputHash,@RequestParam UUID requestKey,Principal p,HttpServletRequest request) throws IOException {
+    public ResponseEntity<AuthorSignatureService.Signed> sign(@PathVariable UUID targetDocId,@PathVariable UUID artifactId,@RequestParam long rowVersion,@RequestParam String inputHash,@RequestParam UUID requestKey,@RequestParam String certificateFingerprint,Principal p,HttpServletRequest request) throws IOException {
         if(request.getContentLengthLong()>1049092) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El material de firma supera el límite técnico.");
         byte[] body=request.getInputStream().readNBytes(1049093);
-        try { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(signatures.sign(targetDocId,artifactId,p.getName(),rowVersion,inputHash,requestKey,body,request.isSecure())); }
+        try { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(signatures.sign(targetDocId,artifactId,p.getName(),rowVersion,inputHash,requestKey,body,request.isSecure(),certificateFingerprint)); }
         finally { Arrays.fill(body,(byte)0); }
     }
     @GetMapping("/signed-artifacts/{signedId}/content") public ResponseEntity<byte[]> content(@PathVariable UUID targetDocId,@PathVariable UUID signedId,Principal p) {

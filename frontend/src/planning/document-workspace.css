@@ -14,7 +14,7 @@
 
 @media (min-width: 1080px) {
   nav.document-steps[aria-label="Pasos del Plan"] {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
   nav.document-steps[aria-label="Pasos del Informe"] {
     grid-template-columns: repeat(4, 1fr);

@@ -57,10 +57,10 @@ export function WorkPlanEditor({
   const [plan, setPlan] = useState(initial)
   const [draft, setDraft] = useState(() => fields(initial))
   const [section, setSectionState] = useState<WorkPlanSection>(() => {
-    return validSections.find(value => value === initialSection) ?? 'general'
+    return validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general'
   })
   const [previousSection, setPreviousSection] = useState(initialSection)
-  if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === initialSection) ?? 'general') }
+  if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general') }
   function setSection(next: WorkPlanSection) {
     setSectionState(next)
     onSectionChange?.(next)
@@ -68,10 +68,9 @@ export function WorkPlanEditor({
   const [previewFocus, setPreviewFocus] = useState<'JUSTIFICATION' | 'OBJECTIVE'>('JUSTIFICATION')
   const [previewPane, setPreviewPane] = useState<'split' | 'edit' | 'preview'>('split')
   const [editorWidth, setEditorWidth] = useState(46)
-  const [finalActionsTarget, setFinalActionsTarget] = useState<HTMLDivElement | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const [preparedPreview, setPreparedPreview] = useState<PreparedPreview | null>(null)
-  const previewPrepared = useCallback((value: PreparedPreview) => setPreparedPreview(previous => value.busy && !value.artifact && previous?.artifact ? { ...value, artifact: previous.artifact } : value), [])
+  const previewPrepared = useCallback((value: PreparedPreview) => setPreparedPreview(previous => value.busy && !value.artifact && previous?.artifact ? { ...value, artifact: previous.artifact, signed: previous.signed } : value), [])
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
@@ -140,12 +139,14 @@ export function WorkPlanEditor({
   }
   async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
   async function navigateStep(next: WorkPlanSection) {
+    if (next === 'preparation') next = 'signing'
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
     if (current.editable && ['attachments', 'signing'].includes(next)) {
       const readiness = await api<{ ready: boolean; blockers: { section: string; message: string }[] }>('/work-plans/' + plan.id + '/artifacts/readiness')
-      const blockers = next === 'signing' ? readiness.blockers : readiness.blockers.filter(item => item.section === 'Actividades y matriz')
+      const blockers = next === 'attachments' ? readiness.blockers.filter(item => item.section === 'Actividades y matriz') : []
       if (blockers.length) throw new Error(blockers.map(item => item.message).join(' '))
     }
+    if (next === 'signing') setPreviewPane('split')
     setPlan(current); setDraft(fields(current)); setSection(next); setConflict(false); setError(''); setNotice('')
     requestAnimationFrame(() => stepHeading.current?.focus())
   }
@@ -200,22 +201,20 @@ export function WorkPlanEditor({
     <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
       <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
     </div>
-    <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de 6 · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
+    <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de {planSteps.length} · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
     {error && <Toast message={error} onDismiss={() => setError('')} />}
-    {section !== 'signing' && (
-      <div className="plan-preview-controls" role="group" aria-label="Distribución del espacio de trabajo">
+    <div className="plan-preview-controls" role="group" aria-label="Distribución del espacio de trabajo">
         <div className="live-preview-tabs">
-          {([{ key: 'split', label: 'Vista dividida', icon: 'columns' }, { key: 'edit', label: 'Editar contenido', icon: 'edit' }, { key: 'preview', label: 'Previsualizar documento', icon: 'document' }] as const).map(view => <button key={view.key} type="button" className={'preview-tab-btn' + (previewPane === view.key ? ' is-active' : '')} aria-pressed={previewPane === view.key} onClick={() => setPreviewPane(view.key)}><Icon name={view.icon} size={15} />{view.label}</button>)}
+          {([{ key: 'split', label: 'Vista dividida', icon: 'columns' }, { key: 'edit', label: section === 'signing' ? 'Revisión y firma' : 'Editar contenido', icon: 'edit' }, { key: 'preview', label: 'Previsualizar documento', icon: 'document' }] as const).map(view => <button key={view.key} type="button" className={'preview-tab-btn' + (previewPane === view.key ? ' is-active' : '')} aria-pressed={previewPane === view.key} onClick={() => setPreviewPane(view.key)}><Icon name={view.icon} size={15} />{view.label}</button>)}
         </div>
       </div>
-    )}
     {section === 'matrix' && previewPane === 'split' && <p className="field-help">Puede ampliar la matriz con «Ver matriz completa» o consultar el documento en paralelo.</p>}
     <div className={'plan-persistent-workspace' + (isResizing ? ' is-resizing' : '')} data-step={section} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}>
     <div className="plan-wizard-workspace plan-editor-pane live-preview-editor">
     {childStep ? <>
       {section === 'matrix' && <MatrixEditor onSaved={refreshPlan} targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={returnToPlan} onPrevious={() => navigateStep('content')} onNext={() => navigateStep('attachments')} isSplitView={previewPane === 'split'} onToggleSplit={() => setPreviewPane(current => current === 'split' ? 'edit' : 'split')} />}
-      {section === 'attachments' && <AttachmentEditor onSaved={refreshPlan} nextLabel="Preparación de firma" targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('preparation')} />}
-      {(section === 'preparation' || section === 'signing') && <DocumentPreparation signingTarget={finalActionsTarget} externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />}
+      {section === 'attachments' && <AttachmentEditor onSaved={refreshPlan} nextLabel="Revisar y firmar" targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('signing')} />}
+      {(section === 'preparation' || section === 'signing') && <DocumentPreparation externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onFinish={async () => onBack()} onPrevious={() => navigateStep('attachments')} />}
     </> : <>
     <DocumentLifecycle key={section} plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
     <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
@@ -225,7 +224,7 @@ export function WorkPlanEditor({
       <div className="step-card-header">
         <span className="section-icon"><Icon name="document" /></span>
         <div>
-          <span className="section-kicker">PASO {section === 'general' ? '1 DE 6' : '2 DE 6'}</span>
+          <span className="section-kicker">PASO {section === 'general' ? '1 DE 5' : '2 DE 5'}</span>
           <h2>{section === 'general' ? 'Información general del Plan' : 'Contenido y redacción académica'}</h2>
         </div>
       </div>
@@ -302,7 +301,7 @@ export function WorkPlanEditor({
     <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || navigating} nextDisabled={dirty} />
     </>}
     </div>
-    {previewPane === 'split' && section !== 'signing' && (
+    {previewPane === 'split' && (
       <WorkspaceResizer
         value={editorWidth}
         onChange={setEditorWidth}
@@ -310,7 +309,6 @@ export function WorkPlanEditor({
       />
     )}
     <PlanPreview plan={plan} draft={draft} step={section as PlanStep} focus={previewFocus} dirty={dirty} textDirty={contentDirty} prepared={preparedPreview} />
-    {section === 'signing' && <div className="plan-final-actions" ref={setFinalActionsTarget} />}
     </div>
   </section></PlanStepNavigationContext.Provider>
 }

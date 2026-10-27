@@ -1,5 +1,13 @@
 # Reportes
 
+- [Revisión dividida, finalización y descarga aprobada](2026-10-27-31-signing-completion-and-approved-download.md).
+
+- [Un solo visor del documento firmado](2026-10-27-30-single-signed-preview.md).
+
+- [Recuperación de la confirmación de firma](2026-10-27-29-signing-confirmation-recovery.md).
+
+- [Cinco pasos y firma con certificado aportado](2026-10-27-28-five-steps-and-provided-certificate.md).
+
 - [Preparación de firma y revisión final](2026-10-27-27-signature-preparation-and-final-review.md).
 
 - [Previsualización persistente del Plan T1](2026-10-26-26-persistent-plan-preview.md).

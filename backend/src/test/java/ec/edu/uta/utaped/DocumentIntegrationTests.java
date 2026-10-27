@@ -455,6 +455,7 @@ class DocumentIntegrationTests {
         byte[] original=artifacts.content(id,artifact.id(),email),body=signingBody(fixture,"Test-only-signing-password");UUID key=UUID.randomUUID();long version=version();
         var signed=signatures.sign(id,artifact.id(),email,version,state.preparation().pdfHash(),key,body,true);assertArrayEquals(new byte[body.length],body);
         byte[] bytes=signatures.content(id,signed.id(),email);assertArrayEquals(original,Arrays.copyOf(bytes,original.length));assertArrayEquals(original,artifacts.content(id,artifact.id(),email));
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->signatures.export(id,signed.id(),email)).getStatusCode().value());
         assertEquals("NOT_CHECKED",signed.revocationCheck());assertEquals("DRAFT",plans.get(id,email).documentState());
         assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
         try(var pdf=Loader.loadPDF(bytes)) {
@@ -479,14 +480,23 @@ class DocumentIntegrationTests {
     }
     @Test void signatureFailuresNeverPersistSecretsArtifactsOrAdvanceState() throws Exception {
         complete("Controles de firma.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();signingAdmin();
-        assertFalse(signatures.state(id,artifact.id(),email,true).signingEnabled());
+        assertTrue(signatures.state(id,artifact.id(),email,true).signingEnabled());
         var bound=bindings.register(user,email,new ec.edu.uta.utaped.signing.CertificateBindings.Register(fingerprint(fixture),true,"Test public identity",null));
         var state=signatures.state(id,artifact.id(),email,true);long filesBefore=jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class);
         var invalid=signingBody(fixture,"Wrong password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),invalid,true)).getStatusCode().value());assertArrayEquals(new byte[invalid.length],invalid);
-        var other=signingBody(signingFixture(),"Test-only-signing-password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),other,true)).getStatusCode().value());assertArrayEquals(new byte[other.length],other);
+        var other=signingBody(signingFixture(),"Test-only-signing-password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),other,true,fingerprint(fixture))).getStatusCode().value());assertArrayEquals(new byte[other.length],other);
         var insecure=signingBody(fixture,"Test-only-signing-password");assertEquals(403,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),insecure,false)).getStatusCode().value());assertArrayEquals(new byte[insecure.length],insecure);
         var stale=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version()+1,state.preparation().pdfHash(),UUID.randomUUID(),stale,true)).getStatusCode().value());assertArrayEquals(new byte[stale.length],stale);
-        bindings.revoke(user,bound.id(),email);var revoked=signingBody(fixture,"Test-only-signing-password");assertEquals(409,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),revoked,true)).getStatusCode().value());assertArrayEquals(new byte[revoked.length],revoked);
+        bindings.revoke(user,bound.id(),email);assertTrue(signatures.state(id,artifact.id(),email,true).signingEnabled());var revoked=signingBody(fixture,"Wrong password");assertEquals(400,assertThrows(ResponseStatusException.class,()->signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),revoked,true)).getStatusCode().value());assertArrayEquals(new byte[revoked.length],revoked);
         assertEquals(filesBefore,jdbc.queryForObject("SELECT count(*) FROM stored_file",Long.class));assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM signed_document_artifact",Integer.class));assertEquals("DRAFT",plans.get(id,email).documentState());
     }
+    @Test void unboundCertificateRecordsActualHolderSeparatelyFromAuthenticatedActor() throws Exception {
+        complete("Firma sin registro administrativo.",1);var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(version()));var fixture=signingFixture();
+        assertNull(bindings.current(user));var state=signatures.state(id,artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
+        var signed=signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true,fingerprint(fixture));
+        assertEquals("CERTIFICATE_PROVIDED",signed.identityCheck());assertEquals("Test-only signer",signed.signerName());assertEquals(user,signed.actorId());
+        assertEquals(plans.get(id,email).teacherName(),signed.actorName());assertTrue(signed.certificateSubject().contains("Test-only signer"));assertEquals(fingerprint(fixture),signed.certificateFingerprint());
+        assertNull(jdbc.queryForObject("SELECT binding_id FROM signed_document_artifact WHERE id=?",UUID.class,signed.id()));assertNull(bindings.current(user));
+    }
+
 }
