@@ -46,7 +46,15 @@ public class T1PdfEngine {
     }
     public Map<String,Integer> contentSections(byte[] bytes) {
         try(var pdf=Loader.loadPDF(bytes)) {
-            return Map.of("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"),"OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
+            var sections=new LinkedHashMap<String,Integer>();
+            sections.put("COVER",0);
+            sections.put("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"));
+            sections.put("OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
+            sections.put("MATRIX",sectionPage(pdf,"MATRIZ DE ACTIVIDADES"));
+            sections.put("SIGNATURES",sectionPage(pdf,"FIRMAS DE RESPONSABILIDAD"));
+            if(pdf.getDocumentCatalog().findNamedDestinationPage(new PDNamedDestination(T1Template.anchor("ANEXOS")))!=null)
+                sections.put("ANNEXES",sectionPage(pdf,"ANEXOS"));
+            return Collections.unmodifiableMap(sections);
         } catch(IOException error) { throw new IllegalStateException("No se localizaron las secciones del borrador.",error); }
     }
     public Generated generate(Snapshot snapshot) {

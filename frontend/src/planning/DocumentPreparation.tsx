@@ -1,3 +1,4 @@
+import type { PreparedPreview } from './PlanPreview'
 import { StepPagination } from './StepPagination'
 import { usePlanStepGuard } from './PlanStepNavigation'
 import { confirmAction } from '../shared/confirm-action'
@@ -5,7 +6,7 @@ import { FormalSubmission } from './FormalSubmission'
 import { DocumentSections } from './DocumentSections'
 import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
-import { api } from '../shared/api'
+import { api, ApiError } from '../shared/api'
 import { SignaturePreparation } from './SignaturePreparation'
 import { AuthorSigning } from './AuthorSigning'
 import { Icon } from '../shared/Icon'
@@ -14,7 +15,7 @@ import { navigatePdfWithArrow } from '../shared/pdf-keyboard'
 import type { WorkPlan } from './types'
 interface Readiness { rowVersion: number; ready: boolean; blockers: { section: string; message: string }[] }
 interface Artifact { id: string; pageCount: number; sourceRowVersion: number; createdAt: string; current: boolean; pages: { number: number; kind: string; width: number; height: number }[]; signatureSlots: { label: string; pageNumber: number }[] }
-export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext, onResolveSection, onDocumentChange }: { onDocumentChange?: (plan: WorkPlan) => void; onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => Promise<void>; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
+export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', mode = 'combined', onDirtyChange, onPrevious, onNext, onResolveSection, onDocumentChange, externalPreview = false, onPreparedChange }: { externalPreview?: boolean; onPreparedChange?: (preview: PreparedPreview) => void; onDocumentChange?: (plan: WorkPlan) => void; onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => Promise<void>; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; documentType?: 'T1' | 'T2' | 'T3'; mode?: 'preview' | 'sign' | 'combined'; onDirtyChange?: (value: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/artifacts'
   const [ready, setReady] = useState<Readiness | null>(null); const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [signingDirty, setSigningDirty] = useState(false), [signingBusy, setSigningBusy] = useState(false)
@@ -24,6 +25,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
   const [selected, setSelected] = useState<Artifact | null>(null); const [page, setPage] = useState(0); const [plan, setPlan] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [busy, setBusy] = useState(true); const [imageError, setImageError] = useState(false); const [reload, setReload] = useState(0)
   const [loadedImage, setLoadedImage] = useState(''), [imageAttempt, setImageAttempt] = useState(0)
+  useEffect(() => { onPreparedChange?.({ artifact: selected, busy, error }) }, [selected, busy, error, onPreparedChange])
   const label = documentType === 'T1' ? 'Plan' : 'Informe'
   const automaticPreview = mode === 'preview'
   const pendingChanges = sectionsDirty || formalDirty || signingDirty
@@ -44,8 +46,16 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
         setReady(r); setArtifacts(a); setPlan(p); onDocumentChange?.(p); setPage(0)
         const current = a.find(item => item.current)
         if (automaticPreview && !current && r.ready && p.editable && p.documentState === 'DRAFT') {
-          const artifact = await api<Artifact>(path, 'POST', { rowVersion: r.rowVersion })
-          if (!active) return
+          let artifact: Artifact | undefined
+          for (let attempt = 0; active && !artifact; attempt++) {
+            try { artifact = await api<Artifact>(path, 'POST', { rowVersion: r.rowVersion }) }
+            catch (e) {
+              if (!(e instanceof ApiError) || e.status !== 503 || !e.message.includes('otra generación en curso') || attempt >= 3) throw e
+              // A preceding live preview may still be finishing on the server.
+              await new Promise(resolve => window.setTimeout(resolve, 1200))
+            }
+          }
+          if (!active || !artifact) return
           setArtifacts([artifact, ...a.filter(item => item.id !== artifact.id)]); setSelected(artifact)
         } else setSelected(current ?? a[0] ?? null)
       } catch (e) { if (active) setError(e instanceof Error ? e.message : 'No se pudo preparar el documento.') }
@@ -70,7 +80,7 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.') }
     finally { setBusy(false) }
   }
-  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={operationBusy} onClick={() => void navigate(async () => onBack())}>Volver al {label}</button>}<span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>{embedded ? <h2 className="plan-step-title">{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h2> : <h1>{mode === 'sign' ? 'Firma y finalización' : 'Preparación y previsualización ' + documentType}</h1>}
+  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={operationBusy} onClick={() => void navigate(async () => onBack())}>Volver al {label}</button>}<span className="section-kicker review-kicker">{documentType === 'T1' ? (mode === 'sign' ? 'PASO 6 DE 6 · FIRMA Y FINALIZACIÓN' : externalPreview ? 'PASO 5 DE 6 · REVISIÓN FINAL' : 'PASO 5 DE 6 · PREPARACIÓN Y PREVISUALIZACIÓN') : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>{embedded ? <h2 className="plan-step-title">{mode === 'sign' ? 'Firma y finalización' : externalPreview ? 'Revisión final del documento' : 'Preparación y previsualización ' + documentType}</h2> : <h1>{mode === 'sign' ? 'Firma y finalización' : externalPreview ? 'Revisión final del documento' : 'Preparación y previsualización ' + documentType}</h1>}
     {error && <Toast message={error} onDismiss={() => setError('')} />}
     <FormalSubmission targetDocId={targetDocId} disabled={busy || signingDirty || signingBusy || sectionsBusy} onDirtyChange={setFormalDirty} onBusyChange={setFormalBusy} onRegistered={() => setReload(n => n + 1)} />
     <DocumentSections key={targetDocId + reload} targetDocId={targetDocId} disabled={busy || signingDirty || signingBusy || formalBusy} onDirtyChange={setSectionsDirty} onBusyChange={setSectionsBusy} onSaved={() => setReload(n => n + 1)} />
@@ -85,8 +95,8 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
       {!busy && ready && !ready.ready && <section className="card" aria-label="Datos pendientes"><h2>Complete los datos pendientes</h2><ul>{ready.blockers.map((blocker, index) => <li key={index}><strong>{blocker.section}:</strong> {blocker.message}{onResolveSection && blockerSections[blocker.section] && <button type="button" className="link" disabled={formalDirty || sectionsDirty} onClick={() => void navigate(() => onResolveSection(blockerSections[blocker.section]))}>Ir a {blocker.section.toLowerCase()}</button>}</li>)}</ul></section>}
       {!busy && !error && plan && !plan.editable && !selected && <p role="status">Este documento de solo lectura todavía no tiene una previsualización conservada.</p>}
     </> : !ready ? (busy ? <p role="status">Consultando preparación…</p> : <button type="button" className="secondary" disabled={operationBusy || pendingChanges} onClick={() => setReload(n => n + 1)}>Reintentar preparación</button>) : <div className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PREPARACIÓN DOCUMENTAL</span><h2>Revisión del contenido</h2></div></div>{ready.ready ? <p role="status">Contenido completo para previsualizar.</p> : <ul>{ready.blockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}{plan?.editable ? <button disabled={operationBusy || pendingChanges || !ready.ready} onClick={() => void generate()}>{busy ? 'Generando PDF…' : 'Generar previsualización'}</button> : <p className="field-help">Documento de solo lectura. Consulte su artefacto conservado y las rondas de revisión.</p>}</div>}
-    {selected && <div className="card document-keyboard-viewer" role="region" aria-label="Previsualización del documento" tabIndex={automaticPreview ? 0 : undefined} aria-keyshortcuts={automaticPreview ? 'ArrowLeft ArrowRight' : undefined} aria-describedby={automaticPreview ? 'pdf-keyboard-help' : undefined} onKeyDown={event => { if (automaticPreview) navigatePdfWithArrow(event, page, selected.pages.length, busy || (!imageError && loadedImage !== selected.id + '-' + page), target => { setPage(target); setImageError(false); setImageAttempt(0) }) }}>
-      {automaticPreview && <p id="pdf-keyboard-help" className="field-help">Con el visor seleccionado, usa ← → para cambiar de página.</p>}
+    {selected && <div className="card document-keyboard-viewer" role={externalPreview ? undefined : "region"} aria-label={externalPreview ? undefined : "Previsualización del documento"} tabIndex={automaticPreview && !externalPreview ? 0 : undefined} aria-keyshortcuts={automaticPreview ? 'ArrowLeft ArrowRight' : undefined} aria-describedby={automaticPreview && !externalPreview ? 'pdf-keyboard-help' : undefined} onKeyDown={event => { if (automaticPreview && !externalPreview) navigatePdfWithArrow(event, page, selected.pages.length, busy || (!imageError && loadedImage !== selected.id + '-' + page), target => { setPage(target); setImageError(false); setImageAttempt(0) }) }}>
+      {automaticPreview && !externalPreview && <p id="pdf-keyboard-help" className="field-help">Con el visor seleccionado, usa ← → para cambiar de página.</p>}
       <div className="review-summary">
         <div className="review-summary-meta">
           <span className={'status-badge ' + (selected.current ? 'active' : '')}>
@@ -113,15 +123,15 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
       {!selected.current && <p className="field-help">Artefacto conservado de una preparación anterior. Consulte las rondas para ver los bytes firmados.</p>}
       {mode !== 'preview' && !signingNeedsPreview && !busy && ready && <SignaturePreparation key={targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} />}
       {mode !== 'preview' && !signingNeedsPreview && !busy && ready && <AuthorSigning key={'sign-' + targetDocId + selected.id} targetDocId={targetDocId} artifactId={selected.id} disabled={sectionsDirty || formalDirty || sectionsBusy || formalBusy} onDirtyChange={setSigningDirty} onBusyChange={setSigningBusy} onSigned={() => { setReload(n => n + 1) }} />}
-      <DocumentPageNavigator key={selected.id} page={page} pageCount={selected.pageCount} disabled={busy || (!imageError && loadedImage !== selected.id + '-' + page)} onChange={target => { setPage(target); setImageError(false);setImageAttempt(0) }} references={[...selected.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })), ...selected.pages.filter((item, index) => item.kind === 'ANNEX' && selected.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' }))]} />
+      {!externalPreview && <><DocumentPageNavigator key={selected.id} page={page} pageCount={selected.pageCount} disabled={busy || (!imageError && loadedImage !== selected.id + '-' + page)} onChange={target => { setPage(target); setImageError(false);setImageAttempt(0) }} references={[...selected.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })), ...selected.pages.filter((item, index) => item.kind === 'ANNEX' && selected.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' }))]} />
       {imageError && <><Toast message="No se pudo cargar la página. Pulse Reintentar página." /><button type="button" className="secondary" onClick={() => { setImageError(false);setLoadedImage('');setImageAttempt(n => n + 1) }}>Reintentar página</button></>}
       {!imageError && loadedImage !== selected.id + '-' + page && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className="document-reading-desk">
         <div className="document-page-wrapper">
           <img className="document-page" key={selected.id + '-' + page + '-' + imageAttempt} width={Math.round(selected.pages[page].width * 1.5)} height={Math.round(selected.pages[page].height * 1.5)} src={'/api' + path + '/' + selected.id + '/pages/' + page + '?attempt=' + imageAttempt} alt={'Página ' + (page + 1) + ' del ' + label + ' ' + documentType} onLoad={() => setLoadedImage(selected.id + '-' + page)} onError={() => setImageError(true)} />
         </div>
-      </div>
+      </div></>}
     </div>}
-    {(onPrevious || onNext) && <StepPagination previous={onPrevious ? { label: mode === 'sign' ? 'Preparación y previsualización' : 'Anexos y opciones', action: () => void navigate(onPrevious) } : undefined} next={onNext ? { label: 'Firma y finalización', action: () => void navigate(onNext) } : undefined} disabled={operationBusy} nextDisabled={sectionsDirty || formalDirty || signingDirty || automaticPreview && (!selected || !selected.current || !ready?.ready || !!error)} />}
+    {(onPrevious || onNext) && <StepPagination previous={onPrevious ? { label: mode === 'sign' ? externalPreview ? 'Revisión final' : 'Preparación y previsualización' : 'Anexos y opciones', action: () => void navigate(onPrevious) } : undefined} next={onNext ? { label: 'Firma y finalización', action: () => void navigate(onNext) } : undefined} disabled={operationBusy} nextDisabled={sectionsDirty || formalDirty || signingDirty || automaticPreview && (!selected || !selected.current || !ready?.ready || !!error)} />}
   </section>
 }

@@ -58,6 +58,14 @@ class DocumentIntegrationTests {
         assertFalse(artifacts.readiness(id,email).ready());
         var first=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),0,"JUSTIFICATION"));
         assertEquals(preview.pages(),first.pages());assertEquals(0,first.pageIndex());
+        assertEquals(0,preview.sections().get("COVER"));
+        assertFalse(preview.sections().containsKey("ANNEXES"));
+        for(String section:List.of("COVER","MATRIX","SIGNATURES","ANNEXES")) {
+            var focused=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),input.justification(),input.objective(),-1,section));
+            assertEquals(preview.sections().getOrDefault(section,preview.sections().get("SIGNATURES")),focused.pageIndex());
+            if(section.equals("MATRIX")) assertTrue(focused.pages().get(focused.pageIndex()).width()>focused.pages().get(focused.pageIndex()).height());
+        }
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM document_artifact WHERE work_plan_id=?",Integer.class,id));
         assertTrue(Math.abs(first.pages().getFirst().width()-595.3)<2);
         assertTrue(Math.abs(first.pages().getFirst().height()-841.9)<2);
         assertEquals(409,assertThrows(ResponseStatusException.class,()->artifacts.draftPreview(id,email,
@@ -262,6 +270,12 @@ class DocumentIntegrationTests {
     @Test void immutableTemplatePdfActualPaginationAndHistoricalContent() throws Exception {
         complete("La comisión requiere planificar las actividades y conservar evidencias de cumplimiento.",2);
         attachments.settings(id,email,new AttachmentModels.Settings(version(),true,true));var state=upload("Actas",UUID.randomUUID(),pdf(2,false,false),version());
+        var savedPreviewPlan=plans.get(id,email);
+        var annexPreview=artifacts.draftPreview(id,email,new ArtifactModels.DraftPreview(version(),savedPreviewPlan.justification(),savedPreviewPlan.objective(),-1,"ANNEXES"));
+        assertNotNull(annexPreview.sections().get("ANNEXES"));
+        assertEquals(annexPreview.sections().get("ANNEXES"),annexPreview.pageIndex());
+        assertTrue(annexPreview.pageIndex()<annexPreview.sections().get("SIGNATURES"));
+        assertTrue(artifacts.list(id,email).isEmpty(),"La vista simultánea de anexos no debe preparar un artefacto de firma.");
         assertTrue(artifacts.readiness(id,email).ready());long before=version();
         jdbc.update("UPDATE work_plan SET preparation_date=preparation_date-30 WHERE id=?",id);
         var artifact=artifacts.generate(id,email,new ArtifactModels.Generate(before));byte[] original=artifacts.content(id,artifact.id(),email);

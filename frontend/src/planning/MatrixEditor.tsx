@@ -10,7 +10,7 @@ import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
-export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange }: { onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
+export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
@@ -86,7 +86,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     setBusy(true)
     try {
       const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion })
-      setSaved(m); setDraft(selection(m)); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
+      setSaved(m); setDraft(selection(m)); await onSaved?.(); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true); return false }
     finally { setBusy(false) }
   }

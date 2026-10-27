@@ -31,7 +31,7 @@ public final class ArtifactModels {
     public record Readiness(long rowVersion,boolean ready,List<Blocker> blockers) {}
     public record DraftPreview(@NotNull @PositiveOrZero Long rowVersion,
         @NotNull @Size(max=50000) String justification,@NotNull @Size(max=50000) String objective,
-        @Min(-1) @Max(499) int pageIndex,@NotNull @Pattern(regexp="JUSTIFICATION|OBJECTIVE") String section,
+        @Min(-1) @Max(499) int pageIndex,@NotNull @Pattern(regexp="COVER|JUSTIFICATION|OBJECTIVE|MATRIX|ANNEXES|SIGNATURES") String section,
         @Size(max=200) String title,@Size(max=200) String institutionalUnit,@Size(max=200) String career) {
         public DraftPreview(Long version,String justification,String objective,int page,String section) { this(version,justification,objective,page,section,null,null,null); }
     }

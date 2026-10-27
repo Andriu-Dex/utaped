@@ -29,8 +29,9 @@ test('live A4 preview follows unsaved content without saving or creating an arti
   await expect(preview.getByText(/Introduce una página entre 1 y/)).toBeVisible()
   await preview.getByRole('spinbutton', { name: 'Ir a página', exact: true }).fill('1')
   await preview.getByRole('spinbutton', { name: 'Ir a página', exact: true }).press('Enter')
-  await expect(preview.getByRole('status').filter({ hasText: /Pág\. 1 de/ })).toBeVisible()
-  await preview.getByRole('button', { name: /^Objetivo/ }).click()
+  await expect(preview.getByRole('status').filter({ hasText: /Página 1 de/ })).toBeVisible()
+  const objectivePage = await preview.getByRole('option', { name: /^Objetivo ·/ }).getAttribute('value')
+  await preview.getByRole('combobox', { name: 'Referencias del documento' }).selectOption(objectivePage!)
   await expect(preview.getByRole('button', { name: 'Página anterior' })).toBeEnabled()
 
   const editor = page.locator('.live-preview-editor')

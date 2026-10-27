@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+T1: visor persistente en los seis pasos, basado en el diseño de revisión final, con navegación contextual, ampliación, distribución PC/tablet y avisos de cambios pendientes. Revisión/firma conservan el artefacto preparado. Verificado: 33 pruebas documentales, repetidas 16 sobre la última revisión, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; implementación sin commit. Ajuste anterior de portada cerrado en 60889c7. [Reporte](docs/reports/2026-10-26-26-persistent-plan-preview.md).
+
 Portada T1: unidad y carrera justificadas y agrupadas, mayúsculas, separación del título y posición vertical según el PDF oficial. 33 pruebas documentales, TypeScript/build y revisión visual correctos. Entorno local actualizado; sin commit. [Reporte](docs/reports/2026-10-25-25-t1-cover-layout.md).
 
 Auditoría integral tras el checkpoint local 422b5c3: correcciones de documentos, navegación T2/T3, protección de firmas, estados de carga, contraste y accesibilidad. Verificado: 209 pruebas backend generales, 71 regresiones documentales repetidas tras el último ajuste, 24 de aceptación y lint/TypeScript/build. Entorno local actualizado; cierre autorizado en commits locales 6061b71, 99e3fcf y 9bf18ee, sin push. [Reporte y cobertura](docs/reports/2026-10-25-24-project-audit.md).

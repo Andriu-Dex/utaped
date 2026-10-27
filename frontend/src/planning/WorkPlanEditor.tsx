@@ -1,7 +1,7 @@
 import { StepPagination } from './StepPagination'
 import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
-import { DraftPreview } from './DraftPreview'
+import { PlanPreview, type PreparedPreview } from './PlanPreview'
 import { confirmAction } from '../shared/confirm-action'
 import { Toast } from '../shared/Toast'
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
@@ -67,6 +67,8 @@ export function WorkPlanEditor({
   const [previewFocus, setPreviewFocus] = useState<'JUSTIFICATION' | 'OBJECTIVE'>('JUSTIFICATION')
   const [previewPane, setPreviewPane] = useState<'split' | 'edit' | 'preview'>('split')
   const [editorWidth, setEditorWidth] = useState(46)
+  const [preparedPreview, setPreparedPreview] = useState<PreparedPreview | null>(null)
+  const previewPrepared = useCallback((value: PreparedPreview) => setPreparedPreview(previous => value.busy && !value.artifact && previous?.artifact ? { ...value, artifact: previous.artifact } : value), [])
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
@@ -81,13 +83,17 @@ export function WorkPlanEditor({
     stepGuard.current = guard; setStepBusy(pending)
     return () => { if (stepGuard.current === guard) { stepGuard.current = null; setStepBusy(false) } }
   }, [])
+  const refreshPlan = useCallback(async () => {
+    try { const current = await api<WorkPlan>('/work-plans/' + initial.id); setPlan(current); setDraft(fields(current)) }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista del Plan.') }
+  }, [initial.id])
   const synchronizePlan = useCallback((current: WorkPlan) => { setPlan(current); setDraft(fields(current)) }, [])
   const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty
 
   useEffect(() => {
     const topbar = document.querySelector('.topbar'), navigation = stepHeading.current
     if (!topbar || !navigation) return
-    const measure = () => navigation.style.setProperty('--plan-topbar-height', Math.ceil(topbar.getBoundingClientRect().height) + 'px')
+    const measure = () => { const height = Math.ceil(topbar.getBoundingClientRect().height) + 'px'; navigation.style.setProperty('--plan-topbar-height', height); navigation.closest<HTMLElement>('.plan-wizard')?.style.setProperty('--plan-topbar-height', height) }
     measure(); const observer = new ResizeObserver(measure); observer.observe(topbar, { box: 'border-box' })
     window.addEventListener('resize', measure)
     return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
@@ -180,11 +186,19 @@ export function WorkPlanEditor({
     </div>
     <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de 6 · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
     {error && <Toast message={error} onDismiss={() => setError('')} />}
-    <div className="plan-wizard-workspace">
+    <div className="plan-preview-controls" role="group" aria-label="Distribución del espacio de trabajo">
+      <div className="live-preview-tabs">
+        {([{ key: 'split', label: 'Vista dividida', icon: 'columns' }, { key: 'edit', label: 'Editar contenido', icon: 'edit' }, { key: 'preview', label: 'Previsualizar documento', icon: 'document' }] as const).map(view => <button key={view.key} type="button" className={'preview-tab-btn' + (previewPane === view.key ? ' is-active' : '')} aria-pressed={previewPane === view.key} onClick={() => setPreviewPane(view.key)}><Icon name={view.icon} size={15} />{view.label}</button>)}
+      </div>
+      {previewPane === 'split' && <label className="plan-preview-width">Ancho del formulario<input type="range" aria-label="Ancho del formulario" min="38" max="58" value={editorWidth} onChange={event => setEditorWidth(Number(event.target.value))} /><span>{editorWidth}%</span></label>}
+    </div>
+    {section === 'matrix' && <p className="field-help">Puede ampliar el formulario con «Editar contenido» o abrir el documento a mayor tamaño desde el visor para revisar la matriz completa.</p>}
+    <div className="plan-persistent-workspace" data-step={section} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}>
+    <div className="plan-wizard-workspace plan-editor-pane live-preview-editor">
     {childStep ? <>
-      {section === 'matrix' && <MatrixEditor targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={returnToPlan} onPrevious={() => navigateStep('content')} onNext={() => navigateStep('attachments')} />}
-      {section === 'attachments' && <AttachmentEditor targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('preparation')} />}
-      {(section === 'preparation' || section === 'signing') && <DocumentPreparation key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />}
+      {section === 'matrix' && <MatrixEditor onSaved={refreshPlan} targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={returnToPlan} onPrevious={() => navigateStep('content')} onNext={() => navigateStep('attachments')} />}
+      {section === 'attachments' && <AttachmentEditor onSaved={refreshPlan} nextLabel="Revisión final" targetDocId={plan.id} onDirtyChange={setStepDirty} onBack={() => void returnToPlan()} onPrevious={() => navigateStep('matrix')} onNext={() => navigateStep('preparation')} />}
+      {(section === 'preparation' || section === 'signing') && <DocumentPreparation externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onPrevious={() => navigateStep(section === 'signing' ? 'preparation' : 'attachments')} onNext={section === 'preparation' ? () => navigateStep('signing') : undefined} />}
     </> : <>
     <DocumentLifecycle key={section} plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
     <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
@@ -200,63 +214,6 @@ export function WorkPlanEditor({
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.documentState === 'DRAFT' ? 'Se fija al preparar la firma' : plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
       {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
-      {section === 'content' && plan.editable && (
-        <div className="live-preview-controls">
-          <div className="live-preview-tabs" role="group" aria-label="Vista del contenido">
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'split' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'split'}
-              onClick={() => setPreviewPane('split')}
-              title="Ver editor y documento lado a lado"
-            >
-              <Icon name="columns" size={15} />
-              <span>Vista dividida</span>
-            </button>
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'edit' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'edit'}
-              onClick={() => setPreviewPane('edit')}
-              title="Ampliar editor a ancho completo para redactar cómodamente"
-            >
-              <Icon name="edit" size={15} />
-              <span>Editar contenido</span>
-            </button>
-            <button
-              type="button"
-              className={`preview-tab-btn ${previewPane === 'preview' ? 'is-active' : ''}`}
-              aria-pressed={previewPane === 'preview'}
-              onClick={() => setPreviewPane('preview')}
-              title="Ver el documento A4 generado"
-            >
-              <Icon name="document" size={15} />
-              <span>Previsualizar documento</span>
-            </button>
-          </div>
-          {previewPane === 'split' && (
-            <div className="live-preview-width-wrapper">
-              <label className="live-preview-width" htmlFor={'editor-width-' + plan.id}>
-                <span className="live-preview-width-label">
-                  <Icon name="columns" size={14} />
-                  <span>Ancho del formulario:</span>
-                  <strong>{editorWidth}%</strong>
-                </span>
-                <input
-                  id={'editor-width-' + plan.id}
-                  aria-label="Ancho del formulario"
-                  type="range"
-                  min="38"
-                  max="58"
-                  value={editorWidth}
-                  onChange={e => setEditorWidth(Number(e.target.value))}
-                />
-              </label>
-            </div>
-          )}
-        </div>
-      )}
-      <div className={section === 'content' && plan.editable ? 'live-preview-layout' : undefined} data-pane={previewPane} style={{ '--editor-width': editorWidth + '%' } as CSSProperties}><div className="live-preview-editor">
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
@@ -300,7 +257,7 @@ export function WorkPlanEditor({
             </div>
           </div>
           <textarea id={'objective-' + plan.id} onFocus={() => setPreviewFocus('OBJECTIVE')} rows={6} maxLength={50000} value={draft.objective} onChange={e => change('objective', e.target.value)} />
-          <p className="field-help">El borrador admite contenido incompleto. La preparación comprueba los campos antes de generar la previsualización.</p>
+          <p className="field-help">El borrador admite contenido incompleto. La revisión final comprueba los campos antes de preparar el documento para firma.</p>
           <div className="document-step-actions">
             <div className="step-save-row">
               <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
@@ -316,8 +273,7 @@ export function WorkPlanEditor({
             </div>
           </div>
         </>}
-      </fieldset></form></div>
-      {section === 'content' && plan.editable && <DraftPreview key={plan.id} targetDocId={plan.id} rowVersion={plan.rowVersion} title={draft.title} institutionalUnit={draft.institutionalUnit} career={draft.career} justification={draft.justification} objective={draft.objective} focus={previewFocus} dirty={contentDirty} />}</div>
+      </fieldset></form>
       {section === 'general' && <>
         <DocumentAuthorsEditor targetDocId={plan.id} version={plan.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { const current = await api<WorkPlan>('/work-plans/' + plan.id); setPlan(current); setDraft(fields(current)) }} />
       </>}
@@ -328,6 +284,8 @@ export function WorkPlanEditor({
     </div>
     <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || navigating} nextDisabled={dirty} />
     </>}
+    </div>
+    <PlanPreview plan={plan} draft={draft} step={section as PlanStep} focus={previewFocus} dirty={dirty} textDirty={contentDirty} prepared={preparedPreview} />
     </div>
   </section></PlanStepNavigationContext.Provider>
 }

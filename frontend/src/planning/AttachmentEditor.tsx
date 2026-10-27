@@ -9,7 +9,7 @@ import { api } from '../shared/api'
 
 interface Attachment { id: string; label: string; title: string; description: string; originalName: string; sizeBytes: number; pageCount: number }
 interface State { rowVersion: number; editable: boolean; enabled: boolean; privacyNoticeEnabled: boolean; maxFileBytes: number; maxTotalBytes: number; maxAttachments: number; items: Attachment[] }
-export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPrevious, onNext, documentType = 'T1', previousLabel = 'Actividades y matriz', nextLabel = 'Preparación y previsualización' }: { documentType?: 'T1' | 'T2' | 'T3'; previousLabel?: string; nextLabel?: string; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
+export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPrevious, onNext, documentType = 'T1', previousLabel = 'Actividades y matriz', nextLabel = 'Preparación y previsualización', onSaved }: { onSaved?: () => Promise<void>; documentType?: 'T1' | 'T2' | 'T3'; previousLabel?: string; nextLabel?: string; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/attachments'
   const documentLabel = documentType === 'T1' ? 'Plan' : 'Informe'
   const heading = documentType === 'T1' ? 'Anexos del Plan T1' : documentType === 'T2' ? 'Anexos del Informe final T2' : 'Anexos del Informe de ejecución'
@@ -34,7 +34,7 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPreviou
   }
   async function mutate(action: () => Promise<State>, message: string) {
     setBusy(true); setError(''); setNotice('')
-    try { setState(await action()); setNotice(message); return true } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo completar la operación.'); return false } finally { setBusy(false) }
+    try { setState(await action()); await onSaved?.(); setNotice(message); return true } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo completar la operación.'); return false } finally { setBusy(false) }
   }
   async function upload(e: FormEvent) {
     e.preventDefault(); if (!state || !file) return

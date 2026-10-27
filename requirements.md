@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-26): cerrar los ajustes anteriores de portada en commit local y mantener sin commit la nueva previsualización persistente del T1. Reutilizar el diseño del visor del paso 5 en los seis pasos, con foco en la sección correspondiente, modos de distribución PC/tablet, estados de actualización y conservación de validaciones. El paso 5 pasa a Revisión final; revisión y firma usan el artefacto preparado, distinto del borrador transitorio.
+
 CONFIRMADO-PROYECTO (2026-10-25): ajustar la portada T1 al ejemplo oficial TI-JD2026-UTIT-PLAN-V01-signed.pdf: unidad y carrera justificadas y agrupadas, bloques en mayúsculas, título y período centrados con separación propia. Conservar A4, datos del documento y artefactos firmados. Sin commit hasta revisión.
 
 CONFIRMADO-PROYECTO (2026-10-25): guardar el estado previo en commit local y auditar/corregir consistencia del flujo, UI PC/tablet y documentos conforme a las fuentes vigentes. Las correcciones quedaron inicialmente sin commit para revisión; tras revisarlas, el propietario autorizó los commits locales el 2026-10-25. No se autoriza publicación. No inventar reglas o integraciones institucionales pendientes.
