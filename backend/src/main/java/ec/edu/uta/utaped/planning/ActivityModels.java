@@ -31,7 +31,7 @@ public final class ActivityModels {
         @NotNull @Size(min=1,max=50) List<@NotNull @Valid Choice> means) {}
     public record Save(@NotNull @PositiveOrZero Long rowVersion,@NotNull @Size(max=500) String source,
         @NotNull @Size(max=100) List<@NotNull @Valid Activity> activities) {}
-    public record Matrix(long rowVersion,String source,String elaboratedBy,String collectiveLabel,boolean editable,
+    public record Matrix(long rowVersion,String source,String elaboratedBy,String collectiveLabel,boolean editable,String readOnlyReason,
         LocalDate periodStartsOn,LocalDate periodEndsOn,boolean restrictHolidayEndpoints,
         List<Activity> activities,List<Definition> definitions,List<Catalog> catalogs,List<Member> members,List<Holiday> holidays) {}
 }

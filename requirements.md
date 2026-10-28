@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): los avisos de solo lectura deben explicar el motivo real del bloqueo comunicado por el servidor, sin atribuir todos los casos al vencimiento del plazo. Diferenciar revisión, aprobación, firma de elaboración, archivo, permisos y fechas efectivas de elaboración, incluyendo extensiones. Conservar las reglas de edición y la inmutabilidad del contenido firmado. Revisar y confirmar mediante commit todos los cambios actuales, incluidas las mejoras visuales del propietario.
+
 CONFIRMADO-PROYECTO (2026-10-27): agrupar «Rondas y observaciones», «Ejecución y evidencias» e «Historial del documento» en «Seguimiento del documento», en la cabecera del Plan y fuera de los pasos de elaboración. Ejecución solo aparece para Planes aprobados. Conservar permisos del servidor, proteger cambios pendientes y regresar al paso desde el que se abrió la consulta.
 
 CONFIRMADO-PROYECTO (2026-10-27): ejecutar el plan de auditoría integral de instruction.md en una rama propia desde main, con trazabilidad, hallazgos, correcciones y evidencias de flujos/permisos, UI PC/tablet, documentos y recuperación. Conservar artefactos firmados y datos manuales; no declarar aceptación institucional ni inventar reglas pendientes. [Matriz y alcance](docs/testing/integral-audit-matrix.md).

@@ -1,3 +1,4 @@
+import { DocumentReadOnlyNotice } from './DocumentReadOnlyNotice'
 import { StepPagination } from './StepPagination'
 import { usePlanStepGuard } from './PlanStepNavigation'
 import { confirmAction } from '../shared/confirm-action'
@@ -151,7 +152,23 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
     setEditingActivityId(null); setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
-  if (!saved || !draft) return <section>{!embedded && <button className="secondary" onClick={back}>Volver al Plan</button>}{error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}</section>
+  if (!saved || !draft) return (
+    <section>
+      {!embedded && (
+        <button
+          type="button"
+          className="plan-back-btn"
+          onClick={back}
+          title="Volver al Plan"
+          aria-label="Volver al Plan"
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">Volver al Plan</span>
+        </button>
+      )}
+      {error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}
+    </section>
+  )
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
     if (!saved) return null
     const available = saved.catalogs.filter(c => c.kind === (key === 'resources' ? 'RESOURCE' : 'MEANS') && (c.active || row[key].some(v => v.catalogId === c.id)))
@@ -232,10 +249,19 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
   return (
     <section className={'matrix-workspace' + (embedded ? ' plan-step-panel' : '')}>
       <div className="matrix-topbar">
-        {!embedded && <button type="button" className="secondary matrix-back-btn" disabled={busy} onClick={back}>
-          <Icon name="arrow" size={14} style={{ transform: 'rotate(180deg)' }} />
-          <span>Volver al Plan</span>
-        </button>}
+        {!embedded && (
+          <button
+            type="button"
+            className="plan-back-btn"
+            disabled={busy}
+            onClick={back}
+            title="Volver al Plan"
+            aria-label="Volver al Plan"
+          >
+            <Icon name="arrowLeft" size={20} />
+            <span className="sr-only">Volver al Plan</span>
+          </button>
+        )}
         <div className="matrix-topbar-meta">
           <span className="section-kicker review-kicker">PASO 3 DE 5 · PLAN OPERATIVO</span>
           <span role="status" className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>
@@ -259,7 +285,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
         </div>
       </header>
 
-      {!saved.editable && <Toast tone="warning" message="Solo lectura: ventana de elaboración cerrada." />}
+      <DocumentReadOnlyNotice document={saved} />
 
     {!!draft.activities.length && <section className="card matrix-summary-card">
       <div className="section-heading matrix-summary-heading">

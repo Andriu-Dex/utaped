@@ -1,3 +1,4 @@
+import { DocumentReadOnlyNotice } from './DocumentReadOnlyNotice'
 import { StepPagination } from './StepPagination'
 import { DocumentFollowUp, type FollowUpSection } from './DocumentFollowUp'
 import { InstitutionalProvenance } from './InstitutionalProvenance'
@@ -238,7 +239,7 @@ export function WorkPlanEditor({
         </div>
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.documentState === 'DRAFT' ? 'Se fija al preparar la firma' : plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
-      {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
+      <DocumentReadOnlyNotice document={plan} />
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>

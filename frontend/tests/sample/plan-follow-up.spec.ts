@@ -24,6 +24,12 @@ test('Plan follow-up is separate, keyboard accessible and returns to its source 
   await page.screenshot({ path: 'test-results/plan-follow-up-desktop.png', fullPage: true })
   await page.keyboard.press('Escape'); await expect(trigger).toBeFocused(); await expect(panel).toHaveCount(0)
   await trigger.click(); await page.getByRole('heading', { name: title, exact: true }).click(); await expect(panel).toHaveCount(0)
+  await page.locator('.plan-wizard-header').evaluate(element => element.scrollIntoView({ block: 'start' }))
+  expect(await page.locator('.topbar').evaluate(element => {
+    const box = element.getBoundingClientRect()
+    return !!document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('.topbar')
+  })).toBeTruthy()
+  await page.evaluate(() => window.scrollTo(0, 0))
   const steps = page.getByRole('navigation', { name: 'Pasos del Plan', exact: true })
   await steps.getByRole('button').nth(1).click()
   await page.getByRole('textbox', { name: 'Objetivo', exact: true }).fill('Objetivo sin guardar')

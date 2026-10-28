@@ -43,7 +43,7 @@ public class ActivityService {
             :jdbc.query("SELECT u.id,u.display_name FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.active AND u.active ORDER BY u.display_name,u.id",(rs,n)->new Member(rs.getObject("id",UUID.class),rs.getString("display_name")),plan.scopeId());
         var period=jdbc.queryForMap("SELECT starts_on,ends_on,restrict_holiday_endpoints FROM academic_period WHERE id=?",plan.periodId());
         String label=jdbc.queryForObject("SELECT collective_label FROM institutional_group WHERE id=?",String.class,plan.groupId());
-        return new Matrix(plan.rowVersion(),source,plan.groupName(),label,plan.editable(),((java.sql.Date)period.get("starts_on")).toLocalDate(),((java.sql.Date)period.get("ends_on")).toLocalDate(),(boolean)period.get("restrict_holiday_endpoints"),rows,definitions,catalogs(),members,holidays());
+        return new Matrix(plan.rowVersion(),source,plan.groupName(),label,plan.editable(),plan.readOnlyReason(),((java.sql.Date)period.get("starts_on")).toLocalDate(),((java.sql.Date)period.get("ends_on")).toLocalDate(),(boolean)period.get("restrict_holiday_endpoints"),rows,definitions,catalogs(),members,holidays());
     }
     private List<Choice> choices(List<Choice> incoming,List<Choice> old,List<Catalog> catalog,String kind) {
         var result=new ArrayList<Choice>();var selected=new HashSet<UUID>();boolean other=false;

@@ -1,3 +1,4 @@
+import { DocumentReadOnlyNotice } from './DocumentReadOnlyNotice'
 import { StepPagination } from './StepPagination'
 import { usePlanStepGuard } from './PlanStepNavigation'
 import { Icon } from '../shared/Icon'
@@ -8,7 +9,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 
 interface Attachment { id: string; label: string; title: string; description: string; originalName: string; sizeBytes: number; pageCount: number }
-interface State { rowVersion: number; editable: boolean; enabled: boolean; privacyNoticeEnabled: boolean; maxFileBytes: number; maxTotalBytes: number; maxAttachments: number; items: Attachment[] }
+interface State { rowVersion: number; editable: boolean; readOnlyReason?: string | null; enabled: boolean; privacyNoticeEnabled: boolean; maxFileBytes: number; maxTotalBytes: number; maxAttachments: number; items: Attachment[] }
 export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPrevious, onNext, documentType = 'T1', previousLabel = 'Actividades y matriz', nextLabel = 'Preparación y previsualización', onSaved }: { onSaved?: () => Promise<void>; documentType?: 'T1' | 'T2' | 'T3'; previousLabel?: string; nextLabel?: string; onPrevious?: () => Promise<void>; onNext?: () => Promise<void>; targetDocId: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const path = '/work-plans/' + targetDocId + '/attachments'
   const documentLabel = documentType === 'T1' ? 'Plan' : 'Informe'
@@ -50,11 +51,35 @@ export function AttachmentEditor({ targetDocId, onBack, onDirtyChange, onPreviou
     setEditing(null); requestAnimationFrame(() => editButton.current?.focus())
   }
   function move(index: number, delta: number) { if (!state) return; const ids = state.items.map(a => a.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; void mutate(() => api<State>(path + '/order', 'PUT', { rowVersion: state.rowVersion, attachmentIds: ids }), 'Orden actualizado.') }
-  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={busy} onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios sin guardar?'))) onBack() }}>Volver al {documentLabel}</button>}<span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 4 DE 5 · ANEXOS Y OPCIONES' : 'ANEXOS Y OPCIONES · ' + documentType}</span>{embedded ? <h2 className="plan-step-title">{heading}</h2> : <h1>{heading}</h1>}
+  return <section className={embedded ? 'plan-step-panel' : undefined}>
+    {!embedded ? (
+      <header className="plan-wizard-header">
+        <span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 4 DE 5 · ANEXOS Y OPCIONES' : 'ANEXOS Y OPCIONES · ' + documentType}</span>
+        <div className="plan-header-title-row">
+          <button
+            type="button"
+            className="plan-back-btn"
+            disabled={busy}
+            onClick={async () => { if (!dirty || (await confirmAction('¿Descartar los cambios sin guardar?'))) onBack() }}
+            title={'Volver al ' + documentLabel}
+            aria-label={'Volver al ' + documentLabel}
+          >
+            <Icon name="arrowLeft" size={20} />
+            <span className="sr-only">{'Volver al ' + documentLabel}</span>
+          </button>
+          <h1>{heading}</h1>
+        </div>
+      </header>
+    ) : (
+      <>
+        <span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 4 DE 5 · ANEXOS Y OPCIONES' : 'ANEXOS Y OPCIONES · ' + documentType}</span>
+        <h2 className="plan-step-title">{heading}</h2>
+      </>
+    )}
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
     {!state ? loadFailed ? <div className="notice"><p>No se pudieron cargar los anexos.</p><button type="button" className="secondary" onClick={() => { setError(''); setLoadFailed(false); setReload(value => value + 1) }}>Reintentar carga de anexos</button></div> : <p role="status">Cargando anexos…</p> : <div className="card">
       <p>Archivos PDF privados. Máximo {state.maxAttachments} anexos, {Math.floor(state.maxFileBytes / 1048576)} MB por archivo y {Math.floor(state.maxTotalBytes / 1048576)} MB en total. Límites técnicos configurables.</p>
-      {!state.editable && <Toast tone="warning" message="Documento de solo lectura." />}
+      <DocumentReadOnlyNotice document={state} />
       <fieldset disabled={busy || !state.editable || dirty}><legend>Opciones del documento</legend>
         <label>¿El {documentLabel} tiene anexos?<select aria-label={'¿El ' + documentLabel + ' tiene anexos?'} value={String(state.enabled)} onChange={e => void mutate(() => api<State>(path + '/settings', 'PUT', { rowVersion: state.rowVersion, enabled: e.target.value === 'true', privacyNoticeEnabled: state.privacyNoticeEnabled }), 'Opciones guardadas.')}><option value="false">No</option><option value="true">Sí</option></select></label>
         <label className="check"><input type="checkbox" checked={state.privacyNoticeEnabled} onChange={e => void mutate(() => api<State>(path + '/settings', 'PUT', { rowVersion: state.rowVersion, enabled: state.enabled, privacyNoticeEnabled: e.target.checked }), 'Opciones guardadas.')} />Incluir nota de protección de datos personales de la plantilla</label>

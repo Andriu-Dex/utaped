@@ -381,7 +381,7 @@ nav:not(.primary-nav) button[aria-current] { background: var(--blue-800); color:
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 11;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -711,6 +711,60 @@ tbody tr.row-selected { background: var(--blue-100) !important; }
 }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @media print { .sidebar, .topbar, .workspace-footer, .skip-link { display: none; } .workspace main { padding: 0; } }
+
+/* Navigation back buttons across document workspaces, reviews and consultations */
+.plan-wizard-header { position: relative; z-index: 10; margin: 16px 0 16px; }
+.plan-wizard-header h1 { margin: 6px 0 12px; overflow-wrap: anywhere; }
+.plan-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 12px;
+}
+.plan-header-title-row h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.plan-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--blue-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.plan-back-btn:hover:not(:disabled) {
+  background: rgba(23, 95, 148, 0.08);
+  border-color: var(--blue-700);
+  color: var(--blue-800);
+  transform: translateX(-2px);
+}
+.plan-back-btn:focus-visible {
+  outline: 2px solid var(--blue-700);
+  outline-offset: 2px;
+}
+.plan-back-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+:root[data-theme='dark'] .plan-back-btn {
+  background: #102436;
+  border-color: #244360;
+  color: #8ec3ea;
+  box-shadow: none;
+}
+:root[data-theme='dark'] .plan-back-btn:hover:not(:disabled) {
+  background: #173752;
+  border-color: #4386b8;
+  color: #bce0fc;
+}
 
 /* Document lifecycle actions remain discoverable beside Edit/View. */
 .documents-table .doc-col-action { width: 104px; min-width: 96px; text-align: center; }

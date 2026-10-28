@@ -88,7 +88,31 @@ export function DocumentPreparation({ targetDocId, onBack, documentType = 'T1', 
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.') }
     finally { setBusy(false) }
   }
-  return <section className={embedded ? 'plan-step-panel' : undefined}>{!embedded && <button className="secondary" disabled={operationBusy} onClick={() => void navigate(async () => onBack())}>Volver al {label}</button>}<span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 5 DE 5 · REVISAR Y FIRMAR' : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>{embedded ? <h2 className="plan-step-title">{mode === 'sign' ? externalPreview ? 'Revisar y firmar' : 'Firma y finalización' : externalPreview ? 'Preparación de firma' : 'Preparación y previsualización ' + documentType}</h2> : <h1>{mode === 'sign' ? externalPreview ? 'Revisar y firmar' : 'Firma y finalización' : externalPreview ? 'Preparación de firma' : 'Preparación y previsualización ' + documentType}</h1>}
+  return <section className={embedded ? 'plan-step-panel' : undefined}>
+    {!embedded ? (
+      <header className="plan-wizard-header">
+        <span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 5 DE 5 · REVISAR Y FIRMAR' : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>
+        <div className="plan-header-title-row">
+          <button
+            type="button"
+            className="plan-back-btn"
+            disabled={operationBusy}
+            onClick={() => void navigate(async () => onBack())}
+            title={'Volver al ' + label}
+            aria-label={'Volver al ' + label}
+          >
+            <Icon name="arrowLeft" size={20} />
+            <span className="sr-only">{'Volver al ' + label}</span>
+          </button>
+          <h1>{mode === 'sign' ? externalPreview ? 'Revisar y firmar' : 'Firma y finalización' : externalPreview ? 'Preparación de firma' : 'Preparación y previsualización ' + documentType}</h1>
+        </div>
+      </header>
+    ) : (
+      <>
+        <span className="section-kicker review-kicker">{documentType === 'T1' ? 'PASO 5 DE 5 · REVISAR Y FIRMAR' : 'DOCUMENTO INSTITUCIONAL · ' + documentType}</span>
+        <h2 className="plan-step-title">{mode === 'sign' ? externalPreview ? 'Revisar y firmar' : 'Firma y finalización' : externalPreview ? 'Preparación de firma' : 'Preparación y previsualización ' + documentType}</h2>
+      </>
+    )}
     {error && <Toast message={error} onDismiss={() => setError('')} />}
     {finalReview && <details className="final-document-options"><summary>Elaboradores, opciones y circuito de revisión</summary>
       {selected && <><SignaturePlacement key={selected.id} current={selected.current} targetDocId={targetDocId} artifactId={selected.id} slots={selected.signatureSlots} disabled={operationBusy || pendingChanges} onEditAuthors={onResolveSection ? () => void navigate(() => onResolveSection('general')) : undefined} /><SignaturePreparation targetDocId={targetDocId} artifactId={selected.id} /></>}

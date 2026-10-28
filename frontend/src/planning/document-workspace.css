@@ -2390,9 +2390,9 @@ dialog.activity-modal-overlay::backdrop { background: transparent; }
   .document-list-filters > button { grid-column: 1 / -1; justify-self: end; }
 }
 
-/* One persistent workspace for the six Plan steps. */
+/* One persistent workspace for the five Plan steps. */
 .plan-wizard { min-width: 0; }
-.plan-wizard-header { margin: 16px 0 16px; }
+.plan-wizard-header { position: relative; z-index: 10; margin: 16px 0 16px; }
 .plan-wizard-header h1 { margin: 6px 0 12px; overflow-wrap: anywhere; }
 .plan-header-title-row {
   display: flex;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../shared/api'
 import { confirmAction } from '../shared/confirm-action'
+import { Icon } from '../shared/Icon'
 import { Toast } from '../shared/Toast'
 import { AuditViewer } from '../audit/AuditViewer'
 import { ReviewInspector } from '../workflow/ReviewWorkspace'
@@ -71,8 +72,23 @@ export function DocumentConsultation({ initial, accountId, initialStep, onStepCh
     {toolbar}<ReviewInspector key={latest.id} id={latest.id} accountId={accountId} title={plan.title} backLabel="Volver a Documentos" onBack={onBack} onDirtyChange={setDirty} />
   </>
   return <section className="document-consultation">
-    <button type="button" className="secondary" disabled={signingBusy} onClick={() => void back()}>Volver a Documentos</button>
-    <span className="section-kicker review-kicker">CONSULTA DOCUMENTAL · {plan.documentType}</span><h1>{plan.title}</h1>
+    <header className="plan-wizard-header">
+      <span className="section-kicker review-kicker">CONSULTA DOCUMENTAL · {plan.documentType}</span>
+      <div className="plan-header-title-row">
+        <button
+          type="button"
+          className="plan-back-btn"
+          disabled={signingBusy}
+          onClick={() => void back()}
+          title="Volver a Documentos"
+          aria-label="Volver a Documentos"
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">Volver a Documentos</span>
+        </button>
+        <h1>{plan.title}</h1>
+      </div>
+    </header>
     {error && <Toast message={error} />}
     {loading ? <p role="status">Cargando consulta del documento…</p> : error ? <button type="button" className="secondary" onClick={() => setReload(value => value + 1)}>Reintentar consulta</button> : state && <>
       {toolbar}<div className="document-consultation-layout"><div>

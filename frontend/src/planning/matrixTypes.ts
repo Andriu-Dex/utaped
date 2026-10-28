@@ -8,7 +8,7 @@ export interface Activity {
   startsOn: string | null; endsOn: string | null; responsibleIds: string[]; collective: boolean; resources: Choice[]; means: Choice[]
 }
 export interface Matrix {
-  rowVersion: number; source: string; elaboratedBy: string; collectiveLabel: string; editable: boolean
+  rowVersion: number; source: string; elaboratedBy: string; collectiveLabel: string; readOnlyReason?: string | null; editable: boolean
   periodStartsOn: string; periodEndsOn: string; restrictHolidayEndpoints: boolean
   activities: Activity[]; definitions: Definition[]; catalogs: Catalog[]; members: { id: string; name: string }[]; holidays: { date: string; label: string }[]
 }

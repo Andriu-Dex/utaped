@@ -17,16 +17,16 @@ public final class WorkPlanModels {
     public record Plan(UUID id,UUID teacherId,String teacherName,UUID groupId,String groupName,UUID periodId,String periodName,
         String title,String institutionalUnit,String career,String justification,String objective,String documentState,
         String formalVersion,long rowVersion,LocalDate preparationDate,OffsetDateTime createdAt,OffsetDateTime updatedAt,boolean editable,
-        UUID scopeId,UUID createdBy,int reviewRound,OffsetDateTime archivedAt,String documentType,UUID basePlanId,boolean canManage,String institutionalUnitType) {
-        public Plan discarded() { return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion+1,preparationDate,createdAt,OffsetDateTime.now(),false,scopeId,createdBy,reviewRound,OffsetDateTime.now(),documentType,basePlanId,false,institutionalUnitType); }
+        UUID scopeId,UUID createdBy,int reviewRound,OffsetDateTime archivedAt,String documentType,UUID basePlanId,boolean canManage,String institutionalUnitType,String readOnlyReason) {
+        public Plan discarded() { return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion+1,preparationDate,createdAt,OffsetDateTime.now(),false,scopeId,createdBy,reviewRound,OffsetDateTime.now(),documentType,basePlanId,false,institutionalUnitType,"ARCHIVED"); }
         public Plan withDraftContent(String draftTitle,String unit,String draftCareer,String justification,String objective) {
             return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,draftTitle==null?title:draftTitle,unit==null?institutionalUnit:unit,draftCareer==null?career:draftCareer,
                 justification,objective,documentState,formalVersion,rowVersion,preparationDate,createdAt,updatedAt,editable,
-                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType);
+                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType,readOnlyReason);
         }
         public Plan withPreparationDate(LocalDate date) {
             return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion,date,createdAt,updatedAt,editable,
-                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType);
+                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType,readOnlyReason);
         }
     }
     public record Summary(UUID id,String title,String groupName,String periodName,String documentState,

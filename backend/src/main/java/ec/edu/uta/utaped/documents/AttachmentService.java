@@ -36,7 +36,7 @@ public class AttachmentService {
             SELECT a.*,f.original_name,f.size_bytes,f.page_count,f.sha256 FROM document_attachment a
             JOIN stored_file f ON f.id=a.file_id WHERE a.work_plan_id=? AND a.removed_at IS NULL ORDER BY a.sort_order,a.id
             """,(rs,n)->new Attachment(rs.getObject("id",UUID.class),rs.getObject("file_id",UUID.class),label(n),rs.getString("title"),rs.getString("description"),rs.getString("original_name"),rs.getLong("size_bytes"),rs.getInt("page_count"),rs.getString("sha256")),targetDocId);
-        return new State(plan.rowVersion(),plan.editable(),(boolean)settings.get("attachments_enabled"),(boolean)settings.get("privacy_notice_enabled"),maxFileBytes,maxTotalBytes,maxAttachments,items);
+        return new State(plan.rowVersion(),plan.editable(),plan.readOnlyReason(),(boolean)settings.get("attachments_enabled"),(boolean)settings.get("privacy_notice_enabled"),maxFileBytes,maxTotalBytes,maxAttachments,items);
     }
     public State lock(UUID targetDocId,String email) {
         plans.lock(targetDocId,email);return get(targetDocId,email);

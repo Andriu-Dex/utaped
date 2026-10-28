@@ -110,7 +110,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   else if (dirty) status = 'Documento preparado · cambios pendientes'
   else if (artifact?.current) status = 'Documento preparado para revisión y firma'
   return <aside id={'document-preview-' + plan.id} tabIndex={-1} className="plan-preview card" aria-label={plan.documentType === 'T1' ? 'Previsualización simultánea del Plan' : 'Previsualización del Informe'}>
-    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : sectionLabels[section]} · A4</span></div><div className="plan-preview-actions">
+    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : editing ? sectionLabels[section] : 'PDF conservado'} · A4</span></div><div className="plan-preview-actions">
       {editing && <button type="button" className="secondary icon-only" title="Actualizar vista" aria-label="Actualizar vista" disabled={busy} onClick={() => setRetry(value => value + 1)}><Icon name="refresh" size={16} /></button>}
       <button type="button" className="secondary icon-only" title="Ampliar página" aria-label="Ampliar página" disabled={!image || !!loading || imageError === image} onClick={expand}><Icon name="maximize" size={16} /></button>
     </div></header>

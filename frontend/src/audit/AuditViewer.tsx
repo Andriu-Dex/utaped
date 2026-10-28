@@ -30,8 +30,19 @@ export function AuditViewer({ targetDocId, onBack }: { targetDocId?: string; onB
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo exportar.') } finally { setExporting(false) }
   }
   return <section className="card" aria-label={targetDocId ? 'Historial del documento' : 'Auditoría administrativa'}>
-    {onBack && <button className="secondary" onClick={onBack}>Volver al documento</button>}
     <div className="section-heading">
+      {onBack && (
+        <button
+          type="button"
+          className="plan-back-btn"
+          onClick={onBack}
+          title="Volver al documento"
+          aria-label="Volver al documento"
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">Volver al documento</span>
+        </button>
+      )}
       <div className="section-heading-icon" aria-hidden="true"><Icon name="eye" size={24} /></div>
       <div>
         <h2>{targetDocId ? 'Historial del documento' : 'Auditoría administrativa'}</h2>

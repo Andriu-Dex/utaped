@@ -57,8 +57,24 @@ public class WorkPlanService {
     public LocalDate today() { return LocalDate.now(zone); }
     private boolean within(LocalDate start,LocalDate end) { var today=LocalDate.now(zone);return !today.isBefore(start)&&!today.isAfter(end); }
     private boolean editable(ResultSet rs) throws SQLException {
-        return rs.getString("period_status").equals("ACTIVE")&&rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getObject("archived_at")==null&&rs.getString("document_state").equals("DRAFT")
-            &&(!enforceWindow||within(rs.getObject(!rs.getString("document_type").equals("T1")?"starts_on":"preparation_starts_on",LocalDate.class),rs.getObject(!rs.getString("document_type").equals("T1")?"ends_on":"preparation_effective_ends_on",LocalDate.class)));
+        return readOnlyReason(rs)==null;
+    }
+    private String readOnlyReason(ResultSet rs) throws SQLException {
+        if(rs.getObject("archived_at")!=null) return "ARCHIVED";
+        if(!rs.getString("period_status").equals("ACTIVE")) return "PERIOD_CLOSED";
+        if(!rs.getBoolean("is_editor")) return "NOT_PRINCIPAL";
+        if(rs.getString("document_state").equals("IN_REVIEW")) return "IN_REVIEW";
+        if(rs.getString("document_state").equals("APPROVED")) return "APPROVED";
+        if(!rs.getString("document_state").equals("DRAFT")) return "DOCUMENT_LOCKED";
+        if(rs.getBoolean("authors_locked")) return "SIGNED";
+        if(enforceWindow) {
+            boolean plan=rs.getString("document_type").equals("T1");
+            var start=rs.getObject(plan?"preparation_starts_on":"starts_on",LocalDate.class);
+            var end=rs.getObject(plan?"preparation_effective_ends_on":"ends_on",LocalDate.class);
+            if(today().isBefore(start)) return plan?"PREPARATION_NOT_STARTED":"PERIOD_NOT_STARTED";
+            if(today().isAfter(end)) return plan?"PREPARATION_ENDED":"PERIOD_ENDED";
+        }
+        return null;
     }
     private boolean canManage(ResultSet rs) throws SQLException {
         return rs.getBoolean("is_editor")&&!rs.getBoolean("authors_locked")&&rs.getString("period_status").equals("ACTIVE");
@@ -67,7 +83,7 @@ public class WorkPlanService {
         return new Plan(rs.getObject("id",UUID.class),rs.getObject("responsible_id",UUID.class),rs.getString("teacher_name"),rs.getObject("group_id",UUID.class),rs.getString("group_name"),
             rs.getObject("period_id",UUID.class),rs.getString("period_name"),rs.getString("title"),rs.getString("institutional_unit"),rs.getString("career"),rs.getString("justification"),rs.getString("objective"),
             rs.getString("document_state"),rs.getString("formal_version"),rs.getLong("row_version"),rs.getObject("preparation_date",LocalDate.class),
-            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),canManage(rs),rs.getString("institutional_unit_type"));
+            rs.getObject("created_at",OffsetDateTime.class),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getObject("scope_id",UUID.class),rs.getObject("created_by",UUID.class),rs.getInt("review_round"),rs.getObject("archived_at",OffsetDateTime.class),rs.getString("document_type"),rs.getObject("base_plan_id",UUID.class),canManage(rs),rs.getString("institutional_unit_type"),readOnlyReason(rs));
     }
     public Options options(String email) {
         var actor=accounts.current(email);

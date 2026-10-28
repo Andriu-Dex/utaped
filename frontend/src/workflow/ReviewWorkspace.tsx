@@ -87,7 +87,25 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo firmar.') } finally { form.reset(); setBusy(false) }
   }
   const changePage = async (index: number) => { if (region && !(await confirmAction('¿Descartar la zona seleccionada para cambiar de página?'))) return; setPage(index); setRegion(null); setImageError(false) }
-  return <section><button type="button" className="secondary" disabled={busy} onClick={back}>{backLabel}</button><span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span><h1>{title}</h1>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
+  return <section>
+    <header className="plan-wizard-header">
+      <span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span>
+      <div className="plan-header-title-row">
+        <button
+          type="button"
+          className="plan-back-btn"
+          disabled={busy}
+          onClick={back}
+          title={backLabel}
+          aria-label={backLabel}
+        >
+          <Icon name="arrowLeft" size={20} />
+          <span className="sr-only">{backLabel}</span>
+        </button>
+        <h1>{title}</h1>
+      </div>
+    </header>
+    {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {!state ? loadFailed ? <section className="card" aria-label="Revisión no disponible"><p>No se pudo consultar la revisión. Puede reintentar o volver a la bandeja.</p><button type="button" className="secondary" disabled={loading} onClick={() => setReload(value => value + 1)}>Reintentar revisión</button></section> : <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" disabled={loading} onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
     {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}
     <div className="review-layout"><section className="card review-document"><DocumentPageNavigator page={page} pageCount={state.pageCount} disabled={busy} onChange={changePage} references={state.observations.filter(observation => observation.page_index !== null).map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))} />{task && <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>}{imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}

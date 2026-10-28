@@ -25,20 +25,56 @@ export function DocumentFollowUp({ approved, disabled, pendingChanges, onOpen }:
     onKeyDown={event => {
       if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus() }
     }}>
-    <button type="button" className="secondary document-follow-up-trigger" ref={trigger} aria-expanded={open} aria-controls={id}
+    <button
+      type="button"
+      className={'secondary document-follow-up-trigger' + (open ? ' is-open' : '')}
+      ref={trigger}
+      aria-expanded={open}
+      aria-controls={id}
       onClick={() => setOpen(value => !value)}
       onKeyDown={event => {
         if (event.key === 'ArrowDown') {
           event.preventDefault(); setOpen(true)
           requestAnimationFrame(() => root.current?.querySelector<HTMLButtonElement>('.document-follow-up-panel button:not(:disabled)')?.focus())
         }
-      }}><Icon name="clock" size={17} />Seguimiento del documento<Icon name="chevronRight" className={'follow-up-chevron' + (open ? ' is-open' : '')} size={15} /></button>
+      }}
+    >
+      <Icon name="clock" size={17} />
+      <span>Seguimiento del documento</span>
+      <Icon name="chevronRight" className={'follow-up-chevron' + (open ? ' is-open' : '')} size={15} />
+    </button>
     {open && <section className="document-follow-up-panel" id={id} aria-label="Opciones de seguimiento">
-      <p>Consulta y seguimiento del documento</p>
-      {options.map(option => <button key={option.key} type="button" className="secondary" aria-label={option.label} disabled={disabled} onClick={() => { setOpen(false); onOpen(option.key) }}>
-        <Icon name={option.icon} size={18} /><span><strong>{option.label}</strong><small>{option.description}</small></span>
-      </button>)}
-      {disabled && <small role="status" className="follow-up-pending">{pendingChanges ? 'Guarde los cambios pendientes antes de abrir el seguimiento.' : 'Espere a que termine la operación en curso.'}</small>}
+      <div className="document-follow-up-header">
+        <span className="follow-up-kicker">TRAZABILIDAD</span>
+        <p className="follow-up-header-title">Consulta y seguimiento del documento</p>
+      </div>
+      <div className="document-follow-up-list">
+        {options.map(option => (
+          <button
+            key={option.key}
+            type="button"
+            className="secondary document-follow-up-item"
+            aria-label={option.label}
+            disabled={disabled}
+            onClick={() => { setOpen(false); onOpen(option.key) }}
+          >
+            <span className="follow-up-icon-badge" aria-hidden="true">
+              <Icon name={option.icon} size={18} />
+            </span>
+            <span className="follow-up-item-content">
+              <strong>{option.label}</strong>
+              <small>{option.description}</small>
+            </span>
+            <Icon name="chevronRight" size={15} className="follow-up-item-arrow" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      {disabled && (
+        <div role="status" className="follow-up-pending">
+          <Icon name="lock" size={14} aria-hidden="true" />
+          <span>{pendingChanges ? 'Guarde los cambios pendientes antes de abrir el seguimiento.' : 'Espere a que termine la operación en curso.'}</span>
+        </div>
+      )}
     </section>}
   </div>
 }

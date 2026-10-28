@@ -4,7 +4,7 @@ export interface WorkPlan {
   documentState: 'DRAFT' | 'IN_REVIEW' | 'APPROVED'; formalVersion: string; rowVersion: number; preparationDate: string
   scopeId: string | null; createdBy: string; reviewRound: number; archivedAt: string | null
   documentType: 'T1' | 'T2' | 'T3'; basePlanId: string | null
-  createdAt: string; updatedAt: string; editable: boolean; canManage: boolean
+  createdAt: string; updatedAt: string; readOnlyReason?: string | null; editable: boolean; canManage: boolean
 }
 export interface PlanOptions {
   groups: { id: string; name: string }[]
