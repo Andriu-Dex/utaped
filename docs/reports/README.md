@@ -1,5 +1,7 @@
 # Reportes
 
+- [Dependencias locales y preparación productiva](2026-10-28-42-production-local-dependency-review.md).
+
 - [SMTP externo local](2026-10-28-41-external-smtp-local-configuration.md).
 
 - [Recuperación de acceso y entrega de correo](2026-10-28-40-recovery-confirmation-and-mail-delivery.md).

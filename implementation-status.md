@@ -1,5 +1,7 @@
 # Estado de implementación productiva
 
+Revisadas dependencias locales del runtime y despliegue: API relativa, persistencia real, plantillas empaquetadas y semillas aisladas. Corregida compatibilidad SMTP productiva y reforzado preflight contra URL local, remitentes de ejemplo y datos de desarrollo. Ensayos locales quedan explícitos. 18 pruebas operativas, cinco guardas, renderizado Compose y lint/TypeScript/build correctos. Despliegue/aceptación institucional pendientes. [Reporte](docs/reports/2026-10-28-42-production-local-dependency-review.md).
+
 SMTP externo local conectado mediante compose con credenciales privadas y alias de variables. Autenticación y aceptación de correo técnico verificadas; contenedor actualizado, sin cambiar cuentas ni afirmar recepción final. Mailpit conservado para automatización. [Reporte](docs/reports/2026-10-28-41-external-smtp-local-configuration.md).
 
 Recuperación de acceso con confirmación persistente «Revisa tu correo», foco, inicio de sesión y corrección del correo; errores conservan datos. Corregida interferencia de respuestas tardías después de logout. Entrega local Mailpit y circuito completo de enlace/cambio de contraseña verificados; ocho E2E, aceptación específica, lint/TypeScript/build y revisión visual PC/tablet. Gmail requiere cuenta registrada y SMTP externo configurado; no se afirma entrega externa. [Reporte](docs/reports/2026-10-28-40-recovery-confirmation-and-mail-delivery.md).

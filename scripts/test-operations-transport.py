@@ -48,7 +48,7 @@ def test_transport(project, port, credential_env_file=None):
         override_file.write_text("services:\n  backend:\n    build: !reset null\n    image: " + json.dumps(backend["Image"]) + "\n    pull_policy: never\n    environment:\n      DB_URL: jdbc:postgresql://db:5432/utaped_restore\n      DEADLINE_NOTICES_ENABLED: 'false'\n  frontend:\n    build: !reset null\n    image: " + json.dumps(frontend["Image"]) + "\n    pull_policy: never\nnetworks:\n  default:\n    external: true\n    name: " + json.dumps(project + "_default") + "\nvolumes:\n  document-data:\n    external: true\n    name: " + json.dumps(volume) + "\n")
         validation_values = dict(variables, APP_PUBLIC_URL="https://localhost:64430", WEB_PORT="64430", SMTP_HOST="smtp.fixture.test", SMTP_PORT="587", SMTP_AUTH="true", SMTP_STARTTLS="true", SMTP_USERNAME="test-only-account", SMTP_PASSWORD="test-only-smtp-password", MAIL_FROM="test@fixture.test")
         validation_file = directory / "validation.env";validation_file.write_text("\n".join(k + "=" + v for k, v in validation_values.items()) + "\n")
-        validation = json.loads(run([sys.executable, "scripts/production-preflight.py", "--env-file", str(validation_file)]))
+        validation = json.loads(run([sys.executable, "scripts/production-preflight.py", "--env-file", str(validation_file), "--allow-local-fixture"]))
         if not validation["configurationValid"]:raise RuntimeError("La configuración de prueba no pasó el preflight.")
         command = ["docker", "compose", "-p", name, "--env-file", str(env_file), "-f", "compose.yml", "-f", "compose.production.yml", "-f", str(override_file), "--profile", "web"]
         try:
