@@ -1,4 +1,5 @@
 import { StepPagination } from './StepPagination'
+import { DocumentFollowUp, type FollowUpSection } from './DocumentFollowUp'
 import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
 import { PlanPreview, type PreparedPreview } from './PlanPreview'
@@ -60,6 +61,7 @@ export function WorkPlanEditor({
     return validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general'
   })
   const [previousSection, setPreviousSection] = useState(initialSection)
+  const [followUpReturn, setFollowUpReturn] = useState<PlanStep>('general')
   if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general') }
   function setSection(next: WorkPlanSection) {
     setSectionState(next)
@@ -166,8 +168,13 @@ export function WorkPlanEditor({
     finally { navigationLock.current = false; setNavigating(false) }
   }
   async function returnToPlan() {
-    try { await navigateStep('general') }
+    try { await navigateStep(['rounds', 'execution', 'history'].includes(section) ? followUpReturn : 'general') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
+  }
+  function openFollowUp(next: FollowUpSection) {
+    if (dirty || busy || stepBusy || navigating || next === 'execution' && plan.documentState !== 'APPROVED') return
+    if (planSteps.some(step => step.key === section)) setFollowUpReturn(section as PlanStep)
+    setSection(next)
   }
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
@@ -197,6 +204,10 @@ export function WorkPlanEditor({
         <h1>{plan.title}</h1>
       </div>
       <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+      <div className="plan-document-tools" role="group" aria-label="Acciones del documento">
+        <DocumentFollowUp approved={plan.documentState === 'APPROVED'} disabled={dirty || busy || stepBusy || navigating} pendingChanges={dirty} onOpen={openFollowUp} />
+        {plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || stepBusy || navigating} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
+      </div>
     </header>
     <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
       <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
@@ -217,8 +228,6 @@ export function WorkPlanEditor({
       {(section === 'preparation' || section === 'signing') && <DocumentPreparation externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onFinish={async () => onBack()} onPrevious={() => navigateStep('attachments')} />}
     </> : <>
     <DocumentLifecycle key={section} plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
-    <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button></div>
     {dirty && <p className="field-help">{contentDirty ? 'Puede alternar entre Información general y Contenido sin perder lo escrito. Guarde el borrador para conservarlo antes de avanzar.' : 'Guarde la configuración pendiente o confirme su descarte al cambiar de paso.'}</p>}
     <div className="card">
       <div className="step-card-header">

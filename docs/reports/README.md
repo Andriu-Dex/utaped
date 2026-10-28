@@ -1,5 +1,7 @@
 # Reportes
 
+- [Seguimiento documental separado de elaboración](2026-10-27-35-document-follow-up-menu.md).
+
 - [Auditoría integral de producto y recuperación](2026-10-27-34-integral-product-audit.md).
 
 - [Consulta y revisión separadas de elaboración](2026-10-27-33-document-consultation-and-review.md).
