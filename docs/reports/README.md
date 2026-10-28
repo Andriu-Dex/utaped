@@ -1,5 +1,7 @@
 # Reportes
 
+- [SMTP externo local](2026-10-28-41-external-smtp-local-configuration.md).
+
 - [Recuperación de acceso y entrega de correo](2026-10-28-40-recovery-confirmation-and-mail-delivery.md).
 
 - [Panel de gestión y reportes](2026-10-28-39-management-dashboard-and-reports.md).
