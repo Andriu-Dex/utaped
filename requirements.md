@@ -243,3 +243,7 @@ Frecuencia técnica inicial ajustable: comprobación horaria, aviso previo de tr
 | UT-EXE-060 | Referencias/repositorios como evidencia y texto al final de T2. Plan Maestro §§40 y 44. | CONFIRMADO-PROYECTO, P1. Medio PDF/URL definido y conservado en la matriz; HTTPS, responsable/plazo/período, versiones, cobertura, historial y T2 congelado. Sin convertir URL en PDF ni afirmar integridad remota. |
 
 Límites técnicos y contrato: [importaciones y enlaces](docs/api/user-imports-and-external-evidence.md). No quedan ratificados cargos/fechas institucionales, alta delegada ni política de retención por entregar estas capacidades.
+
+### Recuperación de acceso: confirmación — 2026-10-28
+
+UT-AUTH-022 / UT-UI-020, CONFIRMADO-PROYECTO: tras solicitar un enlace, sustituir el formulario por una confirmación persistente y accesible, con inicio de sesión y corrección del correo. Mantener respuesta indistinguible entre cuentas existentes/ausentes, datos ante errores y ausencia de interferencias por respuestas tardías tras logout. El entorno local captura correo en Mailpit; no presentar esa captura como entrega externa. [Contrato](docs/api/local-access.md).

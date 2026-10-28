@@ -1,4 +1,4 @@
-﻿param([switch]$KeepOnFailure)
+﻿param([switch]$KeepOnFailure, [switch]$SkipInstall)
 $ErrorActionPreference = 'Stop'
 $failed = $true
 $root = Split-Path $PSScriptRoot -Parent
@@ -45,10 +45,14 @@ MAIL_SMTP_PORT=21025
     if (-not $ready) { throw 'El backend E2E no estuvo disponible a tiempo.' }
     Push-Location frontend
     try {
-        npm ci
-        if ($LASTEXITCODE -ne 0) { throw 'Dependencies did not install' }
-        npx playwright install chromium
-        if ($LASTEXITCODE -ne 0) { throw 'Chromium did not install' }
+        if (-not $SkipInstall) {
+            npm ci
+            if ($LASTEXITCODE -ne 0) { throw 'Dependencies did not install' }
+            npx playwright install chromium
+            if ($LASTEXITCODE -ne 0) { throw 'Chromium did not install' }
+        } elseif (-not (Test-Path -LiteralPath 'node_modules/.bin/playwright.cmd')) {
+            throw 'SkipInstall requiere dependencias y Chromium previamente instalados.'
+        }
         npm run test:e2e
         $result = $LASTEXITCODE
     } finally { Pop-Location }

@@ -1,0 +1,11 @@
+.recovery-confirmation { margin-top: 28px; }
+.recovery-confirmation-icon { display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 18px; background: var(--teal-100); color: var(--teal-700); }
+.recovery-confirmation p { line-height: 1.7; color: var(--text); font-size: .92rem; }
+.recovery-confirmation p.muted { margin-top: 12px; color: var(--muted); font-size: .82rem; }
+.recovery-confirmation .access-submit { margin-top: 28px; }
+.access-card .plan-header-title-row { align-items: flex-start; margin: 12px 0 16px; }
+.access-card .plan-header-title-row h1 { margin: 0; }
+.access-card .plan-back-btn { margin-top: 4px; }
+:root[data-theme='dark'] .recovery-confirmation-icon { background: var(--teal-100); color: var(--teal-700); border-color: var(--border); }
+:root[data-theme='dark'] .recovery-confirmation p { color: var(--text); }
+:root[data-theme='dark'] .recovery-confirmation p.muted { color: var(--muted); }

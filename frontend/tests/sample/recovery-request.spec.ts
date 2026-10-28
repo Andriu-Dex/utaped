@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
+
+test('recovery leaves the form after a successful request, preserves errors and returns clearly to login', async ({ page }) => {
+  const email = 'missing-' + randomUUID() + '@example.invalid'
+  await page.goto('/')
+  await page.getByRole('button', { name: '¿Olvidó su contraseña?', exact: true }).click()
+  await page.getByLabel('Correo institucional').fill(email)
+  // A delayed response from a closed session must not replace anonymous recovery.
+  await page.evaluate(() => window.dispatchEvent(new Event('session-expired')))
+  await expect(page.getByLabel('Correo institucional')).toHaveValue(email)
+  await page.route('**/api/auth/forgot-password', route => route.fulfill({ status: 503, json: { message: 'Servicio temporalmente no disponible.' } }))
+  await page.getByRole('button', { name: 'Enviar enlace', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Servicio temporalmente no disponible.')
+  await expect(page.getByLabel('Correo institucional')).toHaveValue(email)
+  await page.unroute('**/api/auth/forgot-password')
+  await page.getByRole('button', { name: 'Enviar enlace', exact: true }).click()
+  const confirmation = page.getByRole('region', { name: 'Solicitud de recuperación registrada', exact: true })
+  await expect(page.getByRole('heading', { name: 'Revisa tu correo', exact: true })).toBeFocused()
+  await expect(confirmation).toContainText('Si el correo está registrado')
+  await expect(page.getByLabel('Correo institucional')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Enviar enlace', exact: true })).toHaveCount(0)
+  await page.screenshot({ path: 'test-results/recovery-request-desktop.png', fullPage: true, animations: 'disabled' })
+  await page.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
+  await page.setViewportSize({ width: 820, height: 1180 })
+  await expect(confirmation.locator('.recovery-confirmation-icon')).toHaveCSS('background-color', 'rgb(23, 61, 56)')
+  await page.screenshot({ path: 'test-results/recovery-request-tablet-dark.png', fullPage: true, animations: 'disabled' })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy()
+  await page.getByRole('button', { name: 'Usar otro correo', exact: true }).click()
+  await expect(page.getByLabel('Correo institucional')).toHaveValue(email)
+  await page.getByRole('button', { name: 'Enviar enlace', exact: true }).click()
+  await expect(confirmation).toBeVisible()
+  await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
+  await expect(page.getByLabel('Usuario', { exact: true })).toBeVisible()
+  await expect(confirmation).toHaveCount(0)
+})

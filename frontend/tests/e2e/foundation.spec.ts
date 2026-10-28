@@ -109,7 +109,9 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.getByRole('button', { name: '¿Olvidó su contraseña?' }).click()
   await page.getByLabel('Correo institucional').fill(email)
   await page.getByRole('button', { name: 'Enviar enlace' }).click()
-  await expect(page.getByRole('status')).toContainText('Si el correo está registrado')
+  await expect(page.getByRole('heading', { name: 'Revisa tu correo', exact: true })).toBeFocused()
+  await expect(page.getByRole('region', { name: 'Solicitud de recuperación registrada' })).toContainText('Si el correo está registrado')
+  await expect(page.getByRole('button', { name: 'Enviar enlace', exact: true })).toHaveCount(0)
   await expect.poll(async () => {
     const result = await (await request.get((process.env.E2E_MAIL_URL || 'http://127.0.0.1:28025') + '/api/v1/messages')).json()
     return result.messages.some((m: { To: { Address: string }[] }) => m.To.some(to => to.Address === email))

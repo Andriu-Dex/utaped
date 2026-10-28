@@ -174,10 +174,10 @@ export default function App() {
   }, [draftDirty, view, documentTarget, documentStep, workspace])
 
   useEffect(() => {
-    const expired = () => { setLoading(true); clearAccount(); setError('Su sesión expiró. Ingrese nuevamente.'); refreshCsrf().catch(() => {}).finally(() => setLoading(false)) }
+    const expired = () => { if (!account) return; setLoading(true); clearAccount(); setError('Su sesión expiró. Ingrese nuevamente.'); refreshCsrf().catch(() => {}).finally(() => setLoading(false)) }
     window.addEventListener('session-expired', expired)
     return () => window.removeEventListener('session-expired', expired)
-  }, [])
+  }, [account])
 
   async function load() {
     const epoch=identityEpoch.current
@@ -196,7 +196,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (account && !account.mustChangePassword) Promise.resolve().then(load).catch(e => { setError(e.message); if (e instanceof ApiError && e.status === 401) clearAccount() })
+    const epoch = identityEpoch.current
+    if (account && !account.mustChangePassword) Promise.resolve().then(load).catch(e => { if (epoch !== identityEpoch.current) return; setError(e.message); if (e instanceof ApiError && e.status === 401) clearAccount() })
   }, [account])
 
   useEffect(() => {

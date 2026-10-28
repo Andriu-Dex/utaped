@@ -3,15 +3,19 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, refreshCsrf, type Account } from '../shared/api'
 import { Brand, Icon } from '../shared/Icon'
 import { CaptchaField } from './CaptchaField'
+import './recovery.css'
 
 export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
   const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('reset'))
-  const [mode, setMode] = useState<'login' | 'forgot' | 'reset'>(resetToken ? 'reset' : 'login')
+  const [mode, setMode] = useState<'login' | 'forgot' | 'reset' | 'requested'>(resetToken ? 'reset' : 'login')
+  const [recoveryEmail, setRecoveryEmail] = useState(''), [recoveryMessage, setRecoveryMessage] = useState('')
+  const heading = useRef<HTMLHeadingElement>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [challenge, setChallenge] = useState(() => crypto.randomUUID()); const [captchaReady, setCaptchaReady] = useState(false)
   const [visible, setVisible] = useState(false)
   const answer = useRef<HTMLInputElement>(null)
   useEffect(() => { if (!busy && error && mode === 'login') answer.current?.focus() }, [busy, error, mode])
+  useEffect(() => { if (mode === 'requested') heading.current?.focus() }, [mode])
   function renew() { setCaptchaReady(false); setChallenge(crypto.randomUUID()); if (answer.current) answer.current.value = '' }
   function switchMode(next: typeof mode) { setMode(next); setError(''); setNotice(''); setVisible(false); if (next === 'login') renew() }
   useEffect(() => {
@@ -27,7 +31,9 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         await api('/auth/login', 'POST', new URLSearchParams({ username: String(data.get('username')), password: String(data.get('password')), captcha: String(data.get('captcha')) }))
         await refreshCsrf(); onLogin(await api<Account>('/auth/me'))
       } else if (mode === 'forgot') {
-        const result = await api<{ message: string }>('/auth/forgot-password', 'POST', { email: data.get('email') }); setNotice(result.message)
+        const email = String(data.get('email')).trim()
+        const result = await api<{ message: string }>('/auth/forgot-password', 'POST', { email })
+        setRecoveryEmail(email); setRecoveryMessage(result.message); switchMode('requested')
       } else {
         if (data.get('password') !== data.get('confirmation')) throw new Error('Las contraseñas no coinciden.')
         await api('/auth/reset-password', 'POST', { token: resetToken, newPassword: data.get('password') })
@@ -45,12 +51,22 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
     </aside>
     <section className="access-form-pane"><div className="access-mobile-brand"><Brand /></div><div className="access-card">
       <span className="section-kicker">{mode === 'login' ? 'BIENVENIDO A TU ESPACIO' : 'ACCESO A TU CUENTA'}</span>
-      <h1>{mode === 'login' ? 'Iniciar sesión' : mode === 'forgot' ? 'Recuperar acceso' : 'Nueva contraseña'}</h1>
+      <div className="plan-header-title-row">
+        {mode !== 'login' && <button type="button" className="plan-back-btn" disabled={busy} onClick={() => switchMode('login')} title="Volver al inicio de sesión" aria-label="Volver al inicio de sesión"><Icon name="arrowLeft" size={20} /><span className="sr-only">Volver al inicio de sesión</span></button>}
+        <h1 ref={heading} tabIndex={-1}>{mode === 'login' ? 'Iniciar sesión' : mode === 'forgot' ? 'Recuperar acceso' : mode === 'requested' ? 'Revisa tu correo' : 'Nueva contraseña'}</h1>
+      </div>
+      {mode === 'requested' ? <section className="recovery-confirmation" aria-label="Solicitud de recuperación registrada">
+        <span className="recovery-confirmation-icon" aria-hidden="true"><Icon name="check" size={28} /></span>
+        <p>{recoveryMessage}</p>
+        <p className="muted">Revisa también la carpeta de correo no deseado.</p>
+        <button type="button" className="access-submit" onClick={() => switchMode('login')}>Iniciar sesión<Icon name="arrow" size={18} /></button>
+        <button type="button" className="link access-recovery" onClick={() => switchMode('forgot')}>Usar otro correo</button>
+      </section> : <>
       <p className="muted">{mode === 'login' ? 'Ingresa con las credenciales asignadas por la institución.' : mode === 'forgot' ? 'Enviaremos un enlace a tu correo institucional.' : 'Elige una contraseña nueva para proteger tu cuenta.'}</p>
       <form onSubmit={submit} key={mode}>
         <fieldset disabled={busy}>
         {mode === 'login' && <label>Usuario<input required name="username" maxLength={254} aria-label="Usuario" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="tu.usuario" /></label>}
-        {mode === 'forgot' && <label>Correo institucional<input required type="email" name="email" maxLength={254} autoComplete="email" placeholder="usuario@uta.edu.ec" /></label>}
+        {mode === 'forgot' && <label>Correo institucional<input required type="email" name="email" defaultValue={recoveryEmail} maxLength={254} autoComplete="email" placeholder="usuario@uta.edu.ec" /></label>}
         {mode !== 'forgot' && <div className="auth-password-field"><label htmlFor="access-password">{mode === 'reset' ? 'Nueva contraseña' : 'Contraseña'}</label><span className="password-control"><input id="access-password" required type={visible ? 'text' : 'password'} name="password" minLength={mode === 'reset' ? 12 : undefined} maxLength={72} autoComplete={mode === 'reset' ? 'new-password' : 'current-password'} /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span></div>}
         {mode === 'reset' && <div className="auth-password-field"><label htmlFor="access-confirm-password">Confirmar contraseña</label><span className="password-control"><input id="access-confirm-password" required name="confirmation" type={visible ? 'text' : 'password'} minLength={12} maxLength={72} autoComplete="new-password" /><button type="button" className="icon-button" title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible} onClick={() => setVisible(value => !value)}><Icon name="eye" /></button></span><small className="field-help">Usa al menos 12 caracteres; máximo 72 bytes UTF-8.</small></div>}
         {mode === 'login' && <CaptchaField key={challenge} nonce={challenge} busy={busy} answer={answer} onReady={setCaptchaReady} onRenew={renew} />}
@@ -58,7 +74,8 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         <button className="access-submit" disabled={busy || (mode === 'login' && !captchaReady)}>{busy ? 'Procesando…' : mode === 'login' ? 'Ingresar' : mode === 'forgot' ? 'Enviar enlace' : 'Guardar contraseña'}<Icon name="arrow" size={18} /></button>
         </fieldset>
       </form>
-      <button className="link access-recovery" disabled={busy} onClick={() => switchMode(mode === 'login' ? 'forgot' : 'login')}>{mode === 'login' ? '¿Olvidó su contraseña?' : 'Volver al inicio de sesión'}</button>
+      {mode === 'login' && <button className="link access-recovery" disabled={busy} onClick={() => switchMode('forgot')}>¿Olvidó su contraseña?</button>}
+      </>}
       <p className="access-footnote"><Icon name="lock" size={15} /> Uso exclusivo de personal institucional autorizado.</p>
     </div><small className="access-copyright">UTAPED · Universidad Técnica de Ambato</small></section>
   </main>

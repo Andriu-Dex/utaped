@@ -43,3 +43,9 @@ El navegador solicita el PNG, obtiene el ID de su cabecera y muestra un objeto B
 No se necesitan variables nuevas, cuenta de voz, clave o instalación de sintetizador en el servidor. Para actualizar Docker: reconstruir backend y frontend del entorno elegido; migración automática al arrancar. Antes de actualizar datos reales, seguir el respaldo habitual. Prototipos permanece congelado.
 
 Esta alternativa mejora el acceso al reto visual; no acredita conformidad WCAG integral ni resistencia a reconocimiento automático. Se conservan CSRF, comprobación de credenciales, sesión y límites de acceso. Falta aceptación de pronunciación/usabilidad con usuarios destinatarios, y definir asistencia institucional para quienes no pueden resolver ninguna de las dos modalidades. Referencias: [W3C G143](https://www.w3.org/WAI/WCAG21/Techniques/general/G143), [W3C G144](https://www.w3.org/WAI/WCAG21/Techniques/general/G144.html).
+
+## Confirmación y entrega de recuperación — 2026-10-28
+
+Al completar POST `/api/auth/forgot-password`, el formulario se sustituye por «Revisa tu correo», con foco en el título, acceso al inicio de sesión y «Usar otro correo». Los errores conservan el formulario y su correo. La respuesta sigue siendo genérica para cuentas existentes y ausentes; no confirma que una dirección esté registrada. Solo las cuentas activas registradas reciben un enlace, de uso único y vigencia de 20 minutos. Una respuesta tardía de sesión expirada, después de cerrar sesión, no debe interrumpir la recuperación pública.
+
+En desarrollo, SMTP apunta a Mailpit: el mensaje se consulta en [la bandeja local](http://127.0.0.1:18027), no en Gmail. La entrega externa necesita SMTP real, remitente y URL pública configurados en el despliegue existente; véase [preparación productiva](../operations/production-readiness.md). No introducir credenciales de correo en frontend o Git.
