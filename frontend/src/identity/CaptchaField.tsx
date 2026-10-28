@@ -65,7 +65,7 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
         </button>
       </div>
     </div>
-    {challenge && !imageFailed && <img className="captcha-image" src={challenge.image} alt="Código de seis caracteres. También puedes escucharlo con Escuchar código." onError={() => setImageFailed(true)} />}
+    {challenge && !imageFailed && <img className="captcha-image" src={challenge.image} alt="Código de verificación. También puedes escucharlo con Escuchar código." onError={() => setImageFailed(true)} />}
     {challenge && audioShown && <div className="captcha-audio-panel animate-reveal">
       <audio
         id="captcha-audio"
@@ -74,7 +74,6 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
         controls
         preload="none"
         aria-label="Audio del código de verificación"
-        aria-describedby="captcha-help"
         src={'/api/auth/captcha/audio?id=' + challenge.id}
         onError={() => setError('No se pudo reproducir el audio o el código expiró. Cambia el código de verificación para reintentar.')}
       />
@@ -82,7 +81,6 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
     {!challenge && !error && <p className="field-help" role="status">Cargando código…</p>}
     {imageFailed && <p className="field-help">La imagen no está disponible. Puedes escuchar el código.</p>}
     {error && <Toast message={error} />}
-    <input ref={answer} id="captcha-answer" name="captcha" required minLength={6} maxLength={6} aria-describedby="captcha-help" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="Escribe el código" />
-    <small id="captcha-help" className="field-help">Seis letras o números, sin espacios. No distingue mayúsculas. Válido por 3 minutos.{audioShown && ' Pulsa reproducir para escucharlo; puedes pausarlo y repetirlo.'}</small>
+    <input ref={answer} id="captcha-answer" name="captcha" required minLength={5} maxLength={5} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="Escribe el código" />
   </div>
 }

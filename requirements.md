@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): reducir el CAPTCHA de acceso a cinco caracteres, conservando el alfabeto sin `O/0` e `I/1`, aceptación indistinta de mayúsculas y minúsculas, audio, renovación, caducidad y límites de intentos. No agregar instrucciones visibles sobre el número de caracteres; mantener el formulario simple.
+
 CONFIRMADO-PROYECTO (2026-10-27): los avisos de solo lectura deben explicar el motivo real del bloqueo comunicado por el servidor, sin atribuir todos los casos al vencimiento del plazo. Diferenciar revisión, aprobación, firma de elaboración, archivo, permisos y fechas efectivas de elaboración, incluyendo extensiones. Conservar las reglas de edición y la inmutabilidad del contenido firmado. Revisar y confirmar mediante commit todos los cambios actuales, incluidas las mejoras visuales del propietario.
 
 CONFIRMADO-PROYECTO (2026-10-27): agrupar «Rondas y observaciones», «Ejecución y evidencias» e «Historial del documento» en «Seguimiento del documento», en la cabecera del Plan y fuera de los pasos de elaboración. Ejecución solo aparece para Planes aprobados. Conservar permisos del servidor, proteger cambios pendientes y regresar al paso desde el que se abrió la consulta.

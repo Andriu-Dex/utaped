@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CaptchaService {
+    private static final int CODE_LENGTH=5;
     private static final String BINDING="utaped.captcha.binding";
     static final String ALPHABET="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private final SecureRandom random=new SecureRandom();
@@ -31,7 +32,7 @@ public class CaptchaService {
         String binding=(String)session.getAttribute(BINDING);
         if(binding==null) { binding=UUID.randomUUID().toString();session.setAttribute(BINDING,binding); }
         StringBuilder text=new StringBuilder();
-        for(int i=0;i<6;i++) text.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
+        for(int i=0;i<CODE_LENGTH;i++) text.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
         UUID id=UUID.randomUUID();
         byte[] image=render(text.toString());
         jdbc.update("DELETE FROM login_captcha WHERE expires_at<=now()");
@@ -57,9 +58,11 @@ public class CaptchaService {
         var rows=jdbc.queryForList("DELETE FROM login_captcha WHERE session_hash=? RETURNING id,answer_hash,expires_at>now() AS valid",AuthThrottle.digest(binding));
         String answer=request.getParameter("captcha");
         if(rows.isEmpty() || answer==null || answer.length()>12 || !Boolean.TRUE.equals(rows.getFirst().get("valid"))) return false;
+        answer=answer.trim().toUpperCase(Locale.ROOT);
+        if(answer.length()!=CODE_LENGTH) return false;
         var row=rows.getFirst();
         return MessageDigest.isEqual(((String)row.get("answer_hash")).getBytes(StandardCharsets.US_ASCII),
-            answerHash((UUID)row.get("id"),answer.trim().toUpperCase(Locale.ROOT)).getBytes(StandardCharsets.US_ASCII));
+            answerHash((UUID)row.get("id"),answer).getBytes(StandardCharsets.US_ASCII));
     }
     private static String answerHash(UUID id,String answer) { return AuthThrottle.digest(id+":"+answer); }
     private byte[] render(String answer) throws IOException {
@@ -69,10 +72,11 @@ public class CaptchaService {
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
             for(int i=0;i<120;i++) { graphics.setColor(new Color(166+random.nextInt(50),196+random.nextInt(35),210+random.nextInt(25)));graphics.fillOval(random.nextInt(300),random.nextInt(88),2,2); }
             graphics.setFont(new Font(Font.SANS_SERIF,Font.BOLD,36));
+            int start=(300-((answer.length()-1)*43+28))/2;
             for(int i=0;i<answer.length();i++) {
-                var transform=graphics.getTransform();graphics.rotate((random.nextDouble()-.5)*.22,34+i*43,48);
+                var transform=graphics.getTransform();graphics.rotate((random.nextDouble()-.5)*.22,start+14+i*43,48);
                 graphics.setColor(new Color(15+random.nextInt(20),65+random.nextInt(25),100+random.nextInt(30)));
-                graphics.drawString(answer.substring(i,i+1),24+i*43,58+random.nextInt(9)-4);graphics.setTransform(transform);
+                graphics.drawString(answer.substring(i,i+1),start+i*43,58+random.nextInt(9)-4);graphics.setTransform(transform);
             }
             graphics.setColor(new Color(120,163,181));
             for(int i=0;i<3;i++) graphics.drawLine(0,random.nextInt(88),300,random.nextInt(88));

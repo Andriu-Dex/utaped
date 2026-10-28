@@ -156,19 +156,19 @@ class FoundationIntegrationTests {
     @Test void captchaIsSessionBoundExpiringAndSingleUse() throws Exception {
         Browser b=new Browser(),other=new Browser();b.csrf();other.csrf();
         assertEquals(400,b.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD,true).statusCode());
-        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
-        String body="username=user@example.invalid&password="+PASSWORD+"&captcha=abc234";
+        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC23");
+        String body="username=user@example.invalid&password="+PASSWORD+"&captcha=abc23";
         assertEquals(400,other.request("POST","/api/auth/login",body,true).statusCode());
         assertEquals(204,b.request("POST","/api/auth/login",body,true).statusCode());b.csrf();
         assertEquals(400,b.request("POST","/api/auth/login",body,true).statusCode());
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha WHERE id=?",Integer.class,challenge.id()));
-        challenge=LoginChallenges.issue(other.client,port,jdbc,"ABC234");
+        challenge=LoginChallenges.issue(other.client,port,jdbc,"ABC23");
         jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",challenge.id());
         assertEquals(400,other.request("POST","/api/auth/login",body,true).statusCode());
     }
     @Test void audioCaptchaIsPrivateRepeatableExpiringAndConsumedWithTheVisualChallenge() throws Exception {
         Browser b=new Browser(),other=new Browser();b.csrf();other.csrf();
-        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        var challenge=LoginChallenges.issue(b.client,port,jdbc,"ABC23");
         String path="/api/auth/captcha/audio?id="+challenge.id();
         var request=HttpRequest.newBuilder(URI.create("http://localhost:"+port+path)).GET().build();
         var response=b.client.send(request,HttpResponse.BodyHandlers.ofByteArray());
@@ -180,20 +180,20 @@ class FoundationIntegrationTests {
             assertEquals(22050,sound.getFormat().getSampleRate());assertTrue(sound.getFrameLength()>22050*4);assertTrue(sound.getFrameLength()<22050*20);
         }
         assertEquals(404,other.request("GET",path,null,false).statusCode());
-        assertEquals(204,b.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD+"&captcha=abc234",true).statusCode());
+        assertEquals(204,b.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD+"&captcha=abc23",true).statusCode());
         assertEquals(404,b.request("GET",path,null,false).statusCode());
-        var old=LoginChallenges.issue(other.client,port,jdbc,"ABC234");LoginChallenges.issue(other.client,port,jdbc,"XYZ789");
+        var old=LoginChallenges.issue(other.client,port,jdbc,"ABC23");LoginChallenges.issue(other.client,port,jdbc,"XYZ78");
         assertEquals(404,other.request("GET","/api/auth/captcha/audio?id="+old.id(),null,false).statusCode());
-        var expiring=LoginChallenges.issue(other.client,port,jdbc,"ABC234");jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",expiring.id());
+        var expiring=LoginChallenges.issue(other.client,port,jdbc,"ABC23");jdbc.update("UPDATE login_captcha SET expires_at=now()-interval '1 second' WHERE id=?",expiring.id());
         assertEquals(404,other.request("GET","/api/auth/captcha/audio?id="+expiring.id(),null,false).statusCode());
-        LoginChallenges.issue(other.client,port,jdbc,"ABC234");
+        LoginChallenges.issue(other.client,port,jdbc,"ABC23");
         assertEquals(400,other.request("POST","/api/auth/login","username=user@example.invalid&password="+PASSWORD+"&captcha=WRONG9",true).statusCode());
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha",Integer.class));
     }
     @Test void refreshingAndIncorrectCaptchaInvalidatePreviousAnswer() throws Exception {
         Browser b=new Browser();b.csrf();
-        var old=LoginChallenges.issue(b.client,port,jdbc,"ABC234");
-        var next=LoginChallenges.issue(b.client,port,jdbc,"XYZ789");
+        var old=LoginChallenges.issue(b.client,port,jdbc,"ABC23");
+        var next=LoginChallenges.issue(b.client,port,jdbc,"XYZ78");
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM login_captcha WHERE id=?",Integer.class,old.id()));
         String body="username=user@example.invalid&password="+PASSWORD+"&captcha=";
         assertEquals(400,b.request("POST","/api/auth/login",body+old.answer(),true).statusCode());
@@ -201,10 +201,10 @@ class FoundationIntegrationTests {
         assertEquals(204,b.login("user@example.invalid",PASSWORD).statusCode());
     }
     @Test void concurrentCaptchaAttemptsCannotBothAuthenticate() throws Exception {
-        Browser b=new Browser();b.csrf();LoginChallenges.issue(b.client,port,jdbc,"ABC234");
+        Browser b=new Browser();b.csrf();LoginChallenges.issue(b.client,port,jdbc,"ABC23");
         var request=HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/api/auth/login"))
             .header("Content-Type","application/x-www-form-urlencoded").header("X-CSRF-TOKEN",b.token)
-            .POST(HttpRequest.BodyPublishers.ofString("username=user@example.invalid&password="+PASSWORD+"&captcha=ABC234")).build();
+            .POST(HttpRequest.BodyPublishers.ofString("username=user@example.invalid&password="+PASSWORD+"&captcha=ABC23")).build();
         var first=b.client.sendAsync(request,HttpResponse.BodyHandlers.ofString());var second=b.client.sendAsync(request,HttpResponse.BodyHandlers.ofString());
         var statuses=java.util.List.of(first.get().statusCode(),second.get().statusCode());
         assertEquals(1,statuses.stream().filter(status->status==204).count());

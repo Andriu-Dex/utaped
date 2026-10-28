@@ -1,5 +1,7 @@
 # Reportes
 
+- [CAPTCHA de cinco caracteres](2026-10-27-37-five-character-captcha.md).
+
 - [Motivos de solo lectura y revisión de interfaz](2026-10-27-36-read-only-reasons-and-interface-review.md).
 
 - [Seguimiento documental separado de elaboración](2026-10-27-35-document-follow-up-menu.md).
