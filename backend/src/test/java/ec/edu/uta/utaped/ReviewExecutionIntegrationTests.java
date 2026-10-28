@@ -361,7 +361,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
         var signing=signatures.state(report.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
         signatures.sign(report.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
-        UUID reportReview=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(reportReview);
+        UUID reportReview=returnAndResubmitReport(report.id());approve(reportReview);
         assertEquals("APPROVED",plans.get(report.id(),email).documentState());assertEquals(parent.rowVersion(),plans.get(id,email).rowVersion());assertEquals(parent.formalVersion(),plans.get(id,email).formalVersion());
         byte[] pdf=reviews.content(reportReview,email);java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-approved.pdf"),pdf);
         try(var rendered=org.apache.pdfbox.Loader.loadPDF(pdf)) { String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertFalse(text.contains("INFORME DE: Informe:"));assertHeaderDateIsInTheRightCell(rendered);assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: Facultad de Ingeniería en Sistemas, Electrónica e Industrial"));assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"));assertTrue(text.contains("ANTECEDENTES"));assertTrue(text.contains("CONCLUSIONES"));assertFalse(text.contains("@@SIG"));for(int i=0;i<rendered.getNumberOfPages();i++) java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-page-"+i+".png"),artifacts.renderPage(pdf,i)); }
@@ -420,7 +420,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t3-execution.pdf"),artifacts.content(first.id(),artifact.id(),email));
         var signing=signatures.state(first.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
         signatures.sign(first.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
-        approve(reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(first.id())).findFirst().orElseThrow().reviewId());
+        approve(returnAndResubmitReport(first.id()));
         assertEquals("APPROVED",plans.get(first.id(),email).documentState());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->lifecycle.nextVersion(first.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(plans.get(first.id(),email).rowVersion(),"No se versiona"))).getStatusCode().value());
         var second=executions.create(id,email);assertNotEquals(first.id(),second.id());assertTrue(second.title().startsWith("Informe de ejecución II —"),second.title());assertEquals(2,executions.data(second.id(),email).sequenceNumber());
@@ -429,6 +429,25 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var finalDraft=reports.create(id,email);lifecycle.archive(finalDraft.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(finalDraft.rowVersion(),"Descartar Informe final de prueba"));lifecycle.archive(second.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(second.rowVersion(),"Descartar corte de prueba"));
         assertNull(reports.get(finalDraft.id(),admin).evidence());assertNull(executions.get(second.id(),admin).evidence());assertFalse(artifacts.readiness(finalDraft.id(),admin).ready());
         assertEquals(404,assertThrows(ResponseStatusException.class,()->plans.get(id,admin)).getStatusCode().value());
+    }
+    private UUID returnAndResubmitReport(UUID reportId) throws Exception {
+        var parent=plans.get(id,email);var original=plans.get(reportId,email);
+        var task=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(reportId)).findFirst().orElseThrow();
+        var previous=reviews.state(task.reviewId(),email);
+        var previousFile=(UUID)previous.review().get("current_file_id");byte[] bytes=files.read(previousFile);
+        reviews.observe(task.id(),reviewerEmail,new ReviewService.Observation(task.rowVersion(),"Revisar el contenido del informe en este corte",0,.1,.1,.2,.1));
+        var pending=reviews.inbox(reviewerEmail).stream().filter(t->t.id().equals(task.id())).findFirst().orElseThrow();
+        reviews.decide(pending.id(),reviewerEmail,new ReviewService.Decision(pending.rowVersion(),"RETURN","",UUID.randomUUID()));
+        var correction=plans.get(reportId,email);assertEquals("DRAFT",correction.documentState());assertTrue(correction.editable());
+        assertEquals(original.formalVersion(),correction.formalVersion());assertEquals(original.reviewRound()+1,correction.reviewRound());
+        var artifact=artifacts.generate(reportId,email,new Generate(correction.rowVersion()));
+        var signing=signatures.state(reportId,artifact.id(),email,true);assertFalse(signing.actorSigned());assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
+        signatures.sign(reportId,artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        var next=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(reportId)).findFirst().orElseThrow();
+        assertNotEquals(task.reviewId(),next.reviewId());assertEquals(correction.reviewRound(),next.roundNumber());
+        assertArrayEquals(bytes,files.read(previousFile));assertEquals(previous.pdfHash(),reviews.state(task.reviewId(),email).pdfHash());
+        assertEquals(parent.rowVersion(),plans.get(id,email).rowVersion());assertEquals("APPROVED",plans.get(id,email).documentState());
+        return next.reviewId();
     }
     @org.springframework.beans.factory.annotation.Autowired ec.edu.uta.utaped.planning.FormalSubmissionService submissions;
     @org.springframework.beans.factory.annotation.Autowired ec.edu.uta.utaped.institution.PositionService positions;

@@ -2,27 +2,8 @@ import { withConfirmation } from '../confirmation'
 import { openAction } from '../open-action'
 import { solveCaptcha } from './login'
 import { test, expect } from '@playwright/test'
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
-import { X509Certificate } from 'node:crypto'
-import { tmpdir } from 'node:os'
-import { join, resolve, dirname, basename } from 'node:path'
+import { readFileSync } from 'node:fs'
 
-function personalCertificate() {
-  const root = resolve(tmpdir()); const directory = mkdtempSync(join(root, 'utaped-signing-'))
-  if (dirname(resolve(directory)) !== root || !basename(directory).startsWith('utaped-signing-')) throw new Error('Invalid test fixture directory')
-  const key = join(directory, 'key.pem'); const certificate = join(directory, 'public.pem'); const container = join(directory, 'certificate.p12')
-  const password = 'E2e-only-signing-password'
-  try {
-    const config = join(directory, 'openssl.cnf')
-    writeFileSync(config, '[req]\ndistinguished_name=dn\n[dn]\n')
-    execFileSync('openssl', ['req', '-config', config, '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', certificate, '-days', '1', '-subj', '/CN=E2E Personal signer', '-addext', 'basicConstraints=critical,CA:FALSE', '-addext', 'keyUsage=critical,digitalSignature'], { stdio: 'ignore' })
-    execFileSync('openssl', ['pkcs12', '-export', '-inkey', key, '-in', certificate, '-out', container, '-passout', 'pass:' + password], { stdio: 'ignore' })
-    return { buffer: readFileSync(container), fingerprint: new X509Certificate(readFileSync(certificate)).fingerprint256.replaceAll(':', '').toLowerCase(), password }
-  } finally { rmSync(directory, { recursive: true, force: true }) }
-}
-
-// This file is generated locally for the isolated validation stack, never committed.
 const environment = Object.fromEntries(readFileSync('../.env.e2e', 'utf8').split(/\r?\n/).filter(line => line.includes('=')).map(line => {
   const index = line.indexOf('='); return [line.slice(0,index),line.slice(index+1)]
 }))
@@ -38,7 +19,6 @@ test('local identity, administration, context isolation, recovery and logout', a
   const email = `e2e-${suffix}@example.invalid`
   const displayName = `Usuario E2E ${suffix}`
   const group = `Grupo de prueba ${suffix}`
-  const certificate = personalCertificate()
   await page.goto('/')
   await page.getByRole('textbox', { name: 'Usuario', exact: true }).fill(environment.BOOTSTRAP_ADMIN_EMAIL)
   await page.getByLabel('Contraseña', { exact: true }).fill(environment.BOOTSTRAP_ADMIN_PASSWORD)
@@ -103,15 +83,11 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.getByRole('button', { name: 'Guardar denominación colectiva', exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Configuración de planificación guardada.' })).toBeVisible()
   await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('button', { name: 'Certificados', exact: true }).click()
-  const certificateAdmin = page.getByRole('region', { name: 'Vinculación de certificados', exact: true })
+  const certificateAdmin = page.getByRole('region', { name: 'Historial de certificados', exact: true })
   await certificateAdmin.getByLabel('Buscar firmante', { exact: true }).fill(email)
   await expect(certificateAdmin.getByLabel('Cuenta del firmante')).toContainText(email)
   await certificateAdmin.getByLabel('Cuenta del firmante').selectOption({ label: displayName + ' · ' + email })
-  await openAction(certificateAdmin, 'Vincular certificado público');await certificateAdmin.getByLabel('Huella SHA-256 pública').fill(certificate.fingerprint)
-  await certificateAdmin.getByLabel('Referencia de comprobación de identidad').fill('Comprobación de certificado público generado para E2E.')
-  await certificateAdmin.getByLabel('He comprobado que el certificado público corresponde a esta cuenta.').check()
-  await certificateAdmin.getByRole('button', { name: 'Vincular huella pública', exact: true }).click()
-  await expect(page.getByRole('status').filter({ hasText: 'Huella pública vinculada.' })).toHaveText('Huella pública vinculada.')
+  await expect(certificateAdmin.getByRole('button', { name: /Vincular/ })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await page.getByRole('textbox', { name: 'Usuario', exact: true }).fill(email)
@@ -156,5 +132,4 @@ test('local identity, administration, context isolation, recovery and logout', a
   await page.screenshot({ path: 'test-results/home-desktop.png', fullPage: true })
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()
   await openAction(page, 'Crear documento'); await expect(page.getByText('No tiene ámbitos disponibles para crear un Plan.', { exact: true })).toBeVisible()
-  certificate.buffer.fill(0)
 })

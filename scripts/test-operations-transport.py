@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from operations import ROOT, one, environment, sql, run, containers
 
 
-def test_transport(project, port):
+def test_transport(project, port, credential_env_file=None):
     if not re.fullmatch(r"utaped-restore-[a-z0-9][a-z0-9-]{0,40}", project):
         raise RuntimeError("La prueba solo admite un proyecto de recuperación aislado.")
     db, backend, frontend = one(project, "db"), one(project, "backend"), one(project, "frontend")
@@ -26,7 +26,7 @@ def test_transport(project, port):
         raise RuntimeError("La prueba requiere utaped_restore.")
     volume = next(mount["Name"] for mount in backend["Mounts"] if mount["Destination"] == "/app/runtime-data")
     fixture = {}
-    for line in (ROOT / ".env.sample").read_text(encoding="utf-8-sig").splitlines():
+    for line in (Path(credential_env_file) if credential_env_file else ROOT / ".env.sample").read_text(encoding="utf-8-sig").splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             name, value = line.split("=", 1);fixture[name.strip()] = value.strip().strip('"').strip("'")
     name = "utaped-ops-tls-" + uuid.uuid4().hex[:10]
@@ -99,7 +99,10 @@ def test_transport(project, port):
             query = """SELECT json_build_object('id',r.id,'sha256',f.sha256) FROM document_review r JOIN work_plan w ON w.id=r.work_plan_id
                 JOIN stored_file f ON f.id=r.current_file_id JOIN organizational_scope s ON s.id=w.scope_id JOIN app_user u ON u.id=s.principal_user_id
                 WHERE r.status='APPROVED' AND u.username='dev.principal' ORDER BY r.created_at DESC LIMIT 1"""
-            signed = json.loads(sql(db, query))
+            signed_record = sql(db, query).strip()
+            if not signed_record:
+                raise RuntimeError("El destino recuperado necesita un PDF aprobado accesible para dev.principal; prepare esa fixture antes del ensayo.")
+            signed = json.loads(signed_record)
             with opener.open(base + "/api/reviews/" + signed["id"] + "/content") as response:
                 if hashlib.sha256(response.read()).hexdigest() != signed["sha256"]:raise RuntimeError("El PDF recuperado no conserva sus bytes.")
             def check_health(_):
@@ -119,9 +122,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--restored-project", required=True)
     parser.add_argument("--port", type=int, default=64433)
+    parser.add_argument("--credential-env-file", type=Path, help="Credenciales de las cuentas ficticias del origen recuperado; no se imprimen.")
     args = parser.parse_args()
     try:
         if not 1024 <= args.port <= 65535:raise RuntimeError("Puerto de prueba inválido.")
-        test_transport(args.restored_project, args.port)
+        test_transport(args.restored_project, args.port, args.credential_env_file)
     except Exception as error:
         parser.exit(1, "La prueba aislada no se completó: " + (str(error) if isinstance(error, RuntimeError) else type(error).__name__) + "\n")
