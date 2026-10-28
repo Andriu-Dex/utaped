@@ -1,3 +1,5 @@
+import { ManagementOverview } from '../planning/ManagementOverview'
+import type { ReportingSummary } from '../planning/reportingTypes'
 import { useEffect, useState } from 'react'
 import { api, type Group, type Period } from '../shared/api'
 import { Icon } from '../shared/Icon'
@@ -7,7 +9,7 @@ import type { AdminPage } from './adminNavigation'
 import './administration.css'
 
 interface Summary {
-  users: number; activeUsers: number; groups: Group[]; periods: Period[];
+  reporting: ReportingSummary; users: number; activeUsers: number; groups: Group[]; periods: Period[];
   events: { id: string; action: string; actorName: string | null; occurredAt: string }[]
 }
 export function AdminDashboard({ onOpen }: { onOpen: (page: AdminPage) => void }) {
@@ -15,8 +17,8 @@ export function AdminDashboard({ onOpen }: { onOpen: (page: AdminPage) => void }
   const [error, setError] = useState(''); const [refresh, setRefresh] = useState(0)
   useEffect(() => {
     let active = true
-    Promise.all([api<{ total: number }>('/admin/users/directory?size=1'), api<{ total: number }>('/admin/users/directory?size=1&active=true'), api<Group[]>('/admin/groups'), api<Period[]>('/periods'), api<{ items: Summary['events'] }>('/admin/audit-events?page=0')])
-      .then(([users, activeUsers, groups, periods, events]) => { if (active) { setData({ users: users.total, activeUsers: activeUsers.total, groups, periods, events: events.items.slice(0,5) }); setError('') } })
+    Promise.all([api<{ total: number }>('/admin/users/directory?size=1'), api<{ total: number }>('/admin/users/directory?size=1&active=true'), api<Group[]>('/admin/groups'), api<Period[]>('/periods'), api<{ items: Summary['events'] }>('/admin/audit-events?page=0'), api<ReportingSummary>('/reporting')])
+      .then(([users, activeUsers, groups, periods, events, reporting]) => { if (active) { setData({ reporting, users: users.total, activeUsers: activeUsers.total, groups, periods, events: events.items.slice(0,5) }); setError('') } })
       .catch(e => { if (active) setError(e instanceof Error ? e.message : 'No se pudo cargar el panel administrativo.') })
     return () => { active = false }
   }, [refresh])
@@ -28,6 +30,7 @@ export function AdminDashboard({ onOpen }: { onOpen: (page: AdminPage) => void }
       <div className="admin-metrics">
         {([{ label: 'Usuarios registrados', value: data.users, page: 'users' }, { label: 'Usuarios activos', value: data.activeUsers, page: 'users' }, { label: 'Grupos activos', value: data.groups.filter(group => group.active).length, page: 'groups' }, { label: 'Períodos registrados', value: data.periods.length, page: 'periods' }] as const).map(metric => <button className="secondary admin-metric" key={metric.label} onClick={() => onOpen(metric.page)}><span>{metric.label}</span><strong>{metric.value}</strong><small>Consultar<Icon name="arrow" size={14} /></small></button>)}
       </div>
+<div className="management-page-header"><div><span className="section-kicker">PANORAMA INSTITUCIONAL</span><h2>Gestión documental</h2></div><button type="button" className="secondary" onClick={() => onOpen('reporting')}><Icon name="document" />Ver reportes de gestión</button></div><ManagementOverview data={data.reporting} />
       <div className="grid"><section className="card"><h2>Configuración institucional</h2><p className="muted">Accede al módulo que necesitas gestionar.</p><div className="admin-shortcuts">{([{ label: 'Usuarios y acceso', page: 'users' }, { label: 'Grupos y pertenencias', page: 'groups' }, { label: 'Catálogo de actividades', page: 'activities' }, { label: 'Recursos y medios', page: 'resources' }, { label: 'Flujos de aprobación', page: 'workflows' }, { label: 'Feriados y restricciones', page: 'holidays' }] as const).map(item => <button className="secondary" key={item.page} onClick={() => onOpen(item.page)}>{item.label}<Icon name="arrow" size={16} /></button>)}</div></section>
       <section className="card"><h2>Actividad reciente</h2>{data.events.length ? <ul className="admin-events">{data.events.map(event => <li key={event.id}><strong>{auditActionLabels[event.action] ?? event.action}</strong><span>{event.actorName ?? 'Sistema'}</span><time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleString('es-EC')}</time></li>)}</ul> : <p>No hay actividad registrada.</p>}<button className="secondary" onClick={() => onOpen('audit')}>Abrir auditoría</button></section></div>
     </>}

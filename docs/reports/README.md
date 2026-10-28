@@ -1,5 +1,7 @@
 # Reportes
 
+- [Panel de gestión y reportes](2026-10-28-39-management-dashboard-and-reports.md).
+
 - [Revisión de navegación de visores](2026-10-28-38-staged-viewer-navigation-review.md).
 
 - [CAPTCHA de cinco caracteres](2026-10-27-37-five-character-captcha.md).

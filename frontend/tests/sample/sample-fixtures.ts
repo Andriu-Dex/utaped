@@ -5,12 +5,21 @@ import { createHash } from 'node:crypto'
 import { acceptanceEnvironmentFile, acceptanceProject, acceptanceBaseURL } from './acceptance-environment'
 export { acceptanceBaseURL }
 const environment = Object.fromEntries(readFileSync(acceptanceEnvironmentFile, 'utf8').split(/\r?\n/).filter(l => l.includes('=')).map(l => { const i = l.indexOf('='); return [l.slice(0,i).trim(), l.slice(i+1).trim()] }))
+let captchaProxyKey: string | undefined
 export async function api(page: Page, path: string, method = 'GET', body?: unknown) {
   const csrf = await (await page.request.get('/api/auth/csrf')).json()
   const r = await page.request.fetch('/api' + path, { method, headers: { [csrf.headerName]: csrf.token }, data: body })
   expect(r.status(), method + ' ' + path).toBeLessThan(300); const data = await r.text(); return data ? JSON.parse(data) : undefined
 }
 export async function login(page: Page, username: string, password = environment.UTAPED_SEED_PASSWORD) {
+  // The entire acceptance suite shares one proxy IP. Reset only its CAPTCHA issue
+  // bucket between positive fixture logins; production limits and other buckets remain intact.
+  if (!captchaProxyKey) {
+    const address = execFileSync('docker', ['inspect', '--format', '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}', acceptanceProject + '-frontend-1'], { encoding: 'utf8' }).trim()
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(address)) throw new Error('Invalid isolated frontend address')
+    captchaProxyKey = createHash('sha256').update('captcha-ip:' + address).digest('hex')
+  }
+  execFileSync('docker', ['compose', '--env-file', acceptanceEnvironmentFile, '-p', acceptanceProject, '-f', '../compose.yml', '-f', '../compose.sample.yml', 'exec', '-T', 'db', 'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'utaped', '-d', 'utaped_dev', '-c', `DELETE FROM auth_throttle WHERE current_database()='utaped_dev' AND key_hash='${captchaProxyKey}'`], { encoding: 'utf8' })
   await page.goto('/'); await page.getByLabel('Usuario', { exact: true }).fill(username); await page.getByLabel('Contraseña', { exact: true }).fill(password)
   await expect.poll(() => page.getByAltText('Código de verificación. También puedes escucharlo con Escuchar código.').evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBeTruthy()
   const pending = page.waitForResponse(r => new URL(r.url()).pathname === '/api/auth/captcha')
