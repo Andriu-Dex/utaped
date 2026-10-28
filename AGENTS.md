@@ -34,6 +34,8 @@ Owner follow-up (2026-10-14): Create document uses a modal with keyboard focus c
 
 Owner notification decision (2026-10-14): do not call browser alert/confirm/prompt in application code. Informational, warning and error feedback uses Toast; decisions use the shared asynchronous confirmAction modal. Always await the decision before discarding data or performing a mutation. Capture event values/form data before awaiting; support keyboard, themes, cancellation and nested document dialogs. Keep toast/theme controls above the active modal. Browser-owned beforeunload protection for actual refresh/tab closure is separate and must not be removed merely to replace internal confirmation dialogs.
 
+Owner UI/UX Design System standard (2026-10-28): all views and components must strictly comply with the UTAPED Modern Design System. Back/return navigation must always use the compact icon button `.plan-back-btn` with `<Icon name="arrowLeft" size={20} />` inside `.plan-header-title-row`; never render full-width rectangular text buttons ("Volver a..."). Any document-viewing or reading screen must keep its page navigator sticky (`position: sticky; top: calc(var(--plan-topbar-height, 72px) + 8px); z-index: 10;`) with opaque surface background and elevation shadow. Split workspaces with preview must use the interactive drag resizer (`.plan-workspace-resizer`). Floating menus and popovers must have 100% opaque backgrounds, border and elevation shadow. All UI components must implement full dark mode styling (`:root[data-theme='dark']`).
+
 Owner environment decision (2026-10-16): reuse utaped-sample as the single persistent manual development environment, preserving its data/volumes. scripts/start-development.ps1 starts DB/backend/Mailpit for local Vite; -Web adds the compiled frontend on the same database. Vite defaults to BACKEND_PORT from .env.sample (18082 fallback), with explicit API_TARGET override. Automated acceptance must use scripts/test-acceptance.ps1 and disposable utaped-acceptance, never the manual environment. Backend/E2E/acceptance launchers clean their test resources, with KeepOnFailure for diagnosis. Do not rename volumes, purge old manual records, restart archived restores or globally prune Docker as routine development setup.
 
 Owner data/source clarification (2026-10-17): current development records are replaceable examples; cleanup/rebuilding them is authorized when needed for a coherent review environment. docs/templates contains official institutional source information. Preserve its factual content and structure, with the explicit page-size correction: T1/T2 use A4 even where a source is Letter. Example accounts and workflow assignments do not become official identities or authorizations merely because catalog names come from those sources. The authorized cleanup of utaped-sample supersedes the earlier prohibition on purging its old example records for this task; retain a verified paired backup before bulk cleanup, keep the seven dev account credentials and isolate automated tests. This is not authorization to reset a future institutional production database.
@@ -648,36 +650,93 @@ Remove obsolete comments when changing the behavior they describe.
 
 These guidelines apply when the task involves a graphical user interface.
 
-Follow the existing design system, component library, visual language, and UX patterns before introducing new ones.
+All frontend development must follow the **UTAPED Modern Design System**, maintaining a professional, accessible, and elegant visual hierarchy for academic management at FISEI / UTA.
 
-Design interfaces that are:
+Never generate primitive, unstyled, raw HTML controls or default browser elements. Every component must look intentional, polished, and fully integrated with the application theme.
 
-* Clear.
-* Consistent.
-* Accessible.
-* Responsive when the application supports multiple screen sizes.
-* Easy to navigate.
-* Visually coherent with the rest of the product.
+---
 
-Prioritize usability over decorative complexity.
+## UTAPED Design System & Visual Standards
 
-Use established reusable components when available.
+### 1. Visual Hierarchy & Color Palette
+* **Institutional Colors**: Use CSS variables for all colors. Institutional Blue (`var(--blue-700)`, `var(--blue-900)`), teal highlights (`var(--teal-600)`, `var(--teal-100)`), neutral surface backgrounds (`var(--surface)`, `var(--canvas)`), and subtle borders (`var(--border)`).
+* **Elevation & Layering**: Use subtle, multi-stop box shadows (`var(--shadow-sm)`, `var(--shadow)`, `0 4px 14px rgba(12, 41, 68, 0.08)`) to lift interactive surfaces, cards, and docks above the background.
+* **Kickers & Badges**: Prefix major sections with an uppercase kicker (`.section-kicker`, e.g. `<span className="section-kicker">PLAN DE TRABAJO · T1</span>`) and clean status badges (`.status-badge`).
+* **Header Structure**: Use `.plan-wizard-header` and `.plan-header-title-row` for main page headers.
 
-Avoid introducing a new visual pattern when an existing pattern already solves the problem adequately.
+---
+
+## Mandatory UI/UX Patterns (DOs and DON'Ts)
+
+### Back & Return Navigation
+* **DO**: Always place a compact icon button with the left arrow (`.plan-back-btn` with `<Icon name="arrowLeft" size={20} />`) inside `.plan-header-title-row` directly to the left of the `<h1>` title:
+  ```tsx
+  <div className="plan-header-title-row">
+    <button
+      type="button"
+      className="plan-back-btn"
+      onClick={back}
+      title="Volver a Documentos"
+      aria-label="Volver a Documentos"
+    >
+      <Icon name="arrowLeft" size={20} />
+      <span className="sr-only">Volver a Documentos</span>
+    </button>
+    <h1>{title}</h1>
+  </div>
+  ```
+* **DON'T**: Never render giant, full-width rectangular text buttons (such as `<button className="secondary">Volver a documentos</button>` or `<button>Volver al documento</button>`) at the top of cards, views, or lists.
+
+### Document Viewers & Sticky Page Navigation
+* **DO**: Any screen that views, reviews, or previews multi-page PDF documents (`ReviewWorkspace`, `DocumentConsultation`, `ReviewHistory`, `DocumentPreparation`, `PlanPreview`) MUST keep its `<DocumentPageNavigator>` sticky at the top of the viewport when scrolling:
+  ```css
+  .review-document > .document-page-navigator,
+  .plan-preparation .document-keyboard-viewer > .document-page-navigator {
+    position: sticky;
+    top: calc(var(--plan-topbar-height, 72px) + 8px);
+    z-index: 10;
+    background: var(--surface);
+    box-shadow: 0 4px 14px rgba(12, 41, 68, 0.08);
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+  ```
+  The sticky container MUST have an opaque background and elevation shadow so that scrolling document pages pass smoothly underneath without visual collisions.
+* **DON'T**: Never leave document page navigators static so that scrolling down the document hides page navigation. Never use transparent backgrounds on sticky toolbars.
+
+### Split-View Workspaces (Editor + Preview)
+* **DO**: All split workspaces with side-by-side editing and document preview MUST include the interactive drag resizer (`.plan-workspace-resizer` with `.plan-resizer-line` and `.plan-resizer-badge`) allowing users to adjust pane widths fluidly.
+* **DO**: On tablet viewports (`@media (max-width: 1199px)`), collapse split workspaces gracefully into a single-column stacked layout or tabbed switcher, keeping the page navigator sticky below the topbar (`top: calc(var(--plan-topbar-height, 72px) + 8px)`).
+* **DON'T**: Never hardcode rigid, immovable CSS grid columns without user-adjustable pane widths.
+
+### Modals, Dialogs, and Actions
+* **DO**: Design modals centered on screen with a dark backdrop blur (`background: rgba(5, 24, 42, 0.65)`), generous rounded corners (`border-radius: 16px`), an icon badge header (`.modal-icon-badge` with a 40x40px rounded box and colored icon), clear typography, and right-aligned action buttons (Cancel as `secondary`, Confirm as primary).
+* **DO**: Wrap mutation and action forms inside `<ActionForm>` so they start closed and open only upon explicit user action. Guard unsaved form dirty state with `confirmAction()`.
+* **DON'T**: Never call native browser `alert()`, `confirm()`, or `prompt()`. Always use `Toast` for informational feedback and `confirmAction()` for confirmation dialogues.
+
+### Floating Menus & Popovers
+* **DO**: Dropdown panels and popovers (such as Document Follow-up / `DocumentFollowUp.tsx`) must feature a 100% solid surface background, crisp border, deep elevation shadow (`box-shadow: 0 12px 36px rgba(12, 41, 68, 0.16)`), uppercase category kickers, and distinct icon badges.
+* **DON'T**: Never render flat, borderless, or semi-transparent popovers that clash with background text.
+
+### Dark Mode Support (`data-theme='dark'`)
+* **DO**: Every single new UI element, card, button, modal, badge, and navigator MUST include complete dark mode styling under `:root[data-theme='dark']`.
+  - Dark surfaces: `#102131`, `#14283b`, `#172b3e`.
+  - Dark borders: `#244360`, `#33495e`.
+  - Dark text: `#e2e8f0`, `#bce0fc`.
+  - Dark elevation: deep dark shadows (`rgba(0, 0, 0, 0.5)`).
+* **DON'T**: Never deliver components with hardcoded `#fff` or dark text on dark backgrounds.
 
 ---
 
 ## Responsive Design
 
-For interfaces intended to work across multiple device sizes:
+For interfaces intended to work across multiple device sizes (PCs and tablets):
 
-* Ensure layouts adapt appropriately to supported viewport sizes.
+* Ensure layouts adapt appropriately to supported viewport sizes (minimum 768px tablet, 1200px+ PC).
 * Avoid unnecessary horizontal overflow.
-* Ensure interactive elements remain usable on smaller screens.
+* Ensure interactive elements remain usable with touch or mouse.
 * Preserve meaningful content hierarchy across breakpoints.
-* Test or inspect relevant responsive states when the available environment permits it.
-
-Do not assume that every project requires responsive behavior. Follow the requirements and target platforms of the application.
+* Inspect desktop and tablet presentations. Mobile phone-specific styles are not required for new delivery.
 
 ---
 
@@ -685,25 +744,19 @@ Do not assume that every project requires responsive behavior. Follow the requir
 
 All Spanish user-facing text should be:
 
-* Clear.
-* Natural.
-* Concise.
-* Consistent in terminology.
-* Appropriate for the intended audience.
+* Clear, natural, and concise.
+* Consistent in institutional terminology (FISEI / UTA, Plan de Trabajo, Informe de Cumplimiento, Rondas de Revisión).
+* Appropriate for academic and administrative staff.
 
-Avoid exposing technical implementation details to users.
-
-Do not display raw stack traces, database errors, internal identifiers, credentials, or sensitive diagnostic information.
+Avoid exposing technical implementation details, stack traces, raw database errors, UUIDs, or sensitive diagnostic information to users.
 
 ---
 
 ## Icons and Emojis
 
-Do not use emojis as substitutes for interface icons.
-
-When an icon is appropriate, prefer the icon system or component library already used by the project.
-
-Do not add a new icon dependency solely for a trivial use case when an adequate existing solution is available.
+* Do not use emojis as substitutes for interface icons.
+* Always use the centralized `<Icon name="..." size={...} />` component.
+* Ensure icon-only buttons include an `aria-label` or `<span className="sr-only">` text for accessibility.
 
 ---
 

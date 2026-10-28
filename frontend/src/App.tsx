@@ -205,6 +205,24 @@ export default function App() {
     return () => { cancelled=true }
   }, [selected])
 
+  useEffect(() => {
+    if (!account) return
+    const topbar = document.querySelector('.topbar')
+    if (!topbar) return
+    const measure = () => {
+      const height = Math.ceil(topbar.getBoundingClientRect().height) + 'px'
+      document.documentElement.style.setProperty('--plan-topbar-height', height)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(topbar, { box: 'border-box' })
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [account, view, administrative])
+
   async function logout() { if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?'))) return; try { await api('/auth/logout','POST'); setLoading(true); clearAccount(); setError(''); await refreshCsrf() } catch(e) { setError(e instanceof Error ? e.message : 'No se pudo cerrar sesión.') } finally { setLoading(false) } }
 
   if (loading) return <main className="connecting"><Brand /><p role="status">Conectando con UTAPED…</p></main>

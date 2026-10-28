@@ -12,6 +12,21 @@ test('review certificate preparation is protected on return, module navigation a
   await page.route('**/api/reviews/' + reviewId + '/pages/*', route => route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9XcAAAAASUVORK5CYII=', 'base64') }))
   await page.getByRole('button', { name: 'Revisión documental', exact: true }).click()
   await page.getByRole('button', { name: 'Revisar ' + title + ' · Ronda 1', exact: true }).click()
+  const pageNavigator = page.locator('.review-document > .document-page-navigator')
+  await expect(pageNavigator).toBeVisible()
+  await expect(pageNavigator).toHaveCSS('position', 'sticky')
+  await page.locator('.review-page').evaluate(element => { element.style.minHeight = '1600px' })
+  for (const width of [1440, 820]) {
+    await page.setViewportSize({ width, height: 1000 })
+    await pageNavigator.evaluate(element => element.scrollIntoView({ block: 'start' }))
+    await page.evaluate(() => window.scrollBy(0, 200))
+    await expect.poll(async () => {
+      const nav = await pageNavigator.boundingBox(), bar = await page.locator('.topbar').boundingBox()
+      return nav && bar ? Math.abs(nav.y - bar.y - bar.height - 8) : 100
+    }).toBeLessThan(2)
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.evaluate(() => window.scrollTo(0, 0))
   await openAction(page, 'Preparar firma de revisión')
   await page.getByLabel('Certificado personal (.p12/.pfx)', { exact: true }).setInputFiles({ name: 'prueba.p12', mimeType: 'application/x-pkcs12', buffer: Buffer.from('temporary-test-container') })
   await page.getByLabel('Contraseña del certificado', { exact: true }).fill('Temporary-test-password')
