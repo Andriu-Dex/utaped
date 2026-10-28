@@ -1,5 +1,9 @@
 # API — Anexos y preparación T1
 
+## Contrato vigente y alcance histórico
+
+Actualización 2026-10-27: T1 utiliza cinco pasos con visor persistente y preparación automática en Revisar y firmar. Autores y revisores usan certificado aportado/confirmado sin vinculación previa. La última firma de elaboración inicia revisión; descarga final únicamente desde la ronda aprobada. Ver [firma vigente](author-signing.md), [autoría](document-authorship-and-review.md) y [circuito](document-circuit.md). Las secciones de entrega siguientes describen la preparación inicial y no mantienen pendientes los módulos ya entregados ni imponen bloqueos históricos de firma.
+
 Rutas bajo `/api/work-plans/{targetDocId}`. Requieren sesión, propietario activo y pertenencia activa. ADMIN no tiene acceso documental implícito. Mutaciones requieren CSRF; IDs de otro Plan no permiten acceder a archivos.
 
 ## Anexos

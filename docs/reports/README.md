@@ -1,5 +1,7 @@
 # Reportes
 
+- [Auditoría integral de producto y recuperación](2026-10-27-34-integral-product-audit.md).
+
 - [Consulta y revisión separadas de elaboración](2026-10-27-33-document-consultation-and-review.md).
 
 - [Apartado de anexos sin archivos](2026-10-27-32-empty-annex-section.md).

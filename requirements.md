@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+CONFIRMADO-PROYECTO (2026-10-27): ejecutar el plan de auditoría integral de instruction.md en una rama propia desde main, con trazabilidad, hallazgos, correcciones y evidencias de flujos/permisos, UI PC/tablet, documentos y recuperación. Conservar artefactos firmados y datos manuales; no declarar aceptación institucional ni inventar reglas pendientes. [Matriz y alcance](docs/testing/integral-audit-matrix.md).
+
 CONFIRMADO-PROYECTO (2026-10-27): separar la consulta y revisión del recorrido de elaboración. El responsable principal conserva el editor; los demás usuarios autorizados consultan sin pasos ni formularios de creación. Cuando existe una ronda, mostrar su PDF firmado conservado, observaciones y acciones habilitadas para la etapa asignada. Los coautores mantienen la firma ordenada desde consulta; conservar rondas, historial, ejecución y evidencias, sin ampliar permisos del servidor.
 
 CONFIRMADO-PROYECTO (2026-10-27): cuando no existan anexos, conservar el apartado numerado «ANEXOS» y mostrar debajo «(No aplica)» en texto normal, como en la referencia visual del propietario. Mantener el índice y las referencias de páginas; no modificar artefactos ya firmados. Las referencias externas y enlaces de evidencia existentes no se presentan como anexos inexistentes.

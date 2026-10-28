@@ -12,7 +12,11 @@ Entrega 2026-10-12. Pruebas técnicas con datos ficticios; la aceptación formal
 | Aprobador | Completa la etapa final y accede al aprobado. | No actúa ni accede antes de activarse su etapa. |
 | Ajeno | Acceso local a su cuenta. | No obtiene documento/artefacto ni API administrativa de otro ámbito. |
 
-Sesión anónima: 401. Acceso documental ajeno/revocado: 404 para no revelar existencia. Lectura autorizada sin edición: 403 ante mutación. La separación y los códigos se verifican tanto con solicitudes HTTP como desde UI. No se inventan permisos de Decano/Subdecano ni aceptación de múltiples elaboradores.
+Sesión anónima: 401. Acceso documental ajeno/revocado: 404 para no revelar existencia. Lectura autorizada sin edición: 403 ante mutación. La separación y los códigos se verifican tanto con solicitudes HTTP como desde UI. No se inventan permisos de Decano/Subdecano. La autoría múltiple fue confirmada el 2026-10-17 y la consulta sin wizard el 2026-10-27: principal editor único, coautores con firma ordenada, revisores sobre el PDF firmado. La firma usa certificado aportado y confirmado, sin pin administrativo previo. La aceptación institucional continúa separada de las pruebas técnicas.
+
+## Auditoría vigente
+
+La ejecución integral del 2026-10-27 se registra en [matriz](integral-audit-matrix.md), [inventario](integral-audit-inventory.md) y [hallazgos](integral-audit-findings.md). Los recuentos y versiones de entregas anteriores son históricos.
 
 ## Documentos largos
 

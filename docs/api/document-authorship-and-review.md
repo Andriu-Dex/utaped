@@ -10,7 +10,7 @@ La configuración empieza cerrada, mediante Configurar elaboradores. El orden es
 
 ## Recopilación de firmas
 
-Las firmas usan la ruta existente `/artifacts/{artifactId}/signing` y el material temporal p12/pfx. Cada usuario solo firma en su turno con su certificado vinculado. La respuesta de estado incluye pendingAuthors, actorSigned, firmas conservadas y el hash exacto de entrada para la siguiente firma.
+Las firmas usan la ruta existente `/artifacts/{artifactId}/signing` y el material temporal p12/pfx. Cada usuario solo firma en su turno con el certificado aportado, inspeccionado y confirmado en la operación, sin vinculación administrativa obligatoria (decisión vigente del 2026-10-27; véase author-signing.md). La respuesta de estado incluye pendingAuthors, actorSigned, firmas conservadas y el hash exacto de entrada para la siguiente firma.
 
 1. El artefacto congela nombres, cargos y slots de todos los elaboradores.
 2. La primera firma bloquea edición, matriz, anexos y gestión del contenido. El documento sigue en DRAFT mientras reúne firmas, con una indicación específica en la UI; no se introduce un estado documental nuevo.
