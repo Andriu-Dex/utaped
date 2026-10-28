@@ -46,12 +46,23 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [reload, setReload] = useState(0); const [imageError, setImageError] = useState(false)
   const [requestKey] = useState(() => crypto.randomUUID())
   const [loadedImage, setLoadedImage] = useState('')
-  const task = state?.canAct ? state.tasks.find(t => t.actor_id === accountId && t.status === 'ACTIVE') : undefined
-  const closedTask = state && !state.canAct && state.tasks.some(t => t.actor_id === accountId && t.status === 'ACTIVE')
+  const [loading, setLoading] = useState(true), [loadFailed, setLoadFailed] = useState(false)
+  const task = !loading && state?.canAct ? state.tasks.find(t => t.actor_id === accountId && t.status === 'ACTIVE') : undefined
+  const closedTask = !loading && state && !state.canAct && state.tasks.some(t => t.actor_id === accountId && t.status === 'ACTIVE')
   const dirty = busy || !!message.trim() || !!region || signingDirty
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   useEffect(() => { const leave = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }; window.addEventListener('beforeunload', leave); return () => window.removeEventListener('beforeunload', leave) }, [dirty])
-  useEffect(() => { let active = true; api<ReviewState>('/reviews/' + id).then(s => { if (active) setState(s) }).catch(e => { if (active) setError(e.message) }); return () => { active = false } }, [id, reload])
+  useEffect(() => {
+    let active = true
+    Promise.resolve().then(async () => {
+      if (!active) return
+      setLoading(true); setLoadFailed(false)
+      try { const value = await api<ReviewState>('/reviews/' + id); if (active) { setState(value); setError('') } }
+      catch (e) { if (active) { setState(null); setLoadFailed(true); setError(e instanceof Error ? e.message : 'No se pudo consultar la revisión.') } }
+      finally { if (active) setLoading(false) }
+    })
+    return () => { active = false }
+  }, [id, reload])
   async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
   function point(event: PointerEvent<HTMLDivElement>) { const b = event.currentTarget.getBoundingClientRect(); return { x: Math.max(0, Math.min(1, (event.clientX - b.left) / b.width)), y: Math.max(0, Math.min(1, (event.clientY - b.top) / b.height)) } }
   function begin(event: PointerEvent<HTMLDivElement>) { if (!task || busy || loadedImage !== id + '-' + page + '-' + reload || event.button !== 0) return; anchor.current = point(event); event.currentTarget.setPointerCapture(event.pointerId); setRegion(null) }
@@ -77,7 +88,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
   }
   const changePage = async (index: number) => { if (region && !(await confirmAction('¿Descartar la zona seleccionada para cambiar de página?'))) return; setPage(index); setRegion(null); setImageError(false) }
   return <section><button type="button" className="secondary" disabled={busy} onClick={back}>{backLabel}</button><span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span><h1>{title}</h1>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
-    {!state ? <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
+    {!state ? loadFailed ? <section className="card" aria-label="Revisión no disponible"><p>No se pudo consultar la revisión. Puede reintentar o volver a la bandeja.</p><button type="button" className="secondary" disabled={loading} onClick={() => setReload(value => value + 1)}>Reintentar revisión</button></section> : <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" disabled={loading} onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
     {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}
     <div className="review-layout"><section className="card review-document"><DocumentPageNavigator page={page} pageCount={state.pageCount} disabled={busy} onChange={changePage} references={state.observations.filter(observation => observation.page_index !== null).map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))} />{task && <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>}{imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}
       {!imageError && loadedImage !== id + '-' + page + '-' + reload && <p role="status" className="field-help">Cargando página {page + 1}…</p>}

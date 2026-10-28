@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ActionForm } from '../shared/ActionForm'
-import { api } from '../shared/api'
+import { api, ApiError } from '../shared/api'
 import { confirmAction } from '../shared/confirm-action'
 import { Icon } from '../shared/Icon'
+import { Toast } from '../shared/Toast'
 
 type Member = { user_id: string; display_name: string; membership_role: string; position_label: string; active: boolean; row_version: number }
 type Candidate = { id: string; display_name: string }
@@ -11,12 +12,14 @@ type Candidate = { id: string; display_name: string }
 export function ScopeMembers({ scopeId, principalId, onDirtyChange, onNotice, onError }: { scopeId: string; principalId: string | null; onDirtyChange: (dirty: boolean) => void; onNotice: (message: string) => void; onError: (message: string) => void }) {
   const [members, setMembers] = useState<Member[]>([]), [canManage, setCanManage] = useState(false), [query, setQuery] = useState(''), [candidates, setCandidates] = useState<Candidate[]>([])
   const [busy, setBusy] = useState(false), [dirty, setDirty] = useState(false), [reload, setReload] = useState(0)
+  const [loadError, setLoadError] = useState(''), [loaded, setLoaded] = useState(false)
   const base = '/organization/scopes/' + scopeId
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => {
     let active = true
-    api<Member[]>(base + '/members').then(m => { if (active) setMembers(m) }).catch(e => { if (active) onError(e.message) })
-    api<Candidate[]>(base + '/candidates').then(() => { if (active) setCanManage(true) }).catch(() => { if (active) setCanManage(false) })
+    Promise.all([api<Member[]>(base + '/members'), api<Candidate[]>(base + '/candidates').then(() => true).catch(e => { if (e instanceof ApiError && e.status === 403) return false; throw e })])
+      .then(([values, allowed]) => { if (active) { setMembers(values); setCanManage(allowed); setLoaded(true); setLoadError('') } })
+      .catch(e => { if (active) { setLoadError(e.message); setCanManage(false) } })
     return () => { active = false }
   }, [base, reload, onError])
   async function search() {
@@ -33,6 +36,8 @@ export function ScopeMembers({ scopeId, principalId, onDirtyChange, onNotice, on
     const existing = members.find(m => m.user_id === userId)
     void save(userId, String(data.get('positionLabel')).trim(), true, existing?.row_version ?? 0, 'Integrante agregado al ámbito.').then(ok => { if (ok) { form.reset(); setCandidates([]); setQuery('') } })
   }
+  if (loadError) return <section className="contextual-recovery"><h2>Integrantes del ámbito</h2><Toast message={loadError} /><button type="button" className="secondary" onClick={() => { setLoadError(''); setLoaded(false); setReload(value => value + 1) }}>Reintentar integrantes del ámbito</button></section>
+  if (!loaded) return <p role="status">Cargando integrantes del ámbito…</p>
   const activeMembers = members.filter(m => m.active)
   return <section className="contextual-recovery"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">INTEGRANTES</span><h2>Integrantes del ámbito</h2></div></div>
     <ul className="scope-member-list">{activeMembers.map(m => <li key={m.user_id}><span><strong>{m.display_name}</strong><small>{m.membership_role === 'COORDINATOR' ? 'Coordinación' : m.user_id === principalId ? 'Responsable principal' : 'Integrante'}{m.position_label ? ' · ' + m.position_label : ''}</small></span>

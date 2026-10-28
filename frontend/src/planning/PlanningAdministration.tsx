@@ -18,6 +18,7 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [dirtyForms, setDirtyForms] = useState<string[]>([])
   const dirty = dirtyForms.length > 0
+  const [loaded, setLoaded] = useState(false), [reload, setReload] = useState(0), [loadFailed, setLoadFailed] = useState(false)
   function markDirty(key: string) { setDirtyForms(current => current.includes(key) ? current : [...current, key]) }
   async function discard(keys: string[]) {
     if (dirtyForms.some(key => keys.includes(key)) && !(await confirmAction('Hay cambios sin guardar. ¿Descartarlos?'))) return false
@@ -30,9 +31,9 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
   }, [dirty])
   async function load() {
     const [p, c, h] = await Promise.all([api<Period[]>('/periods'), api<Catalog[]>('/admin/planning/catalogs'), api<{ date: string; label: string }[]>('/admin/planning/holidays')])
-    setPeriods(p); setCatalogs(c); setHolidays(h)
+    setPeriods(p); setCatalogs(c); setHolidays(h); setLoaded(true); setLoadFailed(false)
   }
-  useEffect(() => { Promise.resolve().then(load).catch(e => setError(e.message)) }, [groups])
+  useEffect(() => { Promise.resolve().then(load).then(() => setError('')).catch(e => { setError(e.message); setLoadFailed(true) }) }, [groups, reload])
   useEffect(() => {
     let cancelled = false
     if (groupId) api<Definition[]>('/admin/planning/groups/' + groupId + '/activities').then(d => { if (!cancelled) setDefinitions(d) }).catch(e => { if (!cancelled) setError(e.message) })
@@ -45,8 +46,10 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
   }
   async function saveCatalog(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/catalogs' + (catalog.id ? '/' + catalog.id : ''), catalog.id ? 'PUT' : 'POST', catalog, 'catalog')) setCatalog({ id: '', kind: 'RESOURCE', evidenceKind: 'PDF', label: '', active: true }) }
   async function saveActivity(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/activities' + (activity.id ? '/' + activity.id : ''), activity.id ? 'PUT' : 'POST', { ...activity, groupId }, 'activity')) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }
+  const retry = <button type="button" className="secondary" disabled={busy || dirty} onClick={() => { setError(''); setReload(value => value + 1) }}>Reintentar catálogos de planificación</button>
+  if (!loaded) return <section className="card"><h2>Catálogos de planificación</h2>{error ? <><Toast message={error} />{retry}</> : <p role="status">Cargando catálogos de planificación…</p>}</section>
   return <section className="card"><p>Los catálogos comienzan vacíos. Registre las denominaciones y fechas institucionales aplicables.</p>
-    {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+    {error && <Toast message={error} />}{loadFailed && retry}{notice && <Toast tone="success" message={notice} />}
     <fieldset disabled={busy}><div>{section === 'resources' && <section>
       <div className="section-heading">
         <div className="section-heading-icon" aria-hidden="true"><Icon name="document" size={24} /></div>
