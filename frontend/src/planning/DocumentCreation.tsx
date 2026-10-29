@@ -55,12 +55,12 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
     finally { onBusyChange(false) }
   }
   return <section className="card animate-reveal document-creation">
-    <div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">NUEVO DOCUMENTO</span><h2>¿Qué documento desea crear?</h2></div></div>
+    <div className="section-heading"><span className="section-icon"><Icon name="document" size={20} /></span><div><span className="section-kicker">NUEVO DOCUMENTO</span><h2>¿Qué documento desea crear?</h2></div></div>
     <p className="muted">Seleccione el formato y su ámbito institucional. El nombre se completa automáticamente.</p>
     <div className="document-kind-options" role="group" aria-label="Tipo de documento">
       {([['T1', 'Plan de Trabajo', 'Organice objetivos, actividades y responsables.', 'UTA-SGC-A-2-1-P7-T1'], ['T3', 'Informe de ejecución', 'Reporte el avance de un corte del Plan aprobado.', 'UTA-SGC-A-1-1-P4-T2'], ['T2', 'Informe final', 'Cierre el Plan aprobado con sus resultados.', 'UTA-SGC-A-2-1-P7-T2']] as const).map(([type, label, help, format]) => <label key={type} className={'document-kind-card ' + (kind === type ? 'selected' : '')}>
         <input type="radio" name="document-kind" value={type} checked={kind === type} disabled={busy} onChange={() => switchKind(type)} />
-        <span className="document-kind-icon"><Icon name={type === 'T1' ? 'calendar' : 'document'} size={24} /></span>
+        <span className="document-kind-icon"><Icon name={type === 'T1' ? 'calendar' : 'document'} size={20} /></span>
         <span><strong>{label}</strong><small>{help}</small><span className="document-kind-format">{format}</span></span>
       </label>)}
     </div>

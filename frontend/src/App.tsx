@@ -3,7 +3,7 @@ import { Toast } from './shared/Toast'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Access, ChangePassword } from './identity/Access'
 import { AdminDashboard } from './institution/AdminDashboard'
-import { adminPages, isAdminPage, type AdminPage } from './institution/adminNavigation'
+import { adminPages, adminNavGroups, isAdminPage, type AdminPage } from './institution/adminNavigation'
 import { Administration } from './institution/Administration'
 import { WorkPlans } from './planning/WorkPlans'
 import { TrackingDashboard } from './planning/TrackingDashboard'
@@ -248,8 +248,31 @@ export default function App() {
       </div>
       {!sidebarCollapsed && <p className="sidebar-section-label">ESPACIO INSTITUCIONAL</p>}
       {!account.mustChangePassword && <nav className="primary-nav" aria-label="Navegación principal">
-        {administrative ? <>{navButton('home','Panel general','home')}{adminPages.map(page => navButton(page.id,page.label,page.icon))}</> : <>{navButton('home','Inicio','home')}{navButton('documents','Documentos','document')}{navButton('reviews','Revisión documental','eye')}{navButton('my-organization','Mi organización','users')}{navButton('reporting','Reportes de gestión','document')}</>}
-        {navButton('password','Mi contraseña','lock')}
+        {administrative ? (
+          <>
+            <div className="sidebar-group sidebar-group-overview" role="group" aria-label="Visión general">
+              {navButton('home', 'Panel general', 'home')}
+            </div>
+            {adminNavGroups.map(group => (
+              <div key={group.title} className="sidebar-group" role="group" aria-label={group.title}>
+                {!sidebarCollapsed && <span className="sidebar-group-label">{group.title}</span>}
+                {group.items.map(page => navButton(page.id, page.label, page.icon))}
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            {navButton('home', 'Inicio', 'home')}
+            {navButton('documents', 'Documentos', 'document')}
+            {navButton('reviews', 'Revisión documental', 'eye')}
+            {navButton('my-organization', 'Mi organización', 'users')}
+            {navButton('reporting', 'Reportes de gestión', 'document')}
+          </>
+        )}
+        <div className="sidebar-group sidebar-group-account" role="group" aria-label="Cuenta personal">
+          {!sidebarCollapsed && administrative && <span className="sidebar-group-label">Cuenta</span>}
+          {navButton('password', 'Mi contraseña', 'lock')}
+        </div>
       </nav>}
       {!account.mustChangePassword && account.systemRole === 'ADMIN' && canUseDocuments && <label className="workspace-context">Espacio de trabajo<select aria-label="Espacio de trabajo" value={administrative ? 'administration' : 'documents'} onChange={event => switchWorkspace(event.target.value as 'administration' | 'documents')}><option value="administration">Administración</option><option value="documents">Espacio documental</option></select></label>}
       <div className="sidebar-account"><span className="avatar">{account.displayName.trim().split(/\s+/).slice(0,2).map(word => word[0]).join('')}</span><div><strong>{account.displayName}</strong><small>{account.systemRole === 'ADMIN' ? 'Administrador' : 'Usuario institucional'}</small></div></div>

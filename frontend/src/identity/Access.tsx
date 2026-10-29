@@ -56,11 +56,27 @@ export function Access({ onLogin }: { onLogin: (account: Account) => void }) {
         <h1 ref={heading} tabIndex={-1}>{mode === 'login' ? 'Iniciar sesión' : mode === 'forgot' ? 'Recuperar acceso' : mode === 'requested' ? 'Revisa tu correo' : 'Nueva contraseña'}</h1>
       </div>
       {mode === 'requested' ? <section className="recovery-confirmation" aria-label="Solicitud de recuperación registrada">
-        <span className="recovery-confirmation-icon" aria-hidden="true"><Icon name="check" size={28} /></span>
-        <p>{recoveryMessage}</p>
-        <p className="muted">Revisa también la carpeta de correo no deseado.</p>
-        <button type="button" className="access-submit" onClick={() => switchMode('login')}>Iniciar sesión<Icon name="arrow" size={18} /></button>
-        <button type="button" className="link access-recovery" onClick={() => switchMode('forgot')}>Usar otro correo</button>
+        <div className="recovery-status-card">
+          <div className="recovery-badge-row">
+            <span className="recovery-confirmation-icon" aria-hidden="true"><Icon name="check" size={24} /></span>
+            <div className="recovery-badge-meta">
+              <strong>Solicitud procesada</strong>
+              <small>Enlace de recuperación</small>
+            </div>
+          </div>
+          <div className="recovery-message-body">
+            <p>{recoveryMessage}</p>
+            {recoveryEmail && <div className="recovery-target-email"><Icon name="document" size={15} /><span>{recoveryEmail}</span></div>}
+          </div>
+          <div className="recovery-tip-box">
+            <span className="recovery-tip-icon" aria-hidden="true"><Icon name="bell" size={16} /></span>
+            <p className="muted">¿No lo encuentras? Revisa también la carpeta de <strong>correo no deseado (spam)</strong>.</p>
+          </div>
+        </div>
+        <div className="recovery-actions">
+          <button type="button" className="access-submit" onClick={() => switchMode('login')}>Iniciar sesión<Icon name="arrow" size={18} /></button>
+          <button type="button" className="secondary access-recovery-btn" onClick={() => switchMode('forgot')}><Icon name="arrowLeft" size={16} /><span>Usar otro correo</span></button>
+        </div>
       </section> : <>
       <p className="muted">{mode === 'login' ? 'Ingresa con las credenciales asignadas por la institución.' : mode === 'forgot' ? 'Enviaremos un enlace a tu correo institucional.' : 'Elige una contraseña nueva para proteger tu cuenta.'}</p>
       <form onSubmit={submit} key={mode}>

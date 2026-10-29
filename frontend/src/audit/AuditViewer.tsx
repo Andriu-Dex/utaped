@@ -68,8 +68,9 @@ export function AuditViewer({ targetDocId, onBack }: { targetDocId?: string; onB
       <p style={{ margin: 0, fontSize: '0.88rem' }}>La exportación incluye los resultados de los filtros aplicados, más allá de la página visible. Los valores con apariencia de fórmula se identifican como texto.</p>
       <button type="button" className="secondary" disabled={busy || exporting || !result?.total} onClick={() => void exportCsv()}>{exporting ? 'Exportando…' : 'Exportar CSV filtrado'}</button>
     </div>}
-    {error && <Toast message={error} />}{busy && <p role="status">Consultando registro…</p>}
-    {result && !busy && <>
+    {error && <Toast message={error} />}
+    {!result && busy && <p role="status">Consultando registro…</p>}
+    {result && <div className={'table-container-wrapper' + (busy ? ' is-searching' : '')} aria-busy={busy}>
       <p>{result.total} eventos · Página {result.page + 1}</p>
       <div className="table-scroll">
         <table className={targetDocId ? 'history-table' : undefined}>
@@ -87,6 +88,6 @@ export function AuditViewer({ targetDocId, onBack }: { targetDocId?: string; onB
         <button className="secondary" disabled={result.page === 0} onClick={() => setFilter(f => ({ ...f, page: f.page - 1 }))}>Eventos anteriores</button>
         <button className="secondary" disabled={(result.page + 1) * result.size >= result.total} onClick={() => setFilter(f => ({ ...f, page: f.page + 1 }))}>Eventos siguientes</button>
       </div>
-    </>}
+    </div>}
   </section>
 }

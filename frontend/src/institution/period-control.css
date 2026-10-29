@@ -45,5 +45,30 @@
   border-color: #1e3347;
 }
 
+.deadline-notices-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.period-dates-box {
+  margin: 18px 0;
+  padding: 16px;
+  background: var(--blue-100);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+:root[data-theme='dark'] .period-dates-box {
+  background: #102131;
+  border-color: #243c52;
+}
+
+:root[data-theme='dark'] .period-dates-box .eyebrow {
+  color: #75dec7 !important;
+}
+
 @media (max-width: 1050px) { .period-overview { grid-template-columns: 1fr; } }
 @media (max-width: 850px) { .period-assignments { grid-template-columns: 1fr; } }
