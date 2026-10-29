@@ -2,6 +2,7 @@ import { Toast } from '../shared/Toast'
 import { useEffect, useState } from 'react'
 import { api } from '../shared/api'
 import { ManagementOverview } from './ManagementOverview'
+import { PendingInbox } from './PendingInbox'
 import type { ReportingSummary } from './reportingTypes'
 import { Icon } from '../shared/Icon'
 import type { PlanOptions, PlanPage } from './types'
@@ -23,6 +24,7 @@ export function TrackingDashboard({ onOpen, onOpenReports }: { onOpen: (id: stri
   }, [filters, reload])
   function filter(key: 'groupId' | 'periodId', value: string) { setData(null); setFilters(f => ({ ...f, [key]: value })) }
   return <section className="management-home" aria-label="Seguimiento de mis documentos">
+    <PendingInbox onOpen={onOpen} />
     <header className="management-page-header"><div><span className="section-kicker">PANORAMA DOCUMENTAL</span><h2>Seguimiento de mis documentos</h2><p>El estado de tus documentos y los próximos compromisos.</p></div><button type="button" className="secondary" onClick={onOpenReports}><Icon name="document" size={17} />Ver reportes de gestión</button></header>
     <div className="management-filters"><label>Grupo del seguimiento<select value={filters.groupId} onChange={e => filter('groupId', e.target.value)}><option value="">Todos mis grupos</option>{options?.groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label><label>Período del seguimiento<select value={filters.periodId} onChange={e => filter('periodId', e.target.value)}><option value="">Todos los períodos</option>{options?.periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button className="secondary" type="button" onClick={() => { setData(null); setReload(n => n + 1) }}><Icon name="refresh" size={16} />Actualizar seguimiento</button></div>
     {error && <><Toast message={error} /><p className="field-help">No se pudo cargar el seguimiento. Vuelve a intentarlo con Actualizar seguimiento.</p></>}

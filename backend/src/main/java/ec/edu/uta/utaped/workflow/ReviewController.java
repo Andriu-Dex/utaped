@@ -21,6 +21,7 @@ public class ReviewController {
         @RequestParam(defaultValue="20") int size) { return service.inboxPage(p.getName(),query,status,documentType,page,size); }
     @GetMapping("/work-plans/{doc}/reviews") public List<Map<String,Object>> history(@PathVariable UUID doc,Principal p) { return service.history(doc,p.getName()); }
     @GetMapping("/reviews/{id}") public ReviewService.State state(@PathVariable UUID id,Principal p) { return service.state(id,p.getName()); }
+    @GetMapping("/reviews/{id}/comparison") public ResponseEntity<ReviewService.Comparison> comparison(@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.comparison(id,p.getName())); }
     @GetMapping("/reviews/{id}/pages/{page}") public ResponseEntity<byte[]> page(@PathVariable UUID id,@PathVariable int page,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG).body(service.page(id,page,p.getName())); }
     @GetMapping("/reviews/{id}/content") public ResponseEntity<byte[]> content(@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).body(service.content(id,p.getName())); }
     @PostMapping("/reviews/tasks/{id}/observations") public void observe(@PathVariable UUID id,@Valid @RequestBody ReviewService.Observation data,Principal p) { service.observe(id,p.getName(),data); }

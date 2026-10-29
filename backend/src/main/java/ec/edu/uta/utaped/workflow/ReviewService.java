@@ -28,6 +28,7 @@ public class ReviewService {
     public record Task(UUID id,UUID reviewId,UUID documentId,String title,String groupName,String periodName,String actorName,String stageLabel,String action,
         boolean requiresSignature,String status,long rowVersion,int roundNumber,int position) {}
     public record State(Map<String,Object> review,List<Map<String,Object>> tasks,List<Map<String,Object>> observations,int pageCount,String pdfHash,boolean canAct) {}
+    public record Comparison(UUID currentReviewId,int currentRound,UUID previousReviewId,Integer previousRound,List<SnapshotComparison.Change> changes) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final WorkPlanService plans;private final ArtifactService artifacts;
     private final StoredFiles files;private final AuditService audit;private final boolean allowHttp;
     private final JsonMapper json=JsonMapper.builder().build();private final Semaphore signing=new Semaphore(1);
@@ -113,6 +114,14 @@ public class ReviewService {
         return new State(record,tasks,observations,file.pageCount(),file.sha256(),canAct);
     }
     public List<Map<String,Object>> history(UUID doc,String email) { plans.get(doc,email);return jdbc.queryForList("SELECT id,round_number,status,created_at,closed_at FROM document_review WHERE work_plan_id=? ORDER BY round_number DESC",doc); }
+    @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public Comparison comparison(UUID review,String email) {
+        var current=authorized(review,email);UUID doc=(UUID)current.get("work_plan_id");int round=((Number)current.get("round_number")).intValue();
+        var earlier=jdbc.queryForList("SELECT id,artifact_id,round_number FROM document_review WHERE work_plan_id=? AND round_number<? ORDER BY round_number DESC LIMIT 1",doc,round);
+        if(earlier.isEmpty()) return new Comparison(review,round,null,null,List.of());
+        var previous=earlier.getFirst();authorized((UUID)previous.get("id"),email);
+        return new Comparison(review,round,(UUID)previous.get("id"),((Number)previous.get("round_number")).intValue(),SnapshotComparison.compare(frozen(doc,(UUID)previous.get("artifact_id")),frozen(doc,(UUID)current.get("artifact_id"))));
+    }
     public byte[] content(UUID review,String email) {
         var record=authorized(review,email);
         if(!record.get("status").equals("APPROVED")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La descarga final está disponible después de la aprobación.");

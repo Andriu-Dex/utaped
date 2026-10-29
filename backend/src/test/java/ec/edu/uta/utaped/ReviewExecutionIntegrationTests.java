@@ -23,8 +23,59 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
     @Autowired ec.edu.uta.utaped.planning.BusinessCalendar calendar;
     @Autowired ec.edu.uta.utaped.planning.PreparationExtensionService extensions;
+    @Autowired ec.edu.uta.utaped.planning.PendingWorkService pendingWork;
     @Autowired ec.edu.uta.utaped.planning.ExecutionReportService executions;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void personalPendingWorkFollowsAssignmentsCorrectionsAndOwnSignatureTurn() throws Exception {
+        UUID review=submit(false);
+        assertEquals(1,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertEquals(0,pendingWork.get(approverEmail,true,"REVIEW",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"REVIEW",0,10).total());
+        assertNull(reviews.comparison(review,email).previousRound());
+        var task=reviews.inbox(reviewerEmail).getFirst();
+        reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Precise el objetivo",UUID.randomUUID()));
+        assertEquals(0,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertEquals(1,pendingWork.get(email,true,"CORRECTION",0,10).total());
+        var prepared=artifacts.generate(id,email,new Generate(version()));
+        assertEquals(1,pendingWork.get(email,true,"SIGNATURE",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"SIGNATURE",1,10).items().size());
+        var originalEnd=jdbc.queryForObject("SELECT preparation_ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,period);
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil")).minusDays(1),period);
+        assertEquals("Consultar requisitos",pendingWork.get(email,true,"SIGNATURE",0,10).items().getFirst().action());
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",originalEnd,period);
+        var signing=signatures.state(id,prepared.id(),email,true);var fixture=signingFixture();
+        signatures.sign(id,prepared.id(),email,version(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        assertEquals(0,pendingWork.get(email,true,"CORRECTION",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"SIGNATURE",0,10).total());
+        assertEquals(1,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertThrows(ResponseStatusException.class,()->pendingWork.get(email,true,"UNKNOWN",0,10));
+    }
+    @Test void comparisonUsesOnlyPreviousConservedRoundAndKeepsSignedBytes() throws Exception {
+        UUID first=submit(false);var oldState=reviews.state(first,email);UUID oldFile=(UUID)oldState.review().get("current_file_id");byte[] original=files.read(oldFile);
+        var task=reviews.inbox(reviewerEmail).getFirst();reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Actualizar justificación",UUID.randomUUID()));
+        var source=plans.get(id,email);plans.update(id,email,new ec.edu.uta.utaped.planning.WorkPlanModels.Update(version(),source.title(),source.institutionalUnit(),source.career(),"Justificación corregida para segunda ronda",source.objective()));
+        var artifact=artifacts.generate(id,email,new Generate(version()));var state=signatures.state(id,artifact.id(),email,true);var fixture=signingFixture();
+        signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        UUID second=reviews.inbox(reviewerEmail).stream().filter(t->t.status().equals("ACTIVE")).findFirst().orElseThrow().reviewId();
+        var compared=reviews.comparison(second,reviewerEmail);assertEquals(first,compared.previousReviewId());assertEquals(1,compared.previousRound());assertEquals(2,compared.currentRound());
+        var change=compared.changes().stream().filter(c->c.section().equals("Justificación")).findFirst().orElseThrow();assertEquals(source.justification(),change.before());assertEquals("Justificación corregida para segunda ronda",change.after());
+        assertArrayEquals(original,files.read(oldFile));assertEquals(oldState.pdfHash(),reviews.state(first,email).pdfHash());
+        String stranger="pending-stranger@example.invalid";jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Ajeno','unused','USER',false)",UUID.randomUUID(),stranger);
+        assertEquals(0,pendingWork.get(stranger,true,"",0,10).total());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->reviews.comparison(second,stranger)).getStatusCode().value());
+    }
+    @Test void personalEvidencePendingDisappearsWhenCoveredAndRespectsPeriodClosure() throws Exception {
+        UUID review=submit(false);approve(review);
+        var pending=pendingWork.get(email,true,"EVIDENCE",0,10);assertEquals(1,pending.total());
+        assertEquals(0,pendingWork.get(reviewerEmail,true,"EVIDENCE",0,10).total());
+        var activity=activities.get(id,email).activities().getFirst();
+        jdbc.update("INSERT INTO deadline_extension(work_plan_id,activity_id,user_id,ends_on,reason,granted_by) VALUES (?,?,?,?,'Prórroga de prueba',?)",id,activity.id(),user,activity.endsOn().plusDays(1),user);
+        assertEquals(activity.endsOn().plusDays(1),pendingWork.get(email,true,"EVIDENCE",0,10).items().getFirst().deadline());
+        evidence.upload(id,activity.id(),0,0,email,new org.springframework.mock.web.MockMultipartFile("file","evidencia.pdf","application/pdf",pdf(1,false,false)));
+        assertEquals(0,pendingWork.get(email,true,"EVIDENCE",0,10).total());
+        jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);
+        assertEquals(0,pendingWork.get(email,true,"",0,10).total());
+    }
     @Test void reportCreationOptionsRequireApprovedAccessiblePlansAndPreserveExistingNames() throws Exception {
         UUID review=submit(false);assertEquals(0,reports.options(email,"",0,20).total());approve(review);
         var source=plans.get(id,email);String originalHash=reviews.state(review,email).pdfHash();
@@ -201,6 +252,8 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             var first=signatures.list(id,artifact.id(),email).getFirst();byte[] signedBefore=signatures.content(id,first.id(),email);
             var coauthorCert=signingFixture();coauthorFixture=coauthorCert;bindings.register(coauthor,email,new CertificateBindings.Register(fingerprint(coauthorCert),true,"Identidad de coautor de prueba",null));
             var next=signatures.state(id,artifact.id(),coauthorEmail,true);assertTrue(next.signingEnabled(),next.signingBlockers().toString());
+            assertEquals(1,pendingWork.get(coauthorEmail,true,"SIGNATURE",0,10).total());
+            assertEquals(0,pendingWork.get(email,true,"SIGNATURE",0,10).total());
             var signed=signatures.sign(id,artifact.id(),coauthorEmail,version(),next.preparation().pdfHash(),UUID.randomUUID(),signingBody(coauthorCert,"Test-only-signing-password"),true);
             byte[] cumulative=signatures.content(id,signed.id(),email);assertArrayEquals(signedBefore,Arrays.copyOf(cumulative,signedBefore.length));
             try(var parsed=org.apache.pdfbox.Loader.loadPDF(cumulative)) { assertEquals(2,parsed.getSignatureDictionaries().size()); }
