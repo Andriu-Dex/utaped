@@ -180,3 +180,97 @@
   box-shadow: 0 12px 38px rgba(0, 0, 0, 0.6);
   outline: 1px solid #2d4560;
 }
+
+/* Observation card actions and editing states */
+.observation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.observation-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.observation-meta strong {
+  margin-bottom: 0;
+}
+.observation-badge-edited {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: rgba(224, 159, 26, 0.14);
+  color: #9c6800;
+  border: 1px solid rgba(224, 159, 26, 0.35);
+}
+.observation-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.observation-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.observation-action-btn:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--blue-700);
+  border-color: var(--border);
+}
+.observation-action-btn.is-danger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.08);
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.25);
+}
+.observation-card.is-editing {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 2px rgba(23, 95, 148, 0.25);
+  background: var(--surface);
+}
+.observation-form-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+:root[data-theme='dark'] .observation-badge-edited {
+  background: rgba(224, 159, 26, 0.2);
+  color: #f5c46b;
+  border-color: rgba(224, 159, 26, 0.4);
+}
+:root[data-theme='dark'] .observation-action-btn {
+  color: #9ab4c7;
+}
+:root[data-theme='dark'] .observation-action-btn:hover:not(:disabled) {
+  background: #172b3e;
+  color: #6cb8f6;
+  border-color: #2b455c;
+}
+:root[data-theme='dark'] .observation-action-btn.is-danger:hover:not(:disabled) {
+  background: rgba(235, 87, 87, 0.15);
+  color: #ff8585;
+  border-color: rgba(235, 87, 87, 0.35);
+}
+:root[data-theme='dark'] .observation-card.is-editing {
+  border-color: #4092d6;
+  box-shadow: 0 0 0 2px rgba(64, 146, 214, 0.3);
+  background: #13273a;
+}

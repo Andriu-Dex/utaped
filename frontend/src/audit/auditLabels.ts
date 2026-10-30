@@ -5,7 +5,7 @@ export const auditActionLabels: Record<string, string> = {
   PERIOD_WORKFLOW_ASSIGNED: 'Flujo asignado al ámbito', PERIOD_WORKFLOWS_ACTIVATED: 'Flujos del período activados', PERIOD_CLOSED: 'Período cerrado sin purga', PERIOD_ARCHIVE_DOWNLOADED: 'Archivo histórico autorizado descargado',
   T1_ARTIFACT_SIGNED: 'Artefacto T1 firmado', SIGNING_CERTIFICATE_BOUND: 'Certificado público vinculado', SIGNING_CERTIFICATE_UNBOUND: 'Certificado público desvinculado',
   T2_ARTIFACT_SIGNED: 'Informe T2 firmado', T2_PREVIEW_GENERATED: 'Previsualización T2 generada', REPORT_CREATED: 'Informe creado', REPORT_DRAFT_SAVED: 'Informe guardado',
-  REVIEW_TASK_ASSIGNED: 'Revisión asignada', REVIEW_OBSERVATION_ADDED: 'Observación registrada', DOCUMENT_RETURNED: 'Documento devuelto', DOCUMENT_APPROVED: 'Documento aprobado', REVIEW_TASK_COMPLETED: 'Etapa completada',
+  REVIEW_TASK_ASSIGNED: 'Revisión asignada', REVIEW_OBSERVATION_ADDED: 'Observación registrada', REVIEW_OBSERVATION_UPDATED: 'Observación actualizada', REVIEW_OBSERVATION_DELETED: 'Observación retirada', DOCUMENT_RETURNED: 'Documento devuelto', DOCUMENT_APPROVED: 'Documento aprobado', REVIEW_TASK_COMPLETED: 'Etapa completada',
   EXECUTION_EVIDENCE_UPLOADED: 'Evidencia registrada', ACTIVITY_EXTENSION_GRANTED: 'Prórroga individual concedida', DOCUMENT_ARCHIVED: 'Documento archivado', DOCUMENT_FORMAL_VERSION_CREATED: 'Versión formal creada',
   CAREER_CREATED: 'Carrera creada', SCOPE_CREATED: 'Ámbito creado', SCOPE_MEMBERSHIP_UPDATED: 'Integrante del ámbito actualizado', SCOPE_PRINCIPAL_DESIGNATED: 'Responsable principal designado',
   AUDIT_EXPORTED: 'Auditoría exportada',

@@ -7,13 +7,14 @@ import { Icon } from '../shared/Icon'
 import { Toast } from '../shared/Toast'
 import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import { RoundComparison } from './RoundComparison'
+import { displayStageLabel } from './workflowLabels'
 import './review.css'
 
-type Task = { id: string; reviewId: string; documentId: string; title: string; groupName: string; periodName: string; stageLabel: string; requiresSignature: boolean; status: string; roundNumber: number }
+type Task = { id: string; reviewId: string; documentId: string; title: string; groupName: string; periodName: string; stageLabel: string; action?: string; requiresSignature: boolean; status: string; roundNumber: number }
 type Inbox = { items: Task[]; total: number; page: number; size: number; metrics: { active: number; completed: number; returned: number } }
-type Stage = { id: string; actor_id: string; actor_name: string; stage_label: string; requires_signature: boolean; status: string; row_version: number }
+type Stage = { id: string; actor_id: string; actor_name: string; stage_label: string; stage_action?: string; display_stage_label?: string; requires_signature: boolean; status: string; row_version: number }
 type Region = { x: number; y: number; width: number; height: number }
-type Observation = { id: string; actor_name: string; message: string; page_index: number | null; x: number | null; y: number | null; width: number | null; height: number | null }
+type Observation = { id: string; task_id?: string; actor_id?: string; actor_name: string; message: string; page_index: number | null; x: number | null; y: number | null; width: number | null; height: number | null; created_at?: string; updated_at?: string | null; can_edit?: boolean; can_delete?: boolean }
 type ReviewState = { review: { id: string; status: string; round_number: number }; tasks: Stage[]; observations: Observation[]; pageCount: number; pdfHash: string; canAct: boolean }
 const labels: Record<string, string> = { ACTIVE: 'Tu turno', PENDING: 'Pendiente', COMPLETED: 'Completada', RETURNED: 'Devuelta', CANCELLED: 'Cancelada', IN_REVIEW: 'En revisión', APPROVED: 'Aprobado' }
 
@@ -34,7 +35,7 @@ export function ReviewWorkspace({ accountId, onDirtyChange }: { accountId: strin
       <form className="review-filters" onSubmit={e => { e.preventDefault(); setSearch(query.trim()); setPage(0) }}><label className="review-search">Buscar documento, ámbito o período<div><Icon name="search" size={18} /><input maxLength={200} value={query} placeholder="Título, comisión, período…" onChange={e => setQuery(e.target.value)} /><button className="secondary">Buscar</button></div></label><label>Estado de la tarea<select value={status} onChange={e => { setStatus(e.target.value); setPage(0) }}><option value="">Todos los estados</option><option value="ACTIVE">Tu turno</option><option value="COMPLETED">Completada</option><option value="RETURNED">Devuelta</option></select></label><label>Tipo de documento<select value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(0) }}><option value="">Todos los tipos</option><option value="T1">Plan de Trabajo · T1</option><option value="T2">Informe final · T2</option><option value="T3">Informe de ejecución · T3</option></select></label></form>
       <div className="review-list-heading"><span role="status">{loading ? 'Cargando tareas…' : inbox ? inbox.total + ' tareas encontradas' : 'Bandeja no disponible'}</span>{(search || status || documentType) && <button type="button" className="link" onClick={() => { setQuery(''); setSearch(''); setStatus(''); setDocumentType(''); setPage(0) }}>Limpiar filtros</button>}<button type="button" className="secondary" title="Actualizar bandeja" aria-label="Actualizar bandeja" disabled={loading} onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}><Icon name="refresh" size={16} /></button></div>
       {!loading && !inbox && <button type="button" className="secondary" onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}>Reintentar</button>}
-      {inbox && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{t.stageLabel}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => setSelected(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
+      {inbox && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{displayStageLabel(t.stageLabel, t.action)}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => setSelected(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
       <div className="review-inbox-pagination"><label>Tareas por página<select value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0) }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label><span>{inbox && !loading ? (inbox.total ? page * size + 1 : 0) + '–' + Math.min((page + 1) * size, inbox.total) + ' de ' + inbox.total : '—'}</span><button type="button" className="secondary" disabled={loading || page === 0} onClick={() => setPage(p => p - 1)}>Página anterior</button><button type="button" className="secondary" disabled={loading || !inbox || (page + 1) * size >= inbox.total} onClick={() => setPage(p => p + 1)}>Página siguiente</button></div>
     </section>
   </section>
@@ -50,7 +51,37 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
   const [loading, setLoading] = useState(true), [loadFailed, setLoadFailed] = useState(false)
   const task = !loading && state?.canAct ? state.tasks.find(t => t.actor_id === accountId && t.status === 'ACTIVE') : undefined
   const closedTask = !loading && state && !state.canAct && state.tasks.some(t => t.actor_id === accountId && t.status === 'ACTIVE')
-  const dirty = busy || !!message.trim() || !!region || signingDirty
+  const [editingObservation, setEditingObservation] = useState<Observation | null>(null)
+  const [hasPageOnly, setHasPageOnly] = useState(false)
+  const [associatedPage, setAssociatedPage] = useState<number | null>(null)
+  const [baselineMessage, setBaselineMessage] = useState('')
+  const [baselineRegion, setBaselineRegion] = useState<Region | null>(null)
+  const [baselinePage, setBaselinePage] = useState<number | null>(null)
+  const [editSignal, setEditSignal] = useState<string | undefined>(undefined)
+  const editSignalSeq = useRef(0)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const currentProposedPageIndex = region ? (associatedPage ?? page) : hasPageOnly ? associatedPage : null
+  const isMessageDirty = editingObservation ? message !== baselineMessage : !!message.trim()
+  const isPageDirty = editingObservation ? currentProposedPageIndex !== baselinePage : false
+  const isRegionDirty = editingObservation
+    ? (
+        (region === null && baselineRegion !== null) ||
+        (region !== null && baselineRegion === null) ||
+        (region !== null && baselineRegion !== null && (
+          region.x !== baselineRegion.x ||
+          region.y !== baselineRegion.y ||
+          region.width !== baselineRegion.width ||
+          region.height !== baselineRegion.height
+        ))
+      )
+    : !!region
+
+  const isFormDirty = editingObservation
+    ? (isMessageDirty || isPageDirty || isRegionDirty)
+    : (!!message.trim() || !!region || hasPageOnly)
+
+  const dirty = busy || signingDirty || isFormDirty
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   useEffect(() => { const leave = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }; window.addEventListener('beforeunload', leave); return () => window.removeEventListener('beforeunload', leave) }, [dirty])
   useEffect(() => {
@@ -68,16 +99,122 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
   function point(event: PointerEvent<HTMLDivElement>) { const b = event.currentTarget.getBoundingClientRect(); return { x: Math.max(0, Math.min(1, (event.clientX - b.left) / b.width)), y: Math.max(0, Math.min(1, (event.clientY - b.top) / b.height)) } }
   function begin(event: PointerEvent<HTMLDivElement>) { if (!task || busy || loadedImage !== id + '-' + page + '-' + reload || event.button !== 0) return; anchor.current = point(event); event.currentTarget.setPointerCapture(event.pointerId); setRegion(null) }
   function move(event: PointerEvent<HTMLDivElement>) { if (!anchor.current) return; const p = point(event), a = anchor.current; setRegion({ x: Math.min(p.x, a.x), y: Math.min(p.y, a.y), width: Math.abs(p.x - a.x), height: Math.abs(p.y - a.y) }) }
-  function finish() { anchor.current = null; setRegion(r => r && r.width > .005 && r.height > .005 ? r : null) }
+  function finish() {
+    anchor.current = null
+    setRegion(r => {
+      if (r && r.width > .005 && r.height > .005) {
+        setAssociatedPage(page)
+        setHasPageOnly(false)
+        return r
+      }
+      return null
+    })
+  }
+  async function cancelObservationForm(force = false) {
+    if (!force && isFormDirty) {
+      if (!(await confirmAction('Hay cambios sin guardar en la observación. ¿Descartarlos y cancelar?'))) return false
+    }
+    setEditingObservation(null)
+    setMessage('')
+    setRegion(null)
+    setHasPageOnly(false)
+    setAssociatedPage(null)
+    setBaselineMessage('')
+    setBaselineRegion(null)
+    setBaselinePage(null)
+    setEditSignal(undefined)
+    return true
+  }
+  async function startEdit(o: Observation) {
+    if (busy) return
+    if (isFormDirty) {
+      if (!(await confirmAction('Hay cambios sin guardar en la observación actual. ¿Descartarlos para editar esta observación?'))) return
+    }
+    setEditingObservation(o)
+    setMessage(o.message)
+    setBaselineMessage(o.message)
+    if (o.page_index !== null) {
+      setPage(o.page_index)
+      setAssociatedPage(o.page_index)
+      setBaselinePage(o.page_index)
+      if (o.x !== null && o.y !== null && o.width !== null && o.height !== null) {
+        const r = { x: o.x, y: o.y, width: o.width, height: o.height }
+        setRegion(r)
+        setBaselineRegion(r)
+        setHasPageOnly(false)
+      } else {
+        setRegion(null)
+        setBaselineRegion(null)
+        setHasPageOnly(true)
+      }
+    } else {
+      setAssociatedPage(null)
+      setBaselinePage(null)
+      setRegion(null)
+      setBaselineRegion(null)
+      setHasPageOnly(false)
+    }
+    setEditSignal('edit-' + o.id + '-' + (++editSignalSeq.current))
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 50)
+  }
+  async function removeObservation(o: Observation) {
+    if (!task) return
+    if (!(await confirmAction('¿Eliminar esta observación?'))) return
+    setBusy(true); setError('')
+    try {
+      await api('/reviews/tasks/' + task.id + '/observations/' + o.id + '?' + new URLSearchParams({ rowVersion: String(task.row_version) }), 'DELETE')
+      if (editingObservation?.id === o.id) {
+        await cancelObservationForm(true)
+      }
+      setNotice('Observación eliminada.')
+      setReload(r => r + 1)
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo eliminar la observación.') } finally { setBusy(false) }
+  }
   async function observe(event: FormEvent) {
     event.preventDefault(); if (!task) return; setBusy(true); setError('')
-    try { await api('/reviews/tasks/' + task.id + '/observations', 'POST', { rowVersion: task.row_version, message, pageIndex: region ? page : null, ...(region ?? { x: null, y: null, width: null, height: null }) }); setMessage(''); setRegion(null); setNotice('Observación guardada en esta ronda.'); setReload(r => r + 1) }
+    try {
+      const pageIndex = region ? (associatedPage ?? page) : hasPageOnly ? associatedPage : null
+      const coords = region ? { x: region.x, y: region.y, width: region.width, height: region.height } : { x: null, y: null, width: null, height: null }
+      if (editingObservation) {
+        await api('/reviews/tasks/' + task.id + '/observations/' + editingObservation.id, 'PUT', {
+          rowVersion: task.row_version,
+          message: message.trim(),
+          pageIndex,
+          ...coords
+        })
+        await cancelObservationForm(true)
+        setNotice('Observación actualizada.')
+      } else {
+        await api('/reviews/tasks/' + task.id + '/observations', 'POST', {
+          rowVersion: task.row_version,
+          message: message.trim(),
+          pageIndex,
+          ...coords
+        })
+        await cancelObservationForm(true)
+        setNotice('Observación guardada en esta ronda.')
+      }
+      setReload(r => r + 1)
+    }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.') } finally { setBusy(false) }
   }
   async function decide(action: 'COMPLETE' | 'RETURN') {
+    if (isFormDirty) {
+      if (!(await confirmAction('Hay cambios sin guardar en la observación actual. ¿Descartarlos para continuar con la decisión?'))) return
+      await cancelObservationForm(true)
+    }
     if (!task || !(await confirmAction(action === 'RETURN' ? '¿Devolver el documento con estas observaciones?' + (signingDirty ? ' Se descartará la preparación de firma pendiente.' : '') : '¿Completar tu etapa y continuar el flujo?'))) return
     setBusy(true); setError('')
-    try { await api('/reviews/tasks/' + task.id + '/decisions', 'POST', { rowVersion: task.row_version, action, message: action === 'RETURN' ? message : '', requestKey }); setMessage(''); setRegion(null); setSigningDirty(false); setNotice(action === 'RETURN' ? 'Documento devuelto para corrección.' : 'Etapa completada.'); setReload(r => r + 1) }
+    try {
+      const returnMessage = editingObservation ? '' : message.trim()
+      await api('/reviews/tasks/' + task.id + '/decisions', 'POST', { rowVersion: task.row_version, action, message: action === 'RETURN' ? returnMessage : '', requestKey })
+      await cancelObservationForm(true)
+      setSigningDirty(false)
+      setNotice(action === 'RETURN' ? 'Documento devuelto para corrección.' : 'Etapa completada.')
+      setReload(r => r + 1)
+    }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo registrar la decisión.') } finally { setBusy(false) }
   }
   const signingContext = useRef({ active: false })
@@ -113,9 +250,170 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
     <div className="review-layout"><section className="card review-document"><DocumentPageNavigator page={page} pageCount={state.pageCount} disabled={busy} onChange={changePage} references={state.observations.filter(observation => observation.page_index !== null).map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))} />{task && <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>}{imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}
       {!imageError && loadedImage !== id + '-' + page + '-' + reload && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className="document-reading-desk"><div className={'review-page ' + (task ? 'review-page-selectable' : '')} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={() => { anchor.current = null; setRegion(null) }}><img key={id + '-' + page + '-' + reload} draggable={false} src={'/api/reviews/' + id + '/pages/' + page + '?v=' + reload} alt={'Página ' + (page + 1) + ' del documento firmado'} onError={() => setImageError(true)} onLoad={() => { setImageError(false); setLoadedImage(id + '-' + page + '-' + reload) }} />{state.observations.filter(o => o.page_index === page && o.x !== null).map(o => <span className="review-highlight" key={o.id} title={o.message} style={{ left: o.x! * 100 + '%', top: o.y! * 100 + '%', width: o.width! * 100 + '%' , height: o.height! * 100 + '%' }} />)}{region && <span className="review-highlight review-selection" style={{ left: region.x * 100 + '%', top: region.y * 100 + '%', width: region.width * 100 + '%', height: region.height * 100 + '%' }} />}</div></div><button type="button" className="link" onClick={() => { setImageError(false); setReload(r => r + 1) }}>Recargar página</button></section>
-      <aside className="review-side"><section className="card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">RUTA DE VALIDACIÓN</span><h2>Etapas</h2></div></div><ol className="review-stages">{state.tasks.map(t => <li key={t.id}><strong>{t.stage_label}</strong><span>{t.actor_name}</span><small>{labels[t.status]}</small></li>)}</ol></section>
-      {task && <section className="card"><h2>Tu decisión</h2><ActionForm label="Agregar observación" dirty={!!message.trim() || !!region} disabled={busy} openSignal={region ? 'region' : undefined} onCancel={() => { setMessage(''); setRegion(null) }}><form onSubmit={observe}><fieldset disabled={busy}><label>Observación<textarea required maxLength={4000} rows={5} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe la corrección necesaria…" /></label>{region && <p className="field-help">Zona seleccionada en página {page + 1}. <button type="button" className="link" onClick={() => setRegion(null)}>Quitar resaltado</button></p>}<button disabled={!message.trim()}>Guardar observación</button></fieldset></form></ActionForm>{state.observations.length > 0 && <p className="field-help">Hay observaciones en esta ronda. Devuelva el documento para que se corrijan; podrá aprobarlo en una nueva ronda.</p>}<div className="review-actions">{!task.requires_signature && <button type="button" disabled={busy || !!message.trim() || !!region || state.observations.length > 0} onClick={() => decide('COMPLETE')}>Completar etapa</button>}<button type="button" className="secondary" disabled={busy || !!region} onClick={() => decide('RETURN')}>Devolver para corrección</button></div>{task.requires_signature && <ActionForm label="Preparar firma de revisión" dirty={signingDirty} onCancel={() => setSigningDirty(false)} disabled={busy || !!message.trim() || !!region || state.observations.length > 0}><form onChangeCapture={() => setSigningDirty(true)} onResetCapture={() => setSigningDirty(false)} onSubmit={sign}><fieldset disabled={busy || !!message.trim() || !!region}><label>Certificado personal (.p12/.pfx)<input name="certificate" type="file" accept=".p12,.pfx" required /></label><label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label><button>Firmar y completar etapa</button><p className="field-help">Certificado y contraseña se usan solo en esta operación. Se comprueban la vigencia del certificado y la integridad del PDF.</p></fieldset></form></ActionForm>}</section>}
-      <section className="card"><h2>Observaciones de la ronda</h2>{state.observations.length === 0 ? <p className="muted">Aún no hay observaciones registradas.</p> : <ul className="review-observations">{state.observations.map(o => <li key={o.id}><strong>{o.actor_name}</strong><p>{o.message}</p>{o.page_index !== null && <button type="button" className="link" onClick={() => changePage(o.page_index!)}>Ver página {o.page_index + 1}</button>}</li>)}</ul>}</section></aside>
+      <aside className="review-side"><section className="card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">RUTA DE VALIDACIÓN</span><h2>Etapas</h2></div></div><ol className="review-stages">{state.tasks.map(t => <li key={t.id}><strong>{displayStageLabel(t.stage_label, t.stage_action)}</strong><span>{t.actor_name}</span><small>{labels[t.status]}</small></li>)}</ol></section>
+      {task && <section className="card"><h2>Tu decisión</h2>
+        <ActionForm
+          label={editingObservation ? 'Editar observación' : 'Agregar observación'}
+          dirty={isFormDirty}
+          disabled={busy}
+          openSignal={editSignal ?? (region ? 'region' : undefined)}
+          onCancel={() => void cancelObservationForm(true)}
+        >
+          <form onSubmit={observe}>
+            <fieldset disabled={busy}>
+              <label>Observación
+                <textarea
+                  ref={textareaRef}
+                  required
+                  maxLength={4000}
+                  rows={5}
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Describe la corrección necesaria…"
+                />
+              </label>
+              {region ? (
+                <p className="field-help">
+                  Zona seleccionada en página {(associatedPage ?? page) + 1}.{' '}
+                  <button type="button" className="link" onClick={() => { setRegion(null); setHasPageOnly(true) }}>
+                    Quitar resaltado (conservar página)
+                  </button>{' '}
+                  ·{' '}
+                  <button type="button" className="link" onClick={() => { setRegion(null); setHasPageOnly(false); setAssociatedPage(null) }}>
+                    Convertir en observación general
+                  </button>
+                </p>
+              ) : hasPageOnly ? (
+                <p className="field-help">
+                  Asociada a página {(associatedPage ?? page) + 1} (sin zona seleccionada).{' '}
+                  {associatedPage !== null && page !== associatedPage && (
+                    <>
+                      <button type="button" className="link" onClick={() => setAssociatedPage(page)}>
+                        Asociar a página actual ({page + 1})
+                      </button>{' '}
+                      ·{' '}
+                    </>
+                  )}
+                  <button type="button" className="link" onClick={() => { setHasPageOnly(false); setAssociatedPage(null) }}>
+                    Convertir en observación general
+                  </button>
+                </p>
+              ) : (
+                <p className="field-help">
+                  Observación general (sin página ni zona). Arrastra sobre el documento si deseas marcar un área.
+                </p>
+              )}
+              <div className="observation-form-buttons">
+                <button type="submit" disabled={!message.trim() || (editingObservation ? !isFormDirty : false)}>
+                  {editingObservation ? 'Guardar cambios' : 'Guardar observación'}
+                </button>
+                {editingObservation && (
+                  <button type="button" className="secondary" onClick={() => void cancelObservationForm()}>
+                    Cancelar edición
+                  </button>
+                )}
+              </div>
+            </fieldset>
+          </form>
+        </ActionForm>
+        {state.observations.length > 0 && <p className="field-help">Hay observaciones en esta ronda. Devuelva el documento para que se corrijan; podrá aprobarlo en una nueva ronda.</p>}
+        <div className="review-actions">
+          {!task.requires_signature && (
+            <button
+              type="button"
+              disabled={busy || isFormDirty || state.observations.length > 0}
+              onClick={() => decide('COMPLETE')}
+            >
+              Completar etapa
+            </button>
+          )}
+          <button
+            type="button"
+            className="secondary"
+            disabled={busy || isFormDirty}
+            onClick={() => decide('RETURN')}
+          >
+            Devolver para corrección
+          </button>
+        </div>
+        {task.requires_signature && (
+          <ActionForm
+            label="Preparar firma de revisión"
+            dirty={signingDirty}
+            onCancel={() => setSigningDirty(false)}
+            disabled={busy || isFormDirty || state.observations.length > 0}
+          >
+            <form onChangeCapture={() => setSigningDirty(true)} onResetCapture={() => setSigningDirty(false)} onSubmit={sign}>
+              <fieldset disabled={busy || isFormDirty}>
+                <label>Certificado personal (.p12/.pfx)<input name="certificate" type="file" accept=".p12,.pfx" required /></label>
+                <label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label>
+                <button>Firmar y completar etapa</button>
+                <p className="field-help">Certificado y contraseña se usan solo en esta operación. Se comprueban la vigencia del certificado y la integridad del PDF.</p>
+              </fieldset>
+            </form>
+          </ActionForm>
+        )}
+      </section>}
+      <section className="card">
+        <h2>Observaciones de la ronda</h2>
+        {state.observations.length === 0 ? (
+          <p className="muted">Aún no hay observaciones registradas.</p>
+        ) : (
+          <ul className="review-observations">
+            {state.observations.map(o => (
+              <li
+                key={o.id}
+                className={'observation-card' + (editingObservation?.id === o.id ? ' is-editing' : '')}
+              >
+                <div className="observation-header">
+                  <div className="observation-meta">
+                    <strong>{o.actor_name}</strong>
+                    {o.updated_at && (
+                      <span className="observation-badge-edited" title="Observación editada">
+                        Editada
+                      </span>
+                    )}
+                  </div>
+                  {(o.can_edit || o.can_delete) && (
+                    <div className="observation-actions">
+                      {o.can_edit && (
+                        <button
+                          type="button"
+                          className="observation-action-btn"
+                          disabled={busy}
+                          onClick={() => startEdit(o)}
+                          title="Editar observación"
+                          aria-label="Editar observación"
+                        >
+                          <Icon name="edit" size={14} />
+                        </button>
+                      )}
+                      {o.can_delete && (
+                        <button
+                          type="button"
+                          className="observation-action-btn is-danger"
+                          disabled={busy}
+                          onClick={() => removeObservation(o)}
+                          title="Eliminar observación"
+                          aria-label="Eliminar observación"
+                        >
+                          <Icon name="trash" size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <p className="observation-message">{o.message}</p>
+                {o.page_index !== null && (
+                  <button type="button" className="link" onClick={() => changePage(o.page_index!)}>
+                    Ver página {o.page_index + 1}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section></aside>
     </div></>}
   </section>
 }

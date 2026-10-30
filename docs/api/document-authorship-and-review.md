@@ -32,7 +32,14 @@ Los flujos admiten positionLabel opcional (máximo 160 caracteres), capturado co
 
 ## Observaciones de revisión
 
-Una observación persistida de la ronda impide COMPLETE y firma/completado de etapa, mediante validación del servidor. La UI también deshabilita estas acciones. La devolución exige una observación y abre corrección/nueva ronda. No se bloquea una nueva ronda por observaciones de rondas anteriores. No se añade una operación silenciosa para borrar o marcar resuelta una observación: la corrección formal continúa mediante devolución.
+Una observación vigente de la ronda impide COMPLETE y firma/completado de etapa, mediante validación del servidor y comprobación en UI. La devolución (RETURN) exige al menos una observación vigente o un mensaje explícito, abriendo una nueva ronda de corrección. No se bloquea una nueva ronda por observaciones de rondas anteriores ni se permite «marcar resuelta» como atajo de aprobación.
+
+Se habilitan la actualización y el retiro explícito de observaciones propias mientras la etapa asignada esté ACTIVE y la ronda permanezca IN_REVIEW:
+- `PUT /api/reviews/tasks/{taskId}/observations/{observationId}`: actualiza el texto y opcionalmente la geometría/página manteniendo la identidad original y versionamiento por `rowVersion`. Registra evento de auditoría `REVIEW_OBSERVATION_UPDATED` e historial en `review_observation_history`.
+- `DELETE /api/reviews/tasks/{taskId}/observations/{observationId}?rowVersion={rowVersion}`: retiro lógico (establece `deleted_at` y `deleted_by`), desvincula la nota como bloqueador de aprobación o justificación de devolución, registra evento `REVIEW_OBSERVATION_DELETED` e historial de retiro en `review_observation_history`.
+- Preservación estricta de asociación de página: navegar entre páginas del PDF no altera la página vinculada a la observación salvo acción explícita del usuario («Asociar a página actual» o trazado de nueva zona). Convertir a observación general activa la detección de cambios pendientes (`isFormDirty`) y «Cancelar edición» solicita confirmación previa con salvaguarda de datos antes de descartar cambios.
+- Archivo y custodia institucional: los registros de `review_observation_history` se incorporan dentro del manifiesto histórico de cada documento (`documents/{id}/manifest.json`) en el ZIP de custodia del período antes de cualquier purga.
+- Normalización de presentación: las etiquetas heredadas exactas «Revisión de ejemplo» (REVIEW) y «Aprobación de ejemplo» (APPROVE) se presentan dinámicamente como «Revisión documental» y «Aprobación del documento», preservando intactos los registros históricos persistidos.
 
 ## Documento institucional
 

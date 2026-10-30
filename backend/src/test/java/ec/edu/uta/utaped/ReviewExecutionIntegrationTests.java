@@ -628,4 +628,192 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         boolean found=false;try(var zip=new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(periodArchives.custody(period,email)))) {java.util.zip.ZipEntry entry;while((entry=zip.getNextEntry())!=null) {byte[] bytes=zip.readAllBytes();if(entry.getName().equals("documents/"+id+"/manifest.json")) {String manifest=new String(bytes,java.nio.charset.StandardCharsets.UTF_8);assertTrue(manifest.contains(first.externalUrl()));assertTrue(manifest.contains(second.externalUrl()));found=true;}}}assertTrue(found);
         assertEquals(404,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,new ec.edu.uta.utaped.planning.EvidenceService.Reference(2,"Acta","https://example.invalid/acta"))).getStatusCode().value());
     }
+    @Test void editableObservationsLifecycleAndAudit() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+        long v0 = task.rowVersion();
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(v0, "Observación inicial", 0, 0.1, 0.2, 0.3, 0.4));
+        var stateAfterAdd = reviews.state(review, reviewerEmail);
+        assertEquals(1, stateAfterAdd.observations().size());
+        var obs = stateAfterAdd.observations().getFirst();
+        UUID obsId = (UUID) obs.get("id");
+        assertEquals("Observación inicial", obs.get("message"));
+        assertNull(obs.get("updated_at"));
+        assertTrue((boolean) obs.get("can_edit"));
+        assertTrue((boolean) obs.get("can_delete"));
+
+        var taskAfterAdd = reviews.inbox(reviewerEmail).getFirst();
+        long v1 = taskAfterAdd.rowVersion();
+        assertEquals(v0 + 1, v1);
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(v1, "Observación modificada", 0, 0.15, 0.25, 0.35, 0.45));
+
+        var stateAfterUpdate = reviews.state(review, reviewerEmail);
+        assertEquals(1, stateAfterUpdate.observations().size());
+        var obsUpdated = stateAfterUpdate.observations().getFirst();
+        assertEquals("Observación modificada", obsUpdated.get("message"));
+        assertNotNull(obsUpdated.get("updated_at"));
+
+        var history = jdbc.queryForList("SELECT * FROM review_observation_history WHERE observation_id=? ORDER BY occurred_at ASC", obsId);
+        assertEquals(1, history.size());
+        assertEquals("UPDATE", history.getFirst().get("operation"));
+        String beforeJson = history.getFirst().get("before_state").toString();
+        String afterJson = history.getFirst().get("after_state").toString();
+        assertTrue(beforeJson.contains("Observación inicial"));
+        assertTrue(afterJson.contains("Observación modificada"));
+
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(v1, "Conflicto", 0, 0.1, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        var taskAfterUpdate = reviews.inbox(reviewerEmail).getFirst();
+        long v2 = taskAfterUpdate.rowVersion();
+        assertEquals(v1 + 1, v2);
+        reviews.deleteObservation(task.id(), obsId, reviewerEmail, v2);
+
+        var stateAfterDelete = reviews.state(review, reviewerEmail);
+        assertEquals(0, stateAfterDelete.observations().size());
+
+        var dbRow = jdbc.queryForMap("SELECT deleted_at, deleted_by FROM review_observation WHERE id=?", obsId);
+        assertNotNull(dbRow.get("deleted_at"));
+        assertNotNull(dbRow.get("deleted_by"));
+
+        var historyAfterDelete = jdbc.queryForList("SELECT * FROM review_observation_history WHERE observation_id=? ORDER BY occurred_at ASC", obsId);
+        assertEquals(2, historyAfterDelete.size());
+        assertEquals("DELETE", historyAfterDelete.get(1).get("operation"));
+        assertNull(historyAfterDelete.get(1).get("after_state"));
+
+        var taskAfterDelete = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(taskAfterDelete.rowVersion(), "No se puede revivir", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task.id(), obsId, reviewerEmail, taskAfterDelete.rowVersion())
+        ).getStatusCode().value());
+    }
+
+    @Test void observationValidationAndGeometryConstraints() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Página fuera de rango", 999, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Página negativa", -1, null, null, null, null))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Geometría incompleta", 0, 0.1, null, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Sin página", null, 0.1, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Fuera de límite", 0, 0.8, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Observación general", null, null, null, null, null));
+        var obs = reviews.state(review, reviewerEmail).observations().getFirst();
+        assertNull(obs.get("page_index"));
+        assertNull(obs.get("x"));
+
+        var task2 = reviews.inbox(reviewerEmail).getFirst();
+        UUID obsId = (UUID) obs.get("id");
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(task2.rowVersion(), "Solo página", 0, null, null, null, null));
+        var obsUpdated = reviews.state(review, reviewerEmail).observations().getFirst();
+        assertEquals(0, obsUpdated.get("page_index"));
+        assertNull(obsUpdated.get("x"));
+    }
+
+    @Test void withdrawnObservationDoesNotBlockOrJustifyReturn() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Error temporal", null, null, null, null, null));
+        var obsId = (UUID) reviews.state(review, reviewerEmail).observations().getFirst().get("id");
+        var taskAfterAdd = reviews.inbox(reviewerEmail).getFirst();
+        reviews.deleteObservation(task.id(), obsId, reviewerEmail, taskAfterAdd.rowVersion());
+
+        var taskAfterDel = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(taskAfterDel.rowVersion(), "RETURN", "   ", UUID.randomUUID()))
+        ).getStatusCode().value());
+
+        reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(taskAfterDel.rowVersion(), "COMPLETE", "", UUID.randomUUID()));
+        var state = reviews.state(review, reviewerEmail);
+        assertEquals("COMPLETED", state.tasks().getFirst().get("status"));
+    }
+
+    @Test void observationPermissionsAndIsolationBetweenDocuments() throws Exception {
+        UUID review1 = submit(false);
+        var task1 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.observe(task1.id(), reviewerEmail, new ReviewService.Observation(task1.rowVersion(), "Nota en doc 1", null, null, null, null, null));
+        var obs1Id = (UUID) reviews.state(review1, reviewerEmail).observations().getFirst().get("id");
+
+        String adminEmail = "sample-admin@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','ADMIN',false)", UUID.randomUUID(), adminEmail, "Admin Prueba");
+
+        var taskCurrent = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, adminEmail, new ReviewService.ObservationUpdate(taskCurrent.rowVersion(), "Admin modificando", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task1.id(), obs1Id, adminEmail, taskCurrent.rowVersion())
+        ).getStatusCode().value());
+
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, email, new ReviewService.ObservationUpdate(taskCurrent.rowVersion(), "Autor modificando", null, null, null, null, null))
+        ).getStatusCode().value());
+
+        reviews.decide(task1.id(), reviewerEmail, new ReviewService.Decision(taskCurrent.rowVersion(), "RETURN", "Devolución formal", UUID.randomUUID()));
+        var taskReturned = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, reviewerEmail, new ReviewService.ObservationUpdate(taskReturned.rowVersion(), "Intento post-decisión", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task1.id(), obs1Id, reviewerEmail, taskReturned.rowVersion())
+        ).getStatusCode().value());
+    }
+
+    @Test void stageLabelPresentationNormalization() {
+        assertEquals("Revisión documental", ReviewService.displayStageLabel("Revisión de ejemplo", "REVIEW"));
+        assertEquals("Aprobación del documento", ReviewService.displayStageLabel("Aprobación de ejemplo", "APPROVE"));
+        assertEquals("Revisión de ejemplo", ReviewService.displayStageLabel("Revisión de ejemplo", "APPROVE"));
+        assertEquals("Aprobación de ejemplo", ReviewService.displayStageLabel("Aprobación de ejemplo", "REVIEW"));
+        assertEquals("Revisión jurídica", ReviewService.displayStageLabel("Revisión jurídica", "REVIEW"));
+        assertEquals("Aprobación de Decanato", ReviewService.displayStageLabel("Aprobación de Decanato", "APPROVE"));
+        assertEquals("", ReviewService.displayStageLabel(null, "REVIEW"));
+    }
+
+    @Test void observationHistoryPreservedInPeriodCustodyArchive() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Obs inicial", null, null, null, null, null));
+        var obsId = (UUID) reviews.state(review, reviewerEmail).observations().getFirst().get("id");
+        var task2 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(task2.rowVersion(), "Obs corregida", null, null, null, null, null));
+
+        var task3 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(task3.rowVersion(), "RETURN", "Corregir", UUID.randomUUID()));
+
+        periodArchives.close(period, email, new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L, "Cierre para verificar historial de observaciones"));
+        byte[] custodyZip = periodArchives.custody(period, email);
+        boolean foundHistory = false;
+        try (var zip = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(custodyZip))) {
+            java.util.zip.ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if (entry.getName().equals("documents/" + id + "/manifest.json")) {
+                    String manifest = new String(zip.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    assertTrue(manifest.contains("observationHistory"), "El manifiesto debe incluir observationHistory");
+                    assertTrue(manifest.contains("Obs inicial"), "El manifiesto debe contener el texto previo");
+                    assertTrue(manifest.contains("Obs corregida"), "El manifiesto debe contener el texto corregido");
+                    foundHistory = true;
+                }
+            }
+        }
+        assertTrue(foundHistory, "Debe encontrarse el manifiesto con el historial de observaciones");
+    }
 }
