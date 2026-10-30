@@ -155,3 +155,16 @@
   .action-form-dialog .action-form-heading { padding: 16px 20px 14px; }
   .action-form-dialog .action-form-body { padding: 18px 20px 20px; }
 }
+
+/* Notices take their own row inside action dialogs, leaving form controls reachable. */
+.action-form-dialog > #toast-root {
+  position: relative;
+  inset: auto;
+  order: 1;
+  flex-shrink: 0;
+  width: auto;
+  max-height: min(200px, 25dvh);
+  margin: 12px 20px 0;
+}
+.action-form-dialog > #toast-root:empty { display: none; }
+.action-form-dialog > .action-form-body { order: 2; }

@@ -308,3 +308,70 @@ test('review observation page association preservation, general conversion dirty
     await expect(page.getByRole('button', { name: 'Agregar observación', exact: true })).toBeVisible()
   }
 })
+
+
+test('review workspace is preserved across page reload and deep linking', async ({ page }) => {
+  const actor = await login(page, 'dev.reviewer'), reviewId = randomUUID(), taskId = randomUUID()
+  const title = 'Revisión persistente en recarga'
+
+  await page.route('**/api/reviews/inbox?*', route => route.fulfill({
+    json: {
+      items: [{
+        id: taskId,
+        reviewId,
+        documentId: randomUUID(),
+        title,
+        groupName: 'Comisión de auditoría',
+        periodName: 'Julio–Diciembre 2026',
+        stageLabel: 'Revisión',
+        requiresSignature: false,
+        status: 'ACTIVE',
+        roundNumber: 1
+      }],
+      total: 1,
+      page: 0,
+      size: 20,
+      metrics: { active: 1, completed: 0, returned: 0 }
+    }
+  }))
+
+  await page.route('**/api/reviews/' + reviewId, route => route.fulfill({
+    json: {
+      review: { id: reviewId, title, status: 'IN_REVIEW', round_number: 1 },
+      tasks: [{ id: taskId, actor_id: actor.id, actor_name: actor.displayName, stage_label: 'Revisión', requires_signature: false, status: 'ACTIVE', row_version: 0 }],
+      observations: [],
+      pageCount: 2,
+      pdfHash: 'b'.repeat(64),
+      canAct: true
+    }
+  }))
+
+  await page.route('**/api/reviews/' + reviewId + '/pages/*', route => route.fulfill({
+    contentType: 'image/png',
+    body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9XcAAAAASUVORK5CYII=', 'base64')
+  }))
+
+  // 1. Navigate to Review view and open the document
+  await page.getByRole('button', { name: 'Revisión documental', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Bandeja de revisión' })).toBeVisible()
+  await page.getByRole('button', { name: 'Revisar ' + title + ' · Ronda 1', exact: true }).click()
+
+  // Verify workspace is opened and URL contains the doc param
+  await expect(page.locator('.review-layout')).toBeVisible()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('doc')).toBe(reviewId)
+  expect(new URL(page.url()).searchParams.get('view')).toBe('reviews')
+
+  // 2. Reload the page (F5) - MUST preserve the open review workspace
+  await page.reload()
+  await expect(page.locator('.review-layout')).toBeVisible()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('doc')).toBe(reviewId)
+  expect(new URL(page.url()).searchParams.get('view')).toBe('reviews')
+
+  // 3. Click back button - URL resets cleanly to ?view=reviews and shows inbox
+  await page.locator('.plan-back-btn').click()
+  await expect(page.getByRole('heading', { name: 'Bandeja de revisión' })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('doc')).toBeNull()
+  expect(new URL(page.url()).searchParams.get('view')).toBe('reviews')
+})

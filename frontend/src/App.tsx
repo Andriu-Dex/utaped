@@ -24,12 +24,18 @@ function parseRoute(): {
   targetDocId: string | null
   step: string | null
   workspace: 'administration' | 'documents' | null
+  scopeId: string | null
+  periodId: string | null
+  groupId: string | null
 } {
   const params = new URLSearchParams(window.location.search)
   const viewParam = params.get('view')
   const doc = params.get('doc')
   const step = params.get('step')
   const ws = params.get('workspace')
+  const scope = params.get('scope')
+  const period = params.get('period')
+  const group = params.get('group')
 
   const validViews: View[] = [
     'home', 'password', 'documents', 'reviews', 'notifications', 'my-organization', 'reporting',
@@ -38,14 +44,17 @@ function parseRoute(): {
   const view = (viewParam && validViews.includes(viewParam as View)) ? (viewParam as View) : (doc ? 'documents' : 'home')
   const workspace = ws === 'administration' || ws === 'documents' ? ws : (view === 'documents' ? 'documents' : null)
 
-  return { view, targetDocId: doc, step, workspace }
+  return { view, targetDocId: doc, step, workspace, scopeId: scope, periodId: period, groupId: group }
 }
 
 function syncRoute(
   view: View,
   targetDocId: string | null,
   step: string | null,
-  workspace: 'administration' | 'documents'
+  workspace: 'administration' | 'documents',
+  scopeId?: string | null,
+  periodId?: string | null,
+  groupId?: string | null
 ) {
   const params = new URLSearchParams()
   if (view !== 'home' || targetDocId) {
@@ -56,6 +65,15 @@ function syncRoute(
   }
   if (step) {
     params.set('step', step)
+  }
+  if (scopeId && view === 'my-organization') {
+    params.set('scope', scopeId)
+  }
+  if (periodId && view === 'reporting') {
+    params.set('period', periodId)
+  }
+  if (groupId && (view === 'groups' || view === 'home')) {
+    params.set('group', groupId)
   }
   if (workspace === 'documents') {
     params.set('workspace', 'documents')
@@ -72,13 +90,14 @@ export default function App() {
   const initialRoute = parseRoute()
   const [account,setAccount] = useState<Account | null>(null); const [loading,setLoading] = useState(true)
   const [error,setError] = useState(''); const [groups,setGroups] = useState<Group[]>([]); const [periods,setPeriods] = useState<Period[]>([])
-  const [selected,setSelected] = useState(''); const [members,setMembers] = useState<Member[]>([]); const [membersLoading,setMembersLoading] = useState(false)
+  const [selected,setSelected] = useState(initialRoute.groupId ?? ''); const [members,setMembers] = useState<Member[]>([]); const [membersLoading,setMembersLoading] = useState(false)
   const [draftDirty,setDraftDirty] = useState(false)
   const [documentTarget,setDocumentTarget] = useState<string | null>(initialRoute.targetDocId)
   const [documentStep,setDocumentStep] = useState<string | null>(initialRoute.step)
   const [view,setView] = useState<View>(initialRoute.view); const content = useRef<HTMLElement>(null)
   const [allPeriods,setAllPeriods] = useState(false)
-  const [reportingPeriod, setReportingPeriod] = useState('')
+  const [reportingPeriod, setReportingPeriod] = useState(initialRoute.periodId ?? '')
+  const [organizationScope, setOrganizationScope] = useState(initialRoute.scopeId ?? '')
   const identityEpoch = useRef(0)
   const [workspace, setWorkspace] = useState<'administration' | 'documents'>(initialRoute.workspace ?? 'administration')
   const documentGroups = groups.filter(group => group.membership_role != null)
@@ -149,6 +168,7 @@ export default function App() {
     setView('home')
     setAllPeriods(false)
     setReportingPeriod('')
+    setOrganizationScope('')
     setWorkspace('administration')
     window.history.replaceState(null, '', window.location.pathname)
   }
@@ -157,23 +177,29 @@ export default function App() {
 
   useEffect(() => {
     if (account && !account.mustChangePassword) {
-      syncRoute(view, documentTarget, documentStep, workspace)
+      syncRoute(view, documentTarget, documentStep, workspace, organizationScope, reportingPeriod, selected)
     }
-  }, [account, view, documentTarget, documentStep, workspace])
+  }, [account, view, documentTarget, documentStep, workspace, organizationScope, reportingPeriod, selected])
 
   useEffect(() => {
     const handlePopState = async () => {
       const route = parseRoute()
-      if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) { syncRoute(view, documentTarget, documentStep, workspace); return }
+      if (draftDirty && !(await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) {
+        syncRoute(view, documentTarget, documentStep, workspace, organizationScope, reportingPeriod, selected)
+        return
+      }
       setDraftDirty(false)
       setView(route.view)
       setDocumentTarget(route.targetDocId)
       setDocumentStep(route.step)
+      setOrganizationScope(route.scopeId ?? '')
+      setReportingPeriod(route.periodId ?? '')
+      setSelected(route.groupId ?? '')
       if (route.workspace) setWorkspace(route.workspace)
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [draftDirty, view, documentTarget, documentStep, workspace])
+  }, [draftDirty, view, documentTarget, documentStep, workspace, organizationScope, reportingPeriod, selected])
 
   useEffect(() => {
     const expired = () => { if (!account) return; setLoading(true); clearAccount(); setError('Su sesión expiró. Ingrese nuevamente.'); refreshCsrf().catch(() => {}).finally(() => setLoading(false)) }
@@ -292,7 +318,7 @@ export default function App() {
       </header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
-        {view === 'my-organization' && !administrative ? <ContextualOrganization onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
+        {view === 'my-organization' && !administrative ? <ContextualOrganization initialScopeId={organizationScope} onScopeChange={setOrganizationScope} onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} onPeriodChange={setReportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} initialReviewId={documentTarget} onReviewSelect={selectDocument} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
 
           <TrackingDashboard displayName={account.displayName} onOpen={(id, step = 'general') => navigate('documents', id, step)} onOpenReports={() => navigate('reporting')} onOpenDocuments={() => navigate('documents')} />
           <div className="context-grid"><section className="card context-card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">COLABORACIÓN</span><h2>Grupos institucionales</h2></div></div><p className="muted">Consulta tus integrantes. Tu identidad se conserva al cambiar de contexto.</p>

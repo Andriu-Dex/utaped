@@ -8,34 +8,153 @@ import { Toast } from '../shared/Toast'
 import { DocumentPageNavigator } from '../shared/DocumentPageNavigator'
 import { RoundComparison } from './RoundComparison'
 import { displayStageLabel } from './workflowLabels'
+import { TaskReassignmentModal } from './TaskReassignmentModal'
 import './review.css'
+import './reassignment.css'
 
-type Task = { id: string; reviewId: string; documentId: string; title: string; groupName: string; periodName: string; stageLabel: string; action?: string; requiresSignature: boolean; status: string; roundNumber: number }
-type Inbox = { items: Task[]; total: number; page: number; size: number; metrics: { active: number; completed: number; returned: number } }
-type Stage = { id: string; actor_id: string; actor_name: string; stage_label: string; stage_action?: string; display_stage_label?: string; requires_signature: boolean; status: string; row_version: number }
+export interface TaskReassignment {
+  id?: string
+  task_id?: string
+  previous_actor_id: string
+  previous_actor_name: string
+  actor_id: string
+  actor_name: string
+  authorized_by: string
+  authorized_by_name: string
+  reason: string
+  created_at: string
+}
+export type Task = { id: string; reviewId: string; documentId: string; title: string; groupName: string; periodName: string; stageLabel: string; action?: string; requiresSignature: boolean; status: string; roundNumber: number }
+export type Inbox = { items: Task[]; total: number; page: number; size: number; metrics: { active: number; completed: number; returned: number } }
+export type Stage = {
+  id: string
+  actor_id: string
+  actor_name: string
+  stage_label: string
+  stage_action?: string
+  display_stage_label?: string
+  requires_signature: boolean
+  status: string
+  row_version: number
+  can_reassign?: boolean
+  slot_actor_id?: string | null
+  reassignments?: TaskReassignment[]
+}
 type Region = { x: number; y: number; width: number; height: number }
 type Observation = { id: string; task_id?: string; actor_id?: string; actor_name: string; message: string; page_index: number | null; x: number | null; y: number | null; width: number | null; height: number | null; created_at?: string; updated_at?: string | null; can_edit?: boolean; can_delete?: boolean }
-type ReviewState = { review: { id: string; status: string; round_number: number }; tasks: Stage[]; observations: Observation[]; pageCount: number; pdfHash: string; canAct: boolean }
+export type ReviewState = { review: { id: string; status: string; round_number: number; title?: string }; tasks: Stage[]; observations: Observation[]; pageCount: number; pdfHash: string; canAct: boolean }
 const labels: Record<string, string> = { ACTIVE: 'Tu turno', PENDING: 'Pendiente', COMPLETED: 'Completada', RETURNED: 'Devuelta', CANCELLED: 'Cancelada', IN_REVIEW: 'En revisión', APPROVED: 'Aprobado' }
 
-export function ReviewWorkspace({ accountId, onDirtyChange }: { accountId: string; onDirtyChange: (dirty: boolean) => void }) {
-  const [inbox, setInbox] = useState<Inbox | null>(null); const [selected, setSelected] = useState<Task | null>(null); const [error, setError] = useState(''); const [reload, setReload] = useState(0)
-  const [query, setQuery] = useState(''); const [search, setSearch] = useState(''); const [status, setStatus] = useState(''); const [documentType, setDocumentType] = useState(''); const [page, setPage] = useState(0); const [size, setSize] = useState(20)
+export function ReviewWorkspace({
+  accountId,
+  onDirtyChange,
+  initialReviewId,
+  onReviewSelect,
+}: {
+  accountId: string
+  onDirtyChange: (dirty: boolean) => void
+  initialReviewId?: string | null
+  onReviewSelect?: (reviewId: string | null) => void
+}) {
+  const [inbox, setInbox] = useState<Inbox | null>(null)
+  const [selected, setSelected] = useState<Task | null>(null)
+  const [internalReviewId, setInternalReviewId] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [reload, setReload] = useState(0)
+  const [query, setQuery] = useState('')
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [documentType, setDocumentType] = useState('')
+  const [page, setPage] = useState(0)
+  const [size, setSize] = useState(20)
+
+  const currentReviewId = initialReviewId !== undefined ? initialReviewId : (selected?.reviewId ?? internalReviewId)
+
   const parameters = new URLSearchParams({ query: search, status, documentType, page: String(page), size: String(size) }).toString()
   const [loadedParameters, setLoadedParameters] = useState('')
   const loading = loadedParameters !== parameters
-  useEffect(() => { let active = true; api<Inbox>('/reviews/inbox?' + parameters).then(result => { if (active) {
-    if (result.total > 0 && page * size >= result.total) { setPage(Math.ceil(result.total / size) - 1); return }
-    setInbox(result); setLoadedParameters(parameters); setError('')
-  } }).catch(e => { if (active) { setError(e.message); setLoadedParameters(parameters); setInbox(null) } }); return () => { active = false } }, [parameters, reload, page, size])
-  if (selected) return <ReviewInspector key={selected.reviewId} id={selected.reviewId} accountId={accountId} title={selected.title} onDirtyChange={onDirtyChange} onBack={() => { setSelected(null); setLoadedParameters(''); setReload(r => r + 1) }} />
-  return <section><span className="section-kicker">VALIDACIÓN DOCUMENTAL</span><h1>Bandeja de revisión</h1><p className="muted">Cada participante interviene sobre el PDF firmado cuando se activa su etapa.</p>{error && <Toast message={error} />}
-    <div className="review-totals review-inbox-totals"><section className="card"><Icon name="document" /><strong>{inbox?.metrics.active ?? '—'}</strong><span>Etapas pendientes de tu decisión</span></section><section className="card"><Icon name="check" /><strong>{inbox?.metrics.completed ?? '—'}</strong><span>Intervenciones completadas</span></section><section className="card"><Icon name="refresh" /><strong>{inbox?.metrics.returned ?? '—'}</strong><span>Documentos devueltos por ti</span></section></div>
+  useEffect(() => {
+    let active = true
+    api<Inbox>('/reviews/inbox?' + parameters)
+      .then(result => {
+        if (active) {
+          if (result.total > 0 && page * size >= result.total) { setPage(Math.ceil(result.total / size) - 1); return }
+          setInbox(result)
+          setLoadedParameters(parameters)
+          setError('')
+        }
+      })
+      .catch(e => {
+        if (active) {
+          setError(e.message)
+          setLoadedParameters(parameters)
+          setInbox(null)
+        }
+      })
+    return () => { active = false }
+  }, [parameters, reload, page, size])
+
+  const activeTask = selected?.reviewId === currentReviewId ? selected : inbox?.items.find(t => t.reviewId === currentReviewId)
+  const activeTitle = activeTask?.title || selected?.title || ''
+
+  const handleSelectReview = (task: Task | null, reviewId?: string | null) => {
+    const targetId = reviewId !== undefined ? reviewId : (task?.reviewId ?? null)
+    setSelected(task)
+    setInternalReviewId(targetId)
+    onReviewSelect?.(targetId)
+  }
+
+  if (currentReviewId) {
+    return (
+      <ReviewInspector
+        key={currentReviewId}
+        id={currentReviewId}
+        accountId={accountId}
+        title={activeTitle}
+        onDirtyChange={onDirtyChange}
+        onBack={() => {
+          handleSelectReview(null, null)
+          setLoadedParameters('')
+          setReload(r => r + 1)
+        }}
+      />
+    )
+  }
+  return <section className="review-inbox-view">
+    <div className="review-inbox-header">
+      <span className="section-kicker">VALIDACIÓN DOCUMENTAL</span>
+      <h1>Bandeja de revisión</h1>
+      <p className="muted">Cada participante interviene sobre el PDF firmado cuando se activa su etapa.</p>
+    </div>
+    {error && <Toast message={error} />}
+    <div className="review-totals review-inbox-totals">
+      <section className="card review-kpi-card">
+        <div className="review-kpi-icon"><Icon name="document" size={22} /></div>
+        <div className="review-kpi-data">
+          <strong>{inbox?.metrics.active ?? '—'}</strong>
+          <span>Etapas pendientes de tu decisión</span>
+        </div>
+      </section>
+      <section className="card review-kpi-card">
+        <div className="review-kpi-icon tone-success"><Icon name="check" size={22} /></div>
+        <div className="review-kpi-data">
+          <strong>{inbox?.metrics.completed ?? '—'}</strong>
+          <span>Intervenciones completadas</span>
+        </div>
+      </section>
+      <section className="card review-kpi-card">
+        <div className="review-kpi-icon tone-amber"><Icon name="refresh" size={22} /></div>
+        <div className="review-kpi-data">
+          <strong>{inbox?.metrics.returned ?? '—'}</strong>
+          <span>Documentos devueltos por ti</span>
+        </div>
+      </section>
+    </div>
     <section className="card review-inbox-card"><div className="section-heading"><span className="section-icon"><Icon name="eye" /></span><div><span className="section-kicker">ASIGNACIONES PERSONALES</span><h2>Documentos para revisar</h2></div></div>
       <form className="review-filters" onSubmit={e => { e.preventDefault(); setSearch(query.trim()); setPage(0) }}><label className="review-search">Buscar documento, ámbito o período<div><Icon name="search" size={18} /><input maxLength={200} value={query} placeholder="Título, comisión, período…" onChange={e => setQuery(e.target.value)} /><button className="secondary">Buscar</button></div></label><label>Estado de la tarea<select value={status} onChange={e => { setStatus(e.target.value); setPage(0) }}><option value="">Todos los estados</option><option value="ACTIVE">Tu turno</option><option value="COMPLETED">Completada</option><option value="RETURNED">Devuelta</option></select></label><label>Tipo de documento<select value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(0) }}><option value="">Todos los tipos</option><option value="T1">Plan de Trabajo · T1</option><option value="T2">Informe final · T2</option><option value="T3">Informe de ejecución · T3</option></select></label></form>
       <div className="review-list-heading"><span role="status">{loading ? 'Cargando tareas…' : inbox ? inbox.total + ' tareas encontradas' : 'Bandeja no disponible'}</span>{(search || status || documentType) && <button type="button" className="link" onClick={() => { setQuery(''); setSearch(''); setStatus(''); setDocumentType(''); setPage(0) }}>Limpiar filtros</button>}<button type="button" className="secondary" title="Actualizar bandeja" aria-label="Actualizar bandeja" disabled={loading} onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}><Icon name="refresh" size={16} /></button></div>
       {!loading && !inbox && <button type="button" className="secondary" onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}>Reintentar</button>}
-      {inbox && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{displayStageLabel(t.stageLabel, t.action)}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => setSelected(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
+      {inbox && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{displayStageLabel(t.stageLabel, t.action)}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => handleSelectReview(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
       <div className="review-inbox-pagination"><label>Tareas por página<select value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0) }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label><span>{inbox && !loading ? (inbox.total ? page * size + 1 : 0) + '–' + Math.min((page + 1) * size, inbox.total) + ' de ' + inbox.total : '—'}</span><button type="button" className="secondary" disabled={loading || page === 0} onClick={() => setPage(p => p - 1)}>Página anterior</button><button type="button" className="secondary" disabled={loading || !inbox || (page + 1) * size >= inbox.total} onClick={() => setPage(p => p + 1)}>Página siguiente</button></div>
     </section>
   </section>
@@ -44,6 +163,8 @@ export function ReviewWorkspace({ accountId, onDirtyChange }: { accountId: strin
 export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, backLabel = 'Volver' }: { backLabel?: string; id: string; accountId: string; title: string; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
   const [state, setState] = useState<ReviewState | null>(null); const [page, setPage] = useState(0); const [message, setMessage] = useState(''); const [region, setRegion] = useState<Region | null>(null)
   const [signingDirty, setSigningDirty] = useState(false)
+  const [reassigningTask, setReassigningTask] = useState<Stage | null>(null)
+  const [reassignmentDirty, setReassignmentDirty] = useState(false)
   const anchor = useRef<{ x: number; y: number } | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [reload, setReload] = useState(0); const [imageError, setImageError] = useState(false)
   const [requestKey] = useState(() => crypto.randomUUID())
@@ -81,7 +202,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
     ? (isMessageDirty || isPageDirty || isRegionDirty)
     : (!!message.trim() || !!region || hasPageOnly)
 
-  const dirty = busy || signingDirty || isFormDirty
+  const dirty = busy || signingDirty || isFormDirty || reassignmentDirty
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   useEffect(() => { const leave = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }; window.addEventListener('beforeunload', leave); return () => window.removeEventListener('beforeunload', leave) }, [dirty])
   useEffect(() => {
@@ -225,6 +346,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo firmar.') } finally { form.reset(); setBusy(false) }
   }
   const changePage = async (index: number) => { if (region && !(await confirmAction('¿Descartar la zona seleccionada para cambiar de página?'))) return; setPage(index); setRegion(null); setImageError(false) }
+
   return <section>
     <header className="plan-wizard-header">
       <span className="section-kicker review-kicker">ARTEFACTO FIRMADO · REVISIÓN</span>
@@ -240,180 +362,449 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
           <Icon name="arrowLeft" size={20} />
           <span className="sr-only">{backLabel}</span>
         </button>
-        <h1>{title}</h1>
+        <h1>{state?.review?.title || title || 'Revisión documental'}</h1>
       </div>
     </header>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {state && <RoundComparison key={id} reviewId={id} />}
-    {!state ? loadFailed ? <section className="card" aria-label="Revisión no disponible"><p>No se pudo consultar la revisión. Puede reintentar o volver a la bandeja.</p><button type="button" className="secondary" disabled={loading} onClick={() => setReload(value => value + 1)}>Reintentar revisión</button></section> : <p role="status">Cargando revisión…</p> : <><div className="review-summary"><span className="status-badge">{labels[state.review.status]} · Ronda {state.review.round_number}</span><span className="muted">{state.pageCount} páginas · PDF conservado</span>{state.review.status === 'APPROVED' && <button type="button" className="secondary" disabled={loading} onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}>Descargar aprobado</button>}</div>
-    {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}
-    <div className="review-layout"><section className="card review-document"><DocumentPageNavigator page={page} pageCount={state.pageCount} disabled={busy} onChange={changePage} references={state.observations.filter(observation => observation.page_index !== null).map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))} />{task && <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>}{imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}
-      {!imageError && loadedImage !== id + '-' + page + '-' + reload && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
-      <div className="document-reading-desk"><div className={'review-page ' + (task ? 'review-page-selectable' : '')} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={() => { anchor.current = null; setRegion(null) }}><img key={id + '-' + page + '-' + reload} draggable={false} src={'/api/reviews/' + id + '/pages/' + page + '?v=' + reload} alt={'Página ' + (page + 1) + ' del documento firmado'} onError={() => setImageError(true)} onLoad={() => { setImageError(false); setLoadedImage(id + '-' + page + '-' + reload) }} />{state.observations.filter(o => o.page_index === page && o.x !== null).map(o => <span className="review-highlight" key={o.id} title={o.message} style={{ left: o.x! * 100 + '%', top: o.y! * 100 + '%', width: o.width! * 100 + '%' , height: o.height! * 100 + '%' }} />)}{region && <span className="review-highlight review-selection" style={{ left: region.x * 100 + '%', top: region.y * 100 + '%', width: region.width * 100 + '%', height: region.height * 100 + '%' }} />}</div></div><button type="button" className="link" onClick={() => { setImageError(false); setReload(r => r + 1) }}>Recargar página</button></section>
-      <aside className="review-side"><section className="card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">RUTA DE VALIDACIÓN</span><h2>Etapas</h2></div></div><ol className="review-stages">{state.tasks.map(t => <li key={t.id}><strong>{displayStageLabel(t.stage_label, t.stage_action)}</strong><span>{t.actor_name}</span><small>{labels[t.status]}</small></li>)}</ol></section>
-      {task && <section className="card"><h2>Tu decisión</h2>
-        <ActionForm
-          label={editingObservation ? 'Editar observación' : 'Agregar observación'}
-          dirty={isFormDirty}
-          disabled={busy}
-          openSignal={editSignal ?? (region ? 'region' : undefined)}
-          onCancel={() => void cancelObservationForm(true)}
-        >
-          <form onSubmit={observe}>
-            <fieldset disabled={busy}>
-              <label>Observación
-                <textarea
-                  ref={textareaRef}
-                  required
-                  maxLength={4000}
-                  rows={5}
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  placeholder="Describe la corrección necesaria…"
-                />
-              </label>
-              {region ? (
-                <p className="field-help">
-                  Zona seleccionada en página {(associatedPage ?? page) + 1}.{' '}
-                  <button type="button" className="link" onClick={() => { setRegion(null); setHasPageOnly(true) }}>
-                    Quitar resaltado (conservar página)
-                  </button>{' '}
-                  ·{' '}
-                  <button type="button" className="link" onClick={() => { setRegion(null); setHasPageOnly(false); setAssociatedPage(null) }}>
-                    Convertir en observación general
-                  </button>
-                </p>
-              ) : hasPageOnly ? (
-                <p className="field-help">
-                  Asociada a página {(associatedPage ?? page) + 1} (sin zona seleccionada).{' '}
-                  {associatedPage !== null && page !== associatedPage && (
-                    <>
-                      <button type="button" className="link" onClick={() => setAssociatedPage(page)}>
-                        Asociar a página actual ({page + 1})
-                      </button>{' '}
-                      ·{' '}
-                    </>
-                  )}
-                  <button type="button" className="link" onClick={() => { setHasPageOnly(false); setAssociatedPage(null) }}>
-                    Convertir en observación general
-                  </button>
-                </p>
-              ) : (
-                <p className="field-help">
-                  Observación general (sin página ni zona). Arrastra sobre el documento si deseas marcar un área.
-                </p>
-              )}
-              <div className="observation-form-buttons">
-                <button type="submit" disabled={!message.trim() || (editingObservation ? !isFormDirty : false)}>
-                  {editingObservation ? 'Guardar cambios' : 'Guardar observación'}
-                </button>
-                {editingObservation && (
-                  <button type="button" className="secondary" onClick={() => void cancelObservationForm()}>
-                    Cancelar edición
-                  </button>
-                )}
-              </div>
-            </fieldset>
-          </form>
-        </ActionForm>
-        {state.observations.length > 0 && <p className="field-help">Hay observaciones en esta ronda. Devuelva el documento para que se corrijan; podrá aprobarlo en una nueva ronda.</p>}
-        <div className="review-actions">
-          {!task.requires_signature && (
-            <button
-              type="button"
-              disabled={busy || isFormDirty || state.observations.length > 0}
-              onClick={() => decide('COMPLETE')}
-            >
-              Completar etapa
-            </button>
-          )}
+    {!state ? loadFailed ? <section className="card" aria-label="Revisión no disponible"><p>No se pudo consultar la revisión. Puede reintentar o volver a la bandeja.</p><button type="button" className="secondary" disabled={loading} onClick={() => setReload(value => value + 1)}>Reintentar revisión</button></section> : <p role="status">Cargando revisión…</p> : <>
+      <div className="review-summary">
+        <div className="review-summary-badges">
+          <span className={'status-badge ' + (state.review.status === 'IN_REVIEW' ? 'active' : '')}>
+            <span className="status-badge-dot" aria-hidden="true" />
+            {labels[state.review.status]} · Ronda {state.review.round_number}
+          </span>
+          <span className="review-meta-chip">
+            <Icon name="document" size={14} />
+            <span>{state.pageCount} páginas</span>
+          </span>
+          <span className="review-meta-chip muted">
+            <Icon name="check" size={14} />
+            <span>PDF conservado</span>
+          </span>
+        </div>
+        {state.review.status === 'APPROVED' && (
           <button
             type="button"
-            className="secondary"
-            disabled={busy || isFormDirty}
-            onClick={() => decide('RETURN')}
+            className="secondary review-download-btn"
+            disabled={loading}
+            onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}
           >
-            Devolver para corrección
+            <Icon name="download" size={15} />
+            <span>Descargar aprobado</span>
           </button>
-        </div>
-        {task.requires_signature && (
-          <ActionForm
-            label="Preparar firma de revisión"
-            dirty={signingDirty}
-            onCancel={() => setSigningDirty(false)}
-            disabled={busy || isFormDirty || state.observations.length > 0}
-          >
-            <form onChangeCapture={() => setSigningDirty(true)} onResetCapture={() => setSigningDirty(false)} onSubmit={sign}>
-              <fieldset disabled={busy || isFormDirty}>
-                <label>Certificado personal (.p12/.pfx)<input name="certificate" type="file" accept=".p12,.pfx" required /></label>
-                <label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label>
-                <button>Firmar y completar etapa</button>
-                <p className="field-help">Certificado y contraseña se usan solo en esta operación. Se comprueban la vigencia del certificado y la integridad del PDF.</p>
-              </fieldset>
-            </form>
-          </ActionForm>
         )}
-      </section>}
-      <section className="card">
-        <h2>Observaciones de la ronda</h2>
-        {state.observations.length === 0 ? (
-          <p className="muted">Aún no hay observaciones registradas.</p>
-        ) : (
-          <ul className="review-observations">
-            {state.observations.map(o => (
-              <li
-                key={o.id}
-                className={'observation-card' + (editingObservation?.id === o.id ? ' is-editing' : '')}
+      </div>
+      {closedTask && <p className="field-help">Período cerrado: la revisión se conserva en solo lectura, sin nuevas observaciones ni firmas.</p>}
+      <div className="review-layout">
+        <section className="card review-document">
+          <DocumentPageNavigator
+            page={page}
+            pageCount={state.pageCount}
+            disabled={busy}
+            onChange={changePage}
+            references={state.observations
+              .filter(observation => observation.page_index !== null)
+              .map((observation, index) => ({ page: observation.page_index!, label: 'Observación ' + (index + 1) }))}
+          />
+          {task && (
+            <div className="review-instruction-tip">
+              <div className="tip-content">
+                <span className="tip-icon"><Icon name="search" size={15} /></span>
+                <p className="field-help">Arrastra sobre la página para asociar un resaltado. También puedes registrar una observación general sin seleccionar una zona.</p>
+              </div>
+              <button
+                type="button"
+                className="reload-page-quick-btn"
+                title="Recargar imagen"
+                aria-label="Recargar imagen"
+                onClick={() => { setImageError(false); setReload(r => r + 1) }}
               >
-                <div className="observation-header">
-                  <div className="observation-meta">
-                    <strong>{o.actor_name}</strong>
-                    {o.updated_at && (
-                      <span className="observation-badge-edited" title="Observación editada">
-                        Editada
-                      </span>
+                <Icon name="refresh" size={13} />
+                <span>Recargar</span>
+              </button>
+            </div>
+          )}
+          {imageError && <Toast message="No se pudo cargar la página. Pulsa Recargar página para reintentar." />}
+          {!imageError && loadedImage !== id + '-' + page + '-' + reload && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
+          <div className="document-reading-desk">
+            <div
+              className={'review-page ' + (task ? 'review-page-selectable' : '')}
+              onPointerDown={begin}
+              onPointerMove={move}
+              onPointerUp={finish}
+              onPointerCancel={() => { anchor.current = null; setRegion(null) }}
+            >
+              <img
+                key={id + '-' + page + '-' + reload}
+                draggable={false}
+                src={'/api/reviews/' + id + '/pages/' + page + '?v=' + reload}
+                alt={'Página ' + (page + 1) + ' del documento firmado'}
+                onError={() => setImageError(true)}
+                onLoad={() => { setImageError(false); setLoadedImage(id + '-' + page + '-' + reload) }}
+              />
+              {state.observations.filter(o => o.page_index === page && o.x !== null).map(o => (
+                <span
+                  className="review-highlight"
+                  key={o.id}
+                  title={o.message}
+                  style={{ left: o.x! * 100 + '%', top: o.y! * 100 + '%', width: o.width! * 100 + '%', height: o.height! * 100 + '%' }}
+                />
+              ))}
+              {region && (
+                <span
+                  className="review-highlight review-selection"
+                  style={{ left: region.x * 100 + '%', top: region.y * 100 + '%', width: region.width * 100 + '%', height: region.height * 100 + '%' }}
+                />
+              )}
+            </div>
+          </div>
+          <button type="button" className="link reload-page-link" onClick={() => { setImageError(false); setReload(r => r + 1) }}>
+            <Icon name="refresh" size={13} />
+            <span>Recargar página</span>
+          </button>
+        </section>
+
+        <aside className="review-side">
+          {/* Card 1: Ruta de Validación */}
+          <section className="card review-stages-card">
+            <div className="section-heading">
+              <span className="section-icon"><Icon name="users" /></span>
+              <div>
+                <span className="section-kicker">RUTA DE VALIDACIÓN</span>
+                <h2>Etapas del flujo</h2>
+              </div>
+            </div>
+            <ol className="review-stages">
+              {state.tasks.map((t, idx) => (
+                <li key={t.id} className={'stage-step stage-' + t.status.toLowerCase()}>
+                  <div className="stage-step-tile" aria-hidden="true">
+                    {t.status === 'COMPLETED' ? (
+                      <Icon name="check" size={14} />
+                    ) : (
+                      <span>{idx + 1}</span>
                     )}
                   </div>
-                  {(o.can_edit || o.can_delete) && (
-                    <div className="observation-actions">
-                      {o.can_edit && (
+                  <div className="stage-item-body">
+                    <div className="stage-item-top">
+                      <strong>{displayStageLabel(t.stage_label, t.stage_action)}</strong>
+                      <small className={'stage-badge ' + (t.status === 'ACTIVE' ? 'is-active' : t.status === 'COMPLETED' ? 'is-completed' : '')}>
+                        {labels[t.status]}
+                      </small>
+                    </div>
+                    <span className="stage-actor">
+                      {t.reassignments && t.reassignments.length > 0 ? <small className="stage-actor-role-hint">Asignación actual: </small> : null}
+                      {t.actor_name}
+                    </span>
+                    {t.requires_signature && (
+                      <span className="stage-signature-notice">
+                        <Icon name="lock" size={12} />
+                        Firma electrónica requerida
+                      </span>
+                    )}
+                    {t.reassignments && t.reassignments.length > 0 && (
+                      <div className="stage-reassignments-history">
+                        <span className="stage-reassignments-title">
+                          <Icon name="clock" size={12} /> Historial de sustitución
+                        </span>
+                        {t.reassignments.map((r, i) => (
+                          <div key={r.id || i} className="stage-reassignment-item">
+                            <small>{new Date(r.created_at).toLocaleString('es-EC')}</small>
+                            <div>
+                              <strong>{r.previous_actor_name}</strong> sustituido por <strong>{r.actor_name}</strong>
+                            </div>
+                            <div>Autorizado por: {r.authorized_by_name}</div>
+                            <div className="stage-reassignment-reason">«{r.reason}»</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {t.can_reassign && (
+                      <button
+                        type="button"
+                        className="stage-reassign-btn"
+                        disabled={busy || isFormDirty || signingDirty}
+                        title={'Sustituir participante de ' + displayStageLabel(t.stage_label, t.stage_action)}
+                        aria-label={'Sustituir participante de ' + displayStageLabel(t.stage_label, t.stage_action)}
+                        onClick={() => setReassigningTask(t)}
+                      >
+                        <Icon name="users" size={14} />
+                        <span>Sustituir participante</span>
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* Card 2: Observaciones de la ronda */}
+          <section className="card review-observations-card">
+            <div className="section-heading">
+              <span className="section-icon"><Icon name="document" /></span>
+              <div>
+                <span className="section-kicker">NOTAS Y CORRECCIONES</span>
+                <h2>Observaciones de la ronda</h2>
+              </div>
+            </div>
+
+            {task && (
+              <ActionForm
+                label={editingObservation ? 'Editar observación' : 'Agregar observación'}
+                dirty={isFormDirty}
+                disabled={busy}
+                openSignal={editSignal ?? (region ? 'region' : undefined)}
+                onCancel={() => void cancelObservationForm(true)}
+              >
+                <form onSubmit={observe}>
+                  <fieldset disabled={busy}>
+                    <label>
+                      Observación
+                      <textarea
+                        ref={textareaRef}
+                        required
+                        maxLength={4000}
+                        rows={4}
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
+                        placeholder="Describe la corrección necesaria…"
+                      />
+                    </label>
+                    <div className="scope-segmented-container">
+                      <div className="scope-segmented-control" role="group" aria-label="Alcance de la observación">
                         <button
                           type="button"
-                          className="observation-action-btn"
-                          disabled={busy}
-                          onClick={() => startEdit(o)}
-                          title="Editar observación"
-                          aria-label="Editar observación"
+                          className={'scope-segment' + (region ? ' is-active' : '')}
+                          disabled={!region}
+                          title={region ? `Vinculada a zona en página ${(associatedPage ?? page) + 1}` : 'Arrastra sobre el documento para marcar una zona'}
+                          aria-label={region ? `Zona seleccionada en página ${(associatedPage ?? page) + 1}` : 'Marcar zona'}
                         >
-                          <Icon name="edit" size={14} />
+                          <Icon name="search" size={13} />
+                          <span>{region ? `Zona (pág. ${(associatedPage ?? page) + 1})` : 'Marcar zona'}</span>
                         </button>
-                      )}
-                      {o.can_delete && (
                         <button
                           type="button"
-                          className="observation-action-btn is-danger"
-                          disabled={busy}
-                          onClick={() => removeObservation(o)}
-                          title="Eliminar observación"
-                          aria-label="Eliminar observación"
+                          className={'scope-segment' + (!region && hasPageOnly ? ' is-active' : '')}
+                          title={region ? 'Quitar resaltado y conservar página' : 'Asociar a toda la página'}
+                          aria-label="Quitar resaltado (conservar página)"
+                          onClick={() => {
+                            setRegion(null)
+                            setHasPageOnly(true)
+                            if (associatedPage === null) setAssociatedPage(page)
+                          }}
                         >
-                          <Icon name="trash" size={14} />
+                          <Icon name="document" size={13} />
+                          <span>{`Toda la pág. ${(associatedPage ?? page) + 1}`}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={'scope-segment' + (!region && !hasPageOnly ? ' is-active' : '')}
+                          title="Convertir en observación general"
+                          aria-label="Convertir en observación general"
+                          onClick={() => {
+                            setRegion(null)
+                            setHasPageOnly(false)
+                            setAssociatedPage(null)
+                          }}
+                        >
+                          <Icon name="document" size={13} />
+                          <span>General</span>
+                        </button>
+                      </div>
+                      <div className="scope-segment-hint">
+                        <span>
+                          {region
+                            ? `Zona seleccionada en página ${(associatedPage ?? page) + 1}.`
+                            : hasPageOnly
+                            ? `Asociada a página ${(associatedPage ?? page) + 1} (sin zona seleccionada).`
+                            : 'Observación general (sin página ni zona).'}
+                        </span>
+                        {hasPageOnly && associatedPage !== null && page !== associatedPage && (
+                          <button
+                            type="button"
+                            className="link text-xs"
+                            onClick={() => setAssociatedPage(page)}
+                          >
+                            Asociar a página actual ({page + 1})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="observation-form-buttons">
+                      <button type="submit" disabled={!message.trim() || (editingObservation ? !isFormDirty : false)}>
+                        {editingObservation ? 'Guardar cambios' : 'Guardar observación'}
+                      </button>
+                      {editingObservation && (
+                        <button type="button" className="secondary" onClick={() => void cancelObservationForm()}>
+                          Cancelar edición
                         </button>
                       )}
                     </div>
-                  )}
+                  </fieldset>
+                </form>
+              </ActionForm>
+            )}
+
+            {state.observations.length === 0 ? (
+              <p className="muted">Aún no hay observaciones registradas.</p>
+            ) : (
+              <ul className="review-observations">
+                {state.observations.map(o => (
+                  <li
+                    key={o.id}
+                    className={'observation-card' + (editingObservation?.id === o.id ? ' is-editing' : '')}
+                  >
+                    <div className="observation-header">
+                      <div className="observation-meta">
+                        <span className="observation-avatar" aria-hidden="true">
+                          {o.actor_name.slice(0, 2).toUpperCase()}
+                        </span>
+                        <div className="observation-author-block">
+                          <strong>{o.actor_name}</strong>
+                          <div className="observation-chips-row">
+                            {o.page_index !== null && (
+                              <span className="observation-chip-scope">
+                                {o.x !== null ? '📍 Zona · Pág. ' + (o.page_index + 1) : '📄 Pág. ' + (o.page_index + 1)}
+                              </span>
+                            )}
+                            {o.page_index === null && (
+                              <span className="observation-chip-scope is-general">
+                                🌐 General
+                              </span>
+                            )}
+                            {o.updated_at && (
+                              <span className="observation-badge-edited" title="Observación editada">
+                                Editada
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {(o.can_edit || o.can_delete) && (
+                        <div className="observation-actions">
+                          {o.can_edit && (
+                            <button
+                              type="button"
+                              className="observation-action-btn"
+                              disabled={busy}
+                              onClick={() => startEdit(o)}
+                              title="Editar observación"
+                              aria-label="Editar observación"
+                            >
+                              <Icon name="edit" size={14} />
+                            </button>
+                          )}
+                          {o.can_delete && (
+                            <button
+                              type="button"
+                              className="observation-action-btn is-danger"
+                              disabled={busy}
+                              onClick={() => removeObservation(o)}
+                              title="Eliminar observación"
+                              aria-label="Eliminar observación"
+                            >
+                              <Icon name="trash" size={14} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="observation-message">{o.message}</p>
+                    {o.page_index !== null && (
+                      <button type="button" className="link observation-jump-btn" onClick={() => changePage(o.page_index!)}>
+                        <Icon name="eye" size={13} />
+                        <span>Ver página {o.page_index + 1}</span>
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Card 3: Resolución de la Etapa (Tu Decisión) */}
+          {task && (
+            <section className="card review-decision-card">
+              <div className="section-heading">
+                <span className="section-icon"><Icon name="check" /></span>
+                <div>
+                  <span className="section-kicker">RESOLUCIÓN FINAL</span>
+                  <h2>Tu decisión</h2>
                 </div>
-                <p className="observation-message">{o.message}</p>
-                {o.page_index !== null && (
-                  <button type="button" className="link" onClick={() => changePage(o.page_index!)}>
-                    Ver página {o.page_index + 1}
+              </div>
+
+              {state.observations.length > 0 ? (
+                <div className="review-blocking-alert" role="alert">
+                  <Icon name="bell" size={16} />
+                  <p className="field-help">Hay observaciones en esta ronda. Devuelva el documento para que se corrijan; podrá aprobarlo en una nueva ronda.</p>
+                </div>
+              ) : (
+                <div className="review-clean-notice">
+                  <Icon name="check" size={14} />
+                  <span>Sin observaciones en esta ronda. Puedes proceder a completar tu etapa.</span>
+                </div>
+              )}
+
+              <div className="review-actions">
+                {!task.requires_signature && (
+                  <button
+                    type="button"
+                    className="review-btn-complete"
+                    disabled={busy || isFormDirty || state.observations.length > 0}
+                    onClick={() => decide('COMPLETE')}
+                  >
+                    <Icon name="check" size={16} />
+                    <span>Completar etapa</span>
                   </button>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section></aside>
-    </div></>}
+                <button
+                  type="button"
+                  className="secondary review-btn-return"
+                  disabled={busy || isFormDirty}
+                  onClick={() => decide('RETURN')}
+                >
+                  <Icon name="refresh" size={16} />
+                  <span>Devolver para corrección</span>
+                </button>
+              </div>
+
+              {task.requires_signature && (
+                <ActionForm
+                  label="Preparar firma de revisión"
+                  dirty={signingDirty}
+                  onCancel={() => setSigningDirty(false)}
+                  disabled={busy || isFormDirty || state.observations.length > 0}
+                >
+                  <form onChangeCapture={() => setSigningDirty(true)} onResetCapture={() => setSigningDirty(false)} onSubmit={sign}>
+                    <fieldset disabled={busy || isFormDirty}>
+                      <label>Certificado personal (.p12/.pfx)<input name="certificate" type="file" accept=".p12,.pfx" required /></label>
+                      <label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label>
+                      <button>
+                        <Icon name="lock" size={16} />
+                        <span>Firmar y completar etapa</span>
+                      </button>
+                      <p className="field-help">Certificado y contraseña se usan solo en esta operación. Se comprueban la vigencia del certificado y la integridad del PDF.</p>
+                    </fieldset>
+                  </form>
+                </ActionForm>
+              )}
+            </section>
+          )}
+        </aside>
+      </div>
+    </>}
+    {reassigningTask && (
+      <TaskReassignmentModal
+        task={reassigningTask}
+        documentTitle={state?.review?.title || title || 'Revisión documental'}
+        onClose={() => setReassigningTask(null)}
+        onComplete={() => {
+          setReassigningTask(null)
+          setNotice('Participante sustituido exitosamente.')
+          setReload(r => r + 1)
+        }}
+        onDirtyChange={setReassignmentDirty}
+      />
+    )}
   </section>
 }

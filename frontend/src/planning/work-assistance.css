@@ -27,20 +27,23 @@
 .signature-checklist li[data-pending='true'] > svg { color: var(--amber-700); }
 .signature-checklist li > div { flex: 1; min-width: 0; }
 .signature-checklist li p { margin: 5px 0; color: var(--muted); font-size: .85rem; }
-.round-comparison { margin: 20px 0; }
-.round-comparison .comparison-intro { color: var(--muted); font-size: .88rem; }
-.round-comparison details { border: 1px solid var(--border); border-radius: 12px; margin-top: 10px; background: var(--surface); }
-.round-comparison summary { cursor: pointer; padding: 16px; font-weight: 600; color: var(--text); }
-.round-comparison summary:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; border-radius: 12px; }
+.round-comparison { margin: 16px 0 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.round-comparison .assistance-heading { align-items: center; }
+.round-comparison .assistance-heading h2 { font-size: 1.15rem; margin: 2px 0 0; }
+.round-comparison .comparison-intro { color: var(--muted); font-size: .88rem; margin: 14px 0 10px; }
+.round-comparison details { border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; background: var(--canvas); }
+.round-comparison summary { cursor: pointer; padding: 14px 16px; font-weight: 600; color: var(--text); }
+.round-comparison summary:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; border-radius: 10px; }
 .comparison-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; padding: 0 16px 16px; }
-.comparison-columns > div { min-width: 0; padding: 16px; background: var(--blue-50); border: 1px solid var(--border); border-radius: 10px; }
-.comparison-columns > div:last-child { background: var(--teal-100); }
-.comparison-columns h4 { margin: 0 0 12px; }
-.comparison-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; font-size: .88rem; line-height: 1.7; }
+.comparison-columns > div { min-width: 0; padding: 14px 16px; background: #eef5fc; border: 1px solid #cde0f2; border-radius: 8px; }
+.comparison-columns > div:last-child { background: #eaf5f2; border-color: #c7e6dc; }
+.comparison-columns h4 { margin: 0 0 10px; font-size: 0.88rem; }
+.comparison-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; font-size: .88rem; line-height: 1.6; }
 :root[data-theme='dark'] .pending-inbox, :root[data-theme='dark'] .signature-checklist, :root[data-theme='dark'] .round-comparison { color: var(--text); background: var(--surface); }
 :root[data-theme='dark'] .pending-filters button[aria-pressed='true'] { background: var(--blue-700); border-color: var(--blue-600); }
-:root[data-theme='dark'] .comparison-columns > div { background: var(--blue-50); }
-:root[data-theme='dark'] .comparison-columns > div:last-child { background: var(--teal-100); }
+:root[data-theme='dark'] .round-comparison details { background: #102131; border-color: #1e3950; }
+:root[data-theme='dark'] .comparison-columns > div { background: #112334; border-color: #213d56; }
+:root[data-theme='dark'] .comparison-columns > div:last-child { background: #112d2b; border-color: #23544d; }
 @media (min-width: 768px) and (max-width: 1100px) {
   .pending-list li { align-items: flex-start; flex-direction: column; gap: 12px; }
 }

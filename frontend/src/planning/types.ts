@@ -15,3 +15,13 @@ export interface PlanOptions {
 }
 export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt' | 'canManage' | 'rowVersion'>[]; total: number; page: number; size: number }
 export type PlanSummary = PlanPage['items'][number]
+
+export type ScopeOption = PlanOptions['scopes'][number]
+export interface CareerCopyOptions {
+  rowVersion: number
+  canCopy: boolean
+  scopes: ScopeOption[]
+}
+export interface CareerCopyResult {
+  documentIds: string[]
+}

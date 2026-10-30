@@ -20,6 +20,7 @@ import { ReportEditor } from './ReportEditor'
 import { DocumentLifecycle } from './DocumentLifecycle'
 import { WritingAssistant } from './WritingAssistant'
 import { Icon } from '../shared/Icon'
+import { CareerCopyModal } from './CareerCopyModal'
 import { PlanStepNavigationContext, planSteps, type PlanStep, type PlanStepGuard } from './PlanStepNavigation'
 import './document-workspace.css'
 
@@ -82,6 +83,8 @@ export function WorkPlanEditor({
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
   const [authorsDirty, setAuthorsDirty] = useState(false)
   const [stepDirty, setStepDirty] = useState(false), [stepBusy, setStepBusy] = useState(false), [navigating, setNavigating] = useState(false)
+  const [careerCopyOpen, setCareerCopyOpen] = useState(false)
+  const [careerCopyDirty, setCareerCopyDirty] = useState(false)
   const stepGuard = useRef<PlanStepGuard | null>(null), navigationLock = useRef(false)
   const stepHeading = useRef<HTMLDivElement>(null)
   const registerStep = useCallback((guard: PlanStepGuard, pending: boolean) => {
@@ -93,7 +96,7 @@ export function WorkPlanEditor({
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista del Plan.') }
   }, [initial.id])
   const synchronizePlan = useCallback((current: WorkPlan) => { setPlan(current); setDraft(fields(current)) }, [])
-  const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty
+  const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty || careerCopyDirty
 
   useEffect(() => {
     const topbar = document.querySelector('.topbar'), navigation = stepHeading.current
@@ -208,6 +211,18 @@ export function WorkPlanEditor({
       <div className="plan-document-tools" role="group" aria-label="Acciones del documento">
         <DocumentFollowUp approved={plan.documentState === 'APPROVED'} disabled={dirty || busy || stepBusy || navigating} pendingChanges={dirty} onOpen={openFollowUp} />
         {plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || stepBusy || navigating} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
+        {plan.documentType === 'T1' && plan.documentState === 'DRAFT' && plan.editable && !plan.archivedAt && (
+          <button
+            type="button"
+            className="secondary"
+            disabled={dirty || busy || stepBusy || navigating}
+            title={dirty ? 'Guarde los cambios pendientes antes de copiar a otra carrera' : 'Copiar este plan a otra carrera del mismo período'}
+            onClick={() => setCareerCopyOpen(true)}
+          >
+            <Icon name="copy" size={16} />
+            <span>Copiar a otra carrera</span>
+          </button>
+        )}
       </div>
     </header>
     <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
@@ -320,5 +335,25 @@ export function WorkPlanEditor({
     )}
     <PlanPreview plan={plan} draft={draft} step={section as PlanStep} focus={previewFocus} dirty={dirty} textDirty={contentDirty} prepared={preparedPreview} />
     </div>
+    {careerCopyOpen && (
+      <CareerCopyModal
+        plan={plan}
+        onClose={() => setCareerCopyOpen(false)}
+        onDirtyChange={setCareerCopyDirty}
+        onCreated={_documentIds => {
+          setNotice('Copias creadas exitosamente.')
+        }}
+        onFinish={onBack}
+        onOpenCreatedPlan={planId => {
+          setCareerCopyOpen(false)
+          api<WorkPlan>('/work-plans/' + planId)
+            .then(doc => {
+              if (onDocumentOpen) onDocumentOpen(doc)
+              else synchronizePlan(doc)
+            })
+            .catch(e => setError(e instanceof Error ? e.message : 'No se pudo abrir el nuevo borrador.'))
+        }}
+      />
+    )}
   </section></PlanStepNavigationContext.Provider>
 }

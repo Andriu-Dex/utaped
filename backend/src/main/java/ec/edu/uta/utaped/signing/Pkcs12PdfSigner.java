@@ -104,6 +104,7 @@ public final class Pkcs12PdfSigner {
                     fail("El núcleo inicial requiere un PDF sin cifrado ni firmas previas.");
                 if(additional) verifyPrevious(pdf,original);
                 var signature=new PDSignature();signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+                if(slot!=null&&slot.action().endsWith("_EN_SUSTITUCION")) signature.setReason("Sustitución autorizada de participante");
                 signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
                 var calendar=GregorianCalendar.from(now.atZone(java.time.ZoneOffset.UTC));signature.setSignDate(calendar);
                 options.setPreferredSignatureSize(32768);
@@ -245,7 +246,7 @@ public final class Pkcs12PdfSigner {
         } catch(com.google.zxing.WriterException error) { throw new IOException("No se pudo generar el código QR de la firma.",error); }
         float pad=2,qr=Math.min(height-2*pad,width*0.38f),module=qr/matrix.getWidth(),qrBottom=(height-qr)/2;
         float textX=pad+qr+4,textWidth=width-textX-pad;
-        String label=encodable(regular,"Firmado electrónicamente por:"),date=encodable(regular,"Fecha: "+java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(STAMP_ZONE).format(now)+" (EC)");
+        String label=encodable(regular,action!=null&&action.endsWith("_EN_SUSTITUCION")?"Firmado por sustitución:":"Firmado electrónicamente por:"),date=encodable(regular,"Fecha: "+java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(STAMP_ZONE).format(now)+" (EC)");
         float small=Math.max(2.5f,Math.min(Math.min(7,height/7),fit(regular,label,textWidth)));float dateSize=Math.max(2.5f,Math.min(small,fit(regular,date,textWidth)));
         float available=height-2*pad-small*1.6f-dateSize*1.6f;
         String safeName=encodable(bold,name);List<String> lines=List.of(safeName);float nameSize=3;

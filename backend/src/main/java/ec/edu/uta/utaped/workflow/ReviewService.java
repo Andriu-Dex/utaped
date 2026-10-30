@@ -112,13 +112,15 @@ public class ReviewService {
         return new InboxPage(items,total,page,size,new InboxMetrics(((Number)counts.get("active")).longValue(),((Number)counts.get("completed")).longValue(),((Number)counts.get("returned")).longValue()));
     }
     private Map<String,Object> authorized(UUID review,String email) {
-        var record=jdbc.queryForList("SELECT * FROM document_review WHERE id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));
+        var record=jdbc.queryForList("SELECT r.*, w.title, w.document_type FROM document_review r JOIN work_plan w ON w.id=r.work_plan_id WHERE r.id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));
         plans.get((UUID)record.get("work_plan_id"),email);return record;
     }
     @Transactional(readOnly=true) public State state(UUID review,String email) {
         var record=authorized(review,email);var file=files.metadata((UUID)record.get("current_file_id"));
-        var tasks=jdbc.queryForList("SELECT id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,status,row_version,acted_at FROM review_task WHERE review_id=? ORDER BY position",review);
+        var tasks=jdbc.queryForList("SELECT id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,status,row_version,acted_at,slot_actor_id FROM review_task WHERE review_id=? ORDER BY position",review);
+        var replacements=jdbc.queryForList("SELECT h.task_id,h.previous_actor_id,h.previous_actor_name,h.actor_id,h.actor_name,h.authorized_by,h.authorized_by_name,h.reason,h.created_at FROM review_task_reassignment h JOIN review_task t ON t.id=h.task_id WHERE t.review_id=? ORDER BY h.created_at,h.id",review);
         for(var t:tasks) {
+            t.put("reassignments",replacements.stream().filter(h->t.get("id").equals(h.get("task_id"))).toList());
             t.put("display_stage_label",displayStageLabel((String)t.get("stage_label"),(String)t.get("stage_action")));
         }
         var observations=jdbc.queryForList("""
@@ -131,6 +133,9 @@ public class ReviewService {
         UUID currentUserId=accounts.current(email).id();
         boolean periodActive=jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN academic_period p ON p.id=w.period_id WHERE w.id=? AND p.status='ACTIVE'",Integer.class,record.get("work_plan_id"))>0;
         boolean isReviewActive="IN_REVIEW".equals(record.get("status"));
+        boolean coordinator=isReviewActive&&periodActive&&jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id AND s.active JOIN scope_member m ON m.scope_id=s.id AND m.active AND m.membership_role='COORDINATOR' WHERE w.id=? AND m.user_id=? AND NOT w.discarded AND w.archived_at IS NULL",Integer.class,record.get("work_plan_id"),currentUserId)>0;
+        var unavailable=jdbc.queryForList("SELECT t.id FROM review_task t JOIN app_user u ON u.id=t.actor_id JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id WHERE t.review_id=? AND (NOT u.active OR EXISTS(SELECT 1 FROM scope_member m WHERE m.scope_id=w.scope_id AND m.user_id=t.actor_id AND NOT m.active))",UUID.class,review);
+        for(var t:tasks) t.put("can_reassign",coordinator&&Set.of("ACTIVE","PENDING").contains(t.get("status"))&&t.get("acted_at")==null&&unavailable.contains(t.get("id")));
         boolean canAct=periodActive&&tasks.stream().anyMatch(t->currentUserId.equals(t.get("actor_id"))&&t.get("status").equals("ACTIVE"));
         for(var obs:observations) {
             UUID obsTaskId=(UUID)obs.get("task_id");
@@ -161,6 +166,7 @@ public class ReviewService {
         var initial=jdbc.queryForList("SELECT review_id FROM review_task WHERE id=? AND actor_id=?",task,accounts.current(email).id()).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Tarea no disponible."));
         jdbc.queryForList("SELECT id FROM document_review WHERE id=? FOR UPDATE",initial.get("review_id"));
         var record=jdbc.queryForMap("SELECT t.*,r.work_plan_id,r.artifact_id,r.current_file_id,r.status AS review_status FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE t.id=?",task);
+        if(!accounts.current(email).id().equals(record.get("actor_id"))) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Tarea no disponible.");
         authorized((UUID)record.get("review_id"),email);
         plans.lock((UUID)record.get("work_plan_id"),email);
         if(!"ACTIVE".equals(record.get("status"))||!"IN_REVIEW".equals(record.get("review_status"))) throw conflict("Esta tarea ya no está activa.");
@@ -281,7 +287,8 @@ public class ReviewService {
             try { certificate=material.certificate(certificateFingerprint); }
             catch(Pkcs12PdfSigner.SigningException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage()); }
             var source=jdbc.queryForObject("SELECT signature_slots::text FROM document_artifact WHERE id=?",String.class,record.get("artifact_id"));
-            var slot=Arrays.stream(json.readValue(source,SignatureSlot[].class)).filter(s->accounts.current(email).id().equals(s.actorId())&&record.get("signature_action").equals(s.action())).findFirst().orElseThrow(()->conflict("Artefacto sin ubicación válida de firma."));
+            var slot=Arrays.stream(json.readValue(source,SignatureSlot[].class)).filter(s->Objects.equals(record.get("slot_actor_id")==null?accounts.current(email).id():record.get("slot_actor_id"),s.actorId())&&record.get("signature_action").equals(s.action())).findFirst().orElseThrow(()->conflict("Artefacto sin ubicación válida de firma."));
+            if(record.get("slot_actor_id")!=null) slot=new SignatureSlot(slot.role(),slot.action()+"_EN_SUSTITUCION",slot.label(),slot.actorId(),slot.pageIndex(),slot.pageNumber(),slot.bounds());
             if(!signing.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra firma en curso. Intente nuevamente.");
             byte[] output;
             try { output=new Pkcs12PdfSigner().signProvided(files.read(meta.id()),material.container,material.password,certificate,Instant.now(),slot,true); }

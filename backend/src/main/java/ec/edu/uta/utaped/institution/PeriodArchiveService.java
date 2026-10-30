@@ -48,8 +48,8 @@ public class PeriodArchiveService {
         result.put("states",jdbc.queryForList("SELECT document_type,document_state,count(*) AS count FROM work_plan WHERE period_id=? GROUP BY document_type,document_state ORDER BY document_type,document_state",period));
         return result;
     }
-    private Object rows(String sql,UUID id) {
-        return jdbc.query("SELECT row_to_json(item)::text FROM ("+sql+") item",(rs,n)->json.readValue(rs.getString(1),Object.class),id);
+    private Object rows(String sql,Object... args) {
+        return jdbc.query("SELECT row_to_json(item)::text FROM ("+sql+") item",(rs,n)->json.readValue(rs.getString(1),Object.class),args);
     }
     private Set<UUID> fileIds(UUID document) {
         return new LinkedHashSet<>(jdbc.queryForList("""
@@ -78,6 +78,8 @@ public class PeriodArchiveService {
         data.put("extensions",rows("SELECT * FROM deadline_extension_history WHERE work_plan_id=? ORDER BY created_at,id",document));
         data.put("reviews",rows("SELECT * FROM document_review WHERE work_plan_id=? ORDER BY round_number",document));
         data.put("tasks",rows("SELECT t.* FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? ORDER BY r.round_number,t.position",document));
+        data.put("reviewReassignments",rows("SELECT h.* FROM review_task_reassignment h JOIN review_task t ON t.id=h.task_id JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? ORDER BY h.created_at,h.id",document));
+        data.put("planCopyBatches",rows("SELECT * FROM plan_copy_batch WHERE source_document_id=? OR jsonb_exists(document_ids,?::text) ORDER BY created_at,request_key",document,document.toString()));
         data.put("observations",rows("SELECT o.* FROM review_observation o JOIN document_review r ON r.id=o.review_id WHERE r.work_plan_id=? ORDER BY o.created_at,o.id",document));
         data.put("observationHistory",rows("SELECT h.* FROM review_observation_history h JOIN review_task t ON t.id=h.task_id JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? ORDER BY h.occurred_at,h.id",document));
         data.put("audit",rows("SELECT * FROM audit_event WHERE target_id=? ORDER BY occurred_at,id",document));
@@ -165,6 +167,8 @@ public class PeriodArchiveService {
         var inventory=jdbc.queryForList("SELECT w.id,w.document_type,w.title,w.document_state,w.formal_version,g.name AS group_name FROM work_plan w JOIN institutional_group g ON g.id=w.group_id WHERE w.period_id=? ORDER BY g.name,w.document_type,w.formal_version,w.id",period);
         var fileIds=new LinkedHashSet<UUID>();for(var document:documents) fileIds.addAll(fileIds(document));fileIds.add((UUID)archive.get("file_id"));
         String reviews="SELECT r.id FROM document_review r JOIN work_plan w ON w.id=r.work_plan_id WHERE w.period_id=?";
+        jdbc.update("DELETE FROM review_task_reassignment WHERE task_id IN (SELECT id FROM review_task WHERE review_id IN ("+reviews+"))",period);
+        jdbc.update("DELETE FROM plan_copy_batch WHERE source_document_id IN (SELECT id FROM work_plan WHERE period_id=?)",period);
         jdbc.update("DELETE FROM review_observation_history WHERE task_id IN (SELECT id FROM review_task WHERE review_id IN ("+reviews+"))",period);
         jdbc.update("DELETE FROM review_observation WHERE review_id IN ("+reviews+")",period);
         jdbc.update("DELETE FROM review_task WHERE review_id IN ("+reviews+")",period);
