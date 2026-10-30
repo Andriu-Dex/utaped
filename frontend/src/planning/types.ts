@@ -14,3 +14,4 @@ export interface PlanOptions {
   defaultJustification?: string
 }
 export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt' | 'canManage' | 'rowVersion'>[]; total: number; page: number; size: number }
+export type PlanSummary = PlanPage['items'][number]

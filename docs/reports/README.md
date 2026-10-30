@@ -1,5 +1,9 @@
 # Reportes
 
+- [Separación de Inicio y Reportes: frontend](2026-10-30-48-home-reporting-separation-frontend.md).
+
+- [Separación de Inicio y Reportes: backend](2026-10-30-47-home-reporting-separation-backend.md).
+
 - [Observaciones editables y etiquetas de revisión](2026-10-30-46-editable-review-observations-and-labels.md).
 
 - [Panel administrativo de supervisión](2026-10-30-45-administrative-executive-overview.md).

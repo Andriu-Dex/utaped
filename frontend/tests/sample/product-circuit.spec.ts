@@ -233,7 +233,7 @@ test('independent scoped T1, return, sequential signatures, evidence, T2 and for
     await archiveDialog.getByRole('button', { name: 'Cancelar', exact: true }).click()
     expect((await api(author, '/work-plans/' + doc.id)).archivedAt).toBeNull()
     await admin.getByRole('button',{name:'Períodos académicos',exact:true}).click(); await admin.getByRole('button',{name:'Comprobar vencimientos ahora',exact:true}).click(); await expect(admin.getByText(/avisos nuevos. Los envíos anteriores/)).toBeVisible(); const alerts=(await api(author,'/notifications?size=100')).items; expect(alerts.some((n:{kind:string;targetId:string})=>n.kind==='ACTIVITY_DEADLINE_NEAR'&&n.targetId===doc.id)).toBe(true); expect((await api(admin,'/admin/deadline-notices/scan','POST')).sent).toBe(0);
-    await author.getByRole('button', { name: 'Inicio', exact: true }).click()
+    await author.getByRole('button', { name: 'Reportes de gestión', exact: true }).click()
     await expect(author.getByRole('region', { name: 'Indicadores de gestión', exact: true })).toBeVisible()
     await author.getByRole('button', { name: 'Abrir ejecución: Preparar evidencia institucional', exact: true }).click()
     await expect(author.getByRole('heading', { name: 'Actividades y evidencias', exact: true })).toBeVisible()
