@@ -55,9 +55,9 @@ test('modern access preserves credentials, supports username and administrative 
   await expect(page.getByRole('heading', { name: 'Panel general', exact: true })).toBeVisible()
   await expect(navigation.getByRole('button', { name: 'Documentos', exact: true })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: /Bienvenido,/ })).toHaveCount(0)
-  await expect(page.getByText('Usuarios registrados', { exact: true })).toBeVisible()
+  await expect(page.getByText('Personal institucional', { exact: true })).toBeVisible()
   const counts = await (await page.request.get('/api/admin/users/directory?size=1')).json()
-  await expect(page.locator('.admin-metric').filter({ hasText: 'Usuarios registrados' }).locator('strong')).toHaveText(String(counts.total))
+  await expect(page.getByRole('button', { name: /Personal institucional/ }).locator('strong')).toHaveText(String(counts.total))
   for (const [theme, width, height] of [['light',1440,1000],['dark',1440,1000],['dark',820,1180]] as const) {
     await page.setViewportSize({ width, height })
     if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: theme === 'dark' ? 'Modo oscuro' : 'Modo claro', exact: true }).click()

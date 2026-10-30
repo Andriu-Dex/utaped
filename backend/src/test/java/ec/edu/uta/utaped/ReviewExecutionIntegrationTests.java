@@ -24,8 +24,17 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.BusinessCalendar calendar;
     @Autowired ec.edu.uta.utaped.planning.PreparationExtensionService extensions;
     @Autowired ec.edu.uta.utaped.planning.PendingWorkService pendingWork;
+    @Autowired ec.edu.uta.utaped.institution.AdminOverviewService overview;
     @Autowired ec.edu.uta.utaped.planning.ExecutionReportService executions;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void administrativeReviewAlertCountsDocumentsNotStagesAndDisappearsAfterDecision() throws Exception {
+        UUID review=submit(false);var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
+        jdbc.update("UPDATE academic_period SET review_starts_on=?,review_ends_on=? WHERE id=?",today.minusDays(5),today.minusDays(1),period);
+        assertEquals(1,overview.get(email,period,false).alerts().reviewsOutsideWindow());
+        var task=reviews.inbox(reviewerEmail).getFirst();reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Corrección pendiente",UUID.randomUUID()));
+        assertEquals(0,overview.get(email,period,false).alerts().reviewsOutsideWindow());
+        assertEquals("RETURNED",reviews.state(review,email).review().get("status"));
+    }
     @Test void personalPendingWorkFollowsAssignmentsCorrectionsAndOwnSignatureTurn() throws Exception {
         UUID review=submit(false);
         assertEquals(1,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());

@@ -78,6 +78,7 @@ export default function App() {
   const [documentStep,setDocumentStep] = useState<string | null>(initialRoute.step)
   const [view,setView] = useState<View>(initialRoute.view); const content = useRef<HTMLElement>(null)
   const [allPeriods,setAllPeriods] = useState(false)
+  const [reportingPeriod, setReportingPeriod] = useState('')
   const identityEpoch = useRef(0)
   const [workspace, setWorkspace] = useState<'administration' | 'documents'>(initialRoute.workspace ?? 'administration')
   const documentGroups = groups.filter(group => group.membership_role != null)
@@ -147,6 +148,7 @@ export default function App() {
     setDocumentStep(null)
     setView('home')
     setAllPeriods(false)
+    setReportingPeriod('')
     setWorkspace('administration')
     window.history.replaceState(null, '', window.location.pathname)
   }
@@ -290,7 +292,7 @@ export default function App() {
       </header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
-        {view === 'my-organization' && !administrative ? <ContextualOrganization onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={page => navigate(page)} /> : <>
+        {view === 'my-organization' && !administrative ? <ContextualOrganization onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
           <section className="welcome-banner"><div><span className="eyebrow">TU ESPACIO DE TRABAJO</span><h1>Bienvenido, {account.displayName}</h1><p>Organiza tu planificación y retoma tus documentos desde un solo lugar.</p><button className="hero-button" onClick={() => navigate('documents')}>Ver mis documentos<Icon name="arrow" size={18} /></button></div><div className="welcome-art" aria-hidden="true"><Icon name="document" size={88} /><span><Icon name="check" size={24} /></span></div></section>
           <TrackingDashboard onOpen={(id, step = 'general') => navigate('documents', id, step)} onOpenReports={() => navigate('reporting')} />
           <div className="context-grid"><section className="card context-card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">COLABORACIÓN</span><h2>Grupos institucionales</h2></div></div><p className="muted">Consulta tus integrantes. Tu identidad se conserva al cambiar de contexto.</p>

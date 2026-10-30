@@ -5,11 +5,11 @@ import { Icon } from '../shared/Icon'
 import { ManagementOverview } from './ManagementOverview'
 import { formatPercent, type ReportingSummary } from './reportingTypes'
 
-export function ReportingDashboard({ administrative = false, onOpenDocument }: { administrative?: boolean; onOpenDocument?: (id: string) => void }) {
+export function ReportingDashboard({ administrative = false, onOpenDocument, initialPeriodId = '' }: { administrative?: boolean; initialPeriodId?: string; onOpenDocument?: (id: string) => void }) {
   const [data, setData] = useState<ReportingSummary | null>(null)
   const [groups, setGroups] = useState<Group[]>([]), [periods, setPeriods] = useState<Period[]>([])
   const [error, setError] = useState(''), [loading, setLoading] = useState(true), [reload, setReload] = useState(0)
-  const [filters, setFilters] = useState({ groupId: '', periodId: '', archived: false })
+  const [filters, setFilters] = useState({ groupId: '', periodId: initialPeriodId, archived: false })
   const [exporting, setExporting] = useState(false)
   const query = new URLSearchParams({ archived: String(filters.archived), ...(filters.groupId ? { groupId: filters.groupId } : {}), ...(filters.periodId ? { periodId: filters.periodId } : {}) }).toString()
   useEffect(() => {

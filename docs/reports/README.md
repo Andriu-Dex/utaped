@@ -1,5 +1,7 @@
 # Reportes
 
+- [Panel administrativo de supervisión](2026-10-30-45-administrative-executive-overview.md).
+
 - [Revisión de interfaz y cierre de cambios](2026-10-29-44-interface-review-and-local-commits.md).
 
 - [Pendientes personales, comparación y comprobación de firma](2026-10-28-43-personal-work-comparison-and-signing-checklist.md).

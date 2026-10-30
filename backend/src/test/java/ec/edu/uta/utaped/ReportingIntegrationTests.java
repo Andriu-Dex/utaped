@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @SpringBootTest
 class ReportingIntegrationTests {
     @Autowired JdbcTemplate jdbc;@Autowired WorkPlanService plans;@Autowired ReportingService reporting;
+    @Autowired ec.edu.uta.utaped.institution.AdminOverviewService overview;
     UUID user,group,period,plan,a,b,c;LocalDate today;String email="metrics@example.invalid";
     @BeforeEach void setup() {
         assertEquals("utaped_test",jdbc.queryForObject("SELECT current_database()",String.class));
@@ -46,6 +47,59 @@ class ReportingIntegrationTests {
     }
     String result(UUID activity,int percentage) { return "{\"activityId\":\""+activity+"\",\"percentage\":"+percentage+"}"; }
     void percent(String expected,BigDecimal actual) { assertEquals(0,new BigDecimal(expected).compareTo(actual)); }
+    String overviewAdmin() {
+        String admin="supervision@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Supervisión','unused','ADMIN',false)",UUID.randomUUID(),admin);
+        return admin;
+    }
+    @Test void administrativeOverviewKeepsAggregatePermissionSeparateFromDocumentAccess() {
+        assertEquals(403,assertThrows(org.springframework.web.server.ResponseStatusException.class,()->overview.get(email,null,false)).getStatusCode().value());
+        String admin=overviewAdmin();report(plan,"T2","DRAFT",1,"[]");report(plan,"T3","DRAFT",1,"[]");
+        var summary=overview.get(admin,null,false);
+        assertEquals(period,summary.selectedPeriodId());assertEquals(2,summary.users());assertEquals(2,summary.activeUsers());
+        assertEquals(2,summary.alerts().pendingEvidence());assertEquals(1,summary.alerts().overdueActivities());
+        assertTrue(summary.reporting().upcoming().isEmpty());assertNull(summary.reporting().declaredExecution());
+        assertEquals(3,summary.documentTypes().stream().mapToLong(type->type.count()).sum());
+        assertEquals(summary.reporting().plans()+summary.reporting().reports(),summary.documentTypes().stream().mapToLong(type->type.count()).sum());
+        assertEquals(404,assertThrows(org.springframework.web.server.ResponseStatusException.class,()->plans.get(plan,admin)).getStatusCode().value());
+    }
+    @Test void overviewUsesIndependentWindowsAndNeverChoosesAnAmbiguousCurrentPeriod() {
+        String admin=overviewAdmin();
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=?,review_starts_on=? WHERE id=?",today,today.plusDays(1),period);
+        var initial=overview.get(admin,null,false);assertEquals("OPEN",initial.periods().getFirst().windows().getFirst().status());
+        assertEquals(0L,initial.periods().getFirst().windows().getFirst().remainingDays());assertEquals("UPCOMING",initial.periods().getFirst().windows().get(1).status());
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",today.minusDays(1),period);
+        assertEquals("CLOSED",overview.get(admin,period,false).periods().getFirst().windows().getFirst().status());
+        UUID second=UUID.randomUUID();jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Segundo período simultáneo',?,?,?,?,?,?)",second,today.minusDays(1),today.plusDays(90),today.minusDays(1),today.plusDays(4),today,today.plusDays(90));
+        assertNull(overview.get(admin,null,false).selectedPeriodId());
+        assertEquals(0,overview.get(admin,second,false).reporting().plans());
+        assertNull(overview.get(admin,null,true).selectedPeriodId());
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,()->overview.get(admin,second,true));
+        jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",second);
+        assertEquals(404,assertThrows(org.springframework.web.server.ResponseStatusException.class,()->overview.get(admin,second,false)).getStatusCode().value());
+    }
+    @Test void missingCoordinatorRequiresActiveMembershipAndAccountAndRespectsScopeFilters() {
+        String admin=overviewAdmin();UUID scope=UUID.randomUUID();
+        jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id) VALUES (?,?,?)",scope,group,period);
+        assertEquals(1,overview.get(admin,period,false).alerts().scopesWithoutCoordinator());
+        jdbc.update("INSERT INTO scope_member(scope_id,user_id,membership_role,active) VALUES (?,?,'COORDINATOR',false)",scope,user);
+        assertEquals(1,overview.get(admin,period,false).alerts().scopesWithoutCoordinator());
+        jdbc.update("UPDATE scope_member SET active=true WHERE scope_id=?",scope);
+        assertEquals(0,overview.get(admin,period,false).alerts().scopesWithoutCoordinator());
+        jdbc.update("UPDATE app_user SET active=false WHERE id=?",user);
+        assertEquals(1,overview.get(admin,period,false).alerts().scopesWithoutCoordinator());
+        jdbc.update("UPDATE organizational_scope SET active=false WHERE id=?",scope);
+        assertEquals(0,overview.get(admin,period,false).alerts().scopesWithoutCoordinator());
+    }
+    @Test void overviewAuditUsesConservedNamesAndFallsBackOnlyForLegacyEvents() {
+        String admin=overviewAdmin();UUID historical=UUID.randomUUID(),legacy=UUID.randomUUID();
+        jdbc.update("INSERT INTO audit_event(id,actor_id,action,actor_display_name) VALUES (?,?,'USER_CREATED','Nombre conservado')",historical,user);
+        jdbc.update("INSERT INTO audit_event(id,actor_id,action) VALUES (?,?,'LOGIN_SUCCEEDED')",legacy,user);
+        jdbc.update("UPDATE app_user SET display_name='Nombre actual' WHERE id=?",user);
+        var events=overview.get(admin,period,false).events();
+        assertEquals("Nombre conservado",events.stream().filter(event->event.id().equals(historical)).findFirst().orElseThrow().actorName());
+        assertEquals("Nombre actual",events.stream().filter(event->event.id().equals(legacy)).findFirst().orElseThrow().actorName());
+    }
     @Test void pendingCountsRespectVersionsExtensionsFiltersAndPrivateAccess() {
         var summary=reporting.get(email,group,period,false);
         assertEquals(3,summary.activities());assertEquals(1,summary.completedActivities());assertEquals(2,summary.pendingEvidence());assertEquals(1,summary.dueSoonActivities());assertEquals(1,summary.overdueActivities());
