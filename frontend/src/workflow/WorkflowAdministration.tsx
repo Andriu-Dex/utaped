@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
+
 interface Stage { positionLabel?: string; positionId?: string | null; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
 interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
+
 export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyChange }: { groups: Group[]; users: User[]; suggestedQuery: string; onDirtyChange: (dirty: boolean) => void }) {
   const [group, setGroup] = useState(''); const [type, setType] = useState('T1'); const [state, setState] = useState<State | null>(null)
   const [draft, setDraft] = useState<Definition>({ name: '', stages: [] }); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
@@ -38,8 +40,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     <div className="section-heading">
       <div className="section-heading-icon" aria-hidden="true"><Icon name="settings" size={24} /></div>
       <div>
+        <span className="section-heading-kicker">GESTIÓN DE PROCESOS</span>
         <h3>Plantillas de flujo por grupo</h3>
-        <p>Prepare revisiones reutilizables para T1 y T2. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
+        <p className="muted">Prepare revisiones reutilizables para Planes e Informes. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
       </div>
     </div>
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
@@ -49,6 +52,12 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+    {!group && (
+      <div className="empty-state" style={{ margin: '24px 0 12px' }}>
+        <Icon name="settings" size={32} />
+        <p>Seleccione un grupo institucional y un tipo documental para consultar o configurar sus etapas de aprobación.</p>
+      </div>
+    )}
     {group && !state && (loadFailed ? <div className="empty-state"><p>No se pudo cargar la configuración del flujo.</p><button type="button" className="secondary" onClick={() => { setLoadFailed(false); setError(''); setRefresh(n => n + 1) }}>Reintentar configuración del flujo</button></div> : <p role="status">Cargando flujo…</p>)}
     {state && <>
       <div className="workflow-status-card">
@@ -77,9 +86,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button className="secondary" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={16} /></button>
-                  <button className="secondary" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}><Icon name="arrowDown" size={16} /></button>
-                  <button className="danger" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}><Icon name="trash" size={16} /></button>
+                  <button className="secondary table-action-icon-btn" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={16} /></button>
+                  <button className="secondary table-action-icon-btn" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}><Icon name="arrowDown" size={16} /></button>
+                  <button className="danger table-action-icon-btn" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}><Icon name="trash" size={16} /></button>
                 </div>
               </div>
               <div className="grid">

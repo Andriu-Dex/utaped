@@ -48,12 +48,13 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
   async function saveActivity(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/activities' + (activity.id ? '/' + activity.id : ''), activity.id ? 'PUT' : 'POST', { ...activity, groupId }, 'activity')) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }
   const retry = <button type="button" className="secondary" disabled={busy || dirty} onClick={() => { setError(''); setReload(value => value + 1) }}>Reintentar catálogos de planificación</button>
   if (!loaded) return <section className="card"><h2>Catálogos de planificación</h2>{error ? <><Toast message={error} />{retry}</> : <p role="status">Cargando catálogos de planificación…</p>}</section>
-  return <section className="card"><p>Los catálogos comienzan vacíos. Registre las denominaciones y fechas institucionales aplicables.</p>
+  return <section className="card">
     {error && <Toast message={error} />}{loadFailed && retry}{notice && <Toast tone="success" message={notice} />}
     <fieldset disabled={busy}><div>{section === 'resources' && <section>
       <div className="section-heading">
         <div className="section-heading-icon" aria-hidden="true"><Icon name="document" size={24} /></div>
         <div>
+          <span className="section-heading-kicker">PLANIFICACIÓN DOCENTE</span>
           <h3>Recursos y medios</h3>
           <p className="muted">Administre los recursos institucionales y formatos de medios de verificación para matrices docentes.</p>
         </div>
@@ -71,65 +72,109 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
           </div>
         </form>
       </ActionForm>
-      <ul className="admin-catalog-list">
-        {catalogs.map(c => <li key={c.id} className="admin-catalog-item">
-          <div>
-            <span className={`status-badge ${c.kind === 'RESOURCE' ? 'active' : 'pending'}`} style={{ marginRight: '8px' }}>{c.kind === 'RESOURCE' ? 'Recurso' : 'Medio'}</span>
-            <strong>{c.label}</strong>
-            {c.kind === 'MEANS' && <span className="muted" style={{ marginLeft: '6px' }}>· {c.evidenceKind === 'URL' ? 'Enlace HTTPS' : 'PDF'}</span>}
-            {!c.active && <span className="status-badge inactive" style={{ marginLeft: '6px' }}>Inactivo</span>}
-          </div>
-          <button className="secondary" title="Editar elemento" aria-label={'Editar elemento ' + c.label} onClick={async () => { if ((await discard(['catalog']))) setCatalog({ ...c, evidenceKind: c.evidenceKind ?? 'PDF' }) }}>✎</button>
-        </li>)}
-      </ul>
+      {catalogs.length === 0 ? (
+        <div className="empty-state" style={{ margin: '20px 0' }}>
+          <Icon name="document" size={32} />
+          <p>No hay recursos ni medios configurados. Use "Crear o editar elemento" para registrar uno.</p>
+        </div>
+      ) : (
+        <ul className="admin-catalog-list">
+          {catalogs.map(c => <li key={c.id} className="admin-catalog-item">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span className={`status-badge ${c.kind === 'RESOURCE' ? 'active' : 'pending'}`}>
+                {c.kind === 'RESOURCE' ? 'Recurso' : 'Medio'}
+              </span>
+              <strong>{c.label}</strong>
+              {c.kind === 'MEANS' && <span className="muted">· {c.evidenceKind === 'URL' ? 'Enlace HTTPS' : 'PDF'}</span>}
+              {!c.active && <span className="status-badge inactive">Inactivo</span>}
+            </div>
+            <button
+              className="secondary table-action-icon-btn"
+              title="Editar elemento"
+              aria-label={'Editar elemento ' + c.label}
+              onClick={async () => { if ((await discard(['catalog']))) setCatalog({ ...c, evidenceKind: c.evidenceKind ?? 'PDF' }) }}
+            >
+              <Icon name="edit" size={15} />
+            </button>
+          </li>)}
+        </ul>
+      )}
     </section>}
     {section === 'activities' && <section>
       <div className="section-heading">
         <div className="section-heading-icon" aria-hidden="true"><Icon name="settings" size={24} /></div>
         <div>
+          <span className="section-heading-kicker">PLANIFICACIÓN DOCENTE</span>
           <h3>Actividades por grupo</h3>
           <p className="muted">Configure las actividades POA o institucionales y la obligatoriedad para cada grupo.</p>
         </div>
       </div>
       <div className="filter-toolbar" style={{ margin: '16px 0' }}>
-        <label>Grupo del catálogo<select value={groupId} onChange={async e => { const nextValue = e.currentTarget.value; if (!(await discard(['activity', 'collective']))) return; setGroupId(nextValue); setDefinitions([]); setLabel(groups.find(g => g.id === nextValue)?.collective_label ?? ''); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+        <label>Grupo del catálogo
+          <select value={groupId} onChange={async e => { const nextValue = e.currentTarget.value; if (!(await discard(['activity', 'collective']))) return; setGroupId(nextValue); setDefinitions([]); setLabel(groups.find(g => g.id === nextValue)?.collective_label ?? ''); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
+            <option value="">Seleccione</option>
+            {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </label>
       </div>
-      {groupId && <>
-        <ActionForm label="Crear o editar actividad" openSignal={activity.id || undefined} dirty={dirtyForms.includes('activity')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'activity')); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
-          <form onChange={() => markDirty('activity')} onSubmit={saveActivity}>
-            <label>Título de actividad del catálogo<input required maxLength={500} value={activity.title} onChange={e => setActivity({ ...activity, title: e.target.value })} /></label>
-            <label>Clasificación de actividad<select value={activity.category} onChange={e => setActivity({ ...activity, category: e.target.value as Category })}>{Object.entries(categoryLabels).map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select></label>
-            <label className="check"><input type="checkbox" checked={activity.mandatory} onChange={e => setActivity({ ...activity, mandatory: e.target.checked })} />Obligatoria para este grupo</label>
-            <label className="check"><input type="checkbox" checked={activity.active} onChange={e => setActivity({ ...activity, active: e.target.checked })} />Actividad activa</label>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              <button>{activity.id ? 'Actualizar actividad' : 'Crear actividad del catálogo'}</button>
-              {activity.id && <button type="button" className="secondary" onClick={async () => { if ((await discard(['activity']))) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>Cancelar edición de actividad</button>}
+      {!groupId ? (
+        <div className="empty-state" style={{ margin: '24px 0 12px' }}>
+          <Icon name="settings" size={32} />
+          <p>Seleccione un grupo institucional para consultar y configurar sus actividades obligatorias y del catálogo.</p>
+        </div>
+      ) : (
+        <>
+          <ActionForm label="Crear o editar actividad" openSignal={activity.id || undefined} dirty={dirtyForms.includes('activity')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'activity')); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
+            <form onChange={() => markDirty('activity')} onSubmit={saveActivity}>
+              <label>Título de actividad del catálogo<input required maxLength={500} value={activity.title} onChange={e => setActivity({ ...activity, title: e.target.value })} /></label>
+              <label>Clasificación de actividad<select value={activity.category} onChange={e => setActivity({ ...activity, category: e.target.value as Category })}>{Object.entries(categoryLabels).map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select></label>
+              <label className="check"><input type="checkbox" checked={activity.mandatory} onChange={e => setActivity({ ...activity, mandatory: e.target.checked })} />Obligatoria para este grupo</label>
+              <label className="check"><input type="checkbox" checked={activity.active} onChange={e => setActivity({ ...activity, active: e.target.checked })} />Actividad activa</label>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <button>{activity.id ? 'Actualizar actividad' : 'Crear actividad del catálogo'}</button>
+                {activity.id && <button type="button" className="secondary" onClick={async () => { if ((await discard(['activity']))) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>Cancelar edición de actividad</button>}
+              </div>
+            </form>
+          </ActionForm>
+          {definitions.length === 0 ? (
+            <div className="empty-state" style={{ margin: '16px 0' }}>
+              <Icon name="document" size={32} />
+              <p>No hay actividades configuradas para este grupo institucional.</p>
             </div>
-          </form>
-        </ActionForm>
-        <ul className="admin-catalog-list">
-          {definitions.map(d => <li key={d.id} className="admin-catalog-item">
-            <div>
-              <strong>{d.title}</strong>
-              <span className="muted" style={{ marginLeft: '8px' }}>· {categoryLabels[d.category]}</span>
-              {d.mandatory && <span className="status-badge active" style={{ marginLeft: '6px' }}>Obligatoria</span>}
-              {!d.active && <span className="status-badge inactive" style={{ marginLeft: '6px' }}>Inactiva</span>}
-            </div>
-            <button className="secondary" title="Editar actividad" aria-label={'Editar actividad ' + d.title} onClick={async () => { if ((await discard(['activity']))) setActivity(d) }}>✎</button>
-          </li>)}
-        </ul>
-        <ActionForm label="Editar denominación colectiva" dirty={dirtyForms.includes('collective')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'collective')); setLabel(groups.find(g => g.id === groupId)?.collective_label ?? '') }}>
-          <form onChange={() => markDirty('collective')} onSubmit={e => { e.preventDefault(); void mutate('/admin/planning/groups/' + groupId + '/collective-label', 'PUT', { label }, 'collective') }}>
-            <label>Denominación colectiva del grupo<input maxLength={200} value={label} onChange={e => setLabel(e.target.value)} /></label>
-            <button>Guardar denominación colectiva</button>
-          </form>
-        </ActionForm>
-      </>}
+          ) : (
+            <ul className="admin-catalog-list">
+              {definitions.map(d => <li key={d.id} className="admin-catalog-item">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <strong>{d.title}</strong>
+                  <span className="muted">· {categoryLabels[d.category]}</span>
+                  {d.mandatory && <span className="status-badge active">Obligatoria</span>}
+                  {!d.active && <span className="status-badge inactive">Inactiva</span>}
+                </div>
+                <button
+                  className="secondary table-action-icon-btn"
+                  title="Editar actividad"
+                  aria-label={'Editar actividad ' + d.title}
+                  onClick={async () => { if ((await discard(['activity']))) setActivity(d) }}
+                >
+                  <Icon name="edit" size={15} />
+                </button>
+              </li>)}
+            </ul>
+          )}
+          <ActionForm label="Editar denominación colectiva" dirty={dirtyForms.includes('collective')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'collective')); setLabel(groups.find(g => g.id === groupId)?.collective_label ?? '') }}>
+            <form onChange={() => markDirty('collective')} onSubmit={e => { e.preventDefault(); void mutate('/admin/planning/groups/' + groupId + '/collective-label', 'PUT', { label }, 'collective') }}>
+              <label>Denominación colectiva del grupo<input maxLength={200} value={label} onChange={e => setLabel(e.target.value)} /></label>
+              <button>Guardar denominación colectiva</button>
+            </form>
+          </ActionForm>
+        </>
+      )}
     </section>}</div>
     {section === 'holidays' && <section>
       <div className="section-heading">
         <div className="section-heading-icon" aria-hidden="true"><Icon name="calendar" size={24} /></div>
         <div>
+          <span className="section-heading-kicker">CALENDARIO Y RESTRICCIONES</span>
           <h3>Feriados y restricciones</h3>
           <p className="muted">Configure fechas no laborables y restricciones de inicio o fin de actividades por período.</p>
         </div>
@@ -141,15 +186,30 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
           <button>Guardar feriado</button>
         </form>
       </ActionForm>
-      <ul className="admin-catalog-list">
-        {holidays.map(h => <li key={h.date} className="admin-catalog-item">
-          <div>
-            <strong style={{ fontFamily: 'var(--font-mono, monospace)', marginRight: '8px' }}>{h.date.split('-').reverse().join('/')}</strong>
-            <span>{h.label}</span>
-          </div>
-          <button title="Eliminar feriado" aria-label={'Eliminar feriado ' + h.label} className="secondary" onClick={async () => { if ((await confirmAction('¿Eliminar este feriado configurado?'))) void mutate('/admin/planning/holidays/' + h.date, 'DELETE') }}>Eliminar</button>
-        </li>)}
-      </ul>
+      {holidays.length === 0 ? (
+        <div className="empty-state" style={{ margin: '16px 0' }}>
+          <Icon name="calendar" size={32} />
+          <p>No hay feriados institucionales registrados.</p>
+        </div>
+      ) : (
+        <ul className="admin-catalog-list">
+          {holidays.map(h => <li key={h.date} className="admin-catalog-item">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="position-code-badge" style={{ fontFamily: 'var(--font-mono, monospace)' }}>{h.date.split('-').reverse().join('/')}</span>
+              <strong>{h.label}</strong>
+            </div>
+            <button
+              title="Eliminar feriado"
+              aria-label={'Eliminar feriado ' + h.label}
+              className="secondary danger-text"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={async () => { if ((await confirmAction('¿Eliminar este feriado configurado?'))) void mutate('/admin/planning/holidays/' + h.date, 'DELETE') }}
+            >
+              <Icon name="trash" size={14} /> Eliminar
+            </button>
+          </li>)}
+        </ul>
+      )}
       <ActionForm label="Configurar restricción de feriados" dirty={dirtyForms.includes('policy')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'policy')); setHolidayPeriod(''); setHolidayEnabled(false) }}>
         <form className="grid" onChange={() => markDirty('policy')} onSubmit={e => { e.preventDefault(); void mutate('/admin/planning/periods/' + holidayPeriod + '/holiday-policy', 'PUT', { enabled: holidayEnabled }, 'policy') }}>
           <label>Período de la restricción<select required value={holidayPeriod} onChange={e => { setHolidayPeriod(e.target.value); setHolidayEnabled(periods.find(p => p.id === e.target.value)?.restrict_holiday_endpoints ?? false) }}><option value="">Seleccione</option>{periods.map(p => <option key={p.id} value={p.id}>{p.name}{p.restrict_holiday_endpoints ? ' · Restricción activa' : ' · Sin restricción'}</option>)}</select></label>
