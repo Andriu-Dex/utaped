@@ -50,6 +50,9 @@ public class ReportingService {
     }
     private static BigDecimal percentage(long value,long total) { return total==0?BigDecimal.ZERO:BigDecimal.valueOf(value).multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(total),2,RoundingMode.HALF_UP); }
     @Transactional(readOnly=true) public Summary get(String email,UUID group,UUID period,boolean archived) {
+        // Interactive aggregates do not amortize PostgreSQL JIT compilation. Scope this
+        // setting to the read transaction, never to the pooled connection or server.
+        jdbc.execute("SET LOCAL jit = off");
         var actor=accounts.current(email);boolean admin=actor.systemRole().equals("ADMIN");var today=LocalDate.now(zone);
         String clock="WITH report_clock AS (SELECT ?::date AS today, ?::int AS near_days) ";
         var points=new BigDecimal[]{BigDecimal.ZERO};
@@ -97,7 +100,7 @@ public class ReportingService {
         return new Summary(rows,rows.stream().mapToLong(Row::plans).sum(),rows.stream().mapToLong(Row::reports).sum(),rows.stream().mapToLong(Row::approved).sum(),activities,rows.stream().mapToLong(Row::completedActivities).sum(),rows.stream().mapToLong(Row::inReview).sum(),rows.stream().mapToLong(Row::drafts).sum(),rows.stream().mapToLong(Row::pendingEvidence).sum(),rows.stream().mapToLong(Row::dueSoonActivities).sum(),rows.stream().mapToLong(Row::overdueActivities).sum(),declared==0?null:points[0].divide(BigDecimal.valueOf(declared),2,RoundingMode.HALF_UP),declared,percentage(declared,activities),nearDays,upcoming);
     }
     private String cell(String value) { String safe=value.replace('\r',' ').replace('\n',' ');if(safe.matches("^[\\s]*[=+@-].*")) safe="'"+safe;return "\""+safe.replace("\"","\"\"")+"\""; }
-    public byte[] csv(String email,UUID group,UUID period,boolean archived) {
+    @Transactional(readOnly=true) public byte[] csv(String email,UUID group,UUID period,boolean archived) {
         var data=get(email,group,period,archived);var csv=new StringBuilder("\uFEFFGrupo,Carrera,Periodo,Planes,Informes,Aprobados,En revision,Borradores,Actividades,Completas,Cobertura documental (%),Avance declarado (%),Actividades informadas,Cobertura de resultados (%),Medios sin evidencia,Actividades proximas a vencer,Actividades con plazos vencidos\r\n");
         for(var r:data.rows()) csv.append(cell(r.groupName())).append(',').append(cell(r.careerName())).append(',').append(cell(r.periodName())).append(',').append(r.plans()).append(',').append(r.reports()).append(',').append(r.approved()).append(',').append(r.inReview()).append(',').append(r.drafts()).append(',').append(r.activities()).append(',').append(r.completedActivities()).append(',').append(r.evidenceCoverage().toPlainString()).append(',').append(r.declaredExecution()==null?"":r.declaredExecution().toPlainString()).append(',').append(r.declaredActivities()).append(',').append(percentage(r.declaredActivities(),r.activities()).toPlainString()).append(',').append(r.pendingEvidence()).append(',').append(r.dueSoonActivities()).append(',').append(r.overdueActivities()).append("\r\n");return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }

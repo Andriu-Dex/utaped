@@ -134,4 +134,18 @@ class ReportingIntegrationTests {
         assertEquals(0,reporting.get(email,group,period,false).plans());
         var history=reporting.get(email,group,period,true);assertEquals(1,history.plans());assertEquals(3,history.activities());assertEquals(0,history.pendingEvidence());assertTrue(history.upcoming().isEmpty());
     }
+    @Test void repeatedReportingReadsRemainStableAndRecordLocalTimings() {
+        String originalJit=jdbc.queryForObject("SELECT current_setting('jit')",String.class);
+        var samples=new ArrayList<Long>();
+        ReportingService.Summary baseline=null;
+        for(int n=0;n<4;n++) {
+            long started=System.nanoTime();
+            var summary=reporting.get(email,null,null,false);
+            samples.add((System.nanoTime()-started)/1_000_000);
+            if(baseline==null) baseline=summary; else assertEquals(baseline,summary);
+        }
+        assertEquals(originalJit,jdbc.queryForObject("SELECT current_setting('jit')",String.class),"The pooled connection must retain its original JIT setting after the transaction");
+        System.out.println("REPORTING_LOCAL_TIMINGS_MS="+samples);
+    }
+
 }

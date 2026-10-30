@@ -60,8 +60,8 @@ test('management overview distinguishes declared progress, coverage and evidence
   // 5. Error recovery in reporting
   unavailable = true
   await page.getByRole('button', { name: 'Actualizar', exact: true }).click()
-  await expect(page.getByRole('region', { name: 'Reportes no disponibles' })).toBeVisible()
-  await expect(overview).toHaveCount(0)
+  await expect(page.getByText('No se pudo actualizar. Se conserva la última consulta de estos filtros.')).toBeVisible()
+  await expect(overview).toBeVisible()
   unavailable = false; empty = true
   await page.getByRole('button', { name: 'Reintentar reportes', exact: true }).click()
   await expect(overview.getByText('Sin resultados', { exact: true })).toBeVisible()
@@ -344,4 +344,65 @@ test('administrative home includes institutional indicators without implicit pri
   await page.getByRole('button', { name: 'Ver reportes de gestión', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Reportes de gestión', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /^Abrir ejecución:/ })).toHaveCount(0)
+})
+
+
+test('report loading isolates catalogs, preserves same-filter refresh and hides previous filters', async ({ page }) => {
+  await login(page, 'dev.principal')
+  const groups = await api(page, '/groups')
+  let catalogCalls = 0, reportCalls = 0
+  let releaseCatalogs!: () => void
+  const catalogGate = new Promise<void>(resolve => { releaseCatalogs = resolve })
+  const pending: (() => void)[] = []
+  let fail = false
+  const summary = { rows: [], plans: 7, reports: 0, approved: 0, inReview: 0, drafts: 7, activities: 0, completedActivities: 0, pendingEvidence: 0, dueSoonActivities: 0, overdueActivities: 0, declaredExecution: null, declaredActivities: 0, declarationCoverage: 0, dueSoonDays: 7, upcoming: [] }
+  await page.route(url => ['/api/groups', '/api/periods'].includes(url.pathname), async route => {
+    catalogCalls++
+    await catalogGate
+    await route.continue()
+  })
+  await page.route(url => url.pathname === '/api/reporting', async route => {
+    reportCalls++
+    await new Promise<void>(resolve => pending.push(resolve))
+    await route.fulfill(fail ? { status: 503, json: { message: 'Reporte temporalmente no disponible' } } : { json: summary })
+  })
+  await page.getByRole('button', { name: 'Reportes de gestión', exact: true }).click()
+  const overview = page.getByRole('region', { name: 'Indicadores de gestión', exact: true })
+  await expect(page.getByRole('region', { name: 'Cargando reporte', exact: true })).toBeVisible()
+  await expect.poll(() => pending.length).toBe(1)
+  pending.shift()!()
+  await expect(overview).toBeVisible() // Catalogs are still pending.
+  releaseCatalogs()
+  await expect(page.getByLabel('Grupo del reporte').locator('option[value="' + groups[0].id + '"]')).toHaveCount(1)
+  const baselineCatalogCalls = catalogCalls
+  await page.getByRole('button', { name: 'Actualizar', exact: true }).click()
+  await expect.poll(() => pending.length).toBe(1)
+  await expect(overview).toBeVisible()
+  await expect(page.getByText('Actualizando reporte…', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Exportar CSV', exact: true })).toBeDisabled()
+  fail = true
+  pending.shift()!()
+  await expect(page.getByText('No se pudo actualizar. Se conserva la última consulta de estos filtros.')).toBeVisible()
+  await expect(overview).toBeVisible()
+  expect(catalogCalls).toBe(baselineCatalogCalls)
+  fail = false
+  await page.getByLabel('Grupo del reporte').selectOption(groups[0].id)
+  await expect.poll(() => pending.length).toBe(1)
+  await expect(overview).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Cargando reporte', exact: true })).toBeVisible()
+  await page.screenshot({ path: 'test-results/report-skeleton-desktop.png', fullPage: true })
+  await page.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
+  await page.setViewportSize({ width: 820, height: 1180 })
+  await page.screenshot({ path: 'test-results/report-skeleton-tablet-dark.png', fullPage: true })
+  fail = true
+  pending.shift()!()
+  await expect(page.getByRole('region', { name: 'Reportes no disponibles' })).toBeVisible()
+  await expect(overview).toHaveCount(0) // Never label previous-filter data as current.
+  fail = false
+  await page.getByRole('button', { name: 'Reintentar reportes', exact: true }).click()
+  await expect.poll(() => pending.length).toBe(1)
+  pending.shift()!()
+  await expect(overview).toBeVisible()
+  expect(catalogCalls).toBe(baselineCatalogCalls)
+  expect(reportCalls).toBe(4)
 })

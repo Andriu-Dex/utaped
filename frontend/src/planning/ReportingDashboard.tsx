@@ -4,30 +4,59 @@ import { Toast } from '../shared/Toast'
 import { Icon } from '../shared/Icon'
 import { ManagementOverview } from './ManagementOverview'
 import { formatPercent, type ReportingSummary } from './reportingTypes'
+import { ReportingSkeleton } from './ReportingSkeleton'
 
-export function ReportingDashboard({ administrative = false, onOpenDocument, initialPeriodId = '' }: { administrative?: boolean; initialPeriodId?: string; onOpenDocument?: (id: string) => void }) {
-  const [data, setData] = useState<ReportingSummary | null>(null)
+export function ReportingDashboard({ administrative = false, onOpenDocument, initialPeriodId = '', onPeriodChange }: { administrative?: boolean; initialPeriodId?: string; onOpenDocument?: (id: string) => void; onPeriodChange?: (id: string) => void }) {
+  const [snapshot, setSnapshot] = useState<{ key: string; value: ReportingSummary } | null>(null)
   const [groups, setGroups] = useState<Group[]>([]), [periods, setPeriods] = useState<Period[]>([])
   const [error, setError] = useState(''), [loading, setLoading] = useState(true), [reload, setReload] = useState(0)
   const [filters, setFilters] = useState({ groupId: '', periodId: initialPeriodId, archived: false })
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState(false), [exportError, setExportError] = useState('')
+  const [catalogError, setCatalogError] = useState(''), [catalogReload, setCatalogReload] = useState(0)
   const query = new URLSearchParams({ archived: String(filters.archived), ...(filters.groupId ? { groupId: filters.groupId } : {}), ...(filters.periodId ? { periodId: filters.periodId } : {}) }).toString()
+
+  const requestKey = String(administrative) + ':' + query
+  const data = snapshot?.key === requestKey ? snapshot.value : null
+
+  const [previousInitialPeriod, setPreviousInitialPeriod] = useState(initialPeriodId)
+  if (previousInitialPeriod !== initialPeriodId) {
+    setPreviousInitialPeriod(initialPeriodId)
+    if (filters.periodId !== initialPeriodId) {
+      setFilters({ ...filters, periodId: initialPeriodId })
+      setLoading(true)
+      setError('')
+    }
+  }
+
+  // Catalogs do not depend on report filters or manual report refreshes.
+  useEffect(() => {
+    let active = true
+    Promise.all([api<Group[]>(administrative ? '/admin/groups' : '/groups'), api<Period[]>('/periods')])
+      .then(([g, p]) => { if (active) { setGroups(g); setPeriods(p); setCatalogError('') } })
+      .catch(e => { if (active) { setGroups([]); setPeriods([]); setCatalogError(e.message) } })
+    return () => { active = false }
+  }, [administrative, catalogReload])
 
   useEffect(() => {
     let active = true
-    Promise.all([api<Group[]>(administrative ? '/admin/groups' : '/groups'), api<Period[]>('/periods'), api<ReportingSummary>('/reporting?' + query)])
-      .then(([g, p, summary]) => { if (active) { setGroups(g); setPeriods(p); setData(summary); setError('') } })
-      .catch(e => { if (active) { setError(e.message); setData(null) } })
+    api<ReportingSummary>('/reporting?' + query)
+      .then(summary => { if (active) { setSnapshot({ key: requestKey, value: summary }); setError('') } })
+      .catch(e => { if (active) setError(e.message) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [query, administrative, reload])
+  }, [query, requestKey, reload])
 
-  const change = (next: typeof filters) => { setData(null); setLoading(true); setError(''); setFilters(next) }
+  const refresh = () => { setLoading(true); setError(''); setReload(value => value + 1) }
+  const change = (next: typeof filters) => {
+    if (next.groupId === filters.groupId && next.periodId === filters.periodId && next.archived === filters.archived) return
+    setLoading(true); setError(''); setFilters(next)
+    onPeriodChange?.(next.periodId)
+  }
 
   async function exportReport() {
-    setExporting(true); setError('')
+    setExporting(true); setExportError('')
     try { await download('/reporting/export?' + query, 'seguimiento-utaped.csv') }
-    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo exportar el reporte.') }
+    catch (e) { setExportError(e instanceof Error ? e.message : 'No se pudo exportar el reporte.') }
     finally { setExporting(false) }
   }
 
@@ -47,22 +76,23 @@ export function ReportingDashboard({ administrative = false, onOpenDocument, ini
     </header>
 
     {error && <Toast message={error} onDismiss={() => setError('')} />}
+    {exportError && <Toast message={exportError} onDismiss={() => setExportError('')} />}
 
     <section className="card" style={{ marginBottom: '22px' }}>
       <div className="management-filters">
         <label>Grupo del reporte
-          <select value={filters.groupId} onChange={e => change({ ...filters, groupId: e.target.value })}>
+          <select aria-label="Grupo del reporte" value={filters.groupId} onChange={e => change({ ...filters, groupId: e.target.value })}>
             <option value="">Todos disponibles</option>
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </label>
         <label>Período del reporte
-          <select value={filters.periodId} onChange={e => change({ ...filters, periodId: e.target.value })}>
+          <select aria-label="Período del reporte" value={filters.periodId} onChange={e => change({ ...filters, periodId: e.target.value })}>
             <option value="">Todos los períodos</option>
             {periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </label>
-        <button className="secondary" type="button" disabled={loading} onClick={() => { setLoading(true); setError(''); setReload(value => value + 1) }}>
+        <button className="secondary" type="button" disabled={loading} onClick={refresh}>
           <Icon name="refresh" size={16} />Actualizar
         </button>
       </div>
@@ -72,10 +102,13 @@ export function ReportingDashboard({ administrative = false, onOpenDocument, ini
       </label>
     </section>
 
-    {loading ? <p role="status">Consultando reportes…</p> : !data ? (
+    {catalogError && <div className="report-loading-notice" role="status"><span>No se pudieron cargar los filtros. El reporte se consulta de forma independiente.</span><button type="button" className="secondary" onClick={() => { setCatalogError(''); setCatalogReload(n => n + 1) }}>Reintentar filtros</button></div>}
+    {data && loading && <p role="status" className="report-loading-notice">Actualizando reporte…</p>}
+    {data && error && !loading && <div className="report-loading-notice" role="status"><span>No se pudo actualizar. Se conserva la última consulta de estos filtros.</span><button type="button" className="secondary" onClick={refresh}>Reintentar reportes</button></div>}
+    {!data && loading ? <ReportingSkeleton /> : !data ? (
       <section className="empty-state" aria-label="Reportes no disponibles">
         <p>No se pudieron cargar los reportes.</p>
-        <button type="button" className="secondary" onClick={() => { setLoading(true); setError(''); setReload(n => n + 1) }}>Reintentar reportes</button>
+        <button type="button" className="secondary" onClick={refresh}>Reintentar reportes</button>
       </section>
     ) : (
       <>
