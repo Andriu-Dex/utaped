@@ -1,5 +1,7 @@
 # Requisitos de UTAPED
 
+Revisión trazable de reuniones (30/10/2026): [checklist del cliente](docs/requirements/client-meeting-checklist.md), con 84 puntos y evidencia por segmento. Sus marcas distinguen cumplimiento técnico de aceptación institucional; no sustituyen las decisiones vigentes ni ratifican políticas pendientes.
+
 CONFIRMADO-PROYECTO (2026-10-30): separar Inicio personal (pendientes y documentos recientes) de Reportes de gestión (indicadores, gráficos, filtros y exportación). Administración conserva su panel institucional. Sin nueva opción Dashboard ni cambios de permisos. Esta precisión sustituye la duplicación analítica previa en Inicio.
 
 CONFIRMADO-PROYECTO (2026-10-30): reorganizar Panel general administrativo con período y ventanas independientes, cuatro indicadores, alertas operativas verificadas por backend, gráficos compactos y auditoría categorizada. No imponer una fase universal ni inferir ejecución física desde evidencias; priorizar ámbitos con pendientes. Conservar filtros al abrir Reportes y permiso agregado de Administración sin acceso implícito a documentos privados. Estados vacíos y errores deben diferenciarse, sin anunciar ausencia total de bloqueos. Gráficos SVG/CSS nativos, sin dependencias nuevas. El propietario autoriza integrar y cerrar también sus mejoras visuales staged.
@@ -253,3 +255,6 @@ Límites técnicos y contrato: [importaciones y enlaces](docs/api/user-imports-a
 ### Recuperación de acceso: confirmación — 2026-10-28
 
 UT-AUTH-022 / UT-UI-020, CONFIRMADO-PROYECTO: tras solicitar un enlace, sustituir el formulario por una confirmación persistente y accesible, con inicio de sesión y corrección del correo. Mantener respuesta indistinguible entre cuentas existentes/ausentes, datos ante errores y ausencia de interferencias por respuestas tardías tras logout. El entorno local captura correo en Mailpit; no presentar esa captura como entrega externa. [Contrato](docs/api/local-access.md).
+
+
+Cierre acordado (30/10/2026): backend de sustitución autorizada y copias explícitas entre carreras; frontend delegado a Antigravity. No considerar cumplidos los escenarios completos hasta integrar y validar la interfaz. [Contrato](docs/api/review-reassignment-and-career-copies.md), [decisiones institucionales](docs/validation/client-closeout-decisions.md), [aceptación final](docs/validation/final-acceptance-checklist.md).

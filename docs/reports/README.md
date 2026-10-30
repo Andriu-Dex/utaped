@@ -1,5 +1,13 @@
 # Reportes
 
+- [Revisión frontend y cierre técnico](2026-10-30-53-frontend-closeout-review.md).
+
+- [Checklist de requisitos de reuniones del cliente](2026-10-30-51-client-meeting-requirements-checklist.md).
+
+- [Rediseño visual de la revisión documental](2026-10-30-50-document-review-modern-ui-refinement.md).
+
+- [Rendimiento y carga de reportes](2026-10-30-49-report-loading-performance.md).
+
 - [Separación de Inicio y Reportes: frontend](2026-10-30-48-home-reporting-separation-frontend.md).
 
 - [Separación de Inicio y Reportes: backend](2026-10-30-47-home-reporting-separation-backend.md).
@@ -186,3 +194,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-12 — Administración contextual, historial y avisos](2026-10-12-03-contextual-administration-and-notices.md).
 
 - [2026-10-12 — Importación administrativa y evidencias externas](2026-10-12-04-user-imports-and-external-evidence.md).
+
+- [2026-10-30 — Cierre backend y entrega a Antigravity](2026-10-30-52-backend-closeout-and-frontend-handoff.md).
