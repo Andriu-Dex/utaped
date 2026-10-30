@@ -4,11 +4,23 @@ import './management-dashboard.css'
 
 export function ManagementOverview({ data, onOpenDocument }: { data: ReportingSummary; onOpenDocument?: (id: string) => void }) {
   const states = [
-    { key: 'draft', label: 'Borradores', value: data.drafts },
-    { key: 'review', label: 'En revisión', value: data.inReview },
-    { key: 'approved', label: 'Aprobados', value: data.approved },
+    { key: 'draft', label: 'Borradores', value: data.drafts, color: 'blue' },
+    { key: 'review', label: 'En revisión', value: data.inReview, color: 'amber' },
+    { key: 'approved', label: 'Aprobados', value: data.approved, color: 'teal' },
   ]
   const total = data.plans + data.reports
+
+  const activeSegmentsCount = states.filter(s => s.value > 0).length
+  const gap = activeSegmentsCount > 1 ? 1.5 : 0
+  let offset = 0
+  const segments = states.map(state => {
+    const start = offset
+    const percentage = total ? (state.value / total) * 100 : 0
+    offset += percentage
+    const dash = Math.max(0, percentage - gap)
+    return { ...state, start, percentage, dash }
+  })
+
   const grouped = new Map<string, { name: string; activities: number; complete: number }>()
   data.rows.forEach(row => {
     const item = grouped.get(row.groupId) ?? { name: row.groupName, activities: 0, complete: 0 }
@@ -77,27 +89,38 @@ export function ManagementOverview({ data, onOpenDocument }: { data: ReportingSu
               <h3>De borrador a aprobación</h3>
             </div>
           </div>
-          <div className="document-state-bar" aria-hidden="true">
-            {states.map(state => (
-              <span
-                key={state.key}
-                className={'state-' + state.key}
-                style={{ width: (total ? (state.value / total) * 100 : 0) + '%' }}
-              />
-            ))}
-          </div>
-          <ul className="state-legend">
-            {states.map(state => (
-              <li key={state.key}>
-                <span className={'legend-dot state-' + state.key} />
-                <span className="legend-label">{state.label}</span>
-                <span className="legend-metrics">
+          <div className="executive-ring-content">
+            <svg viewBox="0 0 160 160" role="img" aria-label={total ? 'Distribución de ' + total + ' documentos por estado' : 'Sin documentos para este período'}>
+              <circle className={'ring-track' + (total === 0 ? ' empty' : '')} cx="80" cy="80" r="58" fill="none" strokeWidth="16" />
+              {segments.filter(segment => segment.value > 0).map(segment => (
+                <circle
+                  key={segment.label}
+                  className={'ring-segment stroke-' + segment.color}
+                  cx="80"
+                  cy="80"
+                  r="58"
+                  fill="none"
+                  strokeWidth="16"
+                  pathLength="100"
+                  strokeDasharray={segment.dash + ' ' + (100 - segment.dash)}
+                  strokeDashoffset={-(segment.start + gap / 2)}
+                  transform="rotate(-90 80 80)"
+                />
+              ))}
+              <text className={'ring-total' + (total === 0 ? ' empty' : '')} x="80" y="78" textAnchor="middle">{total}</text>
+              <text className="ring-caption" x="80" y="98" textAnchor="middle">{total === 1 ? 'documento' : 'documentos'}</text>
+            </svg>
+            <ul className="executive-legend">
+              {states.map(state => (
+                <li key={state.label}>
+                  <span className={'executive-dot tone-' + state.color} />
+                  <span>{state.label}</span>
                   <strong>{state.value}</strong>
                   {total > 0 && <small className="legend-pct">({Math.round((state.value / total) * 100)}%)</small>}
-                </span>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="management-evidence-summary">
             <span className="evidence-summary-badge"><Icon name="check" size={16} /></span>
             <div>
