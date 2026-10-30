@@ -122,6 +122,13 @@ public class WorkPlanService {
         return list(email,page,size,groupId,periodId,query,"UPDATED_DESC");
     }
     public Page list(String email,int page,int size,UUID groupId,UUID periodId,String query,String sort) {
+        return list(email,page,size,groupId,periodId,query,sort,false);
+    }
+    @Transactional(readOnly=true)
+    public Page recent(String email,UUID groupId,UUID periodId) {
+        return list(email,0,5,groupId,periodId,"","UPDATED_DESC",true);
+    }
+    private Page list(String email,int page,int size,UUID groupId,UUID periodId,String query,String sort,boolean currentOnly) {
         String order=switch(sort) {
             case "UPDATED_DESC" -> "w.updated_at DESC,w.id";
             case "UPDATED_ASC" -> "w.updated_at ASC,w.id";
@@ -131,6 +138,7 @@ public class WorkPlanService {
         };
         var actor=accounts.current(email);
         String filters=" AND (?::uuid IS NULL OR w.group_id=?::uuid) AND (?::uuid IS NULL OR w.period_id=?::uuid) AND position(lower(?) in lower(w.title))>0";
+        if(currentOnly) filters+=" AND NOT w.discarded AND w.archived_at IS NULL";
         Object[] args={actor.id(),groupId,groupId,periodId,periodId,query};
         long total=jdbc.queryForObject("SELECT count(*) FROM ("+SELECT+filters+") plans",Long.class,args);
         var items=jdbc.query(SELECT+filters+" ORDER BY "+order+" LIMIT ? OFFSET ?",(rs,n)->new Summary(rs.getObject("id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("document_state"),rs.getString("formal_version"),rs.getObject("updated_at",OffsetDateTime.class),editable(rs),rs.getString("document_type"),rs.getObject("archived_at",OffsetDateTime.class),canManage(rs),rs.getLong("row_version")),actor.id(),groupId,groupId,periodId,periodId,query,size,(long)page*size);
