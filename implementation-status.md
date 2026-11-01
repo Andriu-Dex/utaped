@@ -1,5 +1,12 @@
 # Estado de implementación productiva
 
+## 31/10/2026 — Correcciones OCT30 implementadas y verificadas
+
+Implementados catálogos oficiales jerárquicos/aplicabilidad/importación, firmas personales múltiples, T2 con T3 aprobados, nota editable, anexos ampliados/custodia, búsquedas inmediatas, período actual, autoguardado, correo administrativo, carreras, estructuras JSON, feriados asistidos, propuestas futuras y detalle paginado de reportes. [Reporte y comprobaciones](docs/reports/2026-10-31-55-client-corrections-implementation.md). 190 pruebas backend y 14 recorridos de navegador aprobados en tandas dirigidas, lint/typecheck/build correctos; no equivale a aceptación institucional. Matriz de participantes, contrato FirmaEC y política definitiva siguen pendientes.
+
+
+Planificación tras la transcripción corregida (31/10/2026): [26 puntos OCT30 y tandas de corrección](docs/planning/2026-10-30-client-corrections.md), con prioridades, backend/frontend, dependencias y aceptación. Precisadas firmas personales múltiples, nota editable obligatoria, autoguardado y correo administrativo. En esa revisión inicial solo se documentó; la entrega técnica y pruebas posteriores se registran en la entrada superior. El checklist anterior conserva su alcance histórico y no acredita los requisitos nuevos. [Revisión](docs/reports/2026-10-31-54-corrected-client-meeting-plan.md).
+
 Frontend de cierre integrado y revisado (30/10/2026): copias multicarrera, sustituciones, historial de participantes y persistencia de filtros/ubicación. Corregidos bloqueos de modales y selección del mismo ámbito, límite de diez destinos y avisos que tapaban acciones. Lint, typecheck y build correctos; 14 pruebas backend y 25 escenarios de navegador aprobados. Aceptación institucional aún pendiente. [Revisión](docs/reports/2026-10-30-53-frontend-closeout-review.md).
 
 Cierre backend (30/10/2026): sustitución autorizada de revisores y copias explícitas T1 entre carreras, con concurrencia, idempotencia, auditoría y custodia. 19 escenarios dirigidos aprobados, incluido reintento de la prueba de concurrencia tras corregir su diagnóstico. Migración V38 probada en entorno aislado; frontend integrado en la revisión posterior y aceptación institucional pendiente. RC014/RC051 siguen parciales. [Reporte](docs/reports/2026-10-30-52-backend-closeout-and-frontend-handoff.md), [contrato API](docs/api/review-reassignment-and-career-copies.md).

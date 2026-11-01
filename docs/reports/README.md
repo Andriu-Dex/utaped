@@ -1,5 +1,9 @@
 # Reportes
 
+- [31/10/2026 — Implementación de correcciones OCT30](2026-10-31-55-client-corrections-implementation.md).
+
+- [Plan tras la transcripción corregida del cliente](2026-10-31-54-corrected-client-meeting-plan.md).
+
 - [Revisión frontend y cierre técnico](2026-10-30-53-frontend-closeout-review.md).
 
 - [Checklist de requisitos de reuniones del cliente](2026-10-30-51-client-meeting-requirements-checklist.md).

@@ -1,5 +1,11 @@
 # Requisitos de UTAPED
 
+ACLARACIÓN EXPRESA DEL PROPIETARIO: búsqueda dinámica inmediata en **todos los buscadores de todas las interfaces**. Cada letra/cambio del campo actualiza la búsqueda, sin esperar pausa de escritura, longitud mínima, Enter ni clic en Buscar. Conservar filtros, permisos y foco; cancelar/descartar respuestas obsoletas. Esta precisión sustituye «buscadores pertinentes» y la espera breve propuesta para OCT30-13; no modifica la espera de autoguardado.
+
+Reunión del 30/10/2026 revisada el 31/10/2026 a partir de la **transcripción corregida manualmente** (L1060–1799): [plan y registro OCT30](docs/planning/2026-10-30-client-corrections.md). Se confirman, en el alcance allí delimitado, firmas de todos los participantes personales, nota de matriz siempre presente y editable, autoguardado, correo tras restablecimiento administrativo, selección institucional de actividades y vínculo del Informe final con Plan/cortes de ejecución. Las decisiones más recientes prevalecen sobre configuraciones personales sin firma y opcionalidad de esa nota. El plan conserva pendientes específicos y la excepción colegiada anterior para su ratificación; su apartado 9 y el reporte de implementación registran el avance técnico sin ampliar automáticamente reglas a casos no tratados.
+
+CONFIRMADO-PROYECTO (31/10/2026): el Informe final selecciona únicamente cortes T3 aprobados del mismo Plan y conserva su identidad/artefacto. No se ha acordado agregación automática de porcentajes. La matriz institucional de participantes sigue pendiente si no aparece en Templates; no inventarla.
+
 Revisión trazable de reuniones (30/10/2026): [checklist del cliente](docs/requirements/client-meeting-checklist.md), con 84 puntos y evidencia por segmento. Sus marcas distinguen cumplimiento técnico de aceptación institucional; no sustituyen las decisiones vigentes ni ratifican políticas pendientes.
 
 CONFIRMADO-PROYECTO (2026-10-30): separar Inicio personal (pendientes y documentos recientes) de Reportes de gestión (indicadores, gráficos, filtros y exportación). Administración conserva su panel institucional. Sin nueva opción Dashboard ni cambios de permisos. Esta precisión sustituye la duplicación analítica previa en Inicio.

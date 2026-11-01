@@ -1053,3 +1053,747 @@ Orador 1
 (12:16) Porque era más o menos un estilo clásico. (12:18) Sí, algo estándar. (12:20) Sí, algo más moderno.
 
 Informe de ejecución (24:53) ¿Estos informes se generan en qué momento, Ingeniero? (24:56) Por ejemplo, el informe de ejecución es cuando, de acuerdo a las actividades que estaban planificadas, ejecutan una actividad (25:04) Y es el informe de ejecución (25:06) El informe final es cuándo, y termina lo que es la planificación (25:10) Termina la planificación (25:11) Ok, ya, hoy mismo le integro ese Ingeniero
+
+========================================================
+
+
+30-10-2026:
+Andriu:
+Es el proyecto principal. 
+
+Cliente:
+Está son los dos tipos de documentos, planificación, informe y seguimiento?
+
+Andriu:
+Esta el documento de ejecución que fue el ultimo que me pasó. A la otra matriz no me pasó aun. 
+
+Cliente:
+Ah, aun no te pase el documento con la matriz de ¿Quién valida a quién?
+
+Andriu:
+No, eso sí, no. Solo pude trabajar con los que me había pasado. Eso bueno, como lo había comentado, aquí en la creación de los planes de trabajo, informe de ejecución y informe final como tal.
+
+Andriu:
+Se selecciona en base al ámbito del nuevo plan, en base a los que están listados.
+
+Cliente:
+¿Y ya están asignadas las personas que pertenecen a eso?
+
+Andriu:
+No estoy seguro. El título del plan, ahí ya me da un título sugerido, pero si desea editarle también se puede hacer. Y creamos el plan como tal.
+
+Andriu:
+En el paso uno son los datos que vienen por defecto en el perfil, como había dicho este ingeniero, tipo de unidad, si es académica o administrativa.
+
+Cliente:
+¿Y eso es por defecto?
+
+Andriu:
+Sí.
+
+Cliente:
+¿Ya no pueden modificar?
+
+Andriu:
+No, ellos no pueden modificar.
+
+Andriu:
+Como usted dijo.
+
+Cliente:
+Perfecto, el paso 1 esta bien. ¿Y debes recargar para que aparezca la vista previa? 
+
+Andriu:
+No, solito aparece la vista previa de inmediato.
+
+Cliente:
+Ah, muy bien.
+
+Andriu:
+Bueno, el contenido vendría a ser una justificación por defecto que viene, como usted nos mencionó, que también se puede modificar en la administración.
+
+Andriu:
+Y bueno, redactar un objetivo.
+
+Andriu:
+También ya está con la integración de IA en mejoras de redacción para que sea más claro, más formal o más consistente.
+
+Cliente:
+¿Ya para la parte de objetivos también?
+
+Cliente:
+Y para la parte de objetivos también?
+
+Andriu:
+Sí, para ambas partes si hay la mejora de redacción con IA.
+
+Cliente:
+Ah, ya, ahí si esta bien.
+
+Cliente:
+¿Con qué IA estas utilizando?
+
+Andriu:
+Actualmente estamos usando la API de groq.
+
+Cliente:
+Es gratis?
+
+Andriu:
+Sí, usamos la api gratuita de groq.
+
+Andriu:
+Si desea podríamos hacer para que pueda cambiar ya sea para grog, gemini o llm para cualquiera de las tres opciones gratuitas.
+
+Cliente:
+¿Crearon alguna cuenta para que se vincule?
+
+Andriu:
+Sí, creamos una cuenta "utaped.fisei@gmail.com" ya vinculada con un correo creado justamente para este propósito.
+
+Cliente:
+Ya.
+
+Andriu:
+Pasamos a la siguiente que serían las actividades y la matriz.
+
+Andriu:
+Aquí agregamos una lista para que se adapte junto con la previsualizacion.
+
+Cliente:
+¿Sí te pasa el grupo, por ejemplo, de acciones de mejora?, Lo que son planes de mejora y el POA?
+
+Andriu:
+No, eso aun no nos paso.
+
+Cliente:
+Eso toca para hacer.
+
+Andriu:
+Lo único que tengo son las unidades, las comisiones y el informe de ejecución.
+
+Cliente:
+Ya, ya te paso ahorita.
+
+Cliente:
+Por ejemplo, las acciones que ponen ellos en este informe final, esas selecciones se convierten en lo que son acciones de mejora. Cuando realizan el informe final hay algunas actividades al final, la justificación creo que es.
+
+Cliente:
+Y ahí esas, lo que pusieron ellos que proponen se va apareciendo en acciones de mejora.
+
+Andriu:
+Ok.
+
+Cliente:
+Más o menos así es lo que es de parte del POA.
+
+Cliente:
+Por ejemplo, dice Fortalecer y va a estar más o menos con... para el objetivo estratégico y la actividad.
+
+Cliente:
+Porque la persona tiene que elegir el objetivo estratégico y de ahí coge las actividades porque son varias actividades.
+
+Andriu:
+Ok.
+
+Cliente:
+Ya te voy a pasar la matriz, se llamaba propuestas de mejoras aquí va a estar un Excel, ahí te toca generar lo que es una base de datos donde que debe estar por cada una de las comisiones
+
+Andriu:
+OK
+
+Cliente:
+Por ejemplo mira, aquí esta redes y esta es la acción de mejora que puede coger cualquiera de estas, del CTT la acción de mejora, etc. Puede coger todas o una pero siempre debe coger una mínimo obligatoria.
+
+Cliente:
+Si tenias el plan de mejoras?? 
+
+Andriu:
+Sólo esto ingeniero, el plan de mejora no, solo tengo en los archivos que me mando, solo tengo como tal el excel de las comisiones, informe de ejecución, el documento de la plantilla de la planificación. 
+
+Cliente:
+Esa parte no tienes tampoco? lo que está en la pizarra, de que comisiones nomás pueden estar?
+
+Andriu:
+no ingeniero
+
+Cliente:
+Entonces ya te voy a pasar porque la parte del plan de mejoras también debe ser una base de datos, donde eso de ahí tienes que vincularle con lo que está en el otro excel de acá
+
+Andriu:
+ok
+
+Cliente:
+Ahorita te voy a subir, revisale a ver si ya esta en la carpeta compartida que te subi a la nube.
+
+Andriu:
+Si, ya está 
+
+Cliente:
+Muy bien, ya te subo el otro, el documento del POA. Contiene lo que es actividades. Ese te voy a subir el jueves como a las 4 de la tarde ya que en este momento no lo tengo.
+ 
+
+Cliente:
+Veras, lo que debes hacer tu, te va a tocar generar una base de datos en base al documento que te subi, que tenga el objetivo, la parte de curriculum, el indicador y aquí son las actividades. Donde que el administrador pueda ingresar su... por ejemplo el indicador 1 tiene todas esas actividades, y ahí la persona que va a ejecutar la actividad debe aparecer por ejemplo perfil de egresado y de una le aparezcan las actividades, esta denominación no tanto solo para indicar todas.
+
+Andriu:
+Menciono el objetivo y currículum?
+
+Cliente:
+si este es el criterio, el criterio se va a derivar por ejemplo del currículum se grupa con el perfil, con el proyecto, con la malla, con el silabo
+
+Cliente:
+Ya te voy a indicar un documento que es de un gráfico, de un mapa conceptual, ahí estaba todo, ya que cada indicador tiene sus actividades. Eso ya te lo voy a subir también.
+
+Cliente:
+Entonces tu tendrías que hacer una base de datos mas o menos con esa estructura y aquí debe estar esta información ya que la persona que seleccione la actividad va a ser conforme al indicador y las actividades que tenga, la numeración de las actividades no es necesario incluirlas. El indicador con sus respectivas actividades.
+
+Andriu:
+ok
+
+Cliente:
+es más o menos como ser un Indice. Ya te subi, el archivo se llama Plan De Mejoras. Recuerda, hacer la base de datos, debe cargar de acuerdo a las actividades. Pero la parte vinculasion y seguimiento de graduados... en el archivo que te subi.
+
+Cliente:
+Ah, me falta esa matriz de quien revisa a quien
+ 
+Cliente:
+Ok, con todo esta de que generes una base de datos que te diga ¿Quién revisa con la comisión?
+
+Andriu:
+Ok
+
+Andriu:
+Y bueno, para las actividades que me había mostrado
+
+Andriu:
+¿Cómo debería interactuar como tal el software para esas actividades?
+
+Cliente:
+Suponiendo... tú dices actividades, acá debe salirte un tipo combobox para Que elija o tal vez con un checkbox, lo que consideres mejor. Ahí que diga actividad mejora tal Y ahí te filtre solo las mejoras, si dices actividades del POA...
+
+Cliente:
+O sea, aquí debe estar actividades, catálogo y ahí que elija.
+
+Andriu:
+Ok
+
+Cliente:
+Y aquí que filtres solo las actividades que son de POA, Plan de mejoras, o qué será.., podría poner "otras actividades" para que ingrese, asi mismo con un check, me parece que ahí te permite filtrar. De acuerdo a la comisión.
+
+Cliente:
+Porque te envie ese archivito, por ejemplo dice la comisión de diseño, Entonces solo debe filtrarse las que están en el indicador del 1 al 7, si es de seguimiento, el indicador 11, si es de responsable UC, clubs y aulas virtuales, solo del 12, si es de eventos solo del 14, si es de unidad de titulación solo del 15.
+
+Andriu:
+Entendido
+
+Andriu:
+Bueno continuando con la interfaz, tras añadir la actividad se escogían las fechas desde y hasta, los responsables, en este caso también se puede seleccionar todos y aparecía la frase exacta que había mencionado. Se escogen los recursos, medios de verificación y bueno, si se quiere añadir otros también vale.
+
+Andriu:
+Aquí tenemos la matriz, debido a la vista dividida le hacemos en este apartado a la izquierda pero también se puede ver la tabla completa
+
+Andriu:
+El siguiente paso que es los anexos como tal Igualmente se puede incluir los anexos.
+
+Cliente:
+En este caso se puede incluir el archivo PDF?
+¿Se inserta al final el archivo PDF?
+¿O se inserta el enlace?
+
+Andriu:
+No, se inserta el archivo PDF como tal
+
+Cliente:
+Sí, sí, porque si subo un pdf no estaria bien que solo quede un enlace
+
+Cliente:
+Pero, ahora que lo pienso, podría ser un anexo también un enlace, o imagen.
+
+Andriu:
+Las imágenes no las tengo contemplado
+
+Andriu:
+Tengo para PDFs.
+
+Andriu:
+Voy a añadirle diferentes tipos de archivos
+
+Andriu:
+¿Qué más se podría añadir?
+
+Cliente:
+Como anexos podrian permitirse Imágenes, PDFs, enlaces URL, etc
+
+Cliente:
+También podría ser...
+No creo que pueden insertar un audio
+O sea, para que...
+
+Andriu:
+Podria investigar si hay forma de adjuntar audio, tal vez convirtiendo el audio a url como tal
+
+Cliente:
+Una tabla también podría insertar
+
+Andriu:
+Voy a intentar incluir la mayor cantidad de tipos que se pueda, para que se puede subir anexos de varios tipos
+
+Cliente:
+Si, eso seria mucho mejor.
+
+Andriu:
+Y el última paso que ya es la revisión final y la firma, bueno... como tal el formato de previsualización trate de hacerlo lo mas parecido posible a las plantillas de los documentos que me había entregado.
+
+Cliente:
+Había una nota, creo que después de la tabla de matriz de actividades? ¿te acuerdas tú?
+Una nota que estaba al final de la tabla? por ejemplo creo que decía: esta información va a ser confidencial y no sé qué. Esa nota debe poder añadirse y editarse.
+
+Andriu:
+Un apartado de nota en la tabla de...
+
+Cliente:
+Sí, había una nota
+Esa debe estar siempre insertada
+
+Cliente:
+Sí, porque no está ahí la nota ahorita que veo tu previsualización.
+
+Andriu:
+No, ya, tengo que incluir
+
+Andriu:
+Y bueno, las firmas de responsabilidad...
+
+Cliente:
+Cuando ya le firmas se inserta ahí directo...
+
+Andriu:
+Sí, es más...
+Escogemos el archivo P12 que es el de la firma...
+La contraseña de la firma...
+
+Cliente:
+¿Y esa firma de quien se sacaron?
+
+Andriu:
+Es una generada de prueba.
+
+Cliente:
+Listo...
+
+Andriu:
+Y tras poner la contraseña asi se muestra la firma, Verificamos los datos de la firma correspondiente.
+
+Cliente:
+Ya para descargar una vez este aprobado todo por revisores y aprobadores, como se muestra?
+
+Andriu:
+Bueno, una vez ya he revisado todo al descargar si aparece con las firmas tal cual así ya colocadas en el PDF
+
+Cliente:
+Si sale con el nombre ? 
+
+Andriu:
+Si, aparece el código, el nombre, y la fecha en la que se firmó.
+
+Cliente:
+Ya, esta casi bien, pero la firma debe mostrar: el código QR eso si esta bien, tiene el nombre de la persona, y abajo tiene la frase "Validado únicamente por firmaEC"
+
+Andriu:
+¿Eso le agregó la línea de abajo que mencioné?
+
+Cliente:
+Con todo ya te mando una imagen de como debe aparecer la firma digital.
+
+Andriu:
+Si por favor, pase la imagen y ya veo si puedo adaptar la firma digital a como debe aparecer. Siguiendo con la demostración, una vez firmado ya se envia para revisión. Ahora ingreso con un usuario revisor..
+
+Cliente:
+¿No importan mayúsculas y minúsculas en el captcha?
+
+Andriu:
+Aquí no importan mayúsculas y minúsculas... Debido a...Justamente... La confusión que hay entre... Medúsculas y minúsculas... Ya que el captcha como que distorsiona las letras... Entonces... En... Varios casos... Se confundía...
+Entonces...
+Directamente... se acepto mayúsculas y minúsculas...
+
+Cliente:
+ok...
+
+Andriu:
+Luego voy a la pantalla para ver los documentos a revisar, y aquí están los que están en turno
+
+Cliente:
+¿Te aparece el badge con la frase "en turno"?
+
+Andriu:
+Si, aparece En turno, para los documentos que se debe revisar
+
+Cliente:
+Esa no estaria bien, podria ser otra frase como por ejemplo: por revisar
+
+Andriu:
+Por revisar...
+Ya, si le puedo cambiar, y voy a tratar de usar mejores frases, mas consertientes a este tipo de software para docentes.
+
+Andriu:
+Continuando, aparece el documento completo...
+
+Cliente:
+¿Puedes descargarte el docuemnto?
+Ahí me parecio ver una opcion de descargar?
+
+Andriu:
+No, es un boton que dice Recargar
+Mientras no se apruebe completamente con el flujo completo no se puede descargar. Como usted mencionó en los requerimientos.
+
+Cliente:
+Si, perfecto, asimismo es.
+
+
+Andriu:
+Procedemos con la revisión, si desea se puede marcar y colocar observaciones y con eso queda resaltado donde se haya marcado. Si tiene una observación entonves no se puede completar la etapa y obligatoriamente se debe devolver para corrección.
+
+Cliente:
+Suponiendo el caso...
+¿Si existe 1 observación puedo finalizar?
+
+Andriu:
+No, si existe aunque sea 1 observación, ya no se puede finalizar.
+
+Cliente:
+Ah... perfecto, Ahí está bien...
+
+Andriu:
+Por ahora como ejemplo, no voy a poner observaciones y voy a proceder a finalizar la etapa. 
+
+Cliente:
+La palabra completar etapa también está medio rara...
+Deberia ser algo mas relacionado, como finalizar revisión tal vez
+
+Andriu:
+Ok... Le cambio más claramente a finalizar revisión, y voy a volver a revisar todo el lenguaje usado en el software para que tenga mejor redacción.
+
+Cliente:
+Y algo que noto es que el que revisa no debe aprobar, eso estaría mal aquí
+
+Andriu:
+Como?
+
+Cliente:
+Claro veras, una misma persona no puede ser revisor y aprobador.
+
+Andriu:
+Ah, si ingeniero, pero tal y como ve aquí el paso de aprobación es solo de ese usaurio en el que estoy iniciados esion en este momento, ahora que ya temrino la revisión el ya no puede hacer nada mas.
+
+Cliente:
+Ah, yo pensé que el mismo iba a aporbar
+
+Andriu:
+No no, eso si esta para que se haga diefrentes personas asignadas, solo que creo que la interfaz es un poco ambigua y no lo aclara bien, eso ya lo voy a mejorar
+
+Cliente:
+De acuerdo, y donde esta el apartado para que firme el revisor?
+
+Andriu:
+Tiene razón, parece que eso no esta
+
+Cliente:
+Atento que el que crea, el que revisa, el que aprueba, todos deben firmar, incluso puede haber mas de 1 revisor, o mas de 1 aprobador. Puede haber 2 revisores, entonces los 2 revisores deben firmar.
+
+Andriu:
+Tiene toda la razon, ya voy a corregirlo. Y bueno, lo siguiente seria mostrarle el flujo del aprobador 
+
+Cliente:
+Entiendo, esto que me acaba de mostrar fue lo que debe hacer el revisor, debe tener el otro menú de aprobación, pero no elabora, solo revisa, solo aprueba.
+
+Andriu:
+Entonces, ¿un usuario que es revisor no puede crear documentos?
+
+Cliente:
+No.
+
+Andriu:
+Ah, ya ya,, porque actualmente un aprobador si puede crear documentos, eso estaria mal.
+
+Cliente:
+Claro, es que es como la parte de los jefes, tú tienes que ver un jefe de departamento, ¿un jefe de departamento qué hace?
+Va a revisar las actividades de los que trabajan en departamento, pero los que trabajan en departamento son las que generan documentos, él no va a generar, a menos que sea otro tipo de documento.
+
+Andriu:
+Entiendo.
+
+Andriu:
+Una persona que es revisor o aprobador nunca va a poder crear los documentos como tal.
+
+Cliente:
+No, Solo revisar o aprobar, depende si se creo como revisor o probador.
+
+Andriu:
+Y entonces los que están designados para crear los planes, ellos no van a ser revisores nunca ni aprobadores.
+
+Cliente:
+Exacto. Pero, muy importante, a menos que esté en dos comisiones.
+Por eso de acuerdo al perfil debe dársele el rol, ahí se desigma si esque por ejemplo "puede revisar y puede aprobar", pero, va a revisar/aprobar otro documento, es decir, no puede nunca revisar y aprobar el mismo documento.
+
+Andriu:
+Entendido. Esa restricción tal vez le voy a agregar en administración para que igualmente se pueda manejar dinámicamente.
+
+Andriu:
+Eso, ingeniero.
+Y bueno, como tal, la creacion de los planes, la creación de los informes que vendría a ser muy parecido a la de los planes
+
+Cliente:
+Si, como te mande en los documentos la estructuras es muy parecida, solo aumenta o disminuye algo
+
+Andriu:
+Si es verdad, y además en administracion si se pueden editar.
+
+Andriu:
+Igualmente, como usted dijo, un informe debe estar enlazado a un plan, así que mientras no haya un plan aprobado, no se podría hacer el informe de comité.
+
+Cliente:
+Ah, ya.
+Y lo mismo, el informe final debe estar enlazado a los informes de ejecución y el plan de trabajo.
+
+Andriu:
+Ah, ya, tiene que estar a ambos para poder hacer el informe final.
+
+Cliente:
+Sí, es que imagínate, no tienes un informe de ejecución, entonces, ¿cómo hago un informe final?
+
+Andriu:
+Sí, entiendo, debe cumplirse los 2 para poder hacerse el final.
+
+Andriu:
+Entonces, para la siguiente revisión lo que haría es ya cambiarle los datos reales que usted me pasó y mostrarle ya una...
+Bueno, la ejecución del informe final, porque lo que estaba planeando hacer era utilizar PlayWrite para poder preparar un video con todo el flujo ya ejecutado
+y no tener que hacerlo manualmente, sino que ya esté preparado justamente para el momento de la presentación como tal.
+
+Cliente:
+Sí, está bien eso.
+Enotnces, en resumen, cambiale lo que es la parte de roles, cambiar las actividades y corregir eso de ahí, nada más creo. Ah si, y la temrinologia recuerda hacerle mejor.
+
+Andriu:
+Eso, ingeniero.
+
+Cliente:
+Una cosa mas que note, en buscadores o cosas de ese estilo, asegúrate de que no tenga que darse clic en buscar para que recién haga la búsqueda, sino que mientras vas escribiendo ya de una se vaya buscando.
+
+Andriu:
+Si, no hay problema. Mientras mas facilidad para el usuario mejor, es verdad.
+
+Cliente:
+Y esto que dice filtrar por grupos a que se  refiere?
+
+Andriu:
+mmmm… creo que se referia a filtrar por comisiones
+
+Cliente:
+Bueno, entonces ahí lo correcto seria filtrar por comisiones. Asegurese de manejar bien las temrinologias
+
+Andriu:
+De acuerdo, si porque no recuerdo bien a que se referia por filtrar por grupos.
+
+Cliente:
+Y este de filtrar por periodos? se refiere a que también puedo ver de periodos anteriores?
+
+Andriu: 
+Si, podría ver de los periodos anteiores.
+
+Cliente:
+Entonces haga que el filtro por defento este en el periodo actual, ya que no debe estar por defecto que se muestren todos los periodos.
+
+Andriu:
+Bueno, ahora en cuanto a la parte de administracion, inisio sesion como admin, 
+Aquí temeos la pantalla de usuarios se puede igualmente volver a registrar las contraseñas en caso de que se pierda.
+Edición de alguno de los usuarios.
+
+Cliente:
+¿El administrador puede resetear las contraseñas?
+
+Andriu:
+Sí.
+
+Cliente:
+¿Y envía un correo electrónico de recuperación?
+
+Andriu:
+Creo que si estaba eso. Que cuando el admin resetee la contraseña le llegue un mensaje por correo al docente con esa nueva contraseña temporal y apenas ingresa esa contraseña le exige que cambie la contraseña.
+
+Cliente:
+Sí, eso estaría muy bueno que le pongas.
+
+Cliente:
+Que características de seguridad debe tener la contraseña?
+
+Andriu:
+Eso no estoy del todo seguro, pero crep que está limitado a una longitud de ocho caracteres mínimo dos números y un carácter especial.
+
+Cliente:
+Ya.
+Hay que tener en cuenta que algunos tienen una contraseña media larga.
+O sea, tienen mínimos de ocho caracteres y cual es el Máximo?
+
+Andriu:
+Máximo como tal, creo que eran 54 caracteres.
+
+Cliente:
+Ah, ya, si es asi no hay problema.
+
+Andriu:
+Continuamos a la vista de grupos y pertenencias
+
+Cliente:
+¿Y los grupos que son?
+¿Las comisiones?
+
+Andriu:
+La verdad no estoy seguro de para que sea esa vista.
+
+Andriu:
+Creo que tal vez son de las comisiones.
+
+Cliente:
+Bueno... si es que es de las comisiones asegurate de ponerle el nombre bien.
+
+Andriu:
+Si, ya voy a ver bien de que era esta vista, y bbueno de aquí vienen los perfiles de grupos.
+
+Cliente:
+Hay un limite en que se cierra la sesión?
+
+Andriu:
+La sesión, si se cierra automáticamente cuando está sin interacción, creo que por 30 minutos actualmente.
+
+Cliente:
+Ya. Creo que 30min si esta bien.
+
+Cliente:
+Veo que en las previsualizaciones hay un botón para guardar, aseguraraste de que mejor se guarde automatciamente por si acaso, nunca se sabe, se apaga o pasa algo los documentos si deberían quedarse guardados.
+
+Andriu:
+Tiene razón, ya voy a ver que tengan guardado automatico.
+
+Andriu:
+Bueno, continuando aqui esta la vista de las carreras y ambitos que, bueno, ahorita estoy trabajando con estudiantes de software, Ingeniería en Sistemas Computacionales e Informáticos y TI.
+
+Cliente:
+Verás, en este de aquí (Ingeniería en Sistemas Computacionales e Informáticos) ya no existe. Es antiguo.
+Solo debes escoger las nuevas.
+Software, tecnología de información, telecomunicaciones, industrial, y la otra creo que era Automatización y robotica.
+
+Andriu:
+Entendido. Igualmente sí se puede quitar o añadir más carreras.
+
+Cliente:
+Y a que te refieres con Crear ámbito?? que es ambito?
+
+Andriu:
+Bueno, no estoy seguro, ya voy a ver para que era esa parte.
+
+Cliente:
+¿Tienes alguna tabla que te vincule la carrera con las comisiones?
+
+Andriu:
+No recuerdo bien, creo que la Carrera con comisión no se vinculaba, sino que la administrador al crear un usuario le vincula una carrera al usuario.
+
+Cliente:
+Esque por ejemplo, todas las carreras no necesariamente tienen las mismas comisiones.
+
+Andriu:
+mmmm entiendo, ya voy a revisar como puedo manejar eso.
+
+Andriu:
+Continuando, aquí esta la vista de los cargos institucionales también que se entre cada uno de los usuarios que se crean.
+Los periodos académicos, que en este caso dos o de uno.
+Las plantillas de los formatos.
+
+Cliente:
+Suponemos si puedes editar la plantilla y aumentar más secciones.
+
+Andriu:
+Sí.
+
+Cliente:
+¿Cuálquier cosa?
+
+Andriu:
+Si, Tal como nos había mencionado antes se puede modificar totalmente las plantillas. Aumentar mover o quitar secciones.
+
+Andriu:
+Aquí también está la justificación por defecto que aparece en los documentos totalmente editable
+Aquí tenemos las secciones, en este caso del plan de trabajo.
+Esta sería la estructura, la justificación, objetivo, actividades, todo eso.
+Igualmente se podría agregar las secciones, extra si se desea o cambiar el orden.
+El catálogo de las actividades, como tal.
+Actividades por grupo.
+Recursos y medios.
+
+Cliente:
+¿La plantilla está haciendo con estructura de JSON o cómo?
+
+Andriu:
+Para la plantilla de cada uno de los documentos, no me acuerdo bien, pero creo que si se hace con una estructura de json internamente.
+
+Cliente:
+Supongamos que en caso quiera importarlo en JSON, se podría?
+
+Andriu:
+No tiene en este momento esa opcion, pero sí le podría agregar que se pueda importar y exportar json para el formato de las plantillas.
+
+Cliente:
+¿Modificamos en JSON, subimos, cargamos, evitamos todo ese proceso de estar haciendo a mano, creo que seria buena idea.
+
+Andriu:
+Sí, sí, sería muy buena idea.
+Segumos con Los recursos y medios, que son los que son la creación de cada una de las actividades.
+Aquí vemos las actas de oficios, todo lo que aparece en cada una de las actividades, se modifica aquí.
+Los feriados y las restricciones, igualmente aquí se pueden cargarlos si es que sean feriados, y guardarlo como tal.
+
+Cliente:
+Suponiendo el caso, no hay como decirle a la IA que quiero los feriados por ejemplo de Ambato? y me muestra todos los feriados?
+
+Andriu:
+Sí, podría integrar eso, como ya está usando groq para los resúmenes, tal vez si podría hacer que haga eso para los feriados.
+Entonces, para que consulte inmediatamente los feriados y ya le hagan.
+Bueno, aquí tenemos igualmente los flujos de aprobación. En base a elegir una comisión para el plan de trabajo, se define el grupo de aprobación como tal. Quién es el que va a aprobar, quién es el que va a revisar y todo tal cual. O sea, quién va a borrar también.
+
+Cliente:
+Enotnces ahí se define quien elabora, revisa, aprueba, etc?
+
+Andriu:
+Si, eso asignaria el administrador. 
+Bueno, aquí es la reportería como tal. Se puede exportar cada uno de los registros que vienen aquí. De documentos, de evidencia de pendientes, actividades por vencer y el avance de la información.
+
+Cliente:
+Suponiendo el caso, en las actividades por vencer, quedan unas cinco actividades. ¿Tú puedes ver en detalle qué actividades son las que están por vencer?
+
+Andriu:
+Creo que si. Ya le voya  revisar, para que si hay detalles de desglose de cada una de las cosas. Y asi mismo en los demás.
+
+Andriu:
+Bueno, las auditorías que son las actividades que realizan cada uno de los usuarios. Aquí están, bueno, los de inicio de sesión, revisiones, observación. Sí, sí están los filtros también.
+toda la auditoría igual se puede ver acá, que se hizo o que no se hizo. Y bueno, certificados como tal, esta visto no recuerdo para que era, ya voy a revisar para que era.
+
+Andriu: 
+Y eso me recuerda que le iba a preguntar, ingeniero, que se debe incluir para las firmas digitales, algo que certifique que la firma digital está vigente como tal, y para poder aprobar, porque ese control lo tengo ahorita ya que no tengo manera de validar correctamente eso.
+
+Cliente:
+Pero el archivo P12 tiene la información de hasta cuándo está válida o no. ¿Te has fijado tú eso? 
+
+Andriu:
+No, ingeniero, como no tengo una firma real digital.
+
+Cliente:
+Por ejemplo, en el software de FirmaEC pongo un certificado. Y le pongo validar. Y me dice hasta cuándo está validada la firma, cuando expira. No hay como ver la estructura dentro del P12 como están?
+
+Andriu:
+Sí, pero es que, como este es un archivo que cree digital, bueno, para demostración, no contiene ese tipo de certificados, ya que está meramente como un archivo de prueba.
+Tal vez, voy a averiguar si es que puedo tener acceso a la API de firmaEC, si es que si se puede eso ayudaría bastante.
+
+Cliente:
+Claro, seria buenazo, si la API te dice que no es valida, entonces ya no hay firma. Muy bien, quedemos con esas correciones.
+
+Andriu:
+Muchas gracias, hasta luego.
