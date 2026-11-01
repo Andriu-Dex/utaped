@@ -74,6 +74,8 @@ public class ActivityService {
         if(!plans.get(targetDocId,email).documentType().equals("T1")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Las actividades del Informe se conservan desde el Plan aprobado.");
         if(!current.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El documento está en modo de solo lectura.");
         if(current.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El documento cambió en otra sesión. Recargue antes de guardar la matriz.");
+        var recovery=jdbc.queryForList("SELECT revision FROM work_plan_matrix_recovery WHERE work_plan_id=? AND user_id=?",Long.class,targetDocId,accounts.current(email).id());
+        if(!recovery.isEmpty() && !Objects.equals(recovery.getFirst(),input.recoveryRevision())) throw new ResponseStatusException(HttpStatus.CONFLICT,"El borrador de recuperación cambió en otra sesión.");
         Set<UUID> memberIds=new HashSet<>();current.members().forEach(m->memberIds.add(m.id()));
         Set<UUID> required=new HashSet<>();current.activities().stream().filter(Activity::mandatory).forEach(a->required.add(a.catalogId()));
         var result=new ArrayList<Activity>();var rowIds=new HashSet<UUID>();var catalogIds=new HashSet<UUID>();
@@ -105,6 +107,7 @@ public class ActivityService {
         if(!catalogIds.containsAll(required)) throw invalid("No puede quitar actividades obligatorias del Plan.");
         jdbc.update("INSERT INTO work_plan_matrix(work_plan_id,source,activities) VALUES (?,?,?::jsonb) ON CONFLICT(work_plan_id) DO UPDATE SET source=excluded.source,activities=excluded.activities",targetDocId,input.source().trim(),json.writeValueAsString(result));
         jdbc.update("UPDATE work_plan SET row_version=row_version+1,updated_at=now() WHERE id=?",targetDocId);
+        if(!recovery.isEmpty()) jdbc.update("DELETE FROM work_plan_matrix_recovery WHERE work_plan_id=? AND user_id=? AND revision=?",targetDocId,accounts.current(email).id(),input.recoveryRevision());
         audit.record(accounts.current(email).id(),"WORK_PLAN_MATRIX_SAVED",targetDocId);
         return get(targetDocId,email);
     }

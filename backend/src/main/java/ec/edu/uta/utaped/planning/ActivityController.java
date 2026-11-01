@@ -2,6 +2,8 @@ package ec.edu.uta.utaped.planning;
 
 import static ec.edu.uta.utaped.planning.ActivityModels.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
+import org.springframework.validation.annotation.Validated;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
@@ -9,16 +11,21 @@ import java.util.UUID;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 @RequestMapping("/api")
 public class ActivityController {
     private final ActivityService service;
     private final InstitutionalActivityCatalog reference;
     private final HolidayAssistance assistance;
-    public ActivityController(ActivityService service,InstitutionalActivityCatalog reference,HolidayAssistance assistance) { this.service=service;this.reference=reference;this.assistance=assistance; }
+    private final MatrixRecovery recovery;
+    public ActivityController(ActivityService service,InstitutionalActivityCatalog reference,HolidayAssistance assistance,MatrixRecovery recovery) { this.service=service;this.reference=reference;this.assistance=assistance;this.recovery=recovery; }
     @GetMapping("/admin/planning/activity-reference") public InstitutionalActivityCatalog.Reference reference(Principal p) { return reference.reference(p.getName()); }
     @PostMapping("/admin/planning/activity-reference/import") public InstitutionalActivityCatalog.Result importReference(@Valid @RequestBody InstitutionalActivityCatalog.Import input,Principal p) { return reference.apply(input,p.getName()); }
     @PostMapping("/admin/planning/holiday-suggestions") public HolidayAssistance.Proposal holidaySuggestions(@Valid @RequestBody HolidayAssistance.Query input,Principal p) { return assistance.suggest(p.getName(),input); }
     @PostMapping("/admin/planning/holiday-suggestions/apply") public void applyHolidays(@Valid @RequestBody HolidayAssistance.Apply input,Principal p) { assistance.apply(p.getName(),input); }
+    @GetMapping("/work-plans/{targetDocId}/matrix/recovery") public MatrixRecovery.State recovery(@PathVariable UUID targetDocId,Principal p) { return recovery.read(targetDocId,p.getName()); }
+    @PutMapping("/work-plans/{targetDocId}/matrix/recovery") public MatrixRecovery.State saveRecovery(@PathVariable UUID targetDocId,@Valid @RequestBody MatrixRecovery.Input body,Principal p) { return recovery.save(targetDocId,p.getName(),body); }
+    @DeleteMapping("/work-plans/{targetDocId}/matrix/recovery") public void discardRecovery(@PathVariable UUID targetDocId,@RequestParam @PositiveOrZero long revision,Principal p) { recovery.discard(targetDocId,p.getName(),revision); }
     @GetMapping("/work-plans/{targetDocId}/matrix") public Matrix matrix(@PathVariable UUID targetDocId,Principal p) { return service.get(targetDocId,p.getName()); }
     @PutMapping("/work-plans/{targetDocId}/matrix") public Matrix save(@PathVariable UUID targetDocId,@Valid @RequestBody Save body,Principal p) { return service.save(targetDocId,p.getName(),body); }
     @GetMapping("/admin/planning/catalogs") public List<Catalog> catalogs() { return service.catalogs(); }

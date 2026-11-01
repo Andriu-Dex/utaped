@@ -200,3 +200,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-12 — Importación administrativa y evidencias externas](2026-10-12-04-user-imports-and-external-evidence.md).
 
 - [2026-10-30 — Cierre backend y entrega a Antigravity](2026-10-30-52-backend-closeout-and-frontend-handoff.md).
+
+- [2026-11-01 — Recuperación de actividades incompletas](2026-11-01-56-matrix-recovery.md).
