@@ -1,0 +1,27 @@
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { api, type Period } from '../shared/api'
+import { ActionForm } from '../shared/ActionForm'
+import { Toast } from '../shared/Toast'
+import { Icon } from '../shared/Icon'
+
+type Proposal = { id: string; title: string; row_version: number; source_title: string; source_formal_version: string; source_period_ends_on: string; career_id: string | null }
+type Career = { id: string; name: string; active: boolean }
+export function ActivityProposalReview({ groupId, periods, onDirtyChange, onSaved }: { groupId: string; periods: Period[]; onDirtyChange: (dirty: boolean) => void; onSaved: () => Promise<void> }) {
+  const [items, setItems] = useState<Proposal[] | null>(null), [careers, setCareers] = useState<Career[]>([]), [selected, setSelected] = useState<Proposal | null>(null), [title, setTitle] = useState(''), [periodId, setPeriodId] = useState(''), [careerId, setCareerId] = useState(''), [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(''), [reload, setReload] = useState(0)
+  const [loadedGroup, setLoadedGroup] = useState('')
+  const reasonField = useRef<HTMLTextAreaElement>(null)
+  const dirty = !!selected && (title !== selected.title || !!periodId || !!reason || careerId !== (selected.career_id ?? ''))
+  useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
+  useEffect(() => { let active = true; Promise.all([api<Proposal[]>('/admin/planning/groups/' + groupId + '/activity-proposals'), api<Career[]>('/careers')]).then(([values, options]) => { if (active) { setItems(values); setError(''); setCareers(options); setLoadedGroup(groupId) } }).catch(e => { if (active) { setError(e.message); setItems(null); setLoadedGroup(groupId) } }); return () => { active = false } }, [groupId, reload])
+  async function resolve(action: 'accept' | 'reject') {
+    if (!selected) return
+    if (action === 'reject' && !reason.trim()) { setError('Indique el motivo del rechazo.'); reasonField.current?.focus(); return }
+    setBusy(true); setError('')
+    try { await api('/admin/planning/activity-proposals/' + selected.id + '/' + action, 'POST', action === 'accept' ? { rowVersion: selected.row_version, title, periodId, careerId: careerId || null } : { rowVersion: selected.row_version, reason }); setSelected(null); setReload(value => value + 1); await onSaved(); setNotice(action === 'accept' ? 'Actividad publicada para el período seleccionado.' : 'Propuesta resuelta sin modificar el catálogo.') }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo resolver la propuesta.') }
+    finally { setBusy(false) }
+  }
+  function accept(event: FormEvent) { event.preventDefault(); void resolve('accept') }
+  return <section className="card"><h3>Propuestas procedentes de Informes</h3>{error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}{loadedGroup !== groupId ? <p role="status">Consultando propuestas…</p> : !items ? <button type="button" className="secondary" onClick={() => { setLoadedGroup(''); setReload(value => value + 1) }}>Reintentar propuestas</button> : !items.length ? <p className="muted">No hay propuestas pendientes de esta unidad o comisión.</p> : <ul className="scope-member-list">{items.map(item => <li key={item.id}><span><strong>{item.title}</strong><small>{item.source_title} · Versión {item.source_formal_version}</small></span><button type="button" className="secondary table-action-icon-btn" title={'Revisar propuesta: ' + item.title} aria-label={'Revisar propuesta: ' + item.title} disabled={busy} onClick={() => { setSelected(item); setTitle(item.title); setPeriodId(''); setCareerId(item.career_id ?? ''); setReason('') }}><Icon name="edit" size={18} /></button></li>)}</ul>}{selected && <ActionForm key={selected.id} label="Resolver propuesta" openSignal={selected.id} modal disabled={busy} dirty={dirty} onCancel={() => setSelected(null)}><p>{selected.source_title} · Versión {selected.source_formal_version}</p><form onSubmit={accept}><fieldset disabled={busy}><label>Actividad del catálogo<textarea required maxLength={500} value={title} onChange={e => setTitle(e.currentTarget.value)} /></label><div className="grid"><label>Período posterior<select required value={periodId} onChange={e => setPeriodId(e.currentTarget.value)}><option value="">Seleccione un período</option>{periods.filter(p => p.status === 'ACTIVE' && p.starts_on > selected.source_period_ends_on).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Carrera de aplicación<select required={!!selected.career_id} value={careerId} onChange={e => setCareerId(e.currentTarget.value)}><option value="">{selected.career_id ? 'Seleccione una carrera activa' : 'Ámbito general'}</option>{careers.filter(c => c.active).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div><button>Publicar actividad para el período</button><label>Motivo para no incorporar la propuesta<textarea ref={reasonField} maxLength={1000} value={reason} onChange={e => setReason(e.currentTarget.value)} /></label><button type="button" className="secondary" onClick={() => void resolve('reject')}>No incorporar propuesta</button></fieldset></form></ActionForm>}</section>
+}

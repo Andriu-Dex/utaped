@@ -1,10 +1,13 @@
+import { ActivityProposalReview } from './ActivityProposalReview'
+import { HolidaySuggestions } from './HolidaySuggestions'
+import { ActivityReferenceImport } from './ActivityReferenceImport'
 import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, type Group, type Period } from '../shared/api'
 import { Icon } from '../shared/Icon'
-import { categoryLabels, type Catalog, type Category, type Definition } from './matrixTypes'
+import { categoryLabels, type Catalog, type Category, type Definition, type ActivityContext } from './matrixTypes'
 import './planning-admin.css'
 
 export function PlanningAdministration({ groups, section, onDirtyChange }: { groups: Group[]; section: 'resources' | 'activities' | 'holidays'; onDirtyChange: (dirty: boolean) => void }) {
@@ -14,7 +17,7 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
   const [groupId, setGroupId] = useState(''); const [label, setLabel] = useState('')
   const [holidayPeriod, setHolidayPeriod] = useState(''); const [holidayEnabled, setHolidayEnabled] = useState(false)
   const [catalog, setCatalog] = useState({ id: '', kind: 'RESOURCE' as Catalog['kind'], evidenceKind: 'PDF' as 'PDF' | 'URL', label: '', active: true })
-  const [activity, setActivity] = useState({ id: '', title: '', category: 'POA' as Category, mandatory: false, active: true })
+  const [activity, setActivity] = useState<{ id: string; title: string; category: Category; mandatory: boolean; active: boolean; context?: ActivityContext | null }>({ id: '', title: '', category: 'POA' as Category, mandatory: false, active: true })
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [dirtyForms, setDirtyForms] = useState<string[]>([])
   const dirty = dirtyForms.length > 0
@@ -45,6 +48,9 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); return false } finally { setBusy(false) }
   }
   async function saveCatalog(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/catalogs' + (catalog.id ? '/' + catalog.id : ''), catalog.id ? 'PUT' : 'POST', catalog, 'catalog')) setCatalog({ id: '', kind: 'RESOURCE', evidenceKind: 'PDF', label: '', active: true }) }
+  const proposalsDirty = useCallback((dirty: boolean) => setDirtyForms(keys => dirty ? keys.includes('proposals') ? keys : [...keys, 'proposals'] : keys.filter(key => key !== 'proposals')), [])
+  const suggestionsDirty = useCallback((dirty: boolean) => setDirtyForms(keys => dirty ? keys.includes('holiday-suggestions') ? keys : [...keys, 'holiday-suggestions'] : keys.filter(key => key !== 'holiday-suggestions')), [])
+  const referenceDirty = useCallback((dirty: boolean) => setDirtyForms(keys => dirty ? keys.includes('reference') ? keys : [...keys, 'reference'] : keys.filter(key => key !== 'reference')), [])
   async function saveActivity(e: FormEvent) { e.preventDefault(); if (await mutate('/admin/planning/activities' + (activity.id ? '/' + activity.id : ''), activity.id ? 'PUT' : 'POST', { ...activity, groupId }, 'activity')) setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }
   const retry = <button type="button" className="secondary" disabled={busy || dirty} onClick={() => { setError(''); setReload(value => value + 1) }}>Reintentar catálogos de planificación</button>
   if (!loaded) return <section className="card"><h2>Catálogos de planificación</h2>{error ? <><Toast message={error} />{retry}</> : <p role="status">Cargando catálogos de planificación…</p>}</section>
@@ -111,7 +117,7 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
       </div>
       <div className="filter-toolbar" style={{ margin: '16px 0' }}>
         <label>Grupo del catálogo
-          <select value={groupId} onChange={async e => { const nextValue = e.currentTarget.value; if (!(await discard(['activity', 'collective']))) return; setGroupId(nextValue); setDefinitions([]); setLabel(groups.find(g => g.id === nextValue)?.collective_label ?? ''); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
+          <select value={groupId} onChange={async e => { const nextValue = e.currentTarget.value; if (!(await discard(['activity', 'collective', 'reference', 'proposals']))) return; setGroupId(nextValue); setDefinitions([]); setLabel(groups.find(g => g.id === nextValue)?.collective_label ?? ''); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
             <option value="">Seleccione</option>
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
@@ -124,10 +130,14 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
         </div>
       ) : (
         <>
+          <ActivityProposalReview key={'proposals-' + groupId} groupId={groupId} periods={periods} onDirtyChange={proposalsDirty} onSaved={async () => setDefinitions(await api('/admin/planning/groups/' + groupId + '/activities'))} />
+          <ActivityReferenceImport key={groupId} groupId={groupId} groups={groups} periods={periods} onDirtyChange={referenceDirty} onSaved={async () => setDefinitions(await api('/admin/planning/groups/' + groupId + '/activities'))} />
           <ActionForm label="Crear o editar actividad" openSignal={activity.id || undefined} dirty={dirtyForms.includes('activity')} disabled={busy} onCancel={() => { setDirtyForms(keys => keys.filter(k => k !== 'activity')); setActivity({ id: '', title: '', category: 'POA', mandatory: false, active: true }) }}>
             <form onChange={() => markDirty('activity')} onSubmit={saveActivity}>
               <label>Título de actividad del catálogo<input required maxLength={500} value={activity.title} onChange={e => setActivity({ ...activity, title: e.target.value })} /></label>
               <label>Clasificación de actividad<select value={activity.category} onChange={e => setActivity({ ...activity, category: e.target.value as Category })}>{Object.entries(categoryLabels).map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select></label>
+              <div className="grid">{([{ key: 'objective', label: 'Objetivo estratégico', max: 4000 }, { key: 'criterion', label: 'Criterio', max: 1000 }, { key: 'indicator', label: 'Indicador', max: 1000 }, { key: 'strategy', label: 'Estrategia', max: 1000 }] as const).map(field => <label key={field.key}>{field.label}<textarea maxLength={field.max} rows={2} value={activity.context?.[field.key] ?? ''} onChange={e => setActivity({ ...activity, context: { ...activity.context, [field.key]: e.currentTarget.value } })} /></label>)}</div>
+              {activity.context?.sourceFile && <p className="field-help">Origen: {activity.context.sourceFile}</p>}
               <label className="check"><input type="checkbox" checked={activity.mandatory} onChange={e => setActivity({ ...activity, mandatory: e.target.checked })} />Obligatoria para este grupo</label>
               <label className="check"><input type="checkbox" checked={activity.active} onChange={e => setActivity({ ...activity, active: e.target.checked })} />Actividad activa</label>
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
@@ -179,6 +189,7 @@ export function PlanningAdministration({ groups, section, onDirtyChange }: { gro
           <p className="muted">Configure fechas no laborables y restricciones de inicio o fin de actividades por período.</p>
         </div>
       </div>
+      <HolidaySuggestions existing={holidays.map(h => h.date)} onSaved={load} onDirtyChange={suggestionsDirty} />
       <ActionForm label="Agregar feriado" dirty={dirtyForms.includes('holiday')} disabled={busy} onCancel={() => setDirtyForms(keys => keys.filter(k => k !== 'holiday'))}>
         <form className="grid" onChange={() => markDirty('holiday')} onSubmit={e => { e.preventDefault(); const form = e.currentTarget; const data = Object.fromEntries(new FormData(form)); void mutate('/admin/planning/holidays', 'POST', data, 'holiday').then(ok => { if (ok) form.reset() }) }}>
           <label>Fecha del feriado<input required type="date" name="date" /></label>

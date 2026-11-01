@@ -13,8 +13,9 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
 
   useEffect(() => {
     let active = true
-    api<{ items: User[] }>('/admin/users/directory?' + new URLSearchParams({ query, active: 'true', size: '100' })).then(result => { if (active) setUsers(result.items) }).catch(e => { if (active) setError(e.message) })
-    return () => { active = false }
+    const controller = new AbortController()
+    api<{ items: User[] }>('/admin/users/directory?' + new URLSearchParams({ query, active: 'true', size: '100' }), 'GET', undefined, controller.signal).then(result => { if (active) setUsers(result.items) }).catch(e => { if (active) setError(e.message) })
+    return () => { active = false; controller.abort() }
   }, [query])
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function CertificateAdministration({ onDirtyChange }: { onDirtyChange: (d
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
       <div className="grid">
         <label>Buscar firmante
-          <input value={query} onChange={event => setQuery(event.target.value)} maxLength={200} placeholder="Nombre o correo..." />
+          <input value={query} onChange={event => { setQuery(event.currentTarget.value); setUsers([]) }} maxLength={200} placeholder="Nombre o correo..." />
         </label>
         <label>Cuenta del firmante
           <select value={user} onChange={event => { setUser(event.target.value); setBindings([]); setError('') }}>

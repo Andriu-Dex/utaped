@@ -33,7 +33,7 @@ export function refreshCsrf(): Promise<void> {
   })().finally(() => { csrfRequest = undefined })
   return csrfRequest
 }
-export async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+export async function api<T>(path: string, method = 'GET', body?: unknown, signal?: AbortSignal): Promise<T> {
   const headers: Record<string, string> = {}
   if (method !== 'GET') {
     if (!csrf) await refreshCsrf()
@@ -42,7 +42,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
   const form = body instanceof URLSearchParams
   if (body && !(body instanceof FormData)) headers['Content-Type'] = form ? 'application/x-www-form-urlencoded' : 'application/json'
   const response = await fetch('/api' + path, {
-    method, credentials: 'same-origin', headers,
+    method, credentials: 'same-origin', headers, signal,
     body: body instanceof FormData ? body : body ? form ? body.toString() : JSON.stringify(body) : undefined,
   })
   if (!response.ok) {

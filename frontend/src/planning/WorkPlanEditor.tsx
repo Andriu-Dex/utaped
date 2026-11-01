@@ -78,6 +78,9 @@ export function WorkPlanEditor({
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
+  const [autosaving, setAutosaving] = useState(false), [autosaveFailed, setAutosaveFailed] = useState('')
+  const contentWrite = useRef(false), mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [latest, setLatest] = useState<WorkPlan | null>(null)
   const [lifecycleDirty, setLifecycleDirty] = useState(false)
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
@@ -96,7 +99,7 @@ export function WorkPlanEditor({
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista del Plan.') }
   }, [initial.id])
   const synchronizePlan = useCallback((current: WorkPlan) => { setPlan(current); setDraft(fields(current)) }, [])
-  const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty || careerCopyDirty
+  const dirty = autosaving || contentDirty || lifecycleDirty || authorsDirty || stepDirty || careerCopyDirty
 
   useEffect(() => {
     const topbar = document.querySelector('.topbar'), navigation = stepHeading.current
@@ -124,15 +127,32 @@ export function WorkPlanEditor({
     return () => window.removeEventListener('beforeunload', preventClose)
   }, [])
   function change(name: keyof DraftFields, value: string) { if (name === 'justification') setPreviewFocus('JUSTIFICATION'); if (name === 'objective') setPreviewFocus('OBJECTIVE'); setDraft(current => ({ ...current, [name]: value })); setNotice('') }
+  useEffect(() => {
+    const serialized = JSON.stringify(draft)
+    if (!contentDirty || !plan.editable || busy || autosaving || conflict || authorsDirty || lifecycleDirty || stepDirty || !['general', 'content'].includes(section) || !draft.title.trim() || autosaveFailed === serialized) return
+    const timer = window.setTimeout(() => {
+      if (contentWrite.current) return
+      contentWrite.current = true; setAutosaving(true)
+      api<WorkPlan>('/work-plans/' + plan.id, 'PUT', { ...draft, rowVersion: plan.rowVersion }).then(saved => {
+        if (!mounted.current) return
+        setPlan(saved); setDraft(current => JSON.stringify(current) === serialized ? fields(saved) : current); setAutosaveFailed('')
+      }).catch(e => {
+        if (!mounted.current) return
+        setAutosaveFailed(serialized); setError(e.message || 'No se pudo autoguardar. Sus cambios se conservan en pantalla.')
+        if (e instanceof ApiError && e.status === 409) setConflict(true)
+      }).finally(() => { contentWrite.current = false; if (mounted.current) setAutosaving(false) })
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [draft, contentDirty, plan.id, plan.rowVersion, plan.editable, busy, autosaving, conflict, authorsDirty, lifecycleDirty, stepDirty, section, autosaveFailed])
   async function save(event: FormEvent) {
-    event.preventDefault(); setError(''); setNotice(''); setBusy(true)
+    event.preventDefault(); if (contentWrite.current) return; contentWrite.current = true; setError(''); setNotice(''); setBusy(true)
     try {
       const saved = await api<WorkPlan>('/work-plans/' + plan.id, 'PUT', { ...draft, rowVersion: plan.rowVersion })
       setPlan(saved); setDraft(fields(saved)); setNotice('Borrador guardado en el servidor.')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar.')
       if (e instanceof ApiError && e.status === 409) setConflict(true)
-    } finally { setBusy(false) }
+    } finally { contentWrite.current = false; setBusy(false) }
   }
   async function compare() {
     setError('')
@@ -143,7 +163,7 @@ export function WorkPlanEditor({
     if (!latest || !(await confirmAction('¿Descartar sus cambios locales y cargar la versión del servidor?'))) return
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
-  async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
+  async function back() { if (contentWrite.current) return; if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
   async function navigateStep(next: WorkPlanSection) {
     if (next === 'preparation') next = 'signing'
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
@@ -157,7 +177,7 @@ export function WorkPlanEditor({
     requestAnimationFrame(() => stepHeading.current?.focus())
   }
   async function requestStep(next: PlanStep) {
-    if (next === section || navigationLock.current || busy || stepBusy) return
+    if (next === section || navigationLock.current || contentWrite.current || busy || stepBusy) return
     navigationLock.current = true; setNavigating(true); setError('')
     try {
       // These two views share the same draft: changing tabs must retain unsaved writing.
@@ -176,7 +196,7 @@ export function WorkPlanEditor({
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
   }
   function openFollowUp(next: FollowUpSection) {
-    if (dirty || busy || stepBusy || navigating || next === 'execution' && plan.documentState !== 'APPROVED') return
+    if (dirty || autosaving || busy || stepBusy || navigating || next === 'execution' && plan.documentState !== 'APPROVED') return
     if (planSteps.some(step => step.key === section)) setFollowUpReturn(section as PlanStep)
     setSection(next)
   }
@@ -198,7 +218,7 @@ export function WorkPlanEditor({
           type="button"
           className="plan-back-btn"
           onClick={back}
-          disabled={busy || stepBusy || navigating}
+          disabled={busy || autosaving || stepBusy || navigating}
           title="Volver a documentos"
           aria-label="Volver a documentos"
         >
@@ -207,7 +227,7 @@ export function WorkPlanEditor({
         </button>
         <h1>{plan.title}</h1>
       </div>
-      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{autosaving ? 'Guardando…' : contentDirty && autosaveFailed === JSON.stringify(draft) ? 'Autoguardado pendiente' : dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
       <div className="plan-document-tools" role="group" aria-label="Acciones del documento">
         <DocumentFollowUp approved={plan.documentState === 'APPROVED'} disabled={dirty || busy || stepBusy || navigating} pendingChanges={dirty} onOpen={openFollowUp} />
         {plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || stepBusy || navigating} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
@@ -226,7 +246,7 @@ export function WorkPlanEditor({
       </div>
     </header>
     <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
-      <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
+      <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || autosaving || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
     </div>
     <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de {planSteps.length} · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
     {error && <Toast message={error} onDismiss={() => setError('')} />}
@@ -264,7 +284,7 @@ export function WorkPlanEditor({
               {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
             </span>
             <button
-              disabled={!contentDirty || conflict}
+              disabled={autosaving || !contentDirty || conflict}
               className={dirty ? 'primary-save-btn' : 'secondary'}
             >
               <Icon name="check" size={14} />
@@ -305,7 +325,7 @@ export function WorkPlanEditor({
                 {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
               </span>
               <button
-                disabled={!contentDirty || conflict}
+                disabled={autosaving || !contentDirty || conflict}
                 className={dirty ? 'primary-save-btn' : 'secondary'}
               >
                 <Icon name="check" size={14} />
@@ -323,7 +343,7 @@ export function WorkPlanEditor({
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}
       </div>}
     </div>
-    <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || navigating} nextDisabled={dirty} />
+    <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || autosaving || navigating} nextDisabled={dirty} />
     </>}
     </div>
     {previewPane === 'split' && (

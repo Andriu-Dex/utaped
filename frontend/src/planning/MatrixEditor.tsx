@@ -10,12 +10,25 @@ import { categoryLabels, type Activity, type Matrix } from './matrixTypes'
 import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
-function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities } }
+function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities, note: matrix.note } }
 export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved, isSplitView, onToggleSplit }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void; isSplitView?: boolean; onToggleSplit?: () => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
+  const [autosaving, setAutosaving] = useState(false), [autosaveFailed, setAutosaveFailed] = useState('')
+  const writeLock = useRef(false), mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
   const [catalogId, setCatalogId] = useState(''); const [otherTitle, setOtherTitle] = useState('')
+  const [selectedDefinitions, setSelectedDefinitions] = useState<string[]>([])
+  const [activityOrigin, setActivityOrigin] = useState(''), [activityQuery, setActivityQuery] = useState('')
+  const [strategy, setStrategy] = useState('')
+  const [objective, setObjective] = useState(''), [criterion, setCriterion] = useState(''), [indicator, setIndicator] = useState('')
+  const availableDefinitions = saved?.definitions.filter(d => d.active && !draft?.activities.some(a => a.catalogId === d.id) && (!activityOrigin || d.category === activityOrigin)) ?? []
+  const objectives = [...new Set(availableDefinitions.map(d => d.context?.objective).filter((value): value is string => !!value))]
+  const strategies = [...new Set(availableDefinitions.filter(d => !objective || d.context?.objective === objective).map(d => d.context?.strategy).filter((value): value is string => !!value))]
+  const criteria = [...new Set(availableDefinitions.filter(d => !objective || d.context?.objective === objective).map(d => d.context?.criterion).filter((value): value is string => !!value))]
+  const indicators = [...new Set(availableDefinitions.filter(d => (!objective || d.context?.objective === objective) && (!criterion || d.context?.criterion === criterion)).map(d => d.context?.indicator).filter((value): value is string => !!value))]
+  const filteredDefinitions = availableDefinitions.filter(d => (!strategy || d.context?.strategy === strategy) && (!objective || d.context?.objective === objective) && (!criterion || d.context?.criterion === criterion) && (!indicator || d.context?.indicator === indicator) && [d.title, d.context?.objective, d.context?.criterion, d.context?.indicator, d.context?.strategy].join(' ').toLocaleLowerCase('es').includes(activityQuery.toLocaleLowerCase('es')))
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
   const [addKey, setAddKey] = useState(0)
   const [attempted, setAttempted] = useState(false)
@@ -38,7 +51,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
       })
     }
   }, [editingActivityId])
-  const dirty = !!catalogId || !!otherTitle || !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
+  const dirty = autosaving || !!selectedDefinitions.length || !!catalogId || !!otherTitle || !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
   useEffect(() => {
@@ -56,9 +69,15 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
   }
   function add() {
     if (!saved || !draft) return
+    if (selectedDefinitions.length) {
+      const entries = saved.definitions.filter(d => selectedDefinitions.includes(d.id) && !draft.activities.some(a => a.catalogId === d.id))
+      if (draft.activities.length + entries.length > 100) { setError('La matriz admite hasta 100 actividades.'); return }
+      const additions: Activity[] = entries.map(d => ({ id: crypto.randomUUID(), catalogId: d.id, title: d.title, category: d.category, mandatory: d.mandatory, context: d.context, startsOn: null, endsOn: null, responsibleIds: [], collective: false, resources: [], means: [] }))
+      setDraft({ ...draft, activities: [...draft.activities, ...additions] }); setSelectedDefinitions([]); setCatalogId(''); setAddKey(k => k + 1); setNotice(`${additions.length} actividades incorporadas. Configure su planificación.`); setError(''); return
+    }
     const definition = saved.definitions.find(d => d.id === catalogId)
     if (!definition && !otherTitle.trim()) { setError('Escriba el título de la actividad Otra.'); return }
-    const activity: Activity = { id: crypto.randomUUID(), catalogId: definition?.id ?? null, title: definition?.title ?? otherTitle.trim(), category: definition?.category ?? 'OTHER', mandatory: definition?.mandatory ?? false, startsOn: null, endsOn: null, responsibleIds: [], collective: false, resources: [], means: [] }
+    const activity: Activity = { id: crypto.randomUUID(), catalogId: definition?.id ?? null, title: definition?.title ?? otherTitle.trim(), category: definition?.category ?? 'OTHER', mandatory: definition?.mandatory ?? false, context: definition?.context, startsOn: null, endsOn: null, responsibleIds: [], collective: false, resources: [], means: [] }
     setDraft({ ...draft, activities: [...draft.activities, activity] })
     setCatalogId('')
     setOtherTitle('')
@@ -75,9 +94,24 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     if (checked) values.push({ catalogId: id, other: id === null ? '' : null, label: null })
     update(row.id, { [key]: values })
   }
+  useEffect(() => {
+    if (!saved || !draft || !saved.editable || busy || autosaving || conflict || catalogId || otherTitle || selectedDefinitions.length) return
+    const serialized = JSON.stringify(draft)
+    if (serialized === JSON.stringify(selection(saved)) || serialized === autosaveFailed || !draft.note.trim()) return
+    if (draft.activities.some(a => !a.title.trim() || !a.startsOn || !a.endsOn || a.startsOn > a.endsOn || a.startsOn < saved.periodStartsOn || a.endsOn > saved.periodEndsOn || !a.responsibleIds.length || a.responsibleIds.some(id => !saved.members.some(member => member.id === id)) || !a.resources.length || !a.means.length || [...a.resources, ...a.means].some(c => c.catalogId === null && !c.other?.trim()) || saved.restrictHolidayEndpoints && saved.holidays.some(h => h.date === a.startsOn || h.date === a.endsOn))) return
+    const timer = window.setTimeout(() => {
+      if (writeLock.current) return
+      writeLock.current = true; setAutosaving(true)
+      api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion }).then(async value => {
+        if (!mounted.current) return
+        setSaved(value); setDraft(current => JSON.stringify(current) === serialized ? selection(value) : current); setAutosaveFailed(''); await onSaved?.()
+      }).catch(e => { if (mounted.current) { setAutosaveFailed(serialized); setError(e.message || 'No se pudo autoguardar la matriz.'); if (e instanceof ApiError && e.status === 409) setConflict(true) } }).finally(() => { writeLock.current = false; if (mounted.current) setAutosaving(false) })
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [saved, draft, busy, autosaving, conflict, catalogId, otherTitle, selectedDefinitions.length, autosaveFailed, targetDocId, onSaved])
   async function persist(): Promise<boolean> {
-    if (!saved || !draft) return false
-    if (catalogId || otherTitle) { setError('Agregue la actividad seleccionada o cancele su creación antes de guardar y continuar.'); return false }
+    if (!saved || !draft || writeLock.current) return false
+    if (catalogId || otherTitle || selectedDefinitions.length) { setError('Agregue la actividad seleccionada o cancele su creación antes de guardar y continuar.'); return false }
     setAttempted(true); setError(''); setNotice('')
     const missingDates = draft.activities.find(a => !a.startsOn || !a.endsOn || a.startsOn > a.endsOn)
     if (missingDates) { setError('Complete fechas válidas antes de guardar la matriz.'); showActivity(missingDates.id); return false }
@@ -93,7 +127,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
   }
   async function save(e: FormEvent) { e.preventDefault(); await persist() }
   async function canContinue(): Promise<boolean> {
-    if (!saved || !draft || busy || conflict) return false
+    if (!saved || !draft || busy || writeLock.current || conflict) return false
     if (!saved.editable) return true
     setError(''); setNotice('')
     if (!draft.activities.length) {
@@ -102,6 +136,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
       return false
     }
     setAttempted(true)
+    if (saved.definitions.some(d => d.active && d.category === 'IMPROVEMENT_ACTION') && !draft.activities.some(a => a.category === 'IMPROVEMENT_ACTION')) { setError('Seleccione al menos una acción de mejora aplicable a su comisión.'); return false }
     const incomplete = draft.activities.find(a => !a.title.trim() || !a.startsOn || !a.endsOn ||
       a.startsOn > a.endsOn || a.startsOn < saved.periodStartsOn || a.endsOn > saved.periodEndsOn ||
       !a.responsibleIds.length || a.responsibleIds.some(id => !saved.members.some(member => member.id === id)) ||
@@ -125,7 +160,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     if (!saved || !draft) return ['general', 'content'].includes(target)
     if (['attachments', 'preparation', 'signing'].includes(target)) return canContinue()
     return !dirty || await confirmAction('Hay cambios sin guardar en la matriz. ¿Cambiar de paso y descartarlos?')
-  }, busy || (!saved && !error))
+  }, busy || autosaving || (!saved && !error))
   async function next() {
     if (!(await canContinue())) return
     setBusy(true)
@@ -138,12 +173,13 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     })
   }
   async function back() {
+    if (writeLock.current) return
     if (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?'))) return
     setBusy(true)
     try { await onBack() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo volver.'); setBusy(false) }
   }
   async function previous() {
-    if (busy || (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Volver al contenido y descartarlos?')))) return
+    if (busy || writeLock.current || (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Volver al contenido y descartarlos?')))) return
     setBusy(true)
     try { await (onPrevious ?? onBack)() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.'); setBusy(false) }
   }
@@ -444,6 +480,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
             </label>
           </div>
 
+          <div className="card matrix-source-card"><label htmlFor="matrix-note">Nota de la matriz</label><textarea id="matrix-note" required maxLength={2000} value={draft.note} onChange={e => { setDraft({ ...draft, note: e.currentTarget.value }); setNotice('') }} /></div>
           <div className="matrix-activities-section-header">
             <div className="section-heading">
               <span className="section-icon"><Icon name="document" /></span>
@@ -458,25 +495,27 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
               key={addKey}
               label="Agregar actividad"
               disabled={busy || !saved.editable}
-              dirty={!!catalogId || !!otherTitle}
-              onCancel={() => { setCatalogId(''); setOtherTitle('') }}
+              dirty={!!catalogId || !!otherTitle || !!selectedDefinitions.length}
+              onCancel={() => { setCatalogId(''); setOtherTitle(''); setSelectedDefinitions([]) }}
             >
               <div className="matrix-modal-content">
                 <p className="matrix-modal-intro">
-                  Seleccione una actividad del catálogo institucional o elija «Otra actividad» para especificar una actividad complementaria.
+                  Seleccione las actividades del catálogo institucional o elija «Otra actividad» para especificar una actividad complementaria.
                 </p>
-                <label>
-                  Actividad del catálogo
-                  <select value={catalogId} onChange={e => setCatalogId(e.target.value)}>
-                    <option value="">Seleccione una actividad</option>
-                    {saved.definitions.filter(d => d.active && !draft.activities.some(a => a.catalogId === d.id)).map(d => (
-                      <option key={d.id} value={d.id}>
-                        {categoryLabels[d.category]} · {d.title}
-                      </option>
-                    ))}
-                    <option value="__OTHER__">Otra actividad (especifique)</option>
-                  </select>
-                </label>
+                <div className="grid">
+                  <label>Origen de actividades<select value={activityOrigin} onChange={e => { setActivityOrigin(e.target.value); setObjective(''); setStrategy(''); setCriterion(''); setIndicator(''); setCatalogId(e.target.value === 'OTHER' ? '__OTHER__' : '') }}><option value="">Todos los orígenes</option>{Object.entries(categoryLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                  <label>Buscar actividad<input type="search" value={activityQuery} onChange={e => { setActivityQuery(e.target.value); setCatalogId('') }} /></label>
+                </div>
+                {!!objectives.length && <label>Objetivo estratégico<select value={objective} onChange={e => { setObjective(e.target.value); setStrategy(''); setCriterion(''); setIndicator(''); setCatalogId('') }}><option value="">Todos los objetivos</option>{objectives.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+                {!!strategies.length && <label>Estrategia<select value={strategy} onChange={e => { setStrategy(e.currentTarget.value); setCatalogId('') }}><option value="">Todas las estrategias</option>{strategies.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+                {!!criteria.length && <label>Criterio<select value={criterion} onChange={e => { setCriterion(e.target.value); setIndicator(''); setCatalogId('') }}><option value="">Todos los criterios</option>{criteria.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+                {!!indicators.length && <label>Indicador<select value={indicator} onChange={e => { setIndicator(e.target.value); setCatalogId('') }}><option value="">Todos los indicadores</option>{indicators.map(value => <option key={value} value={value}>{value}</option>)}</select></label>}
+                <p role="status">{filteredDefinitions.length} actividades disponibles · {selectedDefinitions.length} seleccionadas</p>
+                <div className="catalog-reference-list" aria-label="Actividades del catálogo">
+                  {filteredDefinitions.map(d => <label key={d.id} className="catalog-reference-option"><input type="checkbox" checked={selectedDefinitions.includes(d.id)} onChange={e => { setCatalogId(''); setOtherTitle(''); setSelectedDefinitions(ids => e.target.checked ? [...ids, d.id] : ids.filter(id => id !== d.id)) }} /><span><strong>{d.title}</strong><small>{[categoryLabels[d.category], d.context?.indicator, d.context?.strategy].filter(Boolean).join(' · ')}</small></span></label>)}
+                  {!filteredDefinitions.length && <p>No hay actividades con estos filtros.</p>}
+                </div>
+                <button type="button" className="secondary" onClick={() => { setSelectedDefinitions([]); setCatalogId('__OTHER__') }}>Otra actividad (especifique)</button>
                 {catalogId === '__OTHER__' && (
                   <label>
                     Título de Otra actividad
@@ -489,9 +528,9 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
                   </label>
                 )}
                 <div className="action-form-actions">
-                  <button type="button" disabled={draft.activities.length >= 100 || !catalogId || (catalogId === '__OTHER__' && !otherTitle.trim())} onClick={add}>
+                  <button type="button" disabled={draft.activities.length >= 100 || (!selectedDefinitions.length && (!catalogId || (catalogId === '__OTHER__' && !otherTitle.trim())))} onClick={add}>
                     <Icon name="plus" size={15} />
-                    <span>Agregar actividad</span>
+                    <span>{selectedDefinitions.length ? 'Incorporar selección (' + selectedDefinitions.length + ')' : 'Agregar actividad'}</span>
                   </button>
                 </div>
               </div>
@@ -660,7 +699,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
                     </button>
                     <button
                       type="button"
-                      disabled={busy || conflict || !saved.editable}
+                      disabled={busy || autosaving || conflict || !saved.editable}
                       className="primary-save-btn"
                       onClick={async () => {
                         await persist()
@@ -683,7 +722,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
               </div>
               <div className="matrix-footer-buttons">
                 <button
-                  disabled={busy || conflict || !saved.editable}
+                  disabled={busy || autosaving || conflict || !saved.editable}
                   className={dirty ? 'primary-save-btn' : 'secondary'}
                 >
                   <Icon name="check" size={15} />
@@ -694,7 +733,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
             </div>
           )}
       </form>
-    <StepPagination previous={{ label: 'Contenido', action: () => void previous() }} next={{ label: 'Anexos', action: () => void next() }} disabled={busy} nextDisabled={conflict} />
+    <StepPagination previous={{ label: 'Contenido', action: () => void previous() }} next={{ label: 'Anexos', action: () => void next() }} disabled={busy || autosaving} nextDisabled={conflict} />
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
     {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>

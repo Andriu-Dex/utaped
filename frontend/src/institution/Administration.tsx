@@ -1,4 +1,5 @@
 import { confirmAction } from '../shared/confirm-action'
+import './administration.css'
 import { ActionForm } from '../shared/ActionForm'
 import { UserImportWorkspace } from './UserImportWorkspace'
 import { DeadlineNotices } from './DeadlineNotices'
@@ -173,7 +174,7 @@ export function Administration({ page, periods, initialGroupId, onChange, onDirt
           <ActionForm label="Asignar integrante" dirty={dirtyCreates.includes('membership')} disabled={busy} onCancel={() => setDirtyCreates(keys => keys.filter(key => key !== 'membership'))}><form onChange={() => markCreate('membership')} onSubmit={e => submit(e, 'membership')} style={{ marginTop: 16 }}>
             <div className="grid">
               <label>Grupo<select aria-label="Grupo" required name="groupId"><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
-              <label>Buscar usuario para asignar<input maxLength={200} placeholder="Buscar por nombre o correo…" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} /></label>
+              <label>Buscar usuario para asignar<input maxLength={200} placeholder="Buscar por nombre o correo…" value={memberSearch} onChange={e => { setMemberSearch(e.currentTarget.value); setMemberOptions([]) }} /></label>
             </div>
             <p className="field-help">Se muestran hasta 100 coincidencias activas; refine la búsqueda si no encuentra al usuario.</p>
             <div className="grid">

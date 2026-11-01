@@ -45,6 +45,8 @@ type Observation = { id: string; task_id?: string; actor_id?: string; actor_name
 export type ReviewState = { review: { id: string; status: string; round_number: number; title?: string }; tasks: Stage[]; observations: Observation[]; pageCount: number; pdfHash: string; canAct: boolean }
 const labels: Record<string, string> = { ACTIVE: 'Tu turno', PENDING: 'Pendiente', COMPLETED: 'Completada', RETURNED: 'Devuelta', CANCELLED: 'Cancelada', IN_REVIEW: 'En revisión', APPROVED: 'Aprobado' }
 
+function actionNoun(action?: string) { return action === 'APPROVE' ? 'aprobación' : action === 'VALIDATE' ? 'validación' : 'revisión' }
+
 export function ReviewWorkspace({
   accountId,
   onDirtyChange,
@@ -63,6 +65,7 @@ export function ReviewWorkspace({
   const [reload, setReload] = useState(0)
   const [query, setQuery] = useState('')
   const [search, setSearch] = useState('')
+  const [action, setAction] = useState('')
   const [status, setStatus] = useState('')
   const [documentType, setDocumentType] = useState('')
   const [page, setPage] = useState(0)
@@ -70,12 +73,13 @@ export function ReviewWorkspace({
 
   const currentReviewId = initialReviewId !== undefined ? initialReviewId : (selected?.reviewId ?? internalReviewId)
 
-  const parameters = new URLSearchParams({ query: search, status, documentType, page: String(page), size: String(size) }).toString()
+  const parameters = new URLSearchParams({ query: search, status, documentType, action, page: String(page), size: String(size) }).toString()
   const [loadedParameters, setLoadedParameters] = useState('')
   const loading = loadedParameters !== parameters
   useEffect(() => {
     let active = true
-    api<Inbox>('/reviews/inbox?' + parameters)
+    const controller = new AbortController()
+    api<Inbox>('/reviews/inbox?' + parameters, 'GET', undefined, controller.signal)
       .then(result => {
         if (active) {
           if (result.total > 0 && page * size >= result.total) { setPage(Math.ceil(result.total / size) - 1); return }
@@ -91,7 +95,7 @@ export function ReviewWorkspace({
           setInbox(null)
         }
       })
-    return () => { active = false }
+    return () => { active = false; controller.abort() }
   }, [parameters, reload, page, size])
 
   const activeTask = selected?.reviewId === currentReviewId ? selected : inbox?.items.find(t => t.reviewId === currentReviewId)
@@ -127,6 +131,7 @@ export function ReviewWorkspace({
       <p className="muted">Cada participante interviene sobre el PDF firmado cuando se activa su etapa.</p>
     </div>
     {error && <Toast message={error} />}
+    <div className="review-actions" role="group" aria-label="Tipo de intervención">{([['', 'Todas las intervenciones'], ['REVIEW', 'Documentos por revisar'], ['APPROVE', 'Documentos por aprobar']] as const).map(([value, label]) => <button type="button" key={value} className={action === value ? '' : 'secondary'} aria-pressed={action === value} onClick={() => { setAction(value); setPage(0) }}>{label}</button>)}</div>
     <div className="review-totals review-inbox-totals">
       <section className="card review-kpi-card">
         <div className="review-kpi-icon"><Icon name="document" size={22} /></div>
@@ -151,10 +156,10 @@ export function ReviewWorkspace({
       </section>
     </div>
     <section className="card review-inbox-card"><div className="section-heading"><span className="section-icon"><Icon name="eye" /></span><div><span className="section-kicker">ASIGNACIONES PERSONALES</span><h2>Documentos para revisar</h2></div></div>
-      <form className="review-filters" onSubmit={e => { e.preventDefault(); setSearch(query.trim()); setPage(0) }}><label className="review-search">Buscar documento, ámbito o período<div><Icon name="search" size={18} /><input maxLength={200} value={query} placeholder="Título, comisión, período…" onChange={e => setQuery(e.target.value)} /><button className="secondary">Buscar</button></div></label><label>Estado de la tarea<select value={status} onChange={e => { setStatus(e.target.value); setPage(0) }}><option value="">Todos los estados</option><option value="ACTIVE">Tu turno</option><option value="COMPLETED">Completada</option><option value="RETURNED">Devuelta</option></select></label><label>Tipo de documento<select value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(0) }}><option value="">Todos los tipos</option><option value="T1">Plan de Trabajo · T1</option><option value="T2">Informe final · T2</option><option value="T3">Informe de ejecución · T3</option></select></label></form>
-      <div className="review-list-heading"><span role="status">{loading ? 'Cargando tareas…' : inbox ? inbox.total + ' tareas encontradas' : 'Bandeja no disponible'}</span>{(search || status || documentType) && <button type="button" className="link" onClick={() => { setQuery(''); setSearch(''); setStatus(''); setDocumentType(''); setPage(0) }}>Limpiar filtros</button>}<button type="button" className="secondary" title="Actualizar bandeja" aria-label="Actualizar bandeja" disabled={loading} onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}><Icon name="refresh" size={16} /></button></div>
+      <form className="review-filters" onSubmit={e => { e.preventDefault(); setSearch(query.trim()); setPage(0) }}><label className="review-search">Buscar documento, ámbito o período<div><Icon name="search" size={18} /><input maxLength={200} value={query} placeholder="Título, comisión, período…" onChange={e => { const value = e.currentTarget.value; setQuery(value); setSearch(value); setPage(0) }} /><button className="secondary">Buscar</button></div></label><label>Estado de la tarea<select value={status} onChange={e => { setStatus(e.target.value); setPage(0) }}><option value="">Todos los estados</option><option value="ACTIVE">Pendientes</option><option value="COMPLETED">Completada</option><option value="RETURNED">Devuelta</option></select></label><label>Tipo de documento<select value={documentType} onChange={e => { setDocumentType(e.target.value); setPage(0) }}><option value="">Todos los tipos</option><option value="T1">Plan de Trabajo · T1</option><option value="T2">Informe final · T2</option><option value="T3">Informe de ejecución · T3</option></select></label></form>
+      <div className="review-list-heading"><span role="status">{loading ? 'Cargando tareas…' : inbox ? inbox.total + ' tareas encontradas' : 'Bandeja no disponible'}</span>{(search || status || documentType || action) && <button type="button" className="link" onClick={() => { setQuery(''); setSearch(''); setStatus(''); setDocumentType(''); setAction(''); setPage(0) }}>Limpiar filtros</button>}<button type="button" className="secondary" title="Actualizar bandeja" aria-label="Actualizar bandeja" disabled={loading} onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}><Icon name="refresh" size={16} /></button></div>
       {!loading && !inbox && <button type="button" className="secondary" onClick={() => { setLoadedParameters(''); setReload(r => r + 1) }}>Reintentar</button>}
-      {inbox && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{displayStageLabel(t.stageLabel, t.action)}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => handleSelectReview(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
+      {inbox && !loading && <div className={'table-container-wrapper' + (loading ? ' is-searching' : '')} aria-busy={loading}>{inbox.items.length === 0 && !loading ? <div className="empty-state"><Icon name="check" size={32} /><p>{search || status || documentType ? 'No hay tareas con estos filtros.' : 'No tienes tareas disponibles.'}</p><small>Las etapas futuras aparecen cuando llega tu turno.</small></div> : <div className="table-scroll"><table><thead><tr><th>Documento / ámbito</th><th>Etapa</th><th>Ronda</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{inbox.items.map(t => <tr key={t.id}><td><strong>{t.title}</strong><small className="review-caption">{t.groupName} · {t.periodName}</small></td><td>{displayStageLabel(t.stageLabel, t.action)}<small className="review-caption">{t.requiresSignature ? 'Firma electrónica requerida' : 'Decisión registrada'}</small></td><td>{t.roundNumber}</td><td><span className={'status-badge ' + (t.status === 'ACTIVE' ? 'active' : '')}>{t.status === 'ACTIVE' ? t.action === 'APPROVE' ? 'Por aprobar' : t.action === 'VALIDATE' ? 'Por validar' : 'Por revisar' : labels[t.status]}</span></td><td><button type="button" className="secondary" title={'Revisar ' + t.title} aria-label={'Revisar ' + t.title + ' · Ronda ' + t.roundNumber} onClick={() => handleSelectReview(t)}><Icon name="eye" size={16} />Abrir</button></td></tr>)}</tbody></table></div>}</div>}
       <div className="review-inbox-pagination"><label>Tareas por página<select value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0) }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label><span>{inbox && !loading ? (inbox.total ? page * size + 1 : 0) + '–' + Math.min((page + 1) * size, inbox.total) + ' de ' + inbox.total : '—'}</span><button type="button" className="secondary" disabled={loading || page === 0} onClick={() => setPage(p => p - 1)}>Página anterior</button><button type="button" className="secondary" disabled={loading || !inbox || (page + 1) * size >= inbox.total} onClick={() => setPage(p => p + 1)}>Página siguiente</button></div>
     </section>
   </section>
@@ -489,7 +494,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
                     <div className="stage-item-top">
                       <strong>{displayStageLabel(t.stage_label, t.stage_action)}</strong>
                       <small className={'stage-badge ' + (t.status === 'ACTIVE' ? 'is-active' : t.status === 'COMPLETED' ? 'is-completed' : '')}>
-                        {labels[t.status]}
+                        {t.status === 'ACTIVE' ? t.stage_action === 'APPROVE' ? 'Por aprobar' : t.stage_action === 'VALIDATE' ? 'Por validar' : 'Por revisar' : labels[t.status]}
                       </small>
                     </div>
                     <span className="stage-actor">
@@ -754,7 +759,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
                     onClick={() => decide('COMPLETE')}
                   >
                     <Icon name="check" size={16} />
-                    <span>Completar etapa</span>
+                    <span>Finalizar {actionNoun(task.stage_action)}</span>
                   </button>
                 )}
                 <button
@@ -770,7 +775,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
 
               {task.requires_signature && (
                 <ActionForm
-                  label="Preparar firma de revisión"
+                  label={'Preparar firma de ' + actionNoun(task.stage_action)}
                   dirty={signingDirty}
                   onCancel={() => setSigningDirty(false)}
                   disabled={busy || isFormDirty || state.observations.length > 0}
@@ -781,7 +786,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
                       <label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label>
                       <button>
                         <Icon name="lock" size={16} />
-                        <span>Firmar y completar etapa</span>
+                        <span>Firmar y finalizar {actionNoun(task.stage_action)}</span>
                       </button>
                       <p className="field-help">Certificado y contraseña se usan solo en esta operación. Se comprueban la vigencia del certificado y la integridad del PDF.</p>
                     </fieldset>

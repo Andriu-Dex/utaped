@@ -11,25 +11,26 @@ type ReportOptions = { items: ReportOption[]; total: number; page: number; size:
 type ExecutionOption = { id: string; title: string; groupName: string; periodName: string; formalVersion: string; reports: number; draftId: string | null }
 const roman = (n: number) => [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']].reduce((text, [value, symbol]) => { let result = text; while (n >= (value as number)) { result += symbol; n -= value as number } return result }, '')
 export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDirtyChange }: { options: PlanOptions; busy: boolean; onBusyChange: (busy: boolean) => void; onCreated: (document: WorkPlan) => void; onDirtyChange: (dirty: boolean) => void }) {
-  const [kind, setKind] = useState<'T1' | 'T2' | 'T3'>('T1'), [executionReload, setExecutionReload] = useState(0)
+  const [kind, setKind] = useState<'T1' | 'T2' | 'T3'>(() => options.scopes.some(scope => scope.canCreate) ? 'T1' : 'T2'), [executionReload, setExecutionReload] = useState(0)
   const [executionOptions, setExecutionOptions] = useState<ExecutionOption[] | null>(null), [executionBaseId, setExecutionBaseId] = useState('')
   const [scopeId, setScopeId] = useState(''); const [titleOverride, setTitleOverride] = useState<string | null>(null)
   const [requestKey, setRequestKey] = useState(() => crypto.randomUUID())
   const [reportId, setReportId] = useState(''); const [candidates, setCandidates] = useState<ReportOptions | null>(null)
   const [search, setSearch] = useState(''); const [filter, setFilter] = useState({ query: '', page: 0 })
-  const [loading, setLoading] = useState(false); const [error, setError] = useState('')
+  const [loading, setLoading] = useState(!options.scopes.some(scope => scope.canCreate)); const [error, setError] = useState('')
   const scope = options.scopes.find(s => s.id === scopeId && s.canCreate)
   const report = candidates?.items.find(p => p.id === reportId)
   const executionBase = executionOptions?.find(p => p.id === executionBaseId)
   const dirty = kind === 'T1' ? !!scopeId || titleOverride !== null : kind === 'T2' ? !!reportId : !!executionBaseId
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
   useEffect(() => {
+    const controller = new AbortController()
     if (kind !== 'T2') return
     let active = true
-    api<ReportOptions>('/reports/options?' + new URLSearchParams({ query: filter.query, page: String(filter.page), size: '20' })).then(data => {
+    api<ReportOptions>('/reports/options?' + new URLSearchParams({ query: filter.query, page: String(filter.page), size: '20' }), 'GET', undefined, controller.signal).then(data => {
       if (active) { setCandidates(data); setLoading(false) }
     }).catch(e => { if (active) { setError(e.message); setLoading(false) } })
-    return () => { active = false }
+    return () => { active = false; controller.abort() }
   }, [kind, filter])
   useEffect(() => {
     if (kind !== 'T3') return
@@ -59,7 +60,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
     <p className="muted">Seleccione el formato y su ámbito institucional. El nombre se completa automáticamente.</p>
     <div className="document-kind-options" role="group" aria-label="Tipo de documento">
       {([['T1', 'Plan de Trabajo', 'Organice objetivos, actividades y responsables.', 'UTA-SGC-A-2-1-P7-T1'], ['T3', 'Informe de ejecución', 'Reporte el avance de un corte del Plan aprobado.', 'UTA-SGC-A-1-1-P4-T2'], ['T2', 'Informe final', 'Cierre el Plan aprobado con sus resultados.', 'UTA-SGC-A-2-1-P7-T2']] as const).map(([type, label, help, format]) => <label key={type} className={'document-kind-card ' + (kind === type ? 'selected' : '')}>
-        <input type="radio" name="document-kind" value={type} checked={kind === type} disabled={busy} onChange={() => switchKind(type)} />
+        <input type="radio" name="document-kind" value={type} checked={kind === type} disabled={busy || (type === 'T1' ? !options.scopes.some(scope => scope.canCreate) : !options.canCreateDerived)} onChange={() => switchKind(type)} />
         <span className="document-kind-icon"><Icon name={type === 'T1' ? 'calendar' : 'document'} size={20} /></span>
         <span><strong>{label}</strong><small>{help}</small><span className="document-kind-format">{format}</span></span>
       </label>)}
@@ -75,7 +76,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
         <label>Título del nuevo Plan<input required maxLength={200} disabled={!scope || busy} placeholder="Se completa al seleccionar el ámbito" value={titleOverride ?? scope?.suggestedTitle ?? ''} onChange={e => { setTitleOverride(e.target.value); setRequestKey(crypto.randomUUID()) }} /><small className="field-help">Nombre propuesto según el grupo o unidad. Puede ajustarlo antes de crear.</small></label>
         <button disabled={busy || !scope || (titleOverride !== null && !titleOverride.trim())}><Icon name="document" size={17} />{busy ? 'Creando…' : 'Crear borrador'}</button>
       </fieldset></form> : <>
-      <form className="document-base-search" onSubmit={e => { e.preventDefault(); searchPlans() }}><label>Buscar Plan aprobado<input maxLength={200} value={search} disabled={busy} placeholder="Título, grupo o período" onChange={e => setSearch(e.target.value)} /></label><button type="submit" className="secondary" disabled={busy || loading}><Icon name="search" size={17} />Buscar Plan</button></form>
+      <form className="document-base-search" onSubmit={e => { e.preventDefault(); searchPlans() }}><label>Buscar Plan aprobado<input maxLength={200} value={search} disabled={busy} placeholder="Título, grupo o período" onChange={e => { const value = e.currentTarget.value; setSearch(value); setCandidates(null); setReportId(''); setLoading(true); setFilter({ query: value, page: 0 }) }} /></label><button type="submit" className="secondary" disabled={busy || loading}><Icon name="search" size={17} />Buscar Plan</button></form>
       {loading ? <p role="status">Cargando Planes aprobados…</p> : candidates?.items.length ? <form onSubmit={create}><fieldset disabled={busy} className="document-create-fields">
         <label>Plan base del Informe<select required value={reportId} onChange={e => setReportId(e.target.value)}><option value="">Seleccione un Plan aprobado</option>{candidates.items.map(p => <option key={p.id} value={p.id}>{p.title} · {p.periodName} · Versión {p.formalVersion}{p.reportId ? ' · Informe existente' : ''}</option>)}</select></label>
         <label>Nombre del Informe<input readOnly placeholder="Se completa al seleccionar el Plan" value={report?.suggestedTitle ?? ''} /><small className="field-help">Se mantienen la relación, actividades y datos del Plan fuente.{report?.reportId && ' Ya existe un Informe: se abrirá ese documento.'}</small></label>

@@ -878,3 +878,14 @@ tbody tr.row-selected { background: var(--blue-100) !important; }
 .document-archive-dialog .document-discard-confirm { background: var(--danger); border-color: var(--danger); color: #fff; }
 :root[data-theme='dark'] .document-row-actions .document-discard-action { color: #ff7875; border-color: rgba(255, 77, 79, 0.3); }
 :root[data-theme='dark'] .document-row-actions .document-discard-action:hover:not(:disabled) { background: rgba(255, 77, 79, 0.15); border-color: rgba(255, 77, 79, 0.45); color: #ffa39e; }
+
+.catalog-reference-list { max-height: min(36vh, 24rem); overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+.action-form-dialog .catalog-reference-option { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: start; flex-direction: row; gap: 12px; padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.catalog-reference-option:last-child { border-bottom: 0; }
+.action-form-dialog .catalog-reference-option input { width: 18px; height: 18px; margin: 3px 0 0; }
+.catalog-reference-option span { min-width: 0; display: grid; gap: 5px; }
+.catalog-reference-option small { color: var(--muted); overflow-wrap: anywhere; }
+.catalog-reference-option:has(input:checked) { background: var(--blue-50); }
+:root[data-theme="dark"] .catalog-reference-option:has(input:checked) { background: rgba(44, 123, 172, .2); }
+
+.action-form-dialog:has(.catalog-reference-list) .action-form-actions { position: sticky; bottom: 0; z-index: 2; background: var(--surface); padding: 12px 0; margin-bottom: 0; }

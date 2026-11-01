@@ -1,3 +1,4 @@
+import { UpcomingActivities } from './UpcomingActivities'
 import { useEffect, useState } from 'react'
 import { api, download, type Group, type Period } from '../shared/api'
 import { Toast } from '../shared/Toast'
@@ -113,6 +114,7 @@ export function ReportingDashboard({ administrative = false, onOpenDocument, ini
     ) : (
       <>
         <ManagementOverview data={data} onOpenDocument={onOpenDocument} />
+        {<UpcomingActivities key={query} groupId={filters.groupId} periodId={filters.periodId} onOpenDocument={onOpenDocument} />}
         <section className="card">
           <div className="section-heading">
             <span className="section-icon"><Icon name="users" /></span>
