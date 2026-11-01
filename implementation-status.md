@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## 01/11/2026 — Recuperación de actividades incompletas
+
+La matriz conserva borradores incompletos por documento y usuario, separados de los datos oficiales, con control de concurrencia y reintento. [Detalles y comprobaciones dirigidas](docs/reports/2026-11-01-56-matrix-recovery.md).
+
 ## 31/10/2026 — Correcciones OCT30 implementadas y verificadas
 
 Implementados catálogos oficiales jerárquicos/aplicabilidad/importación, firmas personales múltiples, T2 con T3 aprobados, nota editable, anexos ampliados/custodia, búsquedas inmediatas, período actual, autoguardado, correo administrativo, carreras, estructuras JSON, feriados asistidos, propuestas futuras y detalle paginado de reportes. [Reporte y comprobaciones](docs/reports/2026-10-31-55-client-corrections-implementation.md). 190 pruebas backend y 14 recorridos de navegador aprobados en tandas dirigidas, lint/typecheck/build correctos; no equivale a aceptación institucional. Matriz de participantes, contrato FirmaEC y política definitiva siguen pendientes.

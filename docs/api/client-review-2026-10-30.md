@@ -44,3 +44,12 @@ Restablecimiento administrativo confirma hash/cambio obligatorio/revocación ant
 El contador automático de notificaciones no renueva el marcador de actividad de sesión. El servidor invalida sesión tras su intervalo configurado sin otra petición interactiva. No es un detector de teclado/ratón: las peticiones funcionales/autoguardados sí cuentan.
 
 Los campos nuevos opcionales de snapshots históricos se omiten al serializar cuando corresponda. No reconstruir bytes firmados para adoptar campos, catálogos, estructuras o sellos nuevos.
+
+
+## Recuperación de matriz incompleta — 01/11/2026
+
+- `GET /api/work-plans/{id}/matrix/recovery` devuelve `{recovery: null}` o `{recovery:{baseVersion,revision,content}}` para el responsable autorizado de un T1 editable. El contenido se almacena por documento y usuario, fuera de la matriz canónica y del artefacto.
+- `PUT` de la misma ruta acepta `{baseVersion,revision,content}` con filas incompletas tipadas y límites. `revision:null` crea; una revisión numérica actualiza con concurrencia. Cambios del documento o del borrador producen409 sin sobrescribir.
+- `DELETE .../recovery?revision=N` descarta solo la revisión indicada. El guardado canónico admite `recoveryRevision`, comprueba concurrencia y elimina el borrador confirmado dentro de la misma transacción.
+- Preparación y firma se bloquean si existen cambios pendientes del responsable actual. La reasignación del responsable no expone ni bloquea el borrador privado del responsable anterior. Se confirma explícitamente antes de recuperar un borrador cuya versión base quedó antigua.
+- El navegador conserva la edición durante peticiones, informa de errores y permite reintentar. Hasta que el servidor confirme el borrador, la salida conserva la protección de cambios pendientes. No se almacenan certificados ni contraseñas.

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { login, api } from './sample-fixtures'
 import { openAction } from '../open-action'
+import { withConfirmation } from '../confirmation'
 
 test('October corrections: searches request each changed value without submitting', async ({ page }) => {
   await login(page, 'dev.principal')
@@ -111,4 +112,50 @@ test('October corrections: proposal consultation distinguishes failure from an e
   await retry.click()
   await expect(page.getByText('No hay propuestas pendientes de esta unidad o comisión.', { exact: true })).toBeVisible()
   await expect(retry).toHaveCount(0)
+})
+
+
+test('matrix recovery keeps an incomplete activity across reload without changing the official matrix', async ({ page }) => {
+  await login(page, 'dev.principal')
+  const options = await api(page, '/work-plans/options')
+  const scope = options.scopes.find((item: { canCreate: boolean }) => item.canCreate)
+  const plan = await api(page, '/work-plans', 'POST', { scopeId: scope.id, groupId: scope.groupId, periodId: scope.periodId, requestKey: crypto.randomUUID() })
+  await page.goto('/?view=documents&doc=' + plan.id + '&step=matrix&workspace=documents')
+  let delayed = false
+  await page.route('**/matrix/recovery', async route => { if (route.request().method() === 'PUT' && !delayed) { delayed = true; await new Promise(resolve => setTimeout(resolve, 900)) }; await route.continue() })
+  const pending = page.waitForRequest(request => request.method() === 'PUT' && new URL(request.url()).pathname.endsWith('/matrix/recovery'))
+  await openAction(page, 'Agregar actividad')
+  const form = page.getByRole('region', { name: 'Formulario: Agregar actividad', exact: true })
+  await form.getByRole('button', { name: 'Otra actividad (especifique)', exact: true }).click()
+  await form.getByLabel('Título de Otra actividad').fill('Actividad parcialmente preparada')
+  await form.getByRole('button', { name: 'Agregar actividad', exact: true }).click()
+  const activity = page.getByRole('region', { name: 'Actividad 1', exact: true })
+  await expect(activity).toBeVisible()
+  const matrix = await api(page, '/work-plans/' + plan.id + '/matrix')
+  await activity.getByLabel('Desde').fill(matrix.periodStartsOn)
+  await pending
+  await activity.getByLabel('Hasta').fill(matrix.periodEndsOn)
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id + '/matrix/recovery')).recovery?.content.draft.activities[0]?.endsOn).toBe(matrix.periodEndsOn)
+  await page.unroute('**/matrix/recovery')
+  await activity.getByRole('button', { name: 'Listo', exact: true }).click()
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id + '/matrix/recovery')).recovery?.content.draft.activities[0]?.startsOn).toBe(matrix.periodStartsOn)
+  await expect(page.getByText('Borrador guardado · faltan datos por completar', { exact: true })).toBeVisible()
+  expect((await api(page, '/work-plans/' + plan.id + '/matrix')).activities).toHaveLength(0)
+  await page.reload()
+  await expect(page.getByText('Actividad parcialmente preparada', { exact: true }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Ver detalle de la actividad 1', exact: true }).click()
+  await expect(activity.getByLabel('Desde')).toHaveValue(matrix.periodStartsOn)
+  await expect(activity.getByLabel('Hasta')).toHaveValue(matrix.periodEndsOn)
+  await page.route('**/matrix/recovery', route => route.request().method() === 'PUT' ? route.fulfill({ status: 503, json: { message: 'Fallo temporal de recuperación' } }) : route.continue())
+  await activity.getByLabel('Hasta').fill(matrix.periodStartsOn)
+  await expect(activity.getByText('No se pudo guardar el borrador.', { exact: true })).toBeVisible()
+  await expect(activity.getByLabel('Hasta')).toHaveValue(matrix.periodStartsOn)
+  await page.unroute('**/matrix/recovery')
+  await activity.getByRole('button', { name: 'Reintentar guardado', exact: true }).click()
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id + '/matrix/recovery')).recovery?.content.draft.activities[0]?.endsOn).toBe(matrix.periodStartsOn)
+  await activity.getByRole('button', { name: 'Listo', exact: true }).click()
+  await withConfirmation(page, true, () => page.getByRole('button', { name: 'Quitar Actividad parcialmente preparada', exact: true }).click())
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id + '/matrix/recovery')).recovery).toBeNull()
+  await page.reload()
+  await expect(page.getByText('Actividad parcialmente preparada', { exact: true })).toHaveCount(0)
 })

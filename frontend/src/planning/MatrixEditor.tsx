@@ -10,13 +10,17 @@ import { categoryLabels, type Activity, type Matrix } from './matrixTypes'
 import { Icon } from '../shared/Icon'
 import { containDialogFocus } from '../shared/dialog-focus'
 
+type RecoveryContent = { draft: ReturnType<typeof selection>; catalogId: string; otherTitle: string; selectedDefinitions: string[] }
+type Recovery = { baseVersion: number; revision: number; content: RecoveryContent }
 function selection(matrix: Matrix) { return { source: matrix.source, activities: matrix.activities, note: matrix.note } }
 export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyChange, onSaved, isSplitView, onToggleSplit }: { onSaved?: () => Promise<void>; onPrevious?: () => Promise<void>; targetDocId: string; onBack: () => Promise<void>; onNext: () => Promise<void>; onDirtyChange: (dirty: boolean) => void; isSplitView?: boolean; onToggleSplit?: () => void }) {
   const [saved, setSaved] = useState<Matrix | null>(null); const [draft, setDraft] = useState<ReturnType<typeof selection> | null>(null)
+  const [loadVersion, setLoadVersion] = useState(0)
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
   const [autosaving, setAutosaving] = useState(false), [autosaveFailed, setAutosaveFailed] = useState('')
   const writeLock = useRef(false), mounted = useRef(false)
   useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
+  const [recoveryRevision, setRecoveryRevision] = useState<number | null>(null), [recoverySaved, setRecoverySaved] = useState(''), [staleRecovery, setStaleRecovery] = useState<Recovery | null>(null)
   const [conflict, setConflict] = useState(false); const [latest, setLatest] = useState<Matrix | null>(null)
   const [catalogId, setCatalogId] = useState(''); const [otherTitle, setOtherTitle] = useState('')
   const [selectedDefinitions, setSelectedDefinitions] = useState<string[]>([])
@@ -51,18 +55,27 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
       })
     }
   }, [editingActivityId])
+  const recoveryContent = draft ? JSON.stringify({ draft, catalogId, otherTitle, selectedDefinitions }) : ''
   const dirty = autosaving || !!selectedDefinitions.length || !!catalogId || !!otherTitle || !!saved && !!draft && JSON.stringify(selection(saved)) !== JSON.stringify(draft)
-  useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
+  const unprotected = dirty ? (autosaving || recoveryRevision === null || recoverySaved !== recoveryContent) : recoveryRevision !== null
+  useEffect(() => { onDirtyChange(unprotected) }, [unprotected, onDirtyChange])
   useEffect(() => () => onDirtyChange(false), [onDirtyChange])
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = '' } }
+    const handler = (e: BeforeUnloadEvent) => { if (unprotected) { e.preventDefault(); e.returnValue = '' } }
     window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler)
-  }, [dirty])
+  }, [unprotected])
   useEffect(() => {
     let cancelled = false
-    api<Matrix>('/work-plans/' + targetDocId + '/matrix').then(m => { if (!cancelled) { setSaved(m); setDraft(selection(m)) } }).catch(e => { if (!cancelled) setError(e.message) })
+    Promise.all([api<Matrix>('/work-plans/' + targetDocId + '/matrix'), api<{ recovery: Recovery | null }>('/work-plans/' + targetDocId + '/matrix/recovery')]).then(([m, response]) => { if (!cancelled) {
+      setSaved(m); setDraft(selection(m)); const recovery = response.recovery
+      if (recovery && m.editable) {
+        setRecoveryRevision(recovery.revision)
+        if (recovery.baseVersion !== m.rowVersion) { setStaleRecovery(recovery); setConflict(true); setError('La matriz cambió desde el último borrador. Revise sus cambios antes de recuperarlos.') }
+        else { setDraft(recovery.content.draft); setCatalogId(recovery.content.catalogId); setOtherTitle(recovery.content.otherTitle); setSelectedDefinitions(recovery.content.selectedDefinitions); setRecoverySaved(JSON.stringify(recovery.content)); setNotice('Se recuperó el borrador de la matriz.') }
+      }
+    } }).catch(e => { if (!cancelled) setError(e.message) })
     return () => { cancelled = true }
-  }, [targetDocId])
+  }, [targetDocId, loadVersion])
   function update(id: string, patch: Partial<Activity>) { setDraft(d => d && ({ ...d, activities: d.activities.map(a => a.id === id ? { ...a, ...patch } : a) })); setNotice('') }
   function selectResponsible(row: Activity, responsibleIds: string[]) {
     update(row.id, { responsibleIds, collective: !!saved?.collectiveLabel && !!saved.members.length && saved.members.every(member => responsibleIds.includes(member.id)) && responsibleIds.length === saved.members.length })
@@ -95,6 +108,29 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     update(row.id, { [key]: values })
   }
   useEffect(() => {
+    if (!saved || !saved.editable || dirty || recoveryRevision === null || busy || autosaving || conflict || autosaveFailed === 'discard') return
+    const timer = window.setTimeout(() => {
+      if (writeLock.current) return
+      writeLock.current = true; setAutosaving(true)
+      api('/work-plans/' + targetDocId + '/matrix/recovery?revision=' + recoveryRevision, 'DELETE').then(() => {
+        if (mounted.current) { setRecoveryRevision(null); setRecoverySaved(''); setAutosaveFailed('') }
+      }).catch(e => { if (mounted.current) { setAutosaveFailed('discard'); setError(e.message || 'No se pudo actualizar el borrador.'); if (e instanceof ApiError && e.status === 409) setConflict(true) } }).finally(() => { writeLock.current = false; if (mounted.current) setAutosaving(false) })
+    }, 700)
+    return () => window.clearTimeout(timer)
+  }, [saved, dirty, recoveryRevision, busy, autosaving, conflict, autosaveFailed, targetDocId])
+  useEffect(() => {
+    if (!saved || !draft || !saved.editable || busy || autosaving || conflict || !dirty || recoveryContent === recoverySaved || recoveryContent === autosaveFailed) return
+    const timer = window.setTimeout(() => {
+      if (writeLock.current) return
+      writeLock.current = true; setAutosaving(true)
+      api<{ recovery: Recovery }>('/work-plans/' + targetDocId + '/matrix/recovery', 'PUT', { baseVersion: saved.rowVersion, revision: recoveryRevision, content: JSON.parse(recoveryContent) }).then(value => {
+        if (!mounted.current) return
+        setRecoveryRevision(value.recovery.revision); setRecoverySaved(recoveryContent); setAutosaveFailed('')
+      }).catch(e => { if (mounted.current) { setAutosaveFailed(recoveryContent); setError(e.message || 'No se pudo guardar el borrador de la matriz.'); if (e instanceof ApiError && e.status === 409) setConflict(true) } }).finally(() => { writeLock.current = false; if (mounted.current) setAutosaving(false) })
+    }, 700)
+    return () => window.clearTimeout(timer)
+  }, [saved, draft, busy, autosaving, conflict, dirty, recoveryContent, recoverySaved, recoveryRevision, autosaveFailed, targetDocId])
+  useEffect(() => {
     if (!saved || !draft || !saved.editable || busy || autosaving || conflict || catalogId || otherTitle || selectedDefinitions.length) return
     const serialized = JSON.stringify(draft)
     if (serialized === JSON.stringify(selection(saved)) || serialized === autosaveFailed || !draft.note.trim()) return
@@ -102,13 +138,13 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     const timer = window.setTimeout(() => {
       if (writeLock.current) return
       writeLock.current = true; setAutosaving(true)
-      api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion }).then(async value => {
+      api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion, recoveryRevision }).then(async value => {
         if (!mounted.current) return
-        setSaved(value); setDraft(current => JSON.stringify(current) === serialized ? selection(value) : current); setAutosaveFailed(''); await onSaved?.()
+        setSaved(value); setDraft(current => JSON.stringify(current) === serialized ? selection(value) : current); setRecoveryRevision(null); setRecoverySaved(''); setAutosaveFailed(''); await onSaved?.()
       }).catch(e => { if (mounted.current) { setAutosaveFailed(serialized); setError(e.message || 'No se pudo autoguardar la matriz.'); if (e instanceof ApiError && e.status === 409) setConflict(true) } }).finally(() => { writeLock.current = false; if (mounted.current) setAutosaving(false) })
     }, 1200)
     return () => window.clearTimeout(timer)
-  }, [saved, draft, busy, autosaving, conflict, catalogId, otherTitle, selectedDefinitions.length, autosaveFailed, targetDocId, onSaved])
+  }, [saved, draft, busy, autosaving, conflict, catalogId, otherTitle, selectedDefinitions.length, autosaveFailed, targetDocId, onSaved, recoveryRevision])
   async function persist(): Promise<boolean> {
     if (!saved || !draft || writeLock.current) return false
     if (catalogId || otherTitle || selectedDefinitions.length) { setError('Agregue la actividad seleccionada o cancele su creación antes de guardar y continuar.'); return false }
@@ -120,8 +156,8 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     if (draft.activities.some(a => !a.responsibleIds.length || !a.resources.length || !a.means.length)) { setError('Cada actividad requiere al menos un responsable, un recurso y un medio de verificación.'); return false }
     setBusy(true)
     try {
-      const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion })
-      setSaved(m); setDraft(selection(m)); await onSaved?.(); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
+      const m = await api<Matrix>('/work-plans/' + targetDocId + '/matrix', 'PUT', { ...draft, rowVersion: saved.rowVersion, recoveryRevision })
+      setSaved(m); setDraft(selection(m)); setRecoveryRevision(null); setRecoverySaved(''); await onSaved?.(); setNotice('Matriz guardada en el servidor.'); setAttempted(false); setEditingActivityId(null); return true
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar.'); if (e instanceof ApiError && e.status === 409) setConflict(true); return false }
     finally { setBusy(false) }
   }
@@ -159,7 +195,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
     if (busy) return false
     if (!saved || !draft) return ['general', 'content'].includes(target)
     if (['attachments', 'preparation', 'signing'].includes(target)) return canContinue()
-    return !dirty || await confirmAction('Hay cambios sin guardar en la matriz. ¿Cambiar de paso y descartarlos?')
+    return !unprotected || await confirmAction('Hay cambios pendientes de guardar en la matriz. ¿Cambiar de paso?')
   }, busy || autosaving || (!saved && !error))
   async function next() {
     if (!(await canContinue())) return
@@ -174,18 +210,19 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
   }
   async function back() {
     if (writeLock.current) return
-    if (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Salir y descartarlos?'))) return
+    if (unprotected && !(await confirmAction('Hay cambios pendientes de guardar en la matriz. ¿Salir?'))) return
     setBusy(true)
     try { await onBack() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo volver.'); setBusy(false) }
   }
   async function previous() {
-    if (busy || writeLock.current || (dirty && !(await confirmAction('Hay cambios sin guardar en la matriz. ¿Volver al contenido y descartarlos?')))) return
+    if (busy || writeLock.current || (unprotected && !(await confirmAction('Hay cambios pendientes de guardar en la matriz. ¿Volver al contenido?')))) return
     setBusy(true)
     try { await (onPrevious ?? onBack)() } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cambiar de paso.'); setBusy(false) }
   }
   async function compare() { try { setLatest(await api<Matrix>('/work-plans/' + targetDocId + '/matrix')) } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo consultar.') } }
   async function reload() {
     if (!latest || !(await confirmAction('¿Descartar cambios locales y cargar la matriz actual del servidor?'))) return
+    if (recoveryRevision !== null) { try { await api('/work-plans/' + targetDocId + '/matrix/recovery?revision=' + recoveryRevision, 'DELETE'); setRecoveryRevision(null); setRecoverySaved('') } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo descartar el borrador.'); return } }
     setEditingActivityId(null); setSaved(latest); setDraft(selection(latest)); setLatest(null); setConflict(false); setAttempted(false); setError(''); setNotice('Versión del servidor cargada.')
   }
   if (!saved || !draft) return (
@@ -202,7 +239,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
           <span className="sr-only">Volver al Plan</span>
         </button>
       )}
-      {error ? <Toast message={error} /> : <p role="status">Cargando matriz…</p>}
+      {error ? <><Toast message={error} /><button type="button" className="secondary" onClick={() => { setError(''); setLoadVersion(value => value + 1) }}>Reintentar carga de la matriz</button></> : <p role="status">Cargando matriz…</p>}
     </section>
   )
   function choices(row: Activity, key: 'resources' | 'means', title: string) {
@@ -687,7 +724,8 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
 
                 <footer className="activity-modal-footer">
                   <div className="activity-modal-footer-left">
-                    <span className="field-help">Los cambios se guardan en el borrador local.</span>
+                    <span className="field-help" role="status">{autosaving ? 'Guardando borrador…' : autosaveFailed ? 'No se pudo guardar el borrador.' : dirty && recoverySaved === recoveryContent ? 'Borrador guardado en el servidor.' : dirty ? 'Cambios pendientes de guardar.' : 'Matriz sincronizada con el servidor.'}</span>
+                    {!!autosaveFailed && !conflict && <button type="button" className="secondary" onClick={() => { setAutosaveFailed(''); setError('') }}>Reintentar guardado</button>}
                   </div>
                   <div className="activity-modal-footer-actions">
                     <button
@@ -717,7 +755,7 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
             <div className="matrix-footer-actions">
               <div className="matrix-footer-status">
                 <span role="status" className={'step-save-status' + (dirty ? ' is-dirty' : '')}>
-                  {dirty ? 'Hay cambios sin guardar en la matriz' : 'Matriz sincronizada con el servidor'}
+                  {autosaving ? 'Guardando borrador…' : dirty && recoverySaved === recoveryContent ? 'Borrador guardado · faltan datos por completar' : dirty ? 'Hay cambios pendientes de guardar' : 'Matriz sincronizada con el servidor'}
                 </span>
               </div>
               <div className="matrix-footer-buttons">
@@ -734,8 +772,9 @@ export function MatrixEditor({ targetDocId, onBack, onPrevious, onNext, onDirtyC
           )}
       </form>
     <StepPagination previous={{ label: 'Contenido', action: () => void previous() }} next={{ label: 'Anexos', action: () => void next() }} disabled={busy || autosaving} nextDisabled={conflict} />
-    {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} />}
-    {conflict && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
+    {error && <Toast message={error} onDismiss={() => setError('')} />}{!!autosaveFailed && !conflict && <button type="button" className="secondary" onClick={() => { setAutosaveFailed(''); setError('') }}>Reintentar guardado</button>}{notice && <Toast tone="success" message={notice} />}
+    {staleRecovery && <section className="conflict"><p>Existe un borrador guardado sobre una versión anterior de la matriz. Puede recuperar sus cambios y revisarlos antes de guardar.</p><button type="button" className="secondary" onClick={async () => { if (!(await confirmAction('La matriz cambió después de guardar este borrador. ¿Recuperar sus cambios para revisarlos?'))) return; setDraft(staleRecovery.content.draft); setCatalogId(staleRecovery.content.catalogId); setOtherTitle(staleRecovery.content.otherTitle); setSelectedDefinitions(staleRecovery.content.selectedDefinitions); setRecoverySaved(''); setStaleRecovery(null); setConflict(false); setError('') }}>Recuperar borrador anterior</button><button type="button" className="secondary" onClick={async () => { if (!(await confirmAction('¿Descartar el borrador anterior y conservar la matriz actual?'))) return; try { await api('/work-plans/' + targetDocId + '/matrix/recovery?revision=' + staleRecovery.revision, 'DELETE'); setRecoveryRevision(null); setRecoverySaved(''); setStaleRecovery(null); setConflict(false); setError('') } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo descartar el borrador.') } }}>Descartar borrador anterior</button></section>}
+    {conflict && !staleRecovery && <section className="conflict"><p>Los cambios locales se conservan. Revise la matriz actual antes de descartar sus cambios.</p><button className="secondary" onClick={compare}>Consultar matriz actual</button>{latest && <><h2>Matriz actual del servidor</h2><p>Fuente: {latest.source || 'Sin fuente'}</p>{latest.activities.map(a => <section key={a.id}><h3>{a.title}</h3><dl><dt>Fechas</dt><dd>{a.startsOn?.split('-').reverse().join('/') || 'Sin inicio'} — {a.endsOn?.split('-').reverse().join('/') || 'Sin fin'}</dd><dt>Responsables</dt><dd>{a.collective ? latest.collectiveLabel : a.responsibleIds.map(id => latest.members.find(m => m.id === id)?.name ?? 'Integrante no disponible').join(', ')}</dd><dt>Recursos</dt><dd>{a.resources.map(c => c.label).join(', ')}</dd><dt>Medios</dt><dd>{a.means.map(c => c.label).join(', ')}</dd></dl></section>)}<button className="secondary" onClick={reload}>Descartar cambios y cargar matriz actual</button></>}</section>}
   </section>
   )
 }

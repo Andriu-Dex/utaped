@@ -42,8 +42,9 @@ public final class ActivityModels {
         }
     }
     public record Save(@NotNull @PositiveOrZero Long rowVersion,@NotNull @Size(max=500) String source,
-        @NotNull @Size(max=100) List<@NotNull @Valid Activity> activities,@Size(max=2000) String note) {
-        public Save(Long version,String source,List<Activity> activities) { this(version,source,activities,null); }
+        @NotNull @Size(max=100) List<@NotNull @Valid Activity> activities,@Size(max=2000) String note,@PositiveOrZero Long recoveryRevision) {
+        public Save(Long version,String source,List<Activity> activities,String note) { this(version,source,activities,note,null); }
+        public Save(Long version,String source,List<Activity> activities) { this(version,source,activities,null,null); }
     }
     public record Matrix(long rowVersion,String source,String elaboratedBy,String collectiveLabel,boolean editable,String readOnlyReason,
         LocalDate periodStartsOn,LocalDate periodEndsOn,boolean restrictHolidayEndpoints,

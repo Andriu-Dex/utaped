@@ -89,6 +89,8 @@ public class ArtifactService {
             if(annexes.enabled()&&annexes.items().isEmpty()) blockers.add(new Blocker("Anexos","Agregue un PDF o seleccione No en anexos adicionales."));
             return new Readiness(plan.rowVersion(),blockers.isEmpty(),List.copyOf(blockers));
         }
+        if(jdbc.queryForObject("SELECT count(*) FROM work_plan_matrix_recovery WHERE work_plan_id=? AND user_id=?",Integer.class,id,plan.teacherId())>0)
+            blockers.add(new Blocker("Actividades y matriz","Complete o descarte los cambios pendientes de la matriz antes de preparar el documento."));
         if(plan.institutionalUnit().isBlank()) blockers.add(new Blocker("Información general","Indique la unidad institucional."));
         if(plan.justification().isBlank()) blockers.add(new Blocker("Contenido","Complete la justificación."));
         if(plan.objective().isBlank()) blockers.add(new Blocker("Contenido","Complete el objetivo."));
