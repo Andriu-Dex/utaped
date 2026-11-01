@@ -1,0 +1,1 @@
+ALTER TABLE work_plan ADD COLUMN matrix_note text NOT NULL DEFAULT 'Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales.';

@@ -25,9 +25,9 @@ public class ReportingService {
     private static final String FILTER=" AND (? OR w.archived_at IS NULL) AND (?::uuid IS NULL OR w.group_id=?::uuid) AND (?::uuid IS NULL OR w.period_id=?::uuid) ";
     // One row per activity: evidence versions and multiple responsible people never multiply the counts.
     private static final String FACTS="""
-        SELECT (a->>'id')::uuid AS activity_id,a->>'title' AS activity_title,
+        SELECT (a->>'id')::uuid AS activity_id,a->>'title' AS activity_title,NULLIF(a->>'endsOn','')::date AS planned_end,
           jsonb_array_length(COALESCE(a->'means','[]'::jsonb)) AS required_media,
-          missing.total AS missing_media,deadlines.soon,deadlines.overdue
+          missing.total AS missing_media,deadlines.soon,deadlines.overdue,deadlines.overdue_date
         FROM jsonb_array_elements(COALESCE(m.activities,'[]'::jsonb)) a
         CROSS JOIN LATERAL (
           SELECT count(*) AS total FROM jsonb_array_elements(COALESCE(a->'means','[]'::jsonb)) WITH ORDINALITY medium(choice,position)
@@ -35,6 +35,7 @@ public class ReportingService {
         ) missing
         CROSS JOIN LATERAL (
           SELECT min(coalesce(e.ends_on,(a->>'endsOn')::date)) FILTER (WHERE coalesce(e.ends_on,(a->>'endsOn')::date) BETWEEN clock.today AND clock.today+clock.near_days) AS soon,
+            min(coalesce(e.ends_on,(a->>'endsOn')::date)) FILTER (WHERE coalesce(e.ends_on,(a->>'endsOn')::date)<clock.today) AS overdue_date,
             coalesce(bool_or(coalesce(e.ends_on,(a->>'endsOn')::date)<clock.today),false) AS overdue
           FROM jsonb_array_elements_text(COALESCE(a->'responsibleIds','[]'::jsonb)) r
           JOIN app_user u ON u.id=r.value::uuid AND u.active
@@ -98,6 +99,20 @@ public class ReportingService {
             (rs,n)->new Upcoming(rs.getObject("id",UUID.class),rs.getObject("activity_id",UUID.class),rs.getString("title"),rs.getString("activity_title"),rs.getString("name"),rs.getString("period_name"),rs.getObject("soon",LocalDate.class),rs.getLong("missing_media")),today,nearDays,actor.id(),archived,group,group,period,period);
         long activities=rows.stream().mapToLong(Row::activities).sum(),declared=rows.stream().mapToLong(Row::declaredActivities).sum();
         return new Summary(rows,rows.stream().mapToLong(Row::plans).sum(),rows.stream().mapToLong(Row::reports).sum(),rows.stream().mapToLong(Row::approved).sum(),activities,rows.stream().mapToLong(Row::completedActivities).sum(),rows.stream().mapToLong(Row::inReview).sum(),rows.stream().mapToLong(Row::drafts).sum(),rows.stream().mapToLong(Row::pendingEvidence).sum(),rows.stream().mapToLong(Row::dueSoonActivities).sum(),rows.stream().mapToLong(Row::overdueActivities).sum(),declared==0?null:points[0].divide(BigDecimal.valueOf(declared),2,RoundingMode.HALF_UP),declared,percentage(declared,activities),nearDays,upcoming);
+    }
+    public record UpcomingPage(List<Upcoming> items,long total,int page,int size) {}
+    @Transactional(readOnly=true) public UpcomingPage upcoming(String email,UUID group,UUID period,int page,int size) { return activityDetail(email,group,period,"UPCOMING",page,size); }
+    @Transactional(readOnly=true) public UpcomingPage activityDetail(String email,UUID group,UUID period,String kind,int page,int size) {
+        if(!java.util.Set.of("UPCOMING","OVERDUE","PENDING_EVIDENCE").contains(kind) || page<0 || page>100000 || size<1 || size>100) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Paginación no válida.");
+        jdbc.execute("SET LOCAL jit = off");
+        var actor=accounts.current(email);var today=LocalDate.now(zone);
+        String clock="WITH report_clock AS (SELECT ?::date AS today, ?::int AS near_days) ";
+        String condition=kind.equals("UPCOMING")?" AND facts.soon IS NOT NULL ":kind.equals("OVERDUE")?" AND facts.overdue ":" ";
+        String deadline=kind.equals("UPCOMING")?"facts.soon":kind.equals("OVERDUE")?"facts.overdue_date":"COALESCE(facts.overdue_date,facts.soon,facts.planned_end)";
+        String from=FROM+" CROSS JOIN LATERAL ("+FACTS+") facts WHERE ("+WorkPlanService.ACCESS+") AND "+ELIGIBLE+" AND facts.missing_media>0 "+condition+FILTER;
+        long total=jdbc.queryForObject(clock+"SELECT count(*) "+from,Long.class,today,nearDays,actor.id(),false,group,group,period,period);
+        var items=jdbc.query(clock+"SELECT w.id,w.title,g.name,p.name AS period_name,facts.*,"+deadline+" AS deadline "+from+" ORDER BY deadline NULLS LAST,w.id,facts.activity_id LIMIT ? OFFSET ?",(rs,n)->new Upcoming(rs.getObject("id",UUID.class),rs.getObject("activity_id",UUID.class),rs.getString("title"),rs.getString("activity_title"),rs.getString("name"),rs.getString("period_name"),rs.getObject("deadline",LocalDate.class),rs.getLong("missing_media")),today,nearDays,actor.id(),false,group,group,period,period,size,page*size);
+        return new UpcomingPage(items,total,page,size);
     }
     private String cell(String value) { String safe=value.replace('\r',' ').replace('\n',' ');if(safe.matches("^[\\s]*[=+@-].*")) safe="'"+safe;return "\""+safe.replace("\"","\"\"")+"\""; }
     @Transactional(readOnly=true) public byte[] csv(String email,UUID group,UUID period,boolean archived) {

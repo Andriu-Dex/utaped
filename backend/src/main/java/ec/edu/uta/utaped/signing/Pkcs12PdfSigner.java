@@ -246,30 +246,31 @@ public final class Pkcs12PdfSigner {
         } catch(com.google.zxing.WriterException error) { throw new IOException("No se pudo generar el código QR de la firma.",error); }
         float pad=2,qr=Math.min(height-2*pad,width*0.38f),module=qr/matrix.getWidth(),qrBottom=(height-qr)/2;
         float textX=pad+qr+4,textWidth=width-textX-pad;
-        String label=encodable(regular,action!=null&&action.endsWith("_EN_SUSTITUCION")?"Firmado por sustitución:":"Firmado electrónicamente por:"),date=encodable(regular,"Fecha: "+java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(STAMP_ZONE).format(now)+" (EC)");
-        float small=Math.max(2.5f,Math.min(Math.min(7,height/7),fit(regular,label,textWidth)));float dateSize=Math.max(2.5f,Math.min(small,fit(regular,date,textWidth)));
-        float available=height-2*pad-small*1.6f-dateSize*1.6f;
+        String label=encodable(regular,action!=null&&action.endsWith("_EN_SUSTITUCION")?"Firmado por sustitución:":"Firmado electrónicamente por:");
+        String validation=encodable(regular,"Validar únicamente con FirmaEC");
+        float small=Math.max(2,Math.min(5,height/14));
+        var labels=wrap(regular,label,small,textWidth);var footer=wrap(regular,validation,small,textWidth);
+        float available=height-2*pad-(labels.size()+footer.size())*small*1.2f-small;
         String safeName=encodable(bold,name);List<String> lines=List.of(safeName);float nameSize=3;
-        for(float size=Math.min(14,height/4);size>=3;size-=0.5f) {
+        for(float size=Math.min(14,height/4);size>=1.5f;size-=0.25f) {
+            final float candidate=size;
+            boolean fitsWords=Arrays.stream(safeName.split("\\s+")).allMatch(word->{ try { return bold.getStringWidth(word)/1000*candidate<=textWidth; } catch(IOException error) { return false; } });
             var wrapped=wrap(bold,safeName,size,textWidth);
-            if(wrapped.size()*size*1.15f<=available) { lines=wrapped;nameSize=size;break; }
+            if((fitsWords || size<=1.5f) && wrapped.size()*size*1.15f<=available) { lines=wrapped;nameSize=size;break; }
         }
         if(lines.size()==1&&lines.getFirst().equals(safeName)&&bold.getStringWidth(safeName)/1000*nameSize>textWidth) lines=wrap(bold,safeName,nameSize,textWidth);
-        while(lines.size()>1&&lines.size()*nameSize*1.15f>available) lines=lines.subList(0,lines.size()-1);
         try(var content=new PDPageContentStream(pdf,appearance)) {
             content.setNonStrokingColor(java.awt.Color.BLACK);
             for(int y=0;y<matrix.getHeight();y++) for(int x=0;x<matrix.getWidth();x++)
                 if(matrix.get(x,y)) content.addRect(pad+x*module,qrBottom+(matrix.getHeight()-1-y)*module,module,module);
             content.fill();
-            float top=height-pad-small;
-            content.beginText();content.setFont(regular,small);content.newLineAtOffset(textX,top);content.showText(label);content.endText();
-            float lineY=top-small*0.6f-nameSize*1.15f;
+            float lineY=height-pad-small;
+            for(var line:labels) { content.beginText();content.setFont(regular,small);content.newLineAtOffset(textX,lineY);content.showText(line);content.endText();lineY-=small*1.2f; }
+            lineY-=small*0.5f+nameSize;
             for(var line:lines) { content.beginText();content.setFont(bold,nameSize);content.newLineAtOffset(textX,lineY);content.showText(line);content.endText();lineY-=nameSize*1.15f; }
-            content.beginText();content.setFont(regular,dateSize);content.newLineAtOffset(textX,pad+1);content.showText(date);content.endText();
+            lineY=pad+(footer.size()-1)*small*1.2f;
+            for(var line:footer) { content.beginText();content.setFont(regular,small);content.newLineAtOffset(textX,lineY);content.showText(line);content.endText();lineY-=small*1.2f; }
         }
-    }
-    private static float fit(PDType1Font font,String text,float width) throws IOException {
-        float units=font.getStringWidth(text)/1000;return units<=0?width:width/units;
     }
     private static List<String> wrap(PDType1Font font,String text,float size,float width) throws IOException {
         var lines=new ArrayList<String>();var current=new StringBuilder();

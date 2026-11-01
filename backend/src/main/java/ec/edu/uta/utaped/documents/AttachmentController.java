@@ -23,9 +23,15 @@ public class AttachmentController {
         @RequestParam @PositiveOrZero long rowVersion,@RequestParam UUID requestKey,@RequestParam String title,@RequestPart MultipartFile file,Principal p) {
         return service.upload(targetDocId,p.getName(),rowVersion,requestKey,title,file);
     }
+    @PostMapping("/generated") public State generated(@PathVariable UUID targetDocId,@Valid @RequestBody GeneratedInput input,Principal p) { return service.generate(targetDocId,p.getName(),input); }
     @PutMapping("/order") public State reorder(@PathVariable UUID targetDocId,@Valid @RequestBody Reorder body,Principal p) { return service.reorder(targetDocId,p.getName(),body); }
     @PutMapping("/{attachmentId}") public State update(@PathVariable UUID targetDocId,@PathVariable UUID attachmentId,@Valid @RequestBody Update body,Principal p) { return service.update(targetDocId,attachmentId,p.getName(),body); }
     @DeleteMapping("/{attachmentId}") public State remove(@PathVariable UUID targetDocId,@PathVariable UUID attachmentId,@RequestParam @PositiveOrZero long rowVersion,Principal p) { return service.remove(targetDocId,attachmentId,p.getName(),rowVersion); }
+    @GetMapping("/{attachmentId}/original") public ResponseEntity<byte[]> original(@PathVariable UUID targetDocId,@PathVariable UUID attachmentId,Principal p) {
+        var meta=service.metadata(targetDocId,attachmentId,p.getName());
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.parseMediaType(meta.originalMediaType()==null?"application/pdf":meta.originalMediaType()))
+            .header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.attachment().filename(meta.sourceName()==null?meta.originalName():meta.sourceName(),StandardCharsets.UTF_8).build().toString()).body(service.original(targetDocId,attachmentId,p.getName()));
+    }
     @GetMapping("/{attachmentId}/content") public ResponseEntity<byte[]> content(@PathVariable UUID targetDocId,@PathVariable UUID attachmentId,Principal p) {
         var meta=service.metadata(targetDocId,attachmentId,p.getName());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).cacheControl(CacheControl.noStore())

@@ -33,9 +33,9 @@ public class AttachmentService {
     public State get(UUID targetDocId,String email) {
         var plan=plans.get(targetDocId,email);var settings=jdbc.queryForMap("SELECT attachments_enabled,privacy_notice_enabled FROM work_plan WHERE id=?",targetDocId);
         var items=jdbc.query("""
-            SELECT a.*,f.original_name,f.size_bytes,f.page_count,f.sha256 FROM document_attachment a
-            JOIN stored_file f ON f.id=a.file_id WHERE a.work_plan_id=? AND a.removed_at IS NULL ORDER BY a.sort_order,a.id
-            """,(rs,n)->new Attachment(rs.getObject("id",UUID.class),rs.getObject("file_id",UUID.class),label(n),rs.getString("title"),rs.getString("description"),rs.getString("original_name"),rs.getLong("size_bytes"),rs.getInt("page_count"),rs.getString("sha256")),targetDocId);
+            SELECT a.*,f.original_name,f.size_bytes,f.page_count,f.sha256,original.original_name AS source_name,original.size_bytes AS source_size_bytes FROM document_attachment a
+            JOIN stored_file f ON f.id=a.file_id LEFT JOIN stored_file original ON original.id=a.original_file_id WHERE a.work_plan_id=? AND a.removed_at IS NULL ORDER BY a.sort_order,a.id
+            """,(rs,n)->new Attachment(rs.getObject("id",UUID.class),rs.getObject("file_id",UUID.class),label(n),rs.getString("title"),rs.getString("description"),rs.getString("original_name"),rs.getLong("size_bytes"),rs.getInt("page_count"),rs.getString("sha256"),rs.getObject("original_file_id",UUID.class),rs.getString("original_media_type"),rs.getString("source_name"),rs.getObject("source_size_bytes",Long.class)),targetDocId);
         return new State(plan.rowVersion(),plan.editable(),plan.readOnlyReason(),(boolean)settings.get("attachments_enabled"),(boolean)settings.get("privacy_notice_enabled"),maxFileBytes,maxTotalBytes,maxAttachments,items);
     }
     public State lock(UUID targetDocId,String email) {
@@ -55,13 +55,20 @@ public class AttachmentService {
         jdbc.update("UPDATE work_plan SET attachments_enabled=?,privacy_notice_enabled=? WHERE id=?",input.enabled(),input.privacyNoticeEnabled(),targetDocId);
         changed(targetDocId,email,"DOCUMENT_ATTACHMENT_SETTINGS_SAVED");return get(targetDocId,email);
     }
-    @Transactional public State upload(UUID targetDocId,String email,long version,UUID requestKey,String title,MultipartFile upload) {
+    @Transactional public State upload(UUID doc,String email,long version,UUID key,String title,MultipartFile upload) { return upload(doc,email,version,key,title,upload,null); }
+    @Transactional public State generate(UUID doc,String email,GeneratedInput input) {
+        lock(doc,email);
+        String payload=tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(List.of(input.kind(),input.url()==null?"":input.url(),input.rows()==null?List.of():input.rows()));
+        byte[] bytes=GeneratedAttachments.render(input);
+        return upload(doc,email,input.rowVersion(),input.requestKey(),input.title(),new GeneratedAttachments.Upload(input.kind().equals("URL")?"referencia.pdf":"tabla.pdf",bytes),StoredFiles.hash(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    }
+    private State upload(UUID targetDocId,String email,long version,UUID requestKey,String title,MultipartFile upload,String requestHash) {
         var state=lock(targetDocId,email);
         if(title==null || title.isBlank() || title.length()>200) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Escriba el título del anexo (máximo 200 caracteres).");
         if(upload.isEmpty() || upload.getSize()>maxFileBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"El archivo está vacío o supera el límite permitido.");
         byte[] bytes;try { bytes=upload.getBytes(); } catch(IOException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No se pudo leer el archivo."); }
-        String sha=StoredFiles.hash(bytes);
-        var prior=jdbc.queryForList("SELECT a.removed_at,a.title,f.sha256 FROM document_attachment a JOIN stored_file f ON f.id=a.file_id WHERE a.work_plan_id=? AND a.request_key=?",targetDocId,requestKey);
+        String sha=requestHash==null?StoredFiles.hash(bytes):requestHash;
+        var prior=jdbc.queryForList("SELECT a.removed_at,a.title,COALESCE(a.request_hash,original.sha256,f.sha256) AS sha256 FROM document_attachment a JOIN stored_file f ON f.id=a.file_id LEFT JOIN stored_file original ON original.id=a.original_file_id WHERE a.work_plan_id=? AND a.request_key=?",targetDocId,requestKey);
         if(!prior.isEmpty()) {
             var previous=prior.getFirst();
             if(previous.get("removed_at")!=null || !previous.get("sha256").equals(sha) || !previous.get("title").equals(title.trim())) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro archivo o título.");
@@ -69,11 +76,19 @@ public class AttachmentService {
         }
         requireEditable(state,version);
         if(!state.enabled()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione Sí para agregar anexos.");
-        if(state.items().size()>=maxAttachments || state.items().stream().mapToLong(Attachment::sizeBytes).sum()+bytes.length>maxTotalBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Se alcanzó el límite de anexos o tamaño total del Plan.");
+        byte[] originalBytes=null;String mediaType=null;
+        if(bytes.length<5 || bytes[0]!='%' || bytes[1]!='P' || bytes[2]!='D' || bytes[3]!='F' || bytes[4]!='-') {
+            originalBytes=bytes;var converted=AttachmentImages.convert(bytes);bytes=converted.pdf();mediaType=converted.mediaType();
+            if(bytes.length>maxFileBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"La imagen convertida supera el tamaño permitido para un anexo.");
+        }
+        long stored=jdbc.queryForObject("SELECT COALESCE(sum(COALESCE(original.size_bytes,f.size_bytes)),0) FROM document_attachment a JOIN stored_file f ON f.id=a.file_id LEFT JOIN stored_file original ON original.id=a.original_file_id WHERE a.work_plan_id=? AND a.removed_at IS NULL",Long.class,targetDocId);
+        if(state.items().size()>=maxAttachments || stored+(originalBytes==null?bytes.length:originalBytes.length)>maxTotalBytes) throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,"Se alcanzó el límite de anexos o tamaño total del Plan.");
         int pages=pdf.pages(bytes);String name=Objects.requireNonNullElse(upload.getOriginalFilename(),"anexo.pdf").replace('\\','/');name=name.substring(name.lastIndexOf('/')+1).replaceAll("[\\p{Cntrl}]","");
-        if(name.isBlank()) name="anexo.pdf";if(name.length()>200) name=name.substring(name.length()-200);
-        var file=files.put(bytes,name,pages);UUID id=UUID.randomUUID();
-        jdbc.update("INSERT INTO document_attachment(id,work_plan_id,request_key,file_id,title,sort_order) VALUES (?,?,?,?,?,?)",id,targetDocId,requestKey,file.id(),title.trim(),state.items().size());
+        if(name.isBlank()) name="anexo.pdf";if(name.length()>190) name=name.substring(name.length()-190);
+        UUID originalFile=originalBytes==null?null:files.put(originalBytes,name,1).id();
+        String pdfName=originalBytes==null?name:name+".pdf";
+        var file=files.put(bytes,pdfName,pages);UUID id=UUID.randomUUID();
+        jdbc.update("INSERT INTO document_attachment(id,work_plan_id,request_key,file_id,title,sort_order,original_file_id,original_media_type,request_hash) VALUES (?,?,?,?,?,?,?,?,?)",id,targetDocId,requestKey,file.id(),title.trim(),state.items().size(),originalFile,mediaType,sha);
         changed(targetDocId,email,"DOCUMENT_ATTACHMENT_ADDED");return get(targetDocId,email);
     }
     private Attachment find(State state,UUID attachmentId) { return state.items().stream().filter(a->a.id().equals(attachmentId)).findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Anexo no disponible.")); }
@@ -96,5 +111,6 @@ public class AttachmentService {
         changed(targetDocId,email,"DOCUMENT_ATTACHMENTS_REORDERED");return get(targetDocId,email);
     }
     public Attachment metadata(UUID targetDocId,UUID attachmentId,String email) { return find(get(targetDocId,email),attachmentId); }
+    public byte[] original(UUID doc,UUID attachment,String email) { var meta=metadata(doc,attachment,email);return files.read(meta.originalFileId()==null?meta.fileId():meta.originalFileId()); }
     public byte[] content(UUID targetDocId,UUID attachmentId,String email) { return files.read(metadata(targetDocId,attachmentId,email).fileId()); }
 }

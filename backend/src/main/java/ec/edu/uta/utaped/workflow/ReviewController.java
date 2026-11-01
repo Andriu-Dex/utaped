@@ -17,8 +17,8 @@ public class ReviewController {
     @GetMapping("/reviews/tasks") public List<ReviewService.Task> inbox(Principal p) { return service.inbox(p.getName()); }
     @GetMapping("/reviews/inbox") public ReviewService.InboxPage inboxPage(Principal p,
         @RequestParam(defaultValue="") String query,@RequestParam(defaultValue="") String status,
-        @RequestParam(defaultValue="") String documentType,@RequestParam(defaultValue="0") int page,
-        @RequestParam(defaultValue="20") int size) { return service.inboxPage(p.getName(),query,status,documentType,page,size); }
+        @RequestParam(defaultValue="") String documentType,@RequestParam(defaultValue="") String action,@RequestParam(defaultValue="0") int page,
+        @RequestParam(defaultValue="20") int size) { return service.inboxPage(p.getName(),query,status,documentType,action,page,size); }
     @GetMapping("/work-plans/{doc}/reviews") public List<Map<String,Object>> history(@PathVariable UUID doc,Principal p) { return service.history(doc,p.getName()); }
     @GetMapping("/reviews/{id}") public ReviewService.State state(@PathVariable UUID id,Principal p) { return service.state(id,p.getName()); }
     @GetMapping("/reviews/{id}/comparison") public ResponseEntity<ReviewService.Comparison> comparison(@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.comparison(id,p.getName())); }

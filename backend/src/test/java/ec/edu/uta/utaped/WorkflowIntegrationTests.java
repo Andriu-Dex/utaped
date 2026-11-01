@@ -77,7 +77,7 @@ class WorkflowIntegrationTests {
         var incomplete=new Stage(UUID.randomUUID(),"Etapa pendiente","REVIEW","PERSON",List.of(),null,"",true);
         assertEquals(200,b.request("PUT",path,new Save(0L,new Definition("Incompleto",List.of(incomplete))),true).statusCode());
         assertEquals(400,b.request("POST",path+"/revisions",new Version(1L),true).statusCode());
-        var role=new Stage(UUID.randomUUID(),"Coordinación","VALIDATE","GROUP_ROLE",List.of(),"COORDINATOR","",false);
+        var role=new Stage(UUID.randomUUID(),"Coordinación","VALIDATE","GROUP_ROLE",List.of(),"COORDINATOR","",true);
         assertEquals(200,b.request("PUT",path,new Save(1L,new Definition("Rol",List.of(role))),true).statusCode());
         jdbc.update("DELETE FROM membership WHERE group_id=?",group);
         assertEquals(400,b.request("POST",path+"/revisions",new Version(2L),true).statusCode());
@@ -87,5 +87,13 @@ class WorkflowIntegrationTests {
         assertEquals(400,b.request("PUT",path,new Save(2L,new Definition("Duplicados",List.of(same,same))),true).statusCode());
         assertEquals(2,JsonPath.<Integer>read(b.request("GET",path,null,false).body(),"$.rowVersion"));
         assertEquals(400,b.request("PUT",path,new Save(2L,new Definition("",List.of())),true).statusCode());
+    }
+    @Test void personalParticipantsCannotBePublishedWithoutSignatures() throws Exception {
+        var browser=new Browser();browser.login("admin@example.invalid");String path=path(group,"T1");
+        var stage=new Stage(UUID.randomUUID(),"Revisión personal","REVIEW","PERSON",List.of(user),null,"",false);
+        assertEquals(200,browser.request("PUT",path,new Save(0L,new Definition("Flujo",List.of(stage))),true).statusCode());
+        assertEquals(400,browser.request("POST",path+"/revisions",new Version(1L),true).statusCode());
+        assertEquals(200,browser.request("PUT",path,new Save(1L,new Definition("Flujo",List.of(person()))),true).statusCode());
+        assertEquals(200,browser.request("POST",path+"/revisions",new Version(2L),true).statusCode());
     }
 }

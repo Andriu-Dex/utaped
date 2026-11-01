@@ -18,6 +18,10 @@ public class DocumentWorkflowSnapshot {
     private final JdbcTemplate jdbc;
     private final JsonMapper json=JsonMapper.builder().build();
     public DocumentWorkflowSnapshot(JdbcTemplate jdbc) { this.jdbc=jdbc; }
+    // Applies only when composing a new artifact; stored signed snapshots are read unchanged.
+    private Workflow requirePersonalSignatures(Workflow workflow) {
+        return new Workflow(workflow.revisionId(),workflow.revisionNumber(),workflow.name(),workflow.stages().stream().map(s->new Stage(s.id(),s.label(),s.action(),s.recipientKind(),s.recipientLabel(),s.groupRole(),!s.recipientKind().equals("COLLEGIATE") || s.requiresSignature(),s.participants())).toList(),workflow.requiresQuipux());
+    }
     public static String signatureAction(String action) {
         return switch(action) { case "APPROVE" -> "APROBADO_POR";case "VALIDATE" -> "VALIDADO_POR";default -> "REVISADO_POR"; };
     }
@@ -36,7 +40,7 @@ public class DocumentWorkflowSnapshot {
         if(scopeId==null) revisions=jdbc.queryForList("SELECT r.id,r.revision_number,r.definition::text FROM workflow_configuration c JOIN workflow_revision r ON r.id=c.current_revision_id AND r.configuration_id=c.id WHERE c.group_id=? AND c.document_type=?",groupId,type);
         else {
             var assigned=jdbc.queryForList("SELECT r.id,r.revision_number,r.definition::text,a.frozen_workflow::text,p.workflow_locked_at FROM period_workflow_assignment a JOIN workflow_revision r ON r.id=a.revision_id JOIN organizational_scope s ON s.id=a.scope_id JOIN academic_period p ON p.id=s.period_id WHERE a.scope_id=? AND a.document_type=?",scopeId,type);
-            if(!assigned.isEmpty()&&assigned.getFirst().get("frozen_workflow")!=null) return json.readValue((String)assigned.getFirst().get("frozen_workflow"),Workflow.class);
+            if(!assigned.isEmpty()&&assigned.getFirst().get("frozen_workflow")!=null) return requirePersonalSignatures(json.readValue((String)assigned.getFirst().get("frozen_workflow"),Workflow.class));
             if(!publication&&!assigned.isEmpty()&&assigned.getFirst().get("workflow_locked_at")!=null) return null;
             revisions=assigned;
         }
@@ -62,7 +66,7 @@ public class DocumentWorkflowSnapshot {
                     .orElse(new Participant(id,"Participante no disponible",false))).toList();
             }
             String label=position;people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),label)).toList();
-            return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),stage.requiresSignature(),people);
+            return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),!stage.recipientKind().equals("COLLEGIATE") || stage.requiresSignature(),people);
         }).toList();
         return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages,definition.requiresQuipux());
     }

@@ -24,6 +24,7 @@ public class WorkflowService {
         var result=new ArrayList<String>();var ids=new HashSet<UUID>();
         if(definition.stages().isEmpty()) result.add("Agregue al menos una etapa.");
         for(var stage:definition.stages()) {
+            if(!stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) result.add(stage.label()+": los participantes personales deben firmar.");
             if(!ids.add(stage.id())) result.add("No repita identificadores de etapa.");
             var recipients=new HashSet<>(stage.assigneeIds());
             if(recipients.size()!=stage.assigneeIds().size()) result.add(stage.label()+": no repita participantes.");

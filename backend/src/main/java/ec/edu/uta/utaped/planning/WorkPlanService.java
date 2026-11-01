@@ -98,11 +98,12 @@ public class WorkPlanService {
             """,(rs,n)->new ScopeOption(rs.getObject("id",UUID.class),rs.getObject("group_id",UUID.class),rs.getObject("period_id",UUID.class),rs.getString("group_name"),rs.getString("period_name"),rs.getString("career_name"),
                 rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name")),rs.getString("unit_name"),rs.getString("unit_type")),actor.id(),actor.id());
         var groups=jdbc.query("SELECT g.id,g.name FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND g.active ORDER BY g.name",(rs,n)->new GroupOption(rs.getObject("id",UUID.class),rs.getString("name")),actor.id());
-        var periods=jdbc.query("SELECT id,name,status,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
+        var periods=jdbc.query("SELECT id,name,status,status='ACTIVE' AND (now() at time zone 'America/Guayaquil')::date BETWEEN starts_on AND ends_on AS is_current,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
-            return new PeriodOption(rs.getObject("id",UUID.class),rs.getString("name"),start,end,rs.getString("status").equals("ACTIVE")&&(!enforceWindow||within(start,end)),rs.getString("status"));
+            return new PeriodOption(rs.getObject("id",UUID.class),rs.getString("name"),start,end,rs.getString("status").equals("ACTIVE")&&(!enforceWindow||within(start,end)),rs.getString("status"),rs.getBoolean("is_current"));
         });
-        return new Options(groups,periods,true,enforceWindow,scopes,templateService.getJustificationOrDefault("T1"));
+        boolean derived=jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id WHERE s.principal_user_id=? AND s.active AND g.active AND w.document_type='T1' AND w.document_state='APPROVED' AND w.archived_at IS NULL AND p.status='ACTIVE' AND ? BETWEEN p.starts_on AND p.ends_on)",Boolean.class,actor.id(),today());
+        return new Options(groups,periods,true,enforceWindow,scopes,templateService.getJustificationOrDefault("T1"),derived);
     }
     public Plan get(UUID targetDocId,String email) {
         return jdbc.query(SELECT+" AND w.id=?",this::map,accounts.current(email).id(),targetDocId).stream().findFirst()

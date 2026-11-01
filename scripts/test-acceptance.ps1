@@ -51,6 +51,8 @@ SIGNING_ALLOW_HTTP=true
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar el entorno de aceptación.' }
     $ready = $false
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
+        $backendState = & docker @composeArguments ps -a --format '{{.State}}' backend
+        if ($LASTEXITCODE -eq 0 -and "$backendState".Trim() -eq 'exited') { throw 'El backend de aceptación terminó durante el arranque. Revise sus logs.' }
         try {
             $response = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:24431/api/auth/csrf' -TimeoutSec 3
             if ($response.StatusCode -eq 200) { $ready = $true; break }
@@ -60,6 +62,8 @@ SIGNING_ALLOW_HTTP=true
     if ($PreparedDocuments) {
         $preparedReady = $false
         for ($attempt = 0; $attempt -lt 120; $attempt++) {
+            $backendState = & docker @composeArguments ps -a --format '{{.State}}' backend
+            if ($LASTEXITCODE -eq 0 -and "$backendState".Trim() -eq 'exited') { throw 'El backend terminó al preparar los documentos de aceptación. Revise sus logs.' }
             $seedCount = & docker @composeArguments exec -T db psql -U utaped -d utaped_dev -Atc "SELECT count(*) FROM audit_event WHERE action='DEVELOPMENT_DOCUMENTS_CREATED'"
             if ($LASTEXITCODE -eq 0 -and "$seedCount".Trim() -eq '1') { $preparedReady = $true; break }
             Start-Sleep -Seconds 2

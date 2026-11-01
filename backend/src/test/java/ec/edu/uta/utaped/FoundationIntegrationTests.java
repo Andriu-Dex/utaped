@@ -24,6 +24,7 @@ class FoundationIntegrationTests {
     @Value("${local.server.port}") int port;
     @Autowired JdbcTemplate jdbc;
     @Autowired PasswordEncoder encoder;
+    @Autowired org.springframework.session.jdbc.JdbcIndexedSessionRepository sessions;
     UUID admin,user,outsider,group;
     static final String PASSWORD="Test-only-password-2026";
     class Browser {
@@ -54,6 +55,25 @@ class FoundationIntegrationTests {
     }
     void add(UUID id,String email,String role,boolean temporary) {
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,?,?,?)",id,email,email,encoder.encode(PASSWORD),role,temporary);
+    }
+    private <S extends org.springframework.session.Session> void setSessionActivity(org.springframework.session.FindByIndexNameSessionRepository<S> repository,long time) {
+        S session=repository.findByPrincipalName("user@example.invalid").values().iterator().next();
+        session.setAttribute("utaped.lastInteractiveRequest",time);repository.save(session);
+    }
+    @Test void notificationPollingDoesNotExtendInteractiveSession() throws Exception {
+        Browser b=new Browser();assertEquals(204,b.login("user@example.invalid",PASSWORD).statusCode());
+        org.springframework.session.Session session=sessions.findByPrincipalName("user@example.invalid").values().iterator().next();
+        assertEquals(1800,session.getMaxInactiveInterval().toSeconds());
+        long previous=System.currentTimeMillis()-java.time.Duration.ofMinutes(29).toMillis();
+        setSessionActivity(sessions,previous);
+        assertEquals(200,b.request("GET","/api/notifications/unread-count",null,false).statusCode());
+        session=sessions.findById(session.getId());assertEquals(previous,((Long)session.getAttribute("utaped.lastInteractiveRequest")).longValue());
+        assertEquals(200,b.request("GET","/api/auth/me",null,false).statusCode());
+        session=sessions.findById(session.getId());assertTrue((Long)session.getAttribute("utaped.lastInteractiveRequest")>previous);
+        setSessionActivity(sessions,System.currentTimeMillis()-java.time.Duration.ofMinutes(31).toMillis());
+        assertEquals(401,b.request("GET","/api/notifications/unread-count",null,false).statusCode());
+        assertEquals(401,b.request("GET","/api/auth/me",null,false).statusCode());
+        assertTrue(sessions.findByPrincipalName("user@example.invalid").isEmpty());
     }
     @Test void anonymousAndCsrfAreEnforced() throws Exception {
         Browser b=new Browser(); assertEquals(401,b.request("GET","/api/groups",null,false).statusCode());
@@ -245,6 +265,11 @@ class FoundationIntegrationTests {
         assertEquals(403,b.request("POST",path,body,true).statusCode());
         assertEquals(403,a.request("POST",path,body,false).statusCode());
         assertEquals(200,a.request("POST",path,body,true).statusCode());
+        var delivered=HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(System.getenv("TEST_MAIL_URL")+"/api/v1/messages")).GET().build(),HttpResponse.BodyHandlers.ofString());
+        var messages=JsonPath.<java.util.List<java.util.Map<String,Object>>>read(delivered.body(),"$.messages");
+        var message=messages.stream().filter(m->"Contraseña temporal de UTAPED".equals(m.get("Subject"))).findFirst().orElseThrow();
+        var content=HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(System.getenv("TEST_MAIL_URL")+"/api/v1/message/"+message.get("ID"))).GET().build(),HttpResponse.BodyHandlers.ofString());
+        assertTrue(JsonPath.<String>read(content.body(),"$.Text").contains("Temporary-reset-password-2026"));
         assertEquals(401,b.request("GET","/api/auth/me",null,false).statusCode());
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM password_reset WHERE user_id=?",Integer.class,user));
         assertEquals(409,a.request("POST",path,body,true).statusCode());

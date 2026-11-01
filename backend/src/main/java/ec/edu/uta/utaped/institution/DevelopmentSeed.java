@@ -40,7 +40,7 @@ public class DevelopmentSeed implements ApplicationRunner {
         var reference = DevelopmentReference.load();
         UUID period=id("period");
         upgradeUnusedLegacyReference(reference);
-        for (var career : reference.careers()) jdbc.update("INSERT INTO academic_career(id,code,name) VALUES (?,?,?) ON CONFLICT(id) DO NOTHING",id(career.key()),career.code(),career.name());
+        for (var career : reference.careers()) jdbc.update("INSERT INTO academic_career(id,code,name,active) VALUES (?,?,?,?) ON CONFLICT DO NOTHING",id(career.key()),career.code(),career.name(),!career.code().equals("SIS"));
         jdbc.update("""
             INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on)
             VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING
@@ -54,7 +54,7 @@ public class DevelopmentSeed implements ApplicationRunner {
             for (String code : group.careers()) {
                 var career=reference.careers().stream().filter(c -> c.code().equals(code)).findFirst().orElseThrow();
                 UUID scope=group.key().equals("group") && code.equals("TI") ? id("scope") : id("scope-"+group.key()+"-"+code);
-                jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id,career_id,principal_user_id) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM academic_period WHERE id=? AND status='ACTIVE' AND workflow_locked_at IS NULL) ON CONFLICT(id) DO NOTHING",scope,groupId,period,id(career.key()),id("principal"),period);
+                jdbc.update("INSERT INTO organizational_scope(id,group_id,period_id,career_id,principal_user_id) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM academic_period WHERE id=? AND status='ACTIVE' AND workflow_locked_at IS NULL) ON CONFLICT(id) DO NOTHING",scope,groupId,period,careerId(career),id("principal"),period);
                 if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM organizational_scope WHERE id=?)",Boolean.class,scope))) seedScope(scope,groupId,period);
             }
         }
@@ -63,11 +63,16 @@ public class DevelopmentSeed implements ApplicationRunner {
                 List.of("SUBDEAN","Subdecano/a","false"),List.of("DEAN","Decano/a","false")))
             jdbc.update("INSERT INTO institutional_position(id,code,name,career_specific,can_view_history) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",id("position-"+position.get(0)),position.get(0),position.get(1),Boolean.parseBoolean(position.get(2)),Set.of("DEAN","SUBDEAN").contains(position.get(0)));
         for(var career:reference.careers())
-            jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING",id("assignment-UPE-"+career.code()),period,id("position-UPE_RESPONSIBLE"),id(career.key()),id("reviewer"),id("admin"));
+            jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING",id("assignment-UPE-"+career.code()),period,id("position-UPE_RESPONSIBLE"),careerId(career),id("reviewer"),id("admin"));
         jdbc.update("INSERT INTO position_assignment(id,period_id,position_id,career_id,user_id,assigned_by) VALUES (?,?,?,NULL,?,?) ON CONFLICT DO NOTHING",id("assignment-SUBDEAN"),period,id("position-SUBDEAN"),id("approver"),id("admin"));
         for(String kind:List.of("RESOURCE","MEANS")) for (String label : kind.equals("RESOURCE") ? reference.resources() : reference.means())
             jdbc.update("INSERT INTO planning_catalog(id,kind,label,active) VALUES (?,?,?,true) ON CONFLICT DO NOTHING",id("catalog-"+kind+"-"+label),kind,label);
         for (var activity : reference.activities()) jdbc.update("INSERT INTO activity_catalog(id,group_id,title,category,mandatory,active) VALUES (?,?,?,?,false,true) ON CONFLICT(id) DO NOTHING",id(activity.key()),id(activity.groupKey()),activity.title(),activity.category());
+        for(var activity:reference.activities()) if(activity.category().equals("IMPROVEMENT_ACTION")) {
+            UUID career=activity.source().startsWith("PROPUESTAS")?jdbc.queryForObject("SELECT id FROM academic_career WHERE code='TI'",UUID.class):null;
+            var context=new ec.edu.uta.utaped.planning.ActivityModels.Context("improvement-action-2026-"+activity.key(),activity.source(),null,null,null,null,null,null,2026,null,career);
+            jdbc.update("UPDATE activity_catalog SET context=?::jsonb WHERE id=? AND context IS NULL AND title=? AND category=?",tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(context),id(activity.key()),activity.title(),activity.category());
+        }
         // Optional examples only where no institutional reference or administrator catalog exists.
         for(var group:reference.groups()) if(reference.activities().stream().noneMatch(activity->activity.groupKey().equals(group.key()))
             && jdbc.queryForObject("SELECT count(*) FROM activity_catalog WHERE group_id=? AND active",Integer.class,id(group.key()))==0) {
@@ -109,6 +114,7 @@ public class DevelopmentSeed implements ApplicationRunner {
             default -> "Docente integrante";
         };
     }
+    private UUID careerId(DevelopmentReference.Career career) { return jdbc.queryForObject("SELECT id FROM academic_career WHERE code=?",UUID.class,career.code()); }
     private void upgradeUnusedLegacyReference(DevelopmentReference reference) {
         // Never rewrite a period/group/career already referenced by a document or changed by an administrator.
         jdbc.update("UPDATE academic_career SET code='TI',name='Tecnologías de la Información',row_version=row_version+1 WHERE id=? AND code='DEV-SW' AND name='Carrera de ejemplo — Software' AND NOT EXISTS(SELECT 1 FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id WHERE s.career_id=?)",id("career"),id("career"));
@@ -130,8 +136,8 @@ public class DevelopmentSeed implements ApplicationRunner {
             String suffix=group.equals(id("group")) ? type : group+"-"+type;
             UUID configuration=id("configuration-"+suffix),revision=id("revision-"+suffix);
             var definition=new Definition("Revisión y aprobación documental — "+type,List.of(
-                new Stage(id("review-stage-"+type),"Revisión documental","REVIEW","PERSON",List.of(id("reviewer")),null,"",false),
-                new Stage(id("approval-stage-"+type),"Aprobación del documento","APPROVE","PERSON",List.of(id("approver")),null,"",false)));
+                new Stage(id("review-stage-"+type),"Revisión documental","REVIEW","PERSON",List.of(id("reviewer")),null,"",true),
+                new Stage(id("approval-stage-"+type),"Aprobación del documento","APPROVE","PERSON",List.of(id("approver")),null,"",true)));
             int created=jdbc.update("INSERT INTO workflow_configuration(id,group_id,document_type,draft) VALUES (?,?,?,?::jsonb) ON CONFLICT(id) DO NOTHING",configuration,group,type,json.writeValueAsString(definition));
             if (created==1) {
                 jdbc.update("INSERT INTO workflow_revision(id,configuration_id,revision_number,definition,actor_id) VALUES (?,?,1,?::jsonb,?)",revision,configuration,json.writeValueAsString(definition),id("admin"));

@@ -33,9 +33,10 @@ public final class WorkPlanModels {
         String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt,boolean canManage,long rowVersion) {}
     public record Page(List<Summary> items,long total,int page,int size) {}
     public record GroupOption(UUID id,String name) {}
-    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}
+    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status,boolean current) {}
     public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate,String suggestedTitle,String institutionalUnit,String institutionalUnitType) {}
-    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes,String defaultJustification) {
+    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes,String defaultJustification,boolean canCreateDerived) {
+        public Options(List<GroupOption> groups,List<PeriodOption> periods,boolean single,boolean enforce,List<ScopeOption> scopes,String justification) { this(groups,periods,single,enforce,scopes,justification,false); }
         public Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {
             this(groups,periods,singlePlanPerScope,enforcePreparationWindow,scopes,InstitutionalTemplates.DEFAULT_JUSTIFICATION);
         }

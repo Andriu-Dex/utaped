@@ -91,14 +91,18 @@ public class ReviewService {
     public record InboxMetrics(long active,long completed,long returned) {}
     public record InboxPage(List<Task> items,long total,int page,int size,InboxMetrics metrics) {}
     @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
-    public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) {
-        if(query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
+    public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) { return inboxPage(email,query,status,documentType,"",page,size); }
+    @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public InboxPage inboxPage(String email,String query,String status,String documentType,String action,int page,int size) {
+        if(!Set.of("","REVIEW","APPROVE").contains(action) || query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
             || !Set.of("","T1","T2","T3").contains(documentType) || page<0 || page>1000000 || size<1 || size>100)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revise los filtros de la bandeja.");
         UUID actor=accounts.current(email).id();
         String from=" FROM review_task t JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id "
             + "JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id "
             + "WHERE t.actor_id=? AND t.status IN ('ACTIVE','COMPLETED','RETURNED') AND g.active";
+        if(action.equals("REVIEW")) from+=" AND t.stage_action IN ('REVIEW','VALIDATE')";
+        else if(action.equals("APPROVE")) from+=" AND t.stage_action='APPROVE'";
         var counts=jdbc.queryForMap("SELECT count(*) FILTER(WHERE t.status='ACTIVE') AS active,count(*) FILTER(WHERE t.status='COMPLETED') AS completed,count(*) FILTER(WHERE t.status='RETURNED') AS returned"+from,actor);
         String filtered=from+" AND (?='' OR t.status=?) AND (?='' OR w.document_type=?) "
             + "AND (?='' OR position(? in lower(w.title||' '||g.name||' '||p.name))>0)";

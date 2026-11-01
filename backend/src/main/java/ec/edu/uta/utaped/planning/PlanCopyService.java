@@ -68,8 +68,8 @@ public class PlanCopyService {
             jdbc.update("UPDATE work_plan SET justification=?,objective=?,privacy_notice_enabled=(SELECT privacy_notice_enabled FROM work_plan WHERE id=?),attachments_enabled=false,row_version=row_version+1,updated_at=now() WHERE id=?",source.justification(),source.objective(),sourceId,created.id());
             jdbc.update("UPDATE document_structure target SET revision=source.revision,sections=source.sections,contents=source.contents FROM document_structure source WHERE source.work_plan_id=? AND target.work_plan_id=?",sourceId,created.id());
             if(savedMatrix) {
-                var rows=matrix.activities().stream().map(a->new ActivityModels.Activity(UUID.randomUUID(),a.catalogId(),a.title(),a.category(),a.mandatory(),a.startsOn(),a.endsOn(),a.responsibleIds(),a.collective(),a.resources(),a.means())).toList();
-                var save=new ActivityModels.Save(plans.get(created.id(),email).rowVersion(),matrix.source(),rows);
+                var rows=matrix.activities().stream().map(a->new ActivityModels.Activity(UUID.randomUUID(),a.catalogId(),a.title(),a.category(),a.mandatory(),a.startsOn(),a.endsOn(),a.responsibleIds(),a.collective(),a.resources(),a.means(),a.context())).toList();
+                var save=new ActivityModels.Save(plans.get(created.id(),email).rowVersion(),matrix.source(),rows,matrix.note());
                 if(!validator.validate(save).isEmpty())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Complete las actividades guardadas del origen antes de copiarlas.");
                 activities.save(created.id(),email,save);
             }

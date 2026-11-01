@@ -148,4 +148,19 @@ class ReportingIntegrationTests {
         System.out.println("REPORTING_LOCAL_TIMINGS_MS="+samples);
     }
 
+    @Test void upcomingDetailIsPagedAndNeverGrantsAggregateAdministratorsPrivateAccess() {
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'admin-detail@example.invalid','Administración','unused','ADMIN',false)",UUID.randomUUID());
+        var detail=reporting.upcoming(email,null,null,0,20);
+        assertEquals(detail.items().size(),detail.total());
+        assertTrue(reporting.upcoming("admin-detail@example.invalid",null,null,0,20).items().isEmpty());
+        assertEquals(400,assertThrows(org.springframework.web.server.ResponseStatusException.class,()->reporting.upcoming(email,null,null,-1,20)).getStatusCode().value());
+    }
+    @Test void activityDetailTraversesBeyondExecutiveLimitAndSeparatesPendingAndOverdue() {
+        UUID extra=createPlan();var rows=new ArrayList<String>();for(int i=0;i<8;i++) rows.add(activity(UUID.randomUUID(),today.plusDays(2),1));matrix(extra,"["+String.join(",",rows)+"]");
+        assertEquals(6,reporting.get(email,group,period,false).upcoming().size());
+        var seen=new HashSet<UUID>();
+        for(int page=0;page<3;page++) { var detail=reporting.activityDetail(email,group,period,"UPCOMING",page,3);assertEquals(9,detail.total());assertEquals(3,detail.items().size());for(var item:detail.items()) assertTrue(seen.add(item.activityId())); }
+        assertEquals(9,seen.size());assertEquals(1,reporting.activityDetail(email,group,period,"OVERDUE",0,20).total());
+        assertEquals(10,reporting.activityDetail(email,group,period,"PENDING_EVIDENCE",0,20).total());
+    }
 }

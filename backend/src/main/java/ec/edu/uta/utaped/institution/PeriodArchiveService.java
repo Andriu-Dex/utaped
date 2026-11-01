@@ -56,12 +56,17 @@ public class PeriodArchiveService {
             SELECT file_id FROM document_artifact WHERE work_plan_id=?
             UNION SELECT file_id FROM signed_document_artifact WHERE work_plan_id=?
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=?
+            UNION SELECT original_file_id FROM document_attachment WHERE work_plan_id=? AND original_file_id IS NOT NULL
             UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
             UNION SELECT file_id FROM formal_submission WHERE work_plan_id=?
             UNION SELECT current_file_id FROM document_review WHERE work_plan_id=?
             UNION SELECT t.output_file_id FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE r.work_plan_id=? AND t.output_file_id IS NOT NULL
             ORDER BY 1
-            """,UUID.class,document,document,document,document,document,document,document));
+            """,UUID.class,document,document,document,document,document,document,document,document));
+    }
+    private String extension(UUID file) {
+        var types=jdbc.queryForList("SELECT original_media_type FROM document_attachment WHERE original_file_id=? LIMIT 1",String.class,file);
+        return types.isEmpty()?".pdf":types.getFirst().equals("image/png")?".png":".jpg";
     }
     private Map<String,Object> documentMetadata(UUID document) {
         var data=new LinkedHashMap<String,Object>();
@@ -73,6 +78,7 @@ public class PeriodArchiveService {
         data.put("executionReport",rows("SELECT * FROM execution_report WHERE id=?",document));
         data.put("artifacts",rows("SELECT * FROM document_artifact WHERE work_plan_id=? ORDER BY created_at,id",document));
         data.put("authorSignatures",rows("SELECT * FROM signed_document_artifact WHERE work_plan_id=? ORDER BY signed_at,id",document));
+        data.put("activityProposals",rows("SELECT * FROM activity_proposal WHERE source_document_id=? ORDER BY created_at,id",document));
         data.put("attachments",rows("SELECT * FROM document_attachment WHERE work_plan_id=? ORDER BY sort_order,id",document));
         data.put("evidence",rows("SELECT * FROM execution_evidence WHERE work_plan_id=? ORDER BY uploaded_at,id",document));
         data.put("extensions",rows("SELECT * FROM deadline_extension_history WHERE work_plan_id=? ORDER BY created_at,id",document));
@@ -119,7 +125,7 @@ public class PeriodArchiveService {
             for(var document:documents) {
                 String prefix="documents/"+document+"/";
                 entry(zip,prefix+"manifest.json",metadata(documentMetadata(document)),total);
-                for(var file:fileIds(document)) entry(zip,prefix+"files/"+file+".pdf",files.read(file),total);
+                for(var file:fileIds(document)) entry(zip,prefix+"files/"+file+extension(file),files.read(file),total);
             }
             zip.finish();
             var stored=files.put(output.toByteArray(),"period-"+period+".zip",0);
@@ -199,9 +205,10 @@ public class PeriodArchiveService {
             SELECT current_file_id FROM document_review WHERE work_plan_id=? AND status='APPROVED'
             UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL
+            UNION SELECT original_file_id FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL AND original_file_id IS NOT NULL
             UNION SELECT a.file_id FROM document_artifact a JOIN work_plan w ON w.id=a.work_plan_id WHERE w.id=? AND w.scope_id IS NULL
             UNION SELECT a.file_id FROM signed_document_artifact a JOIN work_plan w ON w.id=a.work_plan_id WHERE w.id=? AND w.scope_id IS NULL
-            """,UUID.class,document,document,document,document,document)));
+            """,UUID.class,document,document,document,document,document,document)));
         // ADMIN is not a document grant. Re-authorize at every download; never expose the full internal ZIP.
         var archive=archives.getFirst();
         try(var source=new ZipInputStream(new ByteArrayInputStream(files.read((UUID)archive.get("file_id"))));var output=new ByteArrayOutputStream();var zip=new ZipOutputStream(output)) {
@@ -214,7 +221,7 @@ public class PeriodArchiveService {
                 if(parts.length<3||!parts[0].equals("documents")) continue;
                 UUID document=UUID.fromString(parts[1]);
                 if(permitted.contains(document)) {
-                    if(parts.length==4&&parts[2].equals("files")&&!downloadable.get(document).contains(UUID.fromString(parts[3].replace(".pdf","")))) continue;
+                    if(parts.length==4&&parts[2].equals("files")&&!downloadable.get(document).contains(UUID.fromString(parts[3].substring(0,parts[3].lastIndexOf('.'))))) continue;
                     entry(zip,item.getName(),source.readAllBytes(),total);
                 }
             }

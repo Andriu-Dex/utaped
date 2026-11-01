@@ -34,7 +34,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("UPDATE work_plan SET scope_id=? WHERE id=?",scope,id);
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?)",id,user,user);
         for(String type:List.of("T1","T2")) {
-            var definition=new Definition("Flujo de período "+type,List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW","PERSON",List.of(reviewer),null,"",false)));
+            var definition=new Definition("Flujo de período "+type,List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW","COLLEGIATE",List.of(reviewer),null,"Órgano de prueba",false)));
             workflows.save(group,type,email,new Save(0L,definition));workflows.configure(group,type,email,new Version(1L));
             assignments.assign(scope,type,email,new PeriodWorkflowService.Assign(workflows.get(group,type,email).current().id(),0L));
         }
@@ -142,7 +142,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
     }
     @Test void lateExecutionFlowIsExplicitOneTimeAndDoesNotChangeFrozenPlanWorkflow() {
         configuredScope();assignments.activate(period,email,new PeriodWorkflowService.Version(0L));var before=snapshots.capture(group,scope,"T1");
-        var definition=new Definition("Ejecución del período",List.of(new Stage(UUID.randomUUID(),"Validación","APPROVE","PERSON",List.of(reviewer),null,"",false)));
+        var definition=new Definition("Ejecución del período",List.of(new Stage(UUID.randomUUID(),"Validación","APPROVE","COLLEGIATE",List.of(reviewer),null,"Órgano de prueba",false)));
         workflows.save(group,"T3",email,new Save(0L,definition));workflows.configure(group,"T3",email,new Version(1L));
         var revision=workflows.get(group,"T3",email).current();assignments.assign(scope,"T3",email,new PeriodWorkflowService.Assign(revision.id(),0L));
         assertNotNull(snapshots.capture(group,scope,"T3"));assertEquals(before,snapshots.capture(group,scope,"T1"));
@@ -159,7 +159,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         UUID upe=positions.create(email,new PositionService.PositionInput("UPE_RESPONSIBLE","Responsable UPE",true));
         assertEquals(400,assertThrows(ResponseStatusException.class,()->positions.assign(period,email,new PositionService.AssignmentInput(upe,null,facultyHolder))).getStatusCode().value());
         for(String type:List.of("T1","T2")) {
-            var definition=new Definition("Flujo por cargo "+type,List.of(new Stage(UUID.randomUUID(),"Revisión UPE","REVIEW","POSITION",List.of(),null,"",false,null,upe)));
+            var definition=new Definition("Flujo por cargo "+type,List.of(new Stage(UUID.randomUUID(),"Revisión UPE","REVIEW","POSITION",List.of(),null,"",true,null,upe)));
             workflows.save(group,type,email,new Save(0L,definition));workflows.configure(group,type,email,new Version(1L));
             assignments.assign(scope,type,email,new PeriodWorkflowService.Assign(workflows.get(group,type,email).current().id(),0L));
         }
@@ -180,7 +180,7 @@ class PeriodControlIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,'candidate@example.invalid','Docente nuevo','unused','USER',false)",candidate);
         assertEquals(403,assertThrows(ResponseStatusException.class,()->organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L))).getStatusCode().value());
         organization.member(scope,email,new OrganizationService.MemberInput(coordinator,"COORDINATOR","Coordinación",true,0L,true));
-        assertEquals(400,assertThrows(ResponseStatusException.class,()->organization.candidates(scope,coordinatorEmail,"D")).getStatusCode().value());
+        assertTrue(organization.candidates(scope,coordinatorEmail,"D").stream().anyMatch(c->candidate.equals(c.get("id"))));
         var found=organization.candidates(scope,coordinatorEmail,"docente nuevo");assertTrue(found.stream().anyMatch(c->candidate.equals(c.get("id"))));assertFalse(found.getFirst().containsKey("username"));
         organization.member(scope,coordinatorEmail,new OrganizationService.MemberInput(candidate,"MEMBER","Docente",true,0L));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active",Integer.class,scope,candidate));
