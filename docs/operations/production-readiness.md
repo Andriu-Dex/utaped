@@ -98,3 +98,11 @@ La entrega del 2026-10-13 añade CAPTCHA sonoro sin variables nuevas; reconstrui
 [Reporte de aceptación](../reports/2026-10-12-06-role-acceptance-and-operational-readiness.md). Se verificaron respaldos/restauración de datos ficticios, HTTPS de prueba y un PDF firmado recuperado. Para operar faltan los insumos reales anteriores, prueba de envío a un destinatario autorizado, acuerdo de retención/RPO/RTO y ensayo institucional con datos autorizados. No se acredita capacidad de carga por las lecturas acotadas de /healthz.
 
 Referencias técnicas: [Nginx HTTPS](https://nginx.org/en/docs/http/configuring_https_servers.html), [merge de Compose](https://docs.docker.com/reference/compose-file/merge/), [pg_restore 18](https://www.postgresql.org/docs/18/app-pgrestore.html).
+
+## Revisión de dependencias locales — 2026-10-28
+
+El runtime productivo sirve el frontend compilado en Nginx y utiliza rutas relativas `/api`; no requiere Vite, Playwright, Python ni la carpeta externa de prototipos para atender usuarios. Python/OpenSSL/Docker son herramientas del operador para validación y respaldo. Las plantillas y fuentes se empaquetan en la aplicación/imagen, y documentos/BD utilizan volúmenes persistentes. No copiar los datos de ejemplo al despliegue institucional.
+
+El preflight rechaza URL pública loopback/indefinida o `.invalid`, SMTP local/de ejemplo, remitente `.invalid`, perfiles/credenciales/documentos de semillas y servicios internos publicados. `--allow-local-fixture` es exclusivamente para el ensayo HTTPS aislado: devuelve `localFixture=true` y `deploymentConfiguration=false`; no usar esa opción para la validación de una entrega. Las direcciones privadas institucionales siguen siendo válidas.
+
+Producción admite `SMTP_USER`/`SMTP_PASS` como alias; los valores no vacíos de `SMTP_USERNAME`/`SMTP_PASSWORD` tienen prioridad. Configurar `.env.production` de forma privada: las credenciales añadidas a `.env.sample` no se copian automáticamente al despliegue. La aceptación SMTP local no prueba DNS/TLS/firewall, entrega al buzón ni operación en el servidor final. Permanecen necesarios los insumos y pruebas descritos al inicio de este documento.

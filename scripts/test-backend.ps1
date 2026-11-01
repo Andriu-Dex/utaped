@@ -1,4 +1,4 @@
-﻿param([switch]$KeepOnFailure)
+﻿param([switch]$KeepOnFailure, [string]$TestPattern)
 $ErrorActionPreference = 'Stop'
 $failed = $true
 $result = 1
@@ -6,7 +6,11 @@ Push-Location (Split-Path $PSScriptRoot -Parent)
 try {
     docker volume create utaped-maven-cache | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar la caché Maven.' }
-    docker compose -f compose.test.yml up --abort-on-container-exit --exit-code-from tests --attach tests
+    if ($TestPattern) {
+        docker compose -f compose.test.yml run --rm tests mvn -B -q "-Dtest=$TestPattern" test
+    } else {
+        docker compose -f compose.test.yml up --abort-on-container-exit --exit-code-from tests --attach tests
+    }
     $result = $LASTEXITCODE
     $failed = $result -ne 0
 } finally {

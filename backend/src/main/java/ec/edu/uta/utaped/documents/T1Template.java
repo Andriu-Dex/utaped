@@ -186,7 +186,7 @@ public class T1Template {
         var matrixColumns=all(table,"gridCol");
         for(int i=0;i<matrixColumns.size();i++)matrixColumns.get(i).setAttributeNS(W,"w:w",String.valueOf(matrixWidths[i]));
         InstitutionalTables.apply(table);result.add(table);text(source.get(43),"Fuente: "+s.matrixSource());text(source.get(44),"Elaborado por: "+s.elaboratedBy());result.add(source.get(43));result.add(source.get(44));
-        if(s.privacyNoticeEnabled()) result.add(paragraph(source.get(47),"Nota: Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales."));
+        if(s.matrixNote()!=null || s.privacyNoticeEnabled()) result.add(paragraph(source.get(47),"Nota: "+(s.matrixNote()==null?"Los datos proporcionados serán tratados conforme a la Ley Orgánica de Protección de Datos Personales, garantizando su confidencialidad, seguridad y uso responsable, y serán utilizados exclusivamente para fines institucionales.":s.matrixNote())));
         result.add(source.get(48));
         // The source's optional-annex numbering has placeholder color/size.
         // Use the same paragraph-mark typography as the other institutional headings.

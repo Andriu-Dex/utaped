@@ -26,13 +26,13 @@ public class DevelopmentDocuments implements ApplicationRunner {
     private final JdbcTemplate jdbc; private final WorkPlanService plans; private final ActivityService activities;
     private final AttachmentService attachments; private final ArtifactService artifacts; private final CertificateBindings bindings;
     private final AuthorSignatureService signatures; private final ReviewService reviews; private final EvidenceService evidence;
-    private final ReportService reports; private final PeriodWorkflowService periods; private final ec.edu.uta.utaped.audit.AuditService audit;
+    private final ExecutionReportService execution; private final ReportService reports; private final PeriodWorkflowService periods; private final ec.edu.uta.utaped.audit.AuditService audit;
     private static final String AUTHOR="principal@utaped.example.invalid",ADMIN="admin@utaped.example.invalid";
     public DevelopmentDocuments(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,AttachmentService attachments,
         ArtifactService artifacts,CertificateBindings bindings,AuthorSignatureService signatures,ReviewService reviews,
-        EvidenceService evidence,ReportService reports,PeriodWorkflowService periods,ec.edu.uta.utaped.audit.AuditService audit) {
+        EvidenceService evidence,ReportService reports,ExecutionReportService execution,PeriodWorkflowService periods,ec.edu.uta.utaped.audit.AuditService audit) {
         this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.attachments=attachments;this.artifacts=artifacts;
-        this.bindings=bindings;this.signatures=signatures;this.reviews=reviews;this.evidence=evidence;this.reports=reports;this.periods=periods;this.audit=audit;
+        this.execution=execution;this.bindings=bindings;this.signatures=signatures;this.reviews=reviews;this.evidence=evidence;this.reports=reports;this.periods=periods;this.audit=audit;
     }
     @Override @Transactional(rollbackFor=Exception.class) public void run(ApplicationArguments args) throws Exception {
         if(!"utaped_dev".equals(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Example documents require utaped_dev");
@@ -52,11 +52,7 @@ public class DevelopmentDocuments implements ApplicationRunner {
         var binding=bindings.register(DevelopmentSeed.id("principal"),ADMIN,new CertificateBindings.Register(StoredFiles.hash(fixture.certificate().getEncoded()),true,"Certificado efímero de ejemplo, sin validez institucional",previous==null?null:previous.id()));
         try {
             submit(reviewing,fixture);submit(approved,fixture);
-            for(String role:List.of("reviewer","approver")) {
-                String actor=role+"@utaped.example.invalid";
-                var task=reviews.inbox(actor).stream().filter(t->t.documentId().equals(approved)).findFirst().orElseThrow();
-                reviews.decide(task.id(),actor,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()));
-            }
+            approve(approved,fixture);
         } finally {
             bindings.revoke(DevelopmentSeed.id("principal"),binding.id(),ADMIN);
             if(previous!=null) bindings.register(DevelopmentSeed.id("principal"),ADMIN,new CertificateBindings.Register(previous.fingerprint(),true,previous.verificationNote(),null));
@@ -64,10 +60,20 @@ public class DevelopmentDocuments implements ApplicationRunner {
         }
         for(var activity:activities.get(approved,AUTHOR).activities())
             evidence.upload(approved,activity.id(),0,0,AUTHOR,new Upload("evidencia-ejemplo.pdf",pdf("Evidencia de seguimiento - ejemplo",activity.title())));
+        var cut=execution.create(approved,AUTHOR);var cutData=execution.get(cut.id(),AUTHOR).data();
+        var cutResults=cutData.results().stream().map(r->new ReportService.Result(r.activityId(),BigDecimal.valueOf(100),"Resultado de ejemplo con respaldo documental.")).toList();
+        execution.save(cut.id(),AUTHOR,new ExecutionReportService.Save(cut.rowVersion(),cut.title(),cutData.activityIds(),cutResults,
+            "Se revisó el avance de las actividades del corte de ejemplo.","Equipo organizado.","Tiempo disponible limitado.","Coordinación entre integrantes.","Cambios de cronograma.",
+            "Se documentó el seguimiento del corte.","Mantener la revisión periódica.",List.of(),""));
+        attachments.settings(cut.id(),AUTHOR,new AttachmentModels.Settings(plans.get(cut.id(),AUTHOR).rowVersion(),false,true));
+        artifacts.generate(cut.id(),AUTHOR,new ArtifactModels.Generate(plans.get(cut.id(),AUTHOR).rowVersion()));
+        var cutFixture=certificate();
+        try { submit(cut.id(),cutFixture);approve(cut.id(),cutFixture); }
+        finally { Arrays.fill(cutFixture.body(),(byte)0); }
         var report=reports.create(approved,AUTHOR);var data=reports.get(report.id(),AUTHOR).data();
         var results=data.results().stream().map(r->new ReportService.Result(r.activityId(),BigDecimal.valueOf(100),"Actividad documentada con evidencia de ejemplo. No acredita ejecución institucional real.")).toList();
         reports.save(report.id(),AUTHOR,new ReportService.Save(report.rowVersion(),"Informe: seguimiento académico - Ejemplo", "Escenario de desarrollo derivado del Plan aprobado de ejemplo. Período Julio-Diciembre 2026.",
-            "Se documentaron las actividades previstas y se organizó su evidencia para revisión.","Mantener revisiones periódicas y mejorar la organización de los registros.",results,List.of()));
+            "Se documentaron las actividades previstas y se organizó su evidencia para revisión.","Mantener revisiones periódicas y mejorar la organización de los registros.",results,List.of(),List.of(cut.id())));
         attachments.settings(report.id(),AUTHOR,new AttachmentModels.Settings(plans.get(report.id(),AUTHOR).rowVersion(),false,true));
         artifacts.generate(report.id(),AUTHOR,new ArtifactModels.Generate(plans.get(report.id(),AUTHOR).rowVersion()));
         audit.record(DevelopmentSeed.id("admin"),"DEVELOPMENT_DOCUMENTS_CREATED",draft);
@@ -90,6 +96,14 @@ public class DevelopmentDocuments implements ApplicationRunner {
         attachments.upload(doc,AUTHOR,plans.get(doc,AUTHOR).rowVersion(),DevelopmentSeed.id("annex-"+scenario),"Registro de seguimiento de ejemplo",new Upload("registro-ejemplo.pdf",pdf("Registro de seguimiento - ejemplo",scope.groupName())));
         artifacts.generate(doc,AUTHOR,new ArtifactModels.Generate(plans.get(doc,AUTHOR).rowVersion()));
         return doc;
+    }
+    private void approve(UUID doc,Fixture fixture) {
+        for(String role:List.of("reviewer","approver")) {
+            String actor=role+"@utaped.example.invalid";
+            var task=reviews.inbox(actor).stream().filter(t->t.documentId().equals(doc)&&t.status().equals("ACTIVE")).findFirst().orElseThrow();
+            if(task.requiresSignature()) reviews.sign(task.id(),actor,task.rowVersion(),reviews.state(task.reviewId(),actor).pdfHash(),UUID.randomUUID(),fixture.body().clone(),true);
+            else reviews.decide(task.id(),actor,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()));
+        }
     }
     private void submit(UUID doc,Fixture fixture) {
         var artifact=artifacts.list(doc,AUTHOR).getFirst();var state=signatures.state(doc,artifact.id(),AUTHOR,true);

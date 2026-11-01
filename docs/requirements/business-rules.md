@@ -1,5 +1,7 @@
 # Reglas de negocio
 
+Nota de vigencia (auditoría 2026-10-27): este documento conserva requisitos/estados heredados. No mantiene abiertos comportamientos ya resueltos por decisiones posteriores. Consultar [requisitos vigentes](../../requirements.md), [matriz de auditoría](../testing/integral-audit-matrix.md) y [estado de entrega](../../implementation-status.md); las reglas de firma, autoría, cinco pasos y custodia actuales prevalecen sobre las menciones históricas.
+
 Estado HEREDADO; no acredita ratificación institucional nueva.
 
 - BR-001: mutaciones con ID explícito y autorización sobre objeto; nunca selección global implícita.

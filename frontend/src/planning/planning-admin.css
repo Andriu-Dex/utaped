@@ -31,6 +31,27 @@
   font-size: 0.94rem;
 }
 
+.danger-text {
+  color: var(--danger, #c53030) !important;
+  border-color: rgba(197, 48, 48, 0.3) !important;
+}
+
+.danger-text:hover:not(:disabled) {
+  background: rgba(197, 48, 48, 0.08) !important;
+  border-color: var(--danger, #c53030) !important;
+}
+
 :root[data-theme='dark'] .admin-catalog-item:hover {
   background: rgba(46, 148, 218, 0.06);
+}
+
+:root[data-theme='dark'] .danger-text {
+  color: #ff9ca8 !important;
+  border-color: rgba(255, 120, 136, 0.3) !important;
+}
+
+:root[data-theme='dark'] .danger-text:hover:not(:disabled) {
+  background: rgba(183, 57, 80, 0.2) !important;
+  border-color: #ff9ca8 !important;
+  color: #ffb9c4 !important;
 }

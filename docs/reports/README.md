@@ -1,5 +1,47 @@
 # Reportes
 
+- [31/10/2026 — Implementación de correcciones OCT30](2026-10-31-55-client-corrections-implementation.md).
+
+- [Plan tras la transcripción corregida del cliente](2026-10-31-54-corrected-client-meeting-plan.md).
+
+- [Revisión frontend y cierre técnico](2026-10-30-53-frontend-closeout-review.md).
+
+- [Checklist de requisitos de reuniones del cliente](2026-10-30-51-client-meeting-requirements-checklist.md).
+
+- [Rediseño visual de la revisión documental](2026-10-30-50-document-review-modern-ui-refinement.md).
+
+- [Rendimiento y carga de reportes](2026-10-30-49-report-loading-performance.md).
+
+- [Separación de Inicio y Reportes: frontend](2026-10-30-48-home-reporting-separation-frontend.md).
+
+- [Separación de Inicio y Reportes: backend](2026-10-30-47-home-reporting-separation-backend.md).
+
+- [Observaciones editables y etiquetas de revisión](2026-10-30-46-editable-review-observations-and-labels.md).
+
+- [Panel administrativo de supervisión](2026-10-30-45-administrative-executive-overview.md).
+
+- [Revisión de interfaz y cierre de cambios](2026-10-29-44-interface-review-and-local-commits.md).
+
+- [Pendientes personales, comparación y comprobación de firma](2026-10-28-43-personal-work-comparison-and-signing-checklist.md).
+
+- [Dependencias locales y preparación productiva](2026-10-28-42-production-local-dependency-review.md).
+
+- [SMTP externo local](2026-10-28-41-external-smtp-local-configuration.md).
+
+- [Recuperación de acceso y entrega de correo](2026-10-28-40-recovery-confirmation-and-mail-delivery.md).
+
+- [Panel de gestión y reportes](2026-10-28-39-management-dashboard-and-reports.md).
+
+- [Revisión de navegación de visores](2026-10-28-38-staged-viewer-navigation-review.md).
+
+- [CAPTCHA de cinco caracteres](2026-10-27-37-five-character-captcha.md).
+
+- [Motivos de solo lectura y revisión de interfaz](2026-10-27-36-read-only-reasons-and-interface-review.md).
+
+- [Seguimiento documental separado de elaboración](2026-10-27-35-document-follow-up-menu.md).
+
+- [Auditoría integral de producto y recuperación](2026-10-27-34-integral-product-audit.md).
+
 - [Consulta y revisión separadas de elaboración](2026-10-27-33-document-consultation-and-review.md).
 
 - [Apartado de anexos sin archivos](2026-10-27-32-empty-annex-section.md).
@@ -156,3 +198,5 @@ Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alc
 - [2026-10-12 — Administración contextual, historial y avisos](2026-10-12-03-contextual-administration-and-notices.md).
 
 - [2026-10-12 — Importación administrativa y evidencias externas](2026-10-12-04-user-imports-and-external-evidence.md).
+
+- [2026-10-30 — Cierre backend y entrega a Antigravity](2026-10-30-52-backend-closeout-and-frontend-handoff.md).

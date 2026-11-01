@@ -4,9 +4,16 @@ import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 import { TemporaryPasswordReset } from './TemporaryPasswordReset'
 import { Icon } from '../shared/Icon'
+const groupTypeLabels: Record<string, string> = {
+  COMMISSION: 'Comisión',
+  UNIT: 'Unidad académica',
+  CLUB: 'Club',
+  OTHER: 'Otro',
+}
+
 interface Directory { items: User[]; total: number; page: number; size: number }
 export function DirectoryAdministration({ mode, groups, reload, suggestedQuery, onChange, onDirtyChange }: { mode: 'users' | 'groups'; groups: Group[]; reload: number; suggestedQuery: string; onChange: () => Promise<void>; onDirtyChange: (dirty: boolean) => void }) {
-  const [query, setQuery] = useState(''); const [filter, setFilter] = useState({ query: '', active: '', page: 0 }); const [directory, setDirectory] = useState<Directory | null>(null)
+  const [query, setQuery] = useState(''); const [groupSearch, setGroupSearch] = useState(''); const [filter, setFilter] = useState({ query: '', active: '', page: 0 }); const [directory, setDirectory] = useState<Directory | null>(null)
   const [user, setUser] = useState<User | null>(null); const [group, setGroup] = useState<Group | null>(null)
   const [baseline, setBaseline] = useState(''); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [refresh, setRefresh] = useState(0)
   const [resetUser,setResetUser] = useState<User | null>(null); const [resetDirty,setResetDirty] = useState(false)
@@ -46,12 +53,47 @@ export function DirectoryAdministration({ mode, groups, reload, suggestedQuery, 
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
-    {mode === 'users' && <><form className="filter-toolbar" onSubmit={e => { e.preventDefault(); setFilter(f => ({ ...f, query, page: 0 })) }}><label>Buscar usuarios<input maxLength={200} value={query} placeholder="Nombre, usuario o correo institucional…" onChange={e => setQuery(e.target.value)} /></label><label>Estado de acceso<select value={filter.active} onChange={e => setFilter(f => ({ ...f, active: e.target.value, page: 0 }))}><option value="">Todos los estados</option><option value="true">Solo activos</option><option value="false">Solo inactivos</option></select></label><button><Icon name="search" size={16} />Buscar usuarios</button></form>
-    {directoryLoading ? <p role="status">Cargando directorio…</p> : directoryFailed || !directory ? <div className="empty-state"><p>No se pudo cargar el directorio.</p><button type="button" className="secondary" onClick={() => { setDirectoryLoading(true); setError(''); setRefresh(n => n + 1) }}>Reintentar directorio</button></div> : <><div className="table-scroll"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Usuario</th><th>Acceso</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{directory.items.map(u => <tr key={u.id} className={resetUser?.id === u.id ? 'row-selected' : undefined}><td><span className="user-avatar-badge" aria-hidden="true">{u.display_name.charAt(0).toUpperCase()}</span><span>{u.display_name}</span></td><td>{u.email}</td><td>{u.username ?? "Pendiente"}</td><td><span className={'status-badge ' + (u.system_role === 'ADMIN' ? 'role-admin' : '')}>{u.system_role === 'ADMIN' ? 'Administrador' : 'Usuario'}</span></td><td><span className={'status-badge ' + (u.active ? 'active' : '')}>{u.active ? 'Activo' : 'Inactivo'}</span></td><td className="row-actions"><button type="button" disabled={busy} className="secondary table-action-icon-btn" title={'Editar ' + u.display_name} aria-label={'Editar perfil de ' + u.display_name} onClick={() => editUser(u)}><Icon name="edit" size={16} /></button>{' '}<button disabled={busy} className="secondary" onClick={() => void toggle(u)} aria-label={(u.active ? 'Desactivar ' : 'Activar ') + u.display_name}>{u.active ? 'Desactivar' : 'Activar'}</button>{' '}<button className="secondary" disabled={busy || !u.active} title={'Restablecer acceso de ' + u.display_name} aria-label={'Restablecer acceso de ' + u.display_name} onClick={async () => { if ((await canLeave())) { setUser(null); setGroup(null); setResetDirty(false); setResetUser(u); setNotice(''); setError('') } }}><Icon name="lock" size={16} /></button></td></tr>)}</tbody></table></div>{directory.items.length === 0 && <p>No hay usuarios que coincidan.</p>}
-      <div className="pagination"><span>{directory.total} usuarios · Página {directory.page + 1}</span><button className="secondary" disabled={directory.page === 0} onClick={() => setFilter(f => ({ ...f, page: f.page - 1 }))}>Usuarios anteriores</button><button className="secondary" disabled={(directory.page + 1) * directory.size >= directory.total} onClick={() => setFilter(f => ({ ...f, page: f.page + 1 }))}>Usuarios siguientes</button></div></>}
+    {mode === 'users' && <><form className="filter-toolbar" onSubmit={e => { e.preventDefault(); setFilter(f => ({ ...f, query, page: 0 })) }}><label>Buscar usuarios<input maxLength={200} value={query} placeholder="Nombre, usuario o correo institucional…" onChange={e => { const value = e.currentTarget.value; setQuery(value); setDirectory(null); setDirectoryLoading(true); setFilter(f => ({ ...f, query: value, page: 0 })) }} /></label><label>Estado de acceso<select value={filter.active} onChange={e => setFilter(f => ({ ...f, active: e.target.value, page: 0 }))}><option value="">Todos los estados</option><option value="true">Solo activos</option><option value="false">Solo inactivos</option></select></label><button disabled={directoryLoading}><Icon name="search" size={16} />Buscar usuarios</button></form>
+    {!directory && directoryLoading ? <p role="status">Cargando directorio…</p> : directoryFailed || !directory ? <div className="empty-state"><p>No se pudo cargar el directorio.</p><button type="button" className="secondary" onClick={() => { setDirectoryLoading(true); setError(''); setRefresh(n => n + 1) }}>Reintentar directorio</button></div> : <div className={'table-container-wrapper' + (directoryLoading ? ' is-searching' : '')} aria-busy={directoryLoading}><div className="table-scroll"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Usuario</th><th>Acceso</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{directory.items.map(u => <tr key={u.id} className={resetUser?.id === u.id ? 'row-selected' : undefined}><td><span className="user-avatar-badge" aria-hidden="true">{u.display_name.charAt(0).toUpperCase()}</span><span>{u.display_name}</span></td><td>{u.email}</td><td>{u.username ?? "Pendiente"}</td><td><span className={'status-badge ' + (u.system_role === 'ADMIN' ? 'role-admin' : '')}>{u.system_role === 'ADMIN' ? 'Administrador' : 'Usuario'}</span></td><td><span className={'status-badge ' + (u.active ? 'active' : '')}>{u.active ? 'Activo' : 'Inactivo'}</span></td><td className="row-actions"><button type="button" disabled={busy} className="secondary table-action-icon-btn" title={'Editar ' + u.display_name} aria-label={'Editar perfil de ' + u.display_name} onClick={() => editUser(u)}><Icon name="edit" size={16} /></button>{' '}<button disabled={busy} className="secondary" onClick={() => void toggle(u)} aria-label={(u.active ? 'Desactivar ' : 'Activar ') + u.display_name}>{u.active ? 'Desactivar' : 'Activar'}</button>{' '}<button className="secondary" disabled={busy || !u.active} title={'Restablecer acceso de ' + u.display_name} aria-label={'Restablecer acceso de ' + u.display_name} onClick={async () => { if ((await canLeave())) { setUser(null); setGroup(null); setResetDirty(false); setResetUser(u); setNotice(''); setError('') } }}><Icon name="lock" size={16} /></button></td></tr>)}</tbody></table></div>{directory.items.length === 0 && <p>No hay usuarios que coincidan.</p>}
+      <div className="pagination"><span>{directory.total} usuarios · Página {directory.page + 1}</span><button className="secondary" disabled={directory.page === 0 || directoryLoading} onClick={() => setFilter(f => ({ ...f, page: f.page - 1 }))}>Usuarios anteriores</button><button className="secondary" disabled={(directory.page + 1) * directory.size >= directory.total || directoryLoading} onClick={() => setFilter(f => ({ ...f, page: f.page + 1 }))}>Usuarios siguientes</button></div></div>}
     {resetUser && <TemporaryPasswordReset key={resetUser.id} user={resetUser} onDirtyChange={setResetDirty} onClose={async () => { if ((await canLeave())) { setResetUser(null); setResetDirty(false) } }} onComplete={async () => { setResetUser(null); setResetDirty(false); setRefresh(n => n + 1); setNotice('Acceso restablecido. Se requerirá cambiar la contraseña temporal.'); await onChange() }} />}
     </>}
-    {mode === 'groups' && <label>Perfil de grupo<select aria-label="Perfil de grupo" value={group?.id ?? ''} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; const selected = groups.find(g => g.id === nextValue); if (selected) editGroup(selected); else if ((await canLeave())) { setGroup(null); setUser(null) } }}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}{!g.active && ' · Inactivo'}</option>)}</select></label>}
+    {mode === 'groups' && (
+      <div className="groups-catalog-wrapper" style={{ marginTop: 16 }}>
+        <div className="grid" style={{ marginBottom: 16 }}>
+          <label>Perfil de grupo<select aria-label="Perfil de grupo" value={group?.id ?? ''} disabled={busy} onChange={async e => { const nextValue = e.currentTarget.value; const selected = groups.find(g => g.id === nextValue); if (selected) editGroup(selected); else if ((await canLeave())) { setGroup(null); setUser(null) } }}><option value="">Seleccione</option>{groups.map(g => <option key={g.id} value={g.id}>{g.name}{!g.active && ' · Inactivo'}</option>)}</select></label>
+          <label>Filtrar catálogo de grupos<input placeholder="Buscar por denominación o tipo…" value={groupSearch} onChange={e => setGroupSearch(e.target.value)} /></label>
+        </div>
+        <div className="table-scroll" style={{ maxHeight: 380 }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Denominación del grupo</th>
+                <th>Tipo institucional</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groups
+                .filter(g => !groupSearch || g.name.toLowerCase().includes(groupSearch.toLowerCase()) || (groupTypeLabels[g.group_type] ?? g.group_type).toLowerCase().includes(groupSearch.toLowerCase()))
+                .map(g => (
+                  <tr key={g.id} className={group?.id === g.id ? 'row-selected' : undefined}>
+                    <td><strong>{g.name}</strong></td>
+                    <td><span className="status-badge">{groupTypeLabels[g.group_type] ?? g.group_type}</span></td>
+                    <td><span className={'status-badge ' + (g.active ? 'active' : '')}>{g.active ? 'Activo' : 'Inactivo'}</span></td>
+                    <td className="row-actions">
+                      <button type="button" disabled={busy} className="secondary table-action-icon-btn" title={'Editar ' + g.name} aria-label={'Editar perfil de ' + g.name} onClick={() => editGroup(g)}>
+                        <Icon name="edit" size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
     {(user || group) && <section className="card animate-reveal" style={{ marginTop: 24, border: '1px solid var(--border)' }}><form onSubmit={e => { e.preventDefault(); void save() }}><fieldset disabled={busy}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

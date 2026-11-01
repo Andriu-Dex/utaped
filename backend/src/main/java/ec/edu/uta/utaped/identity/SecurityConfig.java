@@ -63,7 +63,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .formLogin(form -> form.loginProcessingUrl("/api/auth/login")
-                .successHandler((request,response,auth) -> { var actor=accounts.current(auth.getName()); audit.record(actor.id(),"LOGIN_SUCCEEDED",actor.id()); response.setStatus(204); })
+                .successHandler((request,response,auth) -> { request.getSession().setAttribute("utaped.lastInteractiveRequest",System.currentTimeMillis()); var actor=accounts.current(auth.getName()); audit.record(actor.id(),"LOGIN_SUCCEEDED",actor.id()); response.setStatus(204); })
                 .failureHandler((request,response,e) -> error(response,401,"Usuario o contraseña incorrectos.")))
             .logout(logout -> logout.logoutUrl("/api/auth/logout")
                 .invalidateHttpSession(true).deleteCookies("SESSION")
@@ -87,6 +87,17 @@ public class SecurityConfig {
                     }
                     var auth = SecurityContextHolder.getContext().getAuthentication();
                     if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+                        var session=request.getSession(false);
+                        if(session!=null) {
+                            long now=System.currentTimeMillis();
+                            Object last=session.getAttribute("utaped.lastInteractiveRequest");
+                            int timeout=session.getMaxInactiveInterval();
+                            if(last instanceof Long previous && timeout>0 && now-previous>=timeout*1000L)
+                                throw new ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED,"Su sesión expiró. Inicie sesión para continuar.");
+                            // The unread badge polls without user interaction; it must not keep a session alive.
+                            if(!(last instanceof Long) || !request.getMethod().equals("GET") || !request.getRequestURI().equals("/api/notifications/unread-count"))
+                                session.setAttribute("utaped.lastInteractiveRequest",now);
+                        }
                         var account = accounts.current(auth.getName());
                         var refreshed = UsernamePasswordAuthenticationToken.authenticated(auth.getPrincipal(), null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + account.systemRole())));

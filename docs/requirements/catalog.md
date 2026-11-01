@@ -1,5 +1,7 @@
 # Catálogo trazable de requisitos
 
+Nota de vigencia (auditoría 2026-10-27): este documento conserva requisitos/estados heredados. No mantiene abiertos comportamientos ya resueltos por decisiones posteriores. Consultar [requisitos vigentes](../../requirements.md), [matriz de auditoría](../testing/integral-audit-matrix.md) y [estado de entrega](../../implementation-status.md); las reglas de firma, autoría, cinco pasos y custodia actuales prevalecen sobre las menciones históricas.
+
 Actualización productiva: ver [estado de entrega](../../implementation-status.md).
 
 Extracción de la línea base; no es ratificación institucional ni catálogo atómico terminado. IDs FR-* preservados; UT-SEC-* identifican bloques antes sin ID. Declaraciones compuestas requieren desglosarse antes de implementar.

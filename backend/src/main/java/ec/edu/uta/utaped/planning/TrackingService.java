@@ -14,6 +14,10 @@ public class TrackingService {
     public record Summary(long documents,long editableDrafts,long readOnlyDocuments,long withPreview,List<Scope> groups,List<Scope> periods,WorkPlanModels.Page recent) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final WorkPlanService plans;private final boolean enforce;private final ZoneId zone;
     public TrackingService(JdbcTemplate jdbc,Accounts accounts,WorkPlanService plans,@Value("${app.planning.enforce-preparation-window:true}") boolean enforce,@Value("${app.planning.time-zone:America/Guayaquil}") String zone) { this.jdbc=jdbc;this.accounts=accounts;this.plans=plans;this.enforce=enforce;this.zone=ZoneId.of(zone); }
+    @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public WorkPlanModels.Page recent(String email,UUID groupId,UUID periodId) {
+        return plans.recent(email,groupId,periodId);
+    }
     @Transactional(readOnly=true)
     public Summary get(String email,UUID groupId,UUID periodId) {
         var actor=accounts.current(email);

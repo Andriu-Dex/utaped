@@ -1,8 +1,10 @@
+import { ReportActivityProposal } from './ReportActivityProposal'
+import { DocumentReadOnlyNotice } from './DocumentReadOnlyNotice'
 import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { StepPagination } from './StepPagination'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
 import { confirmAction } from '../shared/confirm-action'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../shared/api'
 import { Toast } from '../shared/Toast'
 import { DocumentLifecycle } from './DocumentLifecycle'
@@ -17,8 +19,9 @@ import './document-workspace.css'
 
 type Result = { activityId: string; percentage: number | null; observations: string }
 type Delegation = { purpose: string; location: string; institution: string; contact: string; contactDetails: string; topic: string; agreement: string }
-type Data = { background: string; conclusions: string; improvements: string; results: Result[]; delegations: Delegation[]; basePlanId: string; baseFormalVersion: string }
-type State = { document: WorkPlan; data: Data; activities: { id: string; title: string }[]; evidence: { requiredMedia: number; coveredMedia: number } | null }
+type ExecutionReference = { documentId: string; artifactId: string; reviewId: string; title: string; sequenceNumber: number; formalVersion: string; pdfHash: string }
+type Data = { background: string; conclusions: string; improvements: string; results: Result[]; delegations: Delegation[]; basePlanId: string; baseFormalVersion: string; executionReferences?: ExecutionReference[] }
+type State = { document: WorkPlan; data: Data; activities: { id: string; title: string }[]; evidence: { requiredMedia: number; coveredMedia: number } | null; executionOptions: ExecutionReference[] }
 const steps = ['Información general', 'Antecedentes', 'Resultados', 'Conclusiones', 'Oportunidades de mejora', 'Delegaciones', 'Anexos', 'Previsualizar y firmar']
 
 export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDirtyChange, onDocumentOpen }: { initial: WorkPlan; onDocumentOpen?: (document: WorkPlan) => void; initialStep?: string | number | null; onStepChange?: (step: string) => void; onBack: () => void; onDirtyChange: (dirty: boolean) => void }) {
@@ -50,24 +53,44 @@ export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDir
     }
   }
   const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false); const [reload, setReload] = useState(0)
+  const contentForm = useRef<HTMLFormElement>(null)
+  const [autosaving, setAutosaving] = useState(false), [autosaveFailed, setAutosaveFailed] = useState('')
+  const writeLock = useRef(false), mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [loadFailed, setLoadFailed] = useState(false)
   const contentDirty = !!state && (JSON.stringify(state.data) !== JSON.stringify(draft) || state.document.title !== title)
+  const [proposalDirty, setProposalDirty] = useState(false)
   const [authorsDirty, setAuthorsDirty] = useState(false)
-  const dirty = contentDirty || lifecycleDirty || authorsDirty
+  const dirty = autosaving || proposalDirty || contentDirty || lifecycleDirty || authorsDirty
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   useEffect(() => { const leave = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }; window.addEventListener('beforeunload', leave); return () => window.removeEventListener('beforeunload', leave) }, [dirty])
   useEffect(() => { let active = true; api<State>('/reports/' + document.id).then(s => { if (active) { setState(s); setDraft(s.data); setTitle(s.document.title); setLoadFailed(false) } }).catch(e => { if (active) { setError(e.message); setLoadFailed(true) } }); return () => { active = false } }, [document.id, reload])
+  useEffect(() => {
+    const serialized = JSON.stringify({ title, draft })
+    if (!state || !draft || !contentDirty || !state.document.editable || busy || autosaving || authorsDirty || panel !== 'edit' || !title.trim() || autosaveFailed === serialized) return
+    if (contentForm.current && !contentForm.current.checkValidity()) return
+    const sentDraft = JSON.stringify(draft), sentTitle = title
+    const timer = window.setTimeout(() => {
+      if (writeLock.current) return
+      writeLock.current = true; setAutosaving(true)
+      api<State>('/reports/' + document.id, 'PUT', { ...draft, executionReportIds: (draft.executionReferences ?? []).map(c => c.documentId), title, rowVersion: state.document.rowVersion }).then(value => {
+        if (!mounted.current) return
+        setState(value); setDraft(current => JSON.stringify(current) === sentDraft ? value.data : current); setTitle(current => current === sentTitle ? value.document.title : current); setAutosaveFailed('')
+      }).catch(e => { if (mounted.current) { setAutosaveFailed(serialized); setError(e.message || 'No se pudo autoguardar; sus cambios se conservan.') } }).finally(() => { writeLock.current = false; if (mounted.current) setAutosaving(false) })
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [state, draft, title, contentDirty, busy, autosaving, authorsDirty, panel, autosaveFailed, document.id])
   async function save(event: FormEvent) {
-    event.preventDefault(); if (!state || !draft) return; setBusy(true); setError('')
-    try { const s = await api<State>('/reports/' + document.id, 'PUT', { ...draft, title, rowVersion: state.document.rowVersion }); setState(s); setDraft(s.data); setNotice('Informe guardado. El Plan base se conserva.'); }
+    event.preventDefault(); if (writeLock.current) return; if (!state || !draft) return; setBusy(true); setError('')
+    try { const s = await api<State>('/reports/' + document.id, 'PUT', { ...draft, executionReportIds: (draft.executionReferences ?? []).map(c => c.documentId), title, rowVersion: state.document.rowVersion }); setState(s); setDraft(s.data); setNotice('Informe guardado. El Plan base se conserva.'); }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo guardar. Sus cambios se conservan.') } finally { setBusy(false) }
   }
   const returnToReport = () => { const destination = step < 6 ? step : 5; setStep(destination); setPanel('edit', destination); setReload(r => r + 1) }
   if (panel === 'attachments') return <AttachmentEditor documentType="T2" targetDocId={document.id} onDirtyChange={onDirtyChange} onBack={returnToReport} previousLabel="Delegaciones" nextLabel="Previsualizar y firmar" onPrevious={async () => returnToReport()} onNext={async () => { setStep(7); setPanel('preparation') }} />
-  if (panel === 'preparation') return <DocumentPreparation onDirtyChange={onDirtyChange} targetDocId={document.id} documentType="T2" onBack={returnToReport} onPrevious={async () => { setStep(6); setPanel('attachments') }} />
+  if (panel === 'preparation') return <DocumentPreparation onResolveRequirement={async section => { const destination = section === "Evidencias" ? 2 : Math.max(0, steps.indexOf(section)); setStep(destination); setPanel(section === "Anexos" ? "attachments" : "edit", destination); setReload(value => value + 1) }} onDirtyChange={onDirtyChange} targetDocId={document.id} documentType="T2" onBack={returnToReport} onPrevious={async () => { setStep(6); setPanel('attachments') }} />
   if (panel === 'rounds') return <ReviewHistory documentId={document.id} title={title} onBack={returnToReport} onDirtyChange={onDirtyChange} />
   if (panel === 'history') return <AuditViewer targetDocId={document.id} onBack={returnToReport} />
-  async function choose(next: number) { if (next < 0 || next >= steps.length) return; if (next >= 6 && dirty) { setError('Guarde los cambios antes de abrir anexos o firma.'); return } if (next !== 0 && authorsDirty && !(await confirmAction('Hay cambios en los elaboradores sin guardar. ¿Cambiar de paso y descartarlos?'))) return; setStep(next); if (next === 6) setPanel('attachments'); else if (next === 7) setPanel('preparation'); else setPanel('edit', next) }
+  async function choose(next: number) { if (writeLock.current) return; if (next < 0 || next >= steps.length) return; if (proposalDirty && next !== step && !(await confirmAction('¿Descartar la actividad propuesta sin enviar?'))) return; if (next >= 6 && dirty) { setError('Guarde los cambios antes de abrir anexos o firma.'); return } if (next !== 0 && authorsDirty && !(await confirmAction('Hay cambios en los elaboradores sin guardar. ¿Cambiar de paso y descartarlos?'))) return; setStep(next); if (next === 6) setPanel('attachments'); else if (next === 7) setPanel('preparation'); else setPanel('edit', next) }
   const blankDelegation: Delegation = { purpose: '', location: '', institution: '', contact: '', contactDetails: '', topic: '', agreement: '' }
   return <section>
     <header className="plan-wizard-header">
@@ -88,9 +111,10 @@ export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDir
       </div>
     </header>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
-    {!state || !draft ? loadFailed ? <div className="notice"><p>No se pudo cargar el Informe.</p><button type="button" className="secondary" onClick={() => { setError(''); setLoadFailed(false); setReload(value => value + 1) }}>Reintentar carga del Informe</button></div> : <p role="status">Cargando Informe…</p> : <><div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {state.document.formalVersion} · Ronda {state.document.reviewRound}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div><DocumentLifecycle plan={state.document} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== document.id && onDocumentOpen) onDocumentOpen(p); else { setDocument(p); setState(null); setStep(0); setReload(n => n + 1) } }} /><nav className="document-steps" aria-label="Pasos del Informe">{steps.map((label, i) => <button key={label} type="button" className="secondary" aria-current={step === i ? 'step' : undefined} onClick={() => choose(i)} disabled={busy}><span>{i + 1}</span>{label}</button>)}</nav>
-    <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PASO {step + 1} DE 8</span><h2>{steps[step]}</h2></div></div><form onSubmit={save}><fieldset disabled={busy || authorsDirty || !state.document.editable}>
+    {!state || !draft ? loadFailed ? <div className="notice"><p>No se pudo cargar el Informe.</p><button type="button" className="secondary" onClick={() => { setError(''); setLoadFailed(false); setReload(value => value + 1) }}>Reintentar carga del Informe</button></div> : <p role="status">Cargando Informe…</p> : <><div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {state.document.formalVersion} · Ronda {state.document.reviewRound}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div><DocumentLifecycle plan={state.document} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== document.id && onDocumentOpen) onDocumentOpen(p); else { setDocument(p); setState(null); setStep(0); setReload(n => n + 1) } }} /><nav className="document-steps" aria-label="Pasos del Informe">{steps.map((label, i) => <button key={label} type="button" className="secondary" aria-current={step === i ? 'step' : undefined} onClick={() => choose(i)} disabled={busy || autosaving}><span>{i + 1}</span>{label}</button>)}</nav>
+    <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PASO {step + 1} DE 8</span><h2>{steps[step]}</h2></div></div><DocumentReadOnlyNotice document={state.document} /><form ref={contentForm} onSubmit={save}><fieldset disabled={busy || authorsDirty || !state.document.editable}>
       {step === 0 && <><InstitutionalProvenance unit={state.document.institutionalUnit} career={state.document.career} unitType={state.document.institutionalUnitType} inherited /><label>Título del Informe<input required maxLength={200} value={title} onChange={e => setTitle(e.target.value)} /></label><dl className="plan-metadata"><div><dt>Plan base</dt><dd>Versión {draft.baseFormalVersion}</dd></div><div><dt>Ámbito</dt><dd>{state.document.groupName} · {state.document.career || state.document.institutionalUnit}</dd></div><div><dt>Período</dt><dd>{state.document.periodName}</dd></div><div><dt>Elaborador</dt><dd>{state.document.teacherName}</dd></div></dl><p className="field-help">Este Informe tiene identidad, artefactos y flujo propios. Sus actividades proceden del Plan aprobado.</p></>}
+      {step === 0 && <fieldset className="choice-group"><legend>Informes de ejecución de referencia</legend>{state.executionOptions.length ? state.executionOptions.map(cut => <label key={cut.documentId} className="check"><input type="checkbox" checked={draft.executionReferences?.some(c => c.documentId === cut.documentId) ?? false} onChange={e => setDraft({ ...draft, executionReferences: e.currentTarget.checked ? [...(draft.executionReferences ?? []), cut] : (draft.executionReferences ?? []).filter(c => c.documentId !== cut.documentId) })} /><span>Corte {cut.sequenceNumber} · {cut.title} · Versión {cut.formalVersion}</span></label>) : <p>Aún no hay cortes aprobados de este Plan. Puede preparar el borrador; deberá seleccionar un corte aprobado antes de firmar.</p>}</fieldset>}
       {step === 1 && <>
         <div className="field-header-row">
           <label htmlFor={'report-background-' + document.id}>Antecedentes</label>
@@ -155,7 +179,7 @@ export function ReportEditor({ initial, initialStep, onStepChange, onBack, onDir
         </div>
         <div className="delegation-grid">{([['purpose', 'Nombre o propósito', true], ['location', 'Ciudad, país o institución', false], ['institution', 'Entidad', false], ['contact', 'Persona y cargo de contacto', false], ['contactDetails', 'Correo o teléfono', false], ['topic', 'Tema tratado', true], ['agreement', 'Compromiso, responsable y plazo', true]] as const).map(([key, label, isFullWidth]) => <label key={key} className={isFullWidth ? 'full-width' : undefined}>{label}<input maxLength={key === 'topic' || key === 'agreement' ? 2000 : 500} required={key === 'purpose'} value={d[key]} onChange={e => setDraft({ ...draft, delegations: draft.delegations.map((v, n) => n === i ? { ...v, [key]: e.target.value } : v) })} /></label>)}</div>
       </div>)}<button type="button" className="secondary" disabled={draft.delegations.length >= 100} onClick={() => setDraft({ ...draft, delegations: [...draft.delegations, blankDelegation] })}><Icon name="plus" size={16} />Agregar delegación</button></>}
-      <div className="document-save"><span role="status">{dirty ? 'Cambios sin guardar' : 'Contenido guardado'}</span><button disabled={!contentDirty || authorsDirty}>{busy ? 'Guardando…' : 'Guardar Informe'}<Icon name="check" size={16} /></button></div>
-    </fieldset></form><StepPagination previous={step > 0 ? { label: steps[step - 1], action: () => void choose(step - 1) } : undefined} next={{ label: steps[step + 1], action: () => void choose(step + 1) }} disabled={busy} nextDisabled={step >= 5 && dirty} /></section>{step === 0 && <DocumentAuthorsEditor targetDocId={document.id} version={state.document.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { setReload(value => value + 1) }} />}</>}
+      <div className="document-save"><span role="status">{autosaving ? 'Guardando…' : dirty ? 'Cambios sin guardar' : 'Contenido guardado'}</span><button disabled={autosaving || !contentDirty || authorsDirty}>{busy ? 'Guardando…' : 'Guardar Informe'}<Icon name="check" size={16} /></button></div>
+    </fieldset></form>{step === 4 && state.document.documentState === 'APPROVED' && state.document.canManage && !state.document.archivedAt && <ReportActivityProposal documentId={document.id} onDirtyChange={setProposalDirty} />}<StepPagination previous={step > 0 ? { label: steps[step - 1], action: () => void choose(step - 1) } : undefined} next={{ label: steps[step + 1], action: () => void choose(step + 1) }} disabled={busy || autosaving} nextDisabled={step >= 5 && dirty} /></section>{step === 0 && <DocumentAuthorsEditor targetDocId={document.id} version={state.document.rowVersion} disabled={busy || contentDirty} onDirtyChange={setAuthorsDirty} onSaved={async () => { setReload(value => value + 1) }} />}</>}
   </section>
 }

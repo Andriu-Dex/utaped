@@ -63,6 +63,29 @@ class WorkPlanIntegrationTests {
     }
     String createBody(UUID key) { return "{\"groupId\":\""+group+"\",\"periodId\":\""+period+"\",\"requestKey\":\""+key+"\",\"title\":\"Plan inicial\"}"; }
     String updateBody(long version,String title) { return "{\"rowVersion\":"+version+",\"title\":\""+title+"\",\"institutionalUnit\":\"Facultad de Ingeniería en Sistemas, Electrónica e Industrial\",\"career\":\"\",\"justification\":\"Contenido persistente\",\"objective\":\"\"}"; }
+    @Test void readOnlyReasonsDistinguishReviewFromDatesAndPreserveWriteProtection() throws Exception {
+        openPeriod();Browser browser=new Browser();browser.login("user@example.invalid",PASSWORD);
+        String id=JsonPath.read(browser.request("POST","/api/work-plans",createBody(UUID.randomUUID()),true).body(),"$.id");
+        assertNull(JsonPath.read(browser.request("GET","/api/work-plans/"+id,null,false).body(),"$.readOnlyReason"));
+        for(String state:java.util.List.of("IN_REVIEW","APPROVED")) {
+            jdbc.update("UPDATE work_plan SET document_state=? WHERE id=?::uuid",state,id);
+            for(String suffix:java.util.List.of("","/matrix","/attachments")) {
+                String body=browser.request("GET","/api/work-plans/"+id+suffix,null,false).body();
+                assertEquals(state,JsonPath.read(body,"$.readOnlyReason"));
+                assertFalse(JsonPath.<Boolean>read(body,"$.editable"));
+            }
+            assertEquals(403,browser.request("PUT","/api/work-plans/"+id,updateBody(0,"Forbidden change"),true).statusCode());
+        }
+        jdbc.update("UPDATE work_plan SET document_state='DRAFT' WHERE id=?::uuid",id);
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=(now() at time zone 'America/Guayaquil')::date-1 WHERE id=?",period);
+        assertEquals("PREPARATION_ENDED",JsonPath.read(browser.request("GET","/api/work-plans/"+id,null,false).body(),"$.readOnlyReason"));
+        jdbc.update("UPDATE academic_period SET preparation_starts_on=(now() at time zone 'America/Guayaquil')::date+1,preparation_ends_on=(now() at time zone 'America/Guayaquil')::date+10 WHERE id=?",period);
+        assertEquals("PREPARATION_NOT_STARTED",JsonPath.read(browser.request("GET","/api/work-plans/"+id,null,false).body(),"$.readOnlyReason"));
+        jdbc.update("UPDATE academic_period SET preparation_starts_on=(now() at time zone 'America/Guayaquil')::date-1 WHERE id=?",period);
+        assertTrue(JsonPath.<Boolean>read(browser.request("GET","/api/work-plans/"+id,null,false).body(),"$.editable"));
+        jdbc.update("UPDATE work_plan SET archived_at=now() WHERE id=?::uuid",id);
+        assertEquals("ARCHIVED",JsonPath.read(browser.request("GET","/api/work-plans/"+id,null,false).body(),"$.readOnlyReason"));
+    }
     @Test void draftPersistenceIsolationIdempotencyAndConcurrency() throws Exception {
         openPeriod();Browser b=new Browser();b.login("user@example.invalid",PASSWORD);
         UUID key=UUID.randomUUID();String body=createBody(key);

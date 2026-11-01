@@ -1,0 +1,2019 @@
+{
+  "revision": "2026-10-30",
+  "sources": [
+    {
+      "file": "Actividades.docx",
+      "sha256": "82a4c44aed9c5041b65636ef68e18eeb00df732e7c1fb8522e8b9c67a7d7ef20"
+    },
+    {
+      "file": "Matriz_POA_2026.xlsx",
+      "sha256": "e11db47cdec78901ef367d371db56f2e79ce055f45ca498ceb0ef927edfd5eb7"
+    },
+    {
+      "file": "PLAN DE MEJORAS - CARRERAS.docx",
+      "sha256": "f01203e27e3a67e263e1a012b2ff6bb81ed63e00f04bf86bf11eb4b498b3f77a"
+    },
+    {
+      "file": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx",
+      "sha256": "460eb3b1c6ca433888281c0bf8bfbc89109c8d5296afe07bb5b3d24a60498f2f"
+    },
+    {
+      "file": "TI-JD2026-UTIT-PLAN-V01-signed.pdf",
+      "sha256": "2cfa9d0c8ff46a372d281039d0fedf903d8c968564987a60251b059d63717077"
+    }
+  ],
+  "entries": [
+    {
+      "key": "improvement-plan-2026-1",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-1",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 1",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "1. Perfil de egreso",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-2",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-2",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 2",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "1. Perfil de egreso",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-3",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-3",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 3",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "1. Perfil de egreso",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-4",
+      "title": "Actualizar el proyecto curricular, de acuerdo a la normativa vigente con la participación de los actores involucrados como expertos académicos, organizaciones profesionales, empleadores, graduados y otros actores.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-4",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 4",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "1. Perfil de egreso",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-5",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-5",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 5",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "2. Proyecto Curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-6",
+      "title": "Ejecutar las acciones de mejora en base información.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-6",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 6",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "2. Proyecto Curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-7",
+      "title": "Realizar seguimiento al cumplimiento de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-7",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 7",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "2. Proyecto Curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-8",
+      "title": "Actualizar el proyecto curricular, de acuerdo a la normativa vigente con la participación de los actores involucrados. El proyecto curricular debe considerar la participación de empleadores, egresados, académicos y profesionales con experiencia nacional e internacional en el campo de conocimiento de la carrera de manera que se facilita la flexibilización e internacionalización del currículo.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-8",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 8",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "2. Proyecto Curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-9",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-9",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 9",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "3. Malla curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-10",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-10",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 10",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "3. Malla curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-11",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-11",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 11",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "3. Malla curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-12",
+      "title": "Actualizar la malla curricular, de acuerdo con la normativa vigente con la participación de los actores involucrados.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-12",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 12",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "3. Malla curricular",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-13",
+      "title": "Realizar el seguimiento y evaluación de los syllabus de la carrera.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-13",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 13",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "4. Syllabus",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-14",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación en base a los resultados del seguimiento y evaluación de los syllabus.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-14",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 14",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "4. Syllabus",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-15",
+      "title": "Ejecutar las acciones de mejora en base a la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-15",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 15",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "4. Syllabus",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-16",
+      "title": "Realizar seguimiento y evaluar del cumplimiento de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-16",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 16",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "4. Syllabus",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-17",
+      "title": "Evidenciar el uso de métodos pedagógicos y didácticos para la evaluación formativa y sumativa del proceso de aprendizaje, respetando las necesidades educativas especiales en el caso que aplique",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-17",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 17",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "5. Metodología y recurso de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-18",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-18",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 18",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "5. Metodología y recurso de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-19",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-19",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 19",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "5. Metodología y recurso de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-20",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-20",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 20",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "5. Metodología y recurso de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-21",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-21",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 21",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "6. Escenarios de prácticas formativas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-22",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-22",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 22",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "6. Escenarios de prácticas formativas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-23",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-23",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 23",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "6. Escenarios de prácticas formativas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-24",
+      "title": "Desarrollar actividades prácticas formativas, utilizando ambientes o escenarios de aprendizaje práctico específicos, como laboratorios, talleres, áreas de simulación, salas de audiencias, consultorios jurídicos, observatorios",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-24",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 24",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "6. Escenarios de prácticas formativas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-25",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-25",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 25",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "7. Tecnologías para el aprendizaje y conocimiento (TAC)",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-26",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-26",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 26",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "7. Tecnologías para el aprendizaje y conocimiento (TAC)",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-27",
+      "title": "Realizar el seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-27",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 27",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "7. Tecnologías para el aprendizaje y conocimiento (TAC)",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-28",
+      "title": "Realizar un documento que evidencie la capacitación de los profesores en el uso de las TACs",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-28",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 28",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "7. Tecnologías para el aprendizaje y conocimiento (TAC)",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-29",
+      "title": "Actualizar el inventario de herramientas y recursos pedagógicas.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-29",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 29",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "1. Currículo",
+        "indicator": "7. Tecnologías para el aprendizaje y conocimiento (TAC)",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-30",
+      "title": "Levantar información de los profesores de la carrera.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-30",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 30",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "8. Afinidad Personal Académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-31",
+      "title": "Realizar la matriz de afinidad",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-31",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 31",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "8. Afinidad Personal Académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-32",
+      "title": "Socializar los resultados de la evaluación integral docente al personal académico evaluado.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-32",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 32",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "10. Evaluación integral del desempeño del personal académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-33",
+      "title": "Retroalimentar los resultados de la evaluación integral docente al personal académico evaluado, con los docentes que presenten una baja calificación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-33",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 33",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "10. Evaluación integral del desempeño del personal académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-34",
+      "title": "Plantear compromisos de mejorar con los docentes que presentan una baja calificación",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-34",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 34",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "10. Evaluación integral del desempeño del personal académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-35",
+      "title": "Realizar un plan de formación, capacitación, perfeccionamiento, otros.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-35",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 35",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "10. Evaluación integral del desempeño del personal académico",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-36",
+      "title": "Difundir los horarios, tutores, mecanismos y modalidades de las tutorías académicas.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Tutor de Seguimiento al Desempeño Estudiantil"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-36",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 36",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "11. Sistema de tutorías académicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-37",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Tutor de Seguimiento al Desempeño Estudiantil"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-37",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 37",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "11. Sistema de tutorías académicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-38",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Tutor de Seguimiento al Desempeño Estudiantil"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-38",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 38",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "11. Sistema de tutorías académicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-39",
+      "title": "Elaborar documentación que evidencie los resultados obtenidos de las tutorías o del acompañamiento académico efectuado durante el periodo de evaluación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Tutor de Seguimiento al Desempeño Estudiantil"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-39",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 39",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "11. Sistema de tutorías académicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-40",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Tutor de Seguimiento al Desempeño Estudiantil"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-40",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 40",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "11. Sistema de tutorías académicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-41",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Organización Curricular (UOC)",
+        "Comisión de Gestión de Plataformas Virtuales",
+        "Club Académico de Telecomunicaciones",
+        "Club Académico de Ingeniería Industrial",
+        "Club Académico de Tecnologías de la Información",
+        "Club Académico de Software",
+        "Club de Robótica"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-41",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 41",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "12. Habilidades blandas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-42",
+      "title": "Ejecutar las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Organización Curricular (UOC)",
+        "Comisión de Gestión de Plataformas Virtuales",
+        "Club Académico de Telecomunicaciones",
+        "Club Académico de Ingeniería Industrial",
+        "Club Académico de Tecnologías de la Información",
+        "Club Académico de Software",
+        "Club de Robótica"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-42",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 42",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "12. Habilidades blandas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-43",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Organización Curricular (UOC)",
+        "Comisión de Gestión de Plataformas Virtuales",
+        "Club Académico de Telecomunicaciones",
+        "Club Académico de Ingeniería Industrial",
+        "Club Académico de Tecnologías de la Información",
+        "Club Académico de Software",
+        "Club de Robótica"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-43",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 43",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "12. Habilidades blandas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-44",
+      "title": "Elaborar la matriz de los estudiantes matriculados en las cohortes que iniciaron sus estudios en la carrera durante el periodo de evaluación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Organización de Eventos Académicos Nacionales e Internacionales"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-44",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 44",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "14. Tasa de deserción",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-45",
+      "title": "Desarrollar actividades de socialización sobre la información de la carrera a los estudiantes de primer semestre y nivelación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Organización de Eventos Académicos Nacionales e Internacionales"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-45",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 45",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "14. Tasa de deserción",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-46",
+      "title": "Elaborar la matriz de estudiantes de la carrera que iniciaron el primer nivel en las cohortes definidas que incluya fecha de graduación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Titulación"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-46",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 46",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "15. Tasa de titulación de grado",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-47",
+      "title": "Desarrollar actividades de socialización del proceso de titulación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Titulación"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-47",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 47",
+        "objective": "Formar talento humano de grado y posgrado a través de diferentes modalidades, con liderazgo, responsabilidad social y ambiental, con sólidos conocimientos científicos, tecnológicos y culturales, que interpreten y comprendan la realidad socioeconómica del Ecuador, de Latinoamérica y del mundo y que emprendan de manera autónoma en iniciativas que propicien el desarrollo socioeconómico de la provincia, la región y el país.",
+        "criterion": "2. Docencia",
+        "indicator": "15. Tasa de titulación de grado",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-48",
+      "title": "Difundir los resultados del seguimiento a los graduados de la carrera; según los lineamientos de la DIVISO.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-48",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 48",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "16. Seguimiento a graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-49",
+      "title": "Incluir las acciones de mejora en la planificación de coordinación en base a la información proporcionada por la DIVISO.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-49",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 49",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "16. Seguimiento a graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-50",
+      "title": "Ejecutar las acciones de mejora en base información proporcionada por la DIVISO.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-50",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 50",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "16. Seguimiento a graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-51",
+      "title": "Realizar seguimiento a la implementación de las acciones de mejora.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-51",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 51",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "16. Seguimiento a graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-52",
+      "title": "Evidenciar las actividades del emprendimiento como: RUC, RIMPE, facturación, declaraciones; de ser el caso, u otros, certificada por la instancia competente.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-52",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 52",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "17. Tasa de ocupación de graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-53",
+      "title": "Elaborar un documento consolidado de graduados.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-53",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 53",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "2. Docencia",
+        "indicator": "17. Tasa de ocupación de graduados",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-54",
+      "title": "Verificar los distributivos académicos docentes de los profesores involucrados en los programas o proyectos de investigación e innovación de la carrera, durante el periodo de evaluación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad Operativa de Investigación FISEI"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-54",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 54",
+        "objective": "Realizar investigación científica que permita generar innovación tecnológica, crecimiento productivo y desarrollo social, que contribuya a la superación de los problemas del Ecuador y del mundo, bajo los principios de eficiencia, calidad, pertinencia, integridad, autodeterminación para la producción del pensamiento y conocimiento.",
+        "criterion": "3. Investigación e innovación",
+        "indicator": "18. Gestión de la investigación e innovación",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-55",
+      "title": "Compilar la información de los proyectos de prácticas de servicio comunitario.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-55",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 55",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "4. Vinculación con la sociedad",
+        "indicator": "21. Planificación y gestión de la vinculación con la sociedad",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-56",
+      "title": "Gestionar los distributivo individuales de los profesores involucrados en los programas o proyectos de investigación, VINCULACIÓN e innovación de la carrera, durante el periodo de evaluación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-56",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 56",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "4. Vinculación con la sociedad",
+        "indicator": "21. Planificación y gestión de la vinculación con la sociedad",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-57",
+      "title": "Elaborar informes de acciones de mejora en los procesos de gestión de la vinculación, con base en los resultados de su seguimiento y evaluación; así como, la instancia competente dentro de la Carrera responsable de estos procesos.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-57",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 57",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "4. Vinculación con la sociedad",
+        "indicator": "21. Planificación y gestión de la vinculación con la sociedad",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-58",
+      "title": "Elaborar el informe de difusión entre los estudiantes de las políticas y procedimientos para la realización de las prácticas preprofesionales, así como las oportunidades de acceso, sus mecanismos de seguimiento y evaluación estudiantil.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-58",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 58",
+        "objective": "Vincular la labor universitaria con el desarrollo del entorno social, productivo y cultural, en base a los requerimientos de la sociedad y a través de la transferencia de ciencia y tecnología, la difusión de la cultura y la producción de bienes y/o servicios.",
+        "criterion": "4. Vinculación con la sociedad",
+        "indicator": "Indicador 23. Prácticas preprofesionales",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-59",
+      "title": "Elaborar la planificación académica y administrativa de la carrera que describa, al menos, los objetivos, actividades, responsables, indicadores, recursos, fechas planificadas y reales del cumplimiento de indicadores y metas, entre otros.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-59",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 59",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "Indicador 24. Planificación académica y administrativa de la Carrera",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-60",
+      "title": "Difundir de las normas de conducta ética o Código, así como de los mecanismos para concientización y fomento de la práctica de valores y principios.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-60",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 60",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "26. Ética, transparencia e integridad",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-61",
+      "title": "Participar en un programa de movilidad académica internacional mediante un intercambio estudiantil o docente en una institución extranjera, desarrollando actividades académicas, colaborando en proyectos y generando evidencias como informes, certificados y registros de participación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-61",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 61",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "27. Internacionalización y movilidad",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-62",
+      "title": "Levantar el inventario de los ambientes de aprendizaje por carrera.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-62",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 62",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "29. Ambientes de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-63",
+      "title": "Evaluar la funcionalidad, disponibilidad, equipamiento y accesibilidad de los ambientes de aprendizaje para garantizar mejores condiciones en los procesos formativos.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-63",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 63",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "29. Ambientes de aprendizaje",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-64",
+      "title": "Actualizar el inventario de herramientas pedagógicas.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-64",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 64",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "30. Herramientas pedagógicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-65",
+      "title": "Evaluar la funcionalidad, disponibilidad y accesibilidad de las herramientas pedagógicas.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-plan-2026-65",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 65",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "30. Herramientas pedagógicas",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-66",
+      "title": "Evidenciar la planificación y gestión de los recursos bibliográficos para la Carrera.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-66",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 66",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "31. Gestión del acervo y recursos bibliográficos",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-plan-2026-67",
+      "title": "Elaborar Informe que evidencie las acciones de mejora continua en el acervo, pertinencia, disponibilidad, acceso al material bibliográfico, con base en los resultados de su seguimiento y evaluación.",
+      "category": "IMPROVEMENT_PLAN",
+      "suggestedGroups": [],
+      "context": {
+        "sourceKey": "improvement-plan-2026-67",
+        "sourceFile": "PLAN DE MEJORAS - CARRERAS.docx / actividad 67",
+        "objective": "Desarrollar la gestión universitaria sobre la base de un modelo de gestión que articule los requerimientos del contexto y el Plan Nacional de Desarrollo, que permita un crecimiento integral y sostenido de la Universidad Técnica de Ambato.",
+        "criterion": "5. Metodología y recurso de aprendizaje",
+        "indicator": "31. Gestión del acervo y recursos bibliográficos",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-2",
+      "title": "Fortalecer el perfil de egreso",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-2",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 2",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.2 establecer las necesidades del entorno en relacion con la oferta academica de la universidad.",
+        "measure": "Numero de actividades de fortalecimiento del perfil de egreso ejecutadas/numero de actividades de fortalecimiento del perfil de egreso planificadas",
+        "plannedCompliance": "Trimestre 2: 1.00\nTrimestre 4: 2.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-3",
+      "title": "Realizar el seguimiento a la ejecucion del plan de mejora de carrera",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-3",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 3",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.2 establecer las necesidades del entorno en relacion con la oferta academica de la universidad.",
+        "measure": "Informe de seguimiento presentado/informe de seguimiento programados",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-4",
+      "title": "Gestionar las actividades academicas",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-4",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 4",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.2 establecer las necesidades del entorno en relacion con la oferta academica de la universidad.",
+        "measure": "Distributivo de remuneraciones ejecutado/distributivo de remuneraciones planificado",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-5",
+      "title": "Aplicar los resultados del seguimiento a graduados como insumo para la retroalimentacion del proceso de ensenanza-aprendizaje; el analisis y posible revision del perfil de egresa u oferta academica; y la definicion de acciones de mejora del sistema de seguimiento a graduados.",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-5",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 5",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.2 establecer las necesidades del entorno en relacion con la oferta academica de la universidad.",
+        "measure": "Informe de retroalimentacion del proceso de ensenanza-aprendizajes aprobado/informes de retroalimentacion del proceso de ensenanza-aprendizajes presentado",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-6",
+      "title": "Ajustar la pertinencia curricular",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-6",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 6",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.5 actualizar los proyectos curriculares con base en estandares internacionales y con fines de acreditacion",
+        "measure": "Numero de proyectos curriculares aprobados por hcu/numero de proyectos curriculares presentados",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-7",
+      "title": "Actualizar los planes de estudio de las carreras vigentes, que promuevan la implementacion de curriculos flexibles (de considerarse pertinente) y contemplen el uso adecuado de mecanismos o herramientas de Inteligencia artificial.",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-7",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 7",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.5 actualizar los proyectos curriculares con base en estandares internacionales y con fines de acreditacion",
+        "measure": "Informe de analisis de planes de estudio de carreras vigentes actualizados/informes de analisis de planes de estudio de carreras vigentes",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-8",
+      "title": "Planificar, ejecutar y dar seguimiento a los procesos de titulacion de grado y sus resultados se consideran para la mejora del proceso.",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-8",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 8",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.1.5 actualizar los proyectos curriculares con base en estandares internacionales y con fines de acreditacion",
+        "measure": "Informes de aplicacion del proceso de titulacion de grado aprobados/informes de aplicacion del proceso de titulacion de grado presentados",
+        "plannedCompliance": "Trimestre 3: 1.00\nTrimestre 4: 2.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-9",
+      "title": "Ejecutar el perfeccionamiento del personal academico",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-9",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 9",
+        "objective": "Porcentaje de implementacion de los disenos curriculares con enfoque en competencias y acreditacion internacional",
+        "strategy": "1.2.2 implementar programas de actualizacion docente permanente con apoyo de expertos externos en areas como innovacion pedagogica, competencias digitales, comunicacion efectiva y en areas especificas.",
+        "measure": "Numero de capacitaciones ejecutadas/numero de capacitaciones planificadas",
+        "plannedCompliance": "Trimestre 2: 1.00\nTrimestre 4: 2.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-10",
+      "title": "Promover la produccion cientifica",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-10",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 10",
+        "objective": "Incrementar el 6,00% anual del numero de proyectos de investigacion Iniciados.",
+        "strategy": "2.1.1.4 socializar los resultados de los proyectos de investigacion a los grupos de interes directos e indirectos.",
+        "measure": "Numero de articulos cientificos publicados/numero de articulos cientificos planificados",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-11",
+      "title": "Gestionar proyectos de vinculacion",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-11",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 11",
+        "objective": "Porcentaje de cumplimiento integral de vinculacion con la sociedad.",
+        "strategy": "3.1.1 disenar y ejecutar proyectos de vinculacion multidisciplinarios basados en diagnosticos participativos del entorno, incorporando sistemas de evaluacion de impacto.",
+        "measure": "Numero de proyectos de vinculacion aprobados sobre numero de proyectos de vinculacion presentados",
+        "plannedCompliance": "Trimestre 1: 2.00 \nTrimestre 3: 4.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-12",
+      "title": "Diversificar espacios de practicas laborables",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-12",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 12",
+        "objective": "Porcentaje de cumplimiento integral de vinculacion con la sociedad.",
+        "strategy": "3.2.1 fortalecer las practicas laborales a traves de alianzas estrategicas con empresas publicas y privadas, asegurando su integracion al perfil profesional y su contribucion a la formacion practica del estudiante",
+        "measure": "Numero de nuevos convenios o cartas de compromiso implementados/numero de convenios o cartas de compromiso gestionados",
+        "plannedCompliance": "Trimestre 2: 1.00\nTrimestre 4: 2.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-13",
+      "title": "Realizar el seguimiento a graduados e insercion laboral",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-13",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 13",
+        "objective": "Porcentaje de cumplimiento integral de vinculacion con la sociedad.",
+        "strategy": "3.3.1 implementar mecanismos de seguimiento a graduados para la retroalimentacion de los procesos academicos",
+        "measure": "Numero de graduados encuestados sobre numero de estudiantes graduados",
+        "plannedCompliance": "Trimestre 1: 20.00\nTrimestre 3: 34.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-14",
+      "title": "Aplicar los resultados del seguimiento a graduados como insumo para la retroalimentacion del proceso de ensenanza-aprendizaje; el analisis y posible revision del perfil de egreso u oferta academica; y la definicion de acciones de mejora del seguimiento a graduados.",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-14",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 14",
+        "objective": "Porcentaje de cumplimiento integral de vinculacion con la sociedad.",
+        "strategy": "3.3.1 implementar mecanismos de seguimiento a graduados para la retroalimentacion de los procesos academicos",
+        "measure": "Informe de socializacion del proceso de las mejoras aprobado/informe de socializacion de las mejoras presentado",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "poa-2026-row-15",
+      "title": "Desarrollar actividades academicas y no academicas que involucre a los graduados de grado y que permita la retroalimentacion y actualizacion de contenidos, analisis de tendencias academicas, laborales, investigativas y tecnologicas, entre otras",
+      "category": "POA",
+      "suggestedGroups": [
+        "Unidad de Titulación",
+        "Unidad de Vinculación con la Sociedad",
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "poa-2026-row-15",
+        "sourceFile": "Matriz_POA_2026.xlsx / Matriz POA / fila 15",
+        "objective": "Porcentaje de cumplimiento integral de vinculacion con la sociedad.",
+        "strategy": "3.3.1 implementar mecanismos de seguimiento a graduados para la retroalimentacion de los procesos academicos",
+        "measure": "Informe elaborado que evidencie la participacion de graduados aprobado/informe de la participacion de graduados presentado",
+        "plannedCompliance": "Trimestre 4: 1.00",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-titulacion-8",
+      "title": "Fortalecimiento del seguimiento periódico de los trabajos de titulación mediante la coordinación entre la Unidad de Titulación, los docentes tutores y los estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": null,
+      "suggestedGroups": [
+        "Unidad de Titulación"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-titulacion-8",
+        "sourceFile": "TI-JD2026-UTIT-PLAN-V01-signed.pdf / matriz pp. 4–5",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-9",
+      "title": "Implementar un sistema tipo ServiceDesk para centralizar el registro de incidencias, requerimientos de soporte, mantenimientos, solicitudes técnicas y atención a usuarios mediante tickets, permitiendo mejorar la trazabilidad, el control y la gestión documental de las actividades realizadas.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-9",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-10",
+      "title": "Utilizar el módulo administrativo del ServiceDesk para generar estadísticas, indicadores y reportes por fecha, estado, prioridad, área, servicio y técnico responsable, con el fin de fortalecer la toma de decisiones basada en datos y priorizar acciones correctivas o preventivas.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-10",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-11",
+      "title": "Habilitar el registro de tickets por parte de los usuarios solicitantes, permitiendo adjuntar evidencias, consultar el estado de sus requerimientos, revisar el historial de atención e imprimir el seguimiento cuando sea necesario, garantizando mayor transparencia en el proceso de soporte.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-11",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-12",
+      "title": "Consolidar una base de conocimiento institucional dentro del ServiceDesk, donde los técnicos registren soluciones aplicadas, aportaciones técnicas y procedimientos de atención, favoreciendo la estandarización de respuestas, la reducción de tiempos de solución y la transferencia de conocimiento entre el personal técnico.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Redes y Laboratorios"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-12",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / ADMINISTRACIÓN DE REDES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-13",
+      "title": "Fortalecer la imagen del CTT-FISEI mediante la actualización permanente del sitio web y su articulación con campañas digitales de difusión.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de CTT y Talleres Tecnológicos"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-13",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CTT",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-14",
+      "title": "Implementar un proceso de transición y mentoría entre la directiva saliente y entrante, documentado en un manual de inducción del club.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Club Académico de Tecnologías de la Información"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-14",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-15",
+      "title": "Diversificar el formato de actividades (charlas cortas, retos técnicos, proyectos colaborativos) y coordinar horarios con los docentes para minimizar conflictos con la carga académica.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Club Académico de Tecnologías de la Información"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-15",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-16",
+      "title": "Crear y mantener activo un plan de contenidos en redes sociales (Instagram/Facebook) del club, con publicaciones periódicas sobre actividades y logros.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Club Académico de Tecnologías de la Información"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-16",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CLUB ACADÉMICO",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-17",
+      "title": "Talleres de Lógica de Programación Sin Código: Utiliza dinámicas de gamificación (juegos de lógica, diagramas de flujo interactivos o herramientas como Scratch) para despertar el pensamiento computacional sin abrumarlos con la sintaxis de un lenguaje de programación complejo.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Organización de Eventos Académicos Nacionales e Internacionales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-17",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / EVENTOS ACADÉMICOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-18",
+      "title": "Atracción de Empresas y Networking: Invita a empresas tecnológicas de la región. Muéstrales que en la universidad se promueven tecnologías que ahorran miles de dólares en licenciamiento corporativo. Esto abrirá plazas de prácticas pre-profesionales para los asistentes.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Organización de Eventos Académicos Nacionales e Internacionales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-18",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / EVENTOS ACADÉMICOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-19",
+      "title": "Crear un repositorio institucional único de evidencias de la comisión, organizado por actividad, fecha, responsable, producto y medio de verificación.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-19",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-20",
+      "title": "Consolidar una matriz maestra de trazabilidad curricular que vincule competencias, resultados de aprendizaje, asignaturas, unidades temáticas, APE, instrumentos de evaluación y evidencias.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-20",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-21",
+      "title": "Socializar las matrices de movilidad, contenidos mínimos y pre/correquisitos en Consejo Académico de Carrera y Facultad, dejando actas, observaciones y versión final aprobada.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-21",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-22",
+      "title": "Actualizar contenidos mínimos y sílabos para incorporar prácticas verificables en calidad de software, seguridad, ingeniería de datos, cloud, APIs, DevOps básico, gobierno TI y comunicación profesional.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-22",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-23",
+      "title": "Definir rúbricas y productos prácticos mínimos por asignatura para verificar implementación real: proyectos integradores, repositorios, informes técnicos, despliegues, pruebas y documentación.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-23",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-24",
+      "title": "Institucionalizar una consulta anual al sector profesional, con agenda, registro de participantes, matriz de necesidades, brechas, recomendaciones y acta de cierre.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-24",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-25",
+      "title": "Elaborar un plan de recursos mínimos por eje formativo: repositorios Git, laboratorios cloud, herramientas de BI, ambientes de seguridad, servidores, APIs y plataformas de automatización.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-25",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-26",
+      "title": "Diseñar itinerarios o microcredenciales internas en QA, ciberseguridad, datos, cloud, redes, frontend, backend, DevOps e integración de sistemas.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-26",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-27",
+      "title": "Definir una matriz de transición académica que identifique equivalencias, restricciones, pre/correquisitos, casos especiales y responsables de seguimiento por cohorte.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-27",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-28",
+      "title": "Establecer indicadores semestrales de seguimiento: porcentaje de sílabos actualizados, evidencias APE ejecutadas, participación externa, avance de validaciones y cumplimiento de acciones correctivas.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Diseño de Proyectos de Carrera"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-28",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / DISEÑO DE PROY. CARRERA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-29",
+      "title": "Contactar nuevamente a los integrantes de este mecanismo: Estudiantes que tienen pendiente el trabajo de titulación.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión Plan de Contingencia"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-29",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PLAN DE CONTINGENCIA",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-30",
+      "title": "Implementar una lista de verificación previa al cierre del parcial para confirmar syllabus, plan analítico y foro de socialización. (Plan de Mejora 1)",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Gestión de Plataformas Virtuales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-30",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-31",
+      "title": "Socializar criterios mínimos y buenas prácticas para el uso de recursos, IA, REA y simuladores en Moodle. (Plan de Mejora 21",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Gestión de Plataformas Virtuales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-31",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-32",
+      "title": "Mantener matrices consolidadas por parcial y generar alertas tempranas para aulas con indicadores incompletos. (Plan de Mejora 3-41",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Gestión de Plataformas Virtuales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-32",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / AULAS VIRTUALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-33",
+      "title": "Fortalecer el seguimiento periódico de los trabajos de titulación mediante la coordinación entre la Unidad de Titulación, los docentes tutores y los estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Titulación"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-33",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / TITULACIÓN",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-34",
+      "title": "Gestionar ante Subdecanato la unificación de los criterios y procedimientos para la solicitud de evidencias, garantizando su aplicación uniforme en todas las coordinaciones de carrera de la facultad",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Organización Curricular (UOC)"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-34",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / UOC",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-35",
+      "title": "Agilizar la coordinación para su emisión.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-35",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-36",
+      "title": "Implementar herramientas digitales.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-36",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-37",
+      "title": "Establecer cronogramas y controles.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-37",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-38",
+      "title": "Mantener capacitación y evaluación periódica.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Vinculación con la Sociedad"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-38",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / VINCULACIÓN",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-39",
+      "title": "Crear un registro de seguimiento de actividades condicionadas por órganos externos, con fecha de remisión, instancia responsable y estado actual.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Unidad de Planificación y Evaluación (UPE)"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-39",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / UPE",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-40",
+      "title": "Gestionar la ampliación y actualización permanente del banco de empresas e instituciones receptoras, priorizando entidades públicas y privadas alineadas al perfil profesional de cada carrera.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-40",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-41",
+      "title": "Fortalecer la socialización de las diferentes modalidades disponibles para el cumplimiento de prácticas laborales, explicando requisitos, beneficios, procedimientos y documentación necesaria para cada caso.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-41",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-42",
+      "title": "Establecer un procedimiento estandarizado para la gestión de prácticas laborales, definiendo actividades, responsables, plazos, documentos requeridos y medios de verificación en cada etapa del proceso.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-42",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-43",
+      "title": "Mejorar el sistema informático de gestión de prácticas laborales, incorporando mecanismos de validación, alertas y reportes sobre documentos pendientes, fechas de vencimiento, horas registradas y prácticas próximas a finalizar.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-43",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-44",
+      "title": "Impulsar la suscripción de nuevos convenios institucionales con empresas y organizaciones recurrentes, a fin de garantizar espacios permanentes y sostenibles para futuras cohortes de estudiantes.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-44",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-45",
+      "title": "Implementar mecanismos de retroalimentación con tutores institucionales, docentes tutores y estudiantes, mediante encuestas, informes o reuniones de cierre que permitan identificar oportunidades de mejora.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-45",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-46",
+      "title": "Generar reportes consolidados por carrera, modalidad, empresa, tutor y estado del proceso, que permitan analizar resultados, identificar necesidades y proyectar la planificación de prácticas laborales.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-46",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-47",
+      "title": "Coordinar con las empresas receptoras la asignación de actividades acordes al área de formación de los estudiantes, procurando que las tareas contribuyan al desarrollo de competencias técnicas y profesionales.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Prácticas Preprofesionales / Prácticas Laborales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-47",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / PRÁCTICAS LABORALES",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-48",
+      "title": "Incorporar en los procesos de actualización curricular contenidos relacionados con inteligencia artificial, computación en la nube, ciberseguridad, arquitectura de microservicios, automatización de procesos, diseño de APIs y demás tecnologías emergentes identificadas por los graduados.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-48",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-49",
+      "title": "Promover el fortalecimiento de habilidades blandas, liderazgo, comunicación efectiva, gestión de proyectos, resolución de problemas y trabajo en equipo mediante actividades académicas y de vinculación con el sector productivo",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-49",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-50",
+      "title": "Implementar mecanismos permanentes de comunicación con los graduados mediante bases de datos actualizadas, redes profesionales, boletines informativos y encuentros periódicos que faciliten su participación en actividades institucionales.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-50",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-51",
+      "title": "Fortalecer la articulación con empresas e instituciones públicas y privadas para promover prácticas preprofesionales, proyectos conjuntos, conferencias y procesos de retroalimentación que contribuyan a la mejora continua de las carreras.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-51",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-52",
+      "title": "Planificar y ejecutar programas permanentes de educación continua (cursos, talleres, seminarios y webinars) orientados a la actualización de competencias técnicas y profesionales de los graduados.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-52",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-53",
+      "title": "Fomentar la participación activa de los graduados en procesos de seguimiento, evaluación y actualización curricular mediante encuestas, grupos focales, encuentros académicos y espacios de consulta institucional.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Seguimiento a Graduados e Inserción Laboral"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-53",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / SEGUIMIENTO A GRADUADOS",
+        "sourceYear": 2026
+      }
+    },
+    {
+      "key": "improvement-action-2026-proposal-54",
+      "title": "Se propone buscar más opciones de ponentes y personal para el congreso mediante contacto directo por parte de los miembros de la comisión, reduciendo considerablemente la dependencia de la disponibilidad de voluntarios.",
+      "category": "IMPROVEMENT_ACTION",
+      "careerCode": "TI",
+      "suggestedGroups": [
+        "Comisión de Organización de Eventos Académicos Nacionales e Internacionales"
+      ],
+      "context": {
+        "sourceKey": "improvement-action-2026-proposal-54",
+        "sourceFile": "PROPUESTAS DE MEJORA CARRERA DE TI.xlsx / CONGRESO CSEI",
+        "sourceYear": 2026
+      }
+    }
+  ]
+}

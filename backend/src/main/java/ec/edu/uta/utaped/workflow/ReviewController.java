@@ -17,13 +17,16 @@ public class ReviewController {
     @GetMapping("/reviews/tasks") public List<ReviewService.Task> inbox(Principal p) { return service.inbox(p.getName()); }
     @GetMapping("/reviews/inbox") public ReviewService.InboxPage inboxPage(Principal p,
         @RequestParam(defaultValue="") String query,@RequestParam(defaultValue="") String status,
-        @RequestParam(defaultValue="") String documentType,@RequestParam(defaultValue="0") int page,
-        @RequestParam(defaultValue="20") int size) { return service.inboxPage(p.getName(),query,status,documentType,page,size); }
+        @RequestParam(defaultValue="") String documentType,@RequestParam(defaultValue="") String action,@RequestParam(defaultValue="0") int page,
+        @RequestParam(defaultValue="20") int size) { return service.inboxPage(p.getName(),query,status,documentType,action,page,size); }
     @GetMapping("/work-plans/{doc}/reviews") public List<Map<String,Object>> history(@PathVariable UUID doc,Principal p) { return service.history(doc,p.getName()); }
     @GetMapping("/reviews/{id}") public ReviewService.State state(@PathVariable UUID id,Principal p) { return service.state(id,p.getName()); }
+    @GetMapping("/reviews/{id}/comparison") public ResponseEntity<ReviewService.Comparison> comparison(@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.comparison(id,p.getName())); }
     @GetMapping("/reviews/{id}/pages/{page}") public ResponseEntity<byte[]> page(@PathVariable UUID id,@PathVariable int page,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG).body(service.page(id,page,p.getName())); }
     @GetMapping("/reviews/{id}/content") public ResponseEntity<byte[]> content(@PathVariable UUID id,Principal p) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).body(service.content(id,p.getName())); }
     @PostMapping("/reviews/tasks/{id}/observations") public void observe(@PathVariable UUID id,@Valid @RequestBody ReviewService.Observation data,Principal p) { service.observe(id,p.getName(),data); }
+    @PutMapping("/reviews/tasks/{taskId}/observations/{observationId}") public void updateObservation(@PathVariable UUID taskId,@PathVariable UUID observationId,@Valid @RequestBody ReviewService.ObservationUpdate data,Principal p) { service.updateObservation(taskId,observationId,p.getName(),data); }
+    @DeleteMapping("/reviews/tasks/{taskId}/observations/{observationId}") public void deleteObservation(@PathVariable UUID taskId,@PathVariable UUID observationId,@RequestParam long rowVersion,Principal p) { service.deleteObservation(taskId,observationId,p.getName(),rowVersion); }
     @PostMapping("/reviews/tasks/{id}/decisions") public void decide(@PathVariable UUID id,@Valid @RequestBody ReviewService.Decision data,Principal p) { service.decide(id,p.getName(),data); }
     @PostMapping(value="/reviews/tasks/{id}/signing",consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void sign(@PathVariable UUID id,@RequestParam long rowVersion,@RequestParam String inputHash,@RequestParam UUID requestKey,@RequestParam String certificateFingerprint,Principal p,HttpServletRequest request) throws IOException {

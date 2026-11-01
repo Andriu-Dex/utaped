@@ -95,7 +95,7 @@ public class OrganizationService {
         if(!actor.systemRole().equals("ADMIN")&&!coordinates(scope,actor.id())) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo la coordinación del ámbito puede gestionar integrantes.");
         String term=query==null?"":query.strip();
         if(term.isEmpty()) return List.of();
-        if(term.length()<2||term.length()>100) throw invalid("Escriba al menos dos letras del nombre para buscar.");
+        if(term.length()>100) throw invalid("La búsqueda admite hasta 100 caracteres.");
         return jdbc.queryForList("""
             SELECT u.id,u.display_name FROM app_user u WHERE u.active AND u.system_role='USER' AND position(lower(?) in lower(u.display_name))>0
               AND NOT EXISTS(SELECT 1 FROM scope_member m WHERE m.scope_id=? AND m.user_id=u.id AND m.active)

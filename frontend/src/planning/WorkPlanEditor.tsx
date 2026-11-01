@@ -1,4 +1,6 @@
+import { DocumentReadOnlyNotice } from './DocumentReadOnlyNotice'
 import { StepPagination } from './StepPagination'
+import { DocumentFollowUp, type FollowUpSection } from './DocumentFollowUp'
 import { InstitutionalProvenance } from './InstitutionalProvenance'
 import { DocumentAuthorsEditor } from './DocumentAuthorsEditor'
 import { PlanPreview, type PreparedPreview } from './PlanPreview'
@@ -18,6 +20,7 @@ import { ReportEditor } from './ReportEditor'
 import { DocumentLifecycle } from './DocumentLifecycle'
 import { WritingAssistant } from './WritingAssistant'
 import { Icon } from '../shared/Icon'
+import { CareerCopyModal } from './CareerCopyModal'
 import { PlanStepNavigationContext, planSteps, type PlanStep, type PlanStepGuard } from './PlanStepNavigation'
 import './document-workspace.css'
 
@@ -60,6 +63,7 @@ export function WorkPlanEditor({
     return validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general'
   })
   const [previousSection, setPreviousSection] = useState(initialSection)
+  const [followUpReturn, setFollowUpReturn] = useState<PlanStep>('general')
   if (previousSection !== initialSection) { setPreviousSection(initialSection); setSectionState(validSections.find(value => value === (initialSection === 'preparation' ? 'signing' : initialSection)) ?? 'general') }
   function setSection(next: WorkPlanSection) {
     setSectionState(next)
@@ -74,11 +78,16 @@ export function WorkPlanEditor({
   const [report, setReport] = useState<WorkPlan | null>(null)
   const [error, setError] = useState(''); const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false)
+  const [autosaving, setAutosaving] = useState(false), [autosaveFailed, setAutosaveFailed] = useState('')
+  const contentWrite = useRef(false), mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   const [latest, setLatest] = useState<WorkPlan | null>(null)
   const [lifecycleDirty, setLifecycleDirty] = useState(false)
   const contentDirty = JSON.stringify(draft) !== JSON.stringify(fields(plan))
   const [authorsDirty, setAuthorsDirty] = useState(false)
   const [stepDirty, setStepDirty] = useState(false), [stepBusy, setStepBusy] = useState(false), [navigating, setNavigating] = useState(false)
+  const [careerCopyOpen, setCareerCopyOpen] = useState(false)
+  const [careerCopyDirty, setCareerCopyDirty] = useState(false)
   const stepGuard = useRef<PlanStepGuard | null>(null), navigationLock = useRef(false)
   const stepHeading = useRef<HTMLDivElement>(null)
   const registerStep = useCallback((guard: PlanStepGuard, pending: boolean) => {
@@ -90,7 +99,7 @@ export function WorkPlanEditor({
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista del Plan.') }
   }, [initial.id])
   const synchronizePlan = useCallback((current: WorkPlan) => { setPlan(current); setDraft(fields(current)) }, [])
-  const dirty = contentDirty || lifecycleDirty || authorsDirty || stepDirty
+  const dirty = autosaving || contentDirty || lifecycleDirty || authorsDirty || stepDirty || careerCopyDirty
 
   useEffect(() => {
     const topbar = document.querySelector('.topbar'), navigation = stepHeading.current
@@ -118,15 +127,32 @@ export function WorkPlanEditor({
     return () => window.removeEventListener('beforeunload', preventClose)
   }, [])
   function change(name: keyof DraftFields, value: string) { if (name === 'justification') setPreviewFocus('JUSTIFICATION'); if (name === 'objective') setPreviewFocus('OBJECTIVE'); setDraft(current => ({ ...current, [name]: value })); setNotice('') }
+  useEffect(() => {
+    const serialized = JSON.stringify(draft)
+    if (!contentDirty || !plan.editable || busy || autosaving || conflict || authorsDirty || lifecycleDirty || stepDirty || !['general', 'content'].includes(section) || !draft.title.trim() || autosaveFailed === serialized) return
+    const timer = window.setTimeout(() => {
+      if (contentWrite.current) return
+      contentWrite.current = true; setAutosaving(true)
+      api<WorkPlan>('/work-plans/' + plan.id, 'PUT', { ...draft, rowVersion: plan.rowVersion }).then(saved => {
+        if (!mounted.current) return
+        setPlan(saved); setDraft(current => JSON.stringify(current) === serialized ? fields(saved) : current); setAutosaveFailed('')
+      }).catch(e => {
+        if (!mounted.current) return
+        setAutosaveFailed(serialized); setError(e.message || 'No se pudo autoguardar. Sus cambios se conservan en pantalla.')
+        if (e instanceof ApiError && e.status === 409) setConflict(true)
+      }).finally(() => { contentWrite.current = false; if (mounted.current) setAutosaving(false) })
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [draft, contentDirty, plan.id, plan.rowVersion, plan.editable, busy, autosaving, conflict, authorsDirty, lifecycleDirty, stepDirty, section, autosaveFailed])
   async function save(event: FormEvent) {
-    event.preventDefault(); setError(''); setNotice(''); setBusy(true)
+    event.preventDefault(); if (contentWrite.current) return; contentWrite.current = true; setError(''); setNotice(''); setBusy(true)
     try {
       const saved = await api<WorkPlan>('/work-plans/' + plan.id, 'PUT', { ...draft, rowVersion: plan.rowVersion })
       setPlan(saved); setDraft(fields(saved)); setNotice('Borrador guardado en el servidor.')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar.')
       if (e instanceof ApiError && e.status === 409) setConflict(true)
-    } finally { setBusy(false) }
+    } finally { contentWrite.current = false; setBusy(false) }
   }
   async function compare() {
     setError('')
@@ -137,7 +163,7 @@ export function WorkPlanEditor({
     if (!latest || !(await confirmAction('¿Descartar sus cambios locales y cargar la versión del servidor?'))) return
     setPlan(latest); setDraft(fields(latest)); setLatest(null); setConflict(false); setNotice('Versión del servidor cargada.'); setError('')
   }
-  async function back() { if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
+  async function back() { if (contentWrite.current) return; if (!dirty || (await confirmAction('Hay cambios sin guardar. ¿Salir y descartarlos?'))) onBack() }
   async function navigateStep(next: WorkPlanSection) {
     if (next === 'preparation') next = 'signing'
     const current = await api<WorkPlan>('/work-plans/' + plan.id)
@@ -151,7 +177,7 @@ export function WorkPlanEditor({
     requestAnimationFrame(() => stepHeading.current?.focus())
   }
   async function requestStep(next: PlanStep) {
-    if (next === section || navigationLock.current || busy || stepBusy) return
+    if (next === section || navigationLock.current || contentWrite.current || busy || stepBusy) return
     navigationLock.current = true; setNavigating(true); setError('')
     try {
       // These two views share the same draft: changing tabs must retain unsaved writing.
@@ -166,8 +192,13 @@ export function WorkPlanEditor({
     finally { navigationLock.current = false; setNavigating(false) }
   }
   async function returnToPlan() {
-    try { await navigateStep('general') }
+    try { await navigateStep(['rounds', 'execution', 'history'].includes(section) ? followUpReturn : 'general') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
+  }
+  function openFollowUp(next: FollowUpSection) {
+    if (dirty || autosaving || busy || stepBusy || navigating || next === 'execution' && plan.documentState !== 'APPROVED') return
+    if (planSteps.some(step => step.key === section)) setFollowUpReturn(section as PlanStep)
+    setSection(next)
   }
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
@@ -187,7 +218,7 @@ export function WorkPlanEditor({
           type="button"
           className="plan-back-btn"
           onClick={back}
-          disabled={busy || stepBusy || navigating}
+          disabled={busy || autosaving || stepBusy || navigating}
           title="Volver a documentos"
           aria-label="Volver a documentos"
         >
@@ -196,10 +227,26 @@ export function WorkPlanEditor({
         </button>
         <h1>{plan.title}</h1>
       </div>
-      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{autosaving ? 'Guardando…' : contentDirty && autosaveFailed === JSON.stringify(draft) ? 'Autoguardado pendiente' : dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+      <div className="plan-document-tools" role="group" aria-label="Acciones del documento">
+        <DocumentFollowUp approved={plan.documentState === 'APPROVED'} disabled={dirty || busy || stepBusy || navigating} pendingChanges={dirty} onOpen={openFollowUp} />
+        {plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || stepBusy || navigating} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
+        {plan.documentType === 'T1' && plan.documentState === 'DRAFT' && plan.editable && !plan.archivedAt && (
+          <button
+            type="button"
+            className="secondary"
+            disabled={dirty || busy || stepBusy || navigating}
+            title={dirty ? 'Guarde los cambios pendientes antes de copiar a otra carrera' : 'Copiar este plan a otra carrera del mismo período'}
+            onClick={() => setCareerCopyOpen(true)}
+          >
+            <Icon name="copy" size={16} />
+            <span>Copiar a otra carrera</span>
+          </button>
+        )}
+      </div>
     </header>
     <div className="plan-wizard-navigation" ref={stepHeading} tabIndex={-1}>
-      <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
+      <nav className="document-steps" aria-label="Pasos del Plan">{planSteps.map((step, index) => <button key={step.key} className="secondary" type="button" aria-current={section === step.key ? 'step' : undefined} disabled={busy || autosaving || stepBusy || navigating} onClick={() => void requestStep(step.key)}><span>{index + 1}</span>{step.label}</button>)}</nav>
     </div>
     <div className="plan-step-location"><span role="status">Paso {planSteps.findIndex(step => step.key === section) + 1} de {planSteps.length} · {planSteps.find(step => step.key === section)?.label}</span><span className="plan-step-document" title={plan.title}>{plan.title}</span></div>
     {error && <Toast message={error} onDismiss={() => setError('')} />}
@@ -217,8 +264,6 @@ export function WorkPlanEditor({
       {(section === 'preparation' || section === 'signing') && <DocumentPreparation externalPreview onPreparedChange={previewPrepared} key={section} onDocumentChange={synchronizePlan} onDirtyChange={setStepDirty} targetDocId={plan.id} onResolveSection={navigateStep} mode={section === 'signing' ? 'sign' : 'preview'} onBack={() => void returnToPlan()} onFinish={async () => onBack()} onPrevious={() => navigateStep('attachments')} />}
     </> : <>
     <DocumentLifecycle key={section} plan={plan} disabled={busy || contentDirty || authorsDirty} onDirtyChange={setLifecycleDirty} onChange={p => { if (p.archivedAt && p.documentState === 'DRAFT') { onBack(); return }; if (p.id !== plan.id && onDocumentOpen) onDocumentOpen(p); else { setPlan(p); setDraft(fields(p)); setSection('general') } }} />
-    <div className="review-actions"><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('rounds')}>Rondas y observaciones</button><button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('execution')}>Ejecución y evidencias</button>{plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || !!plan.archivedAt} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}
-    <button className="secondary" type="button" disabled={dirty || busy} onClick={() => setSection('history')}>Historial del Plan</button></div>
     {dirty && <p className="field-help">{contentDirty ? 'Puede alternar entre Información general y Contenido sin perder lo escrito. Guarde el borrador para conservarlo antes de avanzar.' : 'Guarde la configuración pendiente o confirme su descarte al cambiar de paso.'}</p>}
     <div className="card">
       <div className="step-card-header">
@@ -229,7 +274,7 @@ export function WorkPlanEditor({
         </div>
       </div>
       <dl className="plan-metadata"><div><dt>Responsable actual</dt><dd>{plan.teacherName}</dd></div><div><dt>Grupo</dt><dd>{plan.groupName}</dd></div><div><dt>Período</dt><dd>{plan.periodName}</dd></div><div><dt>Fecha de elaboración</dt><dd>{plan.documentState === 'DRAFT' ? 'Se fija al preparar la firma' : plan.preparationDate.split('-').reverse().join('/')}</dd></div></dl>
-      {!plan.editable && <p className="field-help">Solo lectura según su permiso, estado documental, archivo y ventana de elaboración.</p>}
+      <DocumentReadOnlyNotice document={plan} />
       <form onSubmit={save}><fieldset disabled={!plan.editable || busy || authorsDirty || lifecycleDirty}>
         {section === 'general' ? <>
           <label>Título del Plan<input required maxLength={200} value={draft.title} onChange={e => change('title', e.target.value)} /></label>
@@ -239,7 +284,7 @@ export function WorkPlanEditor({
               {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
             </span>
             <button
-              disabled={!contentDirty || conflict}
+              disabled={autosaving || !contentDirty || conflict}
               className={dirty ? 'primary-save-btn' : 'secondary'}
             >
               <Icon name="check" size={14} />
@@ -280,7 +325,7 @@ export function WorkPlanEditor({
                 {dirty ? 'Hay cambios sin guardar' : 'Contenido sincronizado'}
               </span>
               <button
-                disabled={!contentDirty || conflict}
+                disabled={autosaving || !contentDirty || conflict}
                 className={dirty ? 'primary-save-btn' : 'secondary'}
               >
                 <Icon name="check" size={14} />
@@ -298,7 +343,7 @@ export function WorkPlanEditor({
         {latest && <><h3>Contenido actual del servidor</h3><dl><dt>Título</dt><dd>{latest.title}</dd><dt>Unidad institucional</dt><dd>{latest.institutionalUnit}</dd><dt>Carrera</dt><dd>{latest.career}</dd><dt>Justificación</dt><dd className="preserve-text">{latest.justification || 'Sin contenido'}</dd><dt>Objetivo</dt><dd className="preserve-text">{latest.objective || 'Sin contenido'}</dd></dl><button type="button" className="secondary" onClick={reload}>Descartar cambios y cargar versión actual</button></>}
       </div>}
     </div>
-    <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || navigating} nextDisabled={dirty} />
+    <StepPagination previous={section === 'content' ? { label: 'Información general', action: () => void requestStep('general') } : undefined} next={{ label: section === 'general' ? 'Contenido' : 'Actividades y matriz', action: () => void requestStep(section === 'general' ? 'content' : 'matrix') }} disabled={busy || autosaving || navigating} nextDisabled={dirty} />
     </>}
     </div>
     {previewPane === 'split' && (
@@ -310,5 +355,25 @@ export function WorkPlanEditor({
     )}
     <PlanPreview plan={plan} draft={draft} step={section as PlanStep} focus={previewFocus} dirty={dirty} textDirty={contentDirty} prepared={preparedPreview} />
     </div>
+    {careerCopyOpen && (
+      <CareerCopyModal
+        plan={plan}
+        onClose={() => setCareerCopyOpen(false)}
+        onDirtyChange={setCareerCopyDirty}
+        onCreated={_documentIds => {
+          setNotice('Copias creadas exitosamente.')
+        }}
+        onFinish={onBack}
+        onOpenCreatedPlan={planId => {
+          setCareerCopyOpen(false)
+          api<WorkPlan>('/work-plans/' + planId)
+            .then(doc => {
+              if (onDocumentOpen) onDocumentOpen(doc)
+              else synchronizePlan(doc)
+            })
+            .catch(e => setError(e instanceof Error ? e.message : 'No se pudo abrir el nuevo borrador.'))
+        }}
+      />
+    )}
   </section></PlanStepNavigationContext.Provider>
 }

@@ -23,8 +23,11 @@ public class ReportService {
     public record Result(@NotNull UUID activityId,@DecimalMin("0") @DecimalMax("100") BigDecimal percentage,@NotNull @Size(max=4000) String observations) {}
     public record Delegation(@NotBlank @Size(max=500) String purpose,@NotNull @Size(max=500) String location,@NotNull @Size(max=500) String institution,
         @NotNull @Size(max=500) String contact,@NotNull @Size(max=500) String contactDetails,@NotNull @Size(max=2000) String topic,@NotNull @Size(max=2000) String agreement) {}
-    public record Data(UUID basePlanId,UUID baseArtifactId,String baseFormalVersion,String background,String conclusions,String improvements,List<Result> results,List<Delegation> delegations) {}
-    public record State(WorkPlanModels.Plan document,Data data,List<ActivityModels.Activity> activities,EvidenceService.State evidence) {}
+    public record ExecutionReference(UUID documentId,UUID artifactId,UUID reviewId,String title,int sequenceNumber,String formalVersion,String pdfHash) {}
+    public record Data(UUID basePlanId,UUID baseArtifactId,String baseFormalVersion,String background,String conclusions,String improvements,List<Result> results,List<Delegation> delegations,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY) List<ExecutionReference> executionReferences) {
+        public Data(UUID plan,UUID artifact,String version,String background,String conclusions,String improvements,List<Result> results,List<Delegation> delegations) { this(plan,artifact,version,background,conclusions,improvements,results,delegations,List.of()); }
+    }
+    public record State(WorkPlanModels.Plan document,Data data,List<ActivityModels.Activity> activities,EvidenceService.State evidence,List<ExecutionReference> executionOptions) {}
     public record Option(UUID id,String title,String groupName,String periodName,String formalVersion,String suggestedTitle,UUID reportId) {}
     public record Options(List<Option> items,long total,int page,int size) {}
     @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
@@ -49,15 +52,29 @@ public class ReportService {
         return new Options(items,total,page,size);
     }
     public record Save(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=200) String title,@NotNull @Size(max=50000) String background,
-        @NotNull @Size(max=50000) String conclusions,@NotNull @Size(max=50000) String improvements,@NotNull @Size(max=100) List<@Valid Result> results,@NotNull @Size(max=100) List<@Valid Delegation> delegations) {}
+        @NotNull @Size(max=50000) String conclusions,@NotNull @Size(max=50000) String improvements,@NotNull @Size(max=100) List<@Valid Result> results,@NotNull @Size(max=100) List<@Valid Delegation> delegations,@Size(max=200) List<@NotNull UUID> executionReportIds) {
+        public Save(Long version,String title,String background,String conclusions,String improvements,List<Result> results,List<Delegation> delegations) { this(version,title,background,conclusions,improvements,results,delegations,null); }
+    }
     private final JdbcTemplate jdbc;private final WorkPlanService plans;private final ActivityService activities;private final EvidenceService evidence;private final Accounts accounts;private final AuditService audit;private final ZoneId zone;
     private final JsonMapper json=JsonMapper.builder().build();
     public ReportService(JdbcTemplate jdbc,WorkPlanService plans,ActivityService activities,EvidenceService evidence,Accounts accounts,AuditService audit,@Value("${app.planning.time-zone:America/Guayaquil}") String zone) { this.jdbc=jdbc;this.plans=plans;this.activities=activities;this.evidence=evidence;this.accounts=accounts;this.audit=audit;this.zone=ZoneId.of(zone); }
     public Data data(UUID doc,String email) {
         var plan=plans.get(doc,email);if(!plan.documentType().equals("T2")) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Informe no disponible.");
-        return jdbc.query("SELECT * FROM work_report WHERE id=?",(rs,n)->new Data(rs.getObject("base_plan_id",UUID.class),rs.getObject("base_artifact_id",UUID.class),rs.getString("base_formal_version"),rs.getString("background"),rs.getString("conclusions"),rs.getString("improvements"),List.of(json.readValue(rs.getString("results"),Result[].class)),List.of(json.readValue(rs.getString("delegations"),Delegation[].class))),doc).getFirst();
+        return jdbc.query("SELECT * FROM work_report WHERE id=?",(rs,n)->new Data(rs.getObject("base_plan_id",UUID.class),rs.getObject("base_artifact_id",UUID.class),rs.getString("base_formal_version"),rs.getString("background"),rs.getString("conclusions"),rs.getString("improvements"),List.of(json.readValue(rs.getString("results"),Result[].class)),List.of(json.readValue(rs.getString("delegations"),Delegation[].class)),List.of(json.readValue(rs.getString("execution_references"),ExecutionReference[].class))),doc).getFirst();
     }
-    public State get(UUID doc,String email) { var data=data(doc,email);return new State(plans.get(doc,email),data,activities.get(doc,email).activities(),evidence.forReport(doc,data.basePlanId(),email)); }
+    public State get(UUID doc,String email) { var data=data(doc,email);var plan=plans.get(doc,email);return new State(plan,data,activities.get(doc,email).activities(),evidence.forReport(doc,data.basePlanId(),email),plan.editable()?approvedCuts(data.basePlanId(),email):List.of()); }
+    public List<ExecutionReference> approvedCuts(UUID base,String email) {
+        plans.get(base,email);
+        return jdbc.query("""
+            SELECT w.id,w.title,w.formal_version,e.sequence_number,r.id AS review_id,r.artifact_id,f.sha256
+            FROM execution_report e JOIN work_plan w ON w.id=e.id
+            JOIN institutional_group g ON g.id=w.group_id LEFT JOIN organizational_scope s ON s.id=w.scope_id
+            JOIN app_user actor ON actor.id=?
+            JOIN LATERAL (SELECT * FROM document_review WHERE work_plan_id=w.id AND status='APPROVED' ORDER BY round_number DESC LIMIT 1) r ON true
+            JOIN stored_file f ON f.id=r.current_file_id
+            WHERE e.base_plan_id=? AND w.document_type='T3' AND w.document_state='APPROVED' AND
+            """+WorkPlanService.ACCESS+" ORDER BY e.sequence_number,w.id",(rs,n)->new ExecutionReference(rs.getObject("id",UUID.class),rs.getObject("artifact_id",UUID.class),rs.getObject("review_id",UUID.class),rs.getString("title"),rs.getInt("sequence_number"),rs.getString("formal_version"),rs.getString("sha256")),accounts.current(email).id(),base);
+    }
     @Transactional public WorkPlanModels.Plan create(UUID base,String email) {
         var parent=plans.lock(base,email);submissions.requireComplete(base,email);
         var actor=accounts.current(email);
@@ -86,6 +103,12 @@ public class ReportService {
         var plan=plans.lock(doc,email);data(doc,email);
         if(!plan.editable()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"El Informe está en modo de solo lectura.");
         if(input.rowVersion()!=plan.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Informe cambió. Recargue antes de guardar.");
+        if(input.executionReportIds()!=null) {
+            var selected=new HashSet<>(input.executionReportIds());var available=approvedCuts(plan.basePlanId(),email);
+            if(selected.size()!=input.executionReportIds().size() || !available.stream().map(ExecutionReference::documentId).toList().containsAll(selected)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione cortes aprobados del mismo Plan, sin duplicados.");
+            var references=input.executionReportIds().stream().map(id->available.stream().filter(c->c.documentId().equals(id)).findFirst().orElseThrow()).toList();
+            jdbc.update("UPDATE work_report SET execution_references=?::jsonb WHERE id=?",json.writeValueAsString(references),doc);
+        }
         Set<UUID> ids=new HashSet<>();activities.get(doc,email).activities().forEach(a->ids.add(a.id()));
         if(input.results().size()!=ids.size()||!ids.equals(new HashSet<>(input.results().stream().map(Result::activityId).toList()))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Los resultados deben corresponder exactamente a las actividades del Plan base.");
         var canonical=activities.get(doc,email).activities().stream().map(a->input.results().stream().filter(r->r.activityId().equals(a.id())).findFirst().orElseThrow()).toList();
@@ -94,6 +117,7 @@ public class ReportService {
     }
     public List<Blocker> blockers(UUID doc,String email) {
         var state=get(doc,email);var result=new ArrayList<Blocker>();
+        if(state.data().executionReferences()==null || state.data().executionReferences().isEmpty()) result.add(new Blocker("Información general","Seleccione al menos un Informe de ejecución aprobado del mismo Plan."));
         if(state.data().background().isBlank()) result.add(new Blocker("Antecedentes","Complete los antecedentes con el origen verificable del Plan; no invente resoluciones."));
         if(state.data().conclusions().isBlank()) result.add(new Blocker("Conclusiones","Complete las conclusiones del Informe."));
         if(state.data().improvements().isBlank()) result.add(new Blocker("Oportunidades de mejora","Complete las oportunidades de mejora."));

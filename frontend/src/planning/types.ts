@@ -4,13 +4,25 @@ export interface WorkPlan {
   documentState: 'DRAFT' | 'IN_REVIEW' | 'APPROVED'; formalVersion: string; rowVersion: number; preparationDate: string
   scopeId: string | null; createdBy: string; reviewRound: number; archivedAt: string | null
   documentType: 'T1' | 'T2' | 'T3'; basePlanId: string | null
-  createdAt: string; updatedAt: string; editable: boolean; canManage: boolean
+  createdAt: string; updatedAt: string; readOnlyReason?: string | null; editable: boolean; canManage: boolean
 }
 export interface PlanOptions {
   groups: { id: string; name: string }[]
-  periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean; status: 'ACTIVE' | 'CLOSED' }[]
+  periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean; status: 'ACTIVE' | 'CLOSED'; current?: boolean }[]
   singlePlanPerScope: boolean; enforcePreparationWindow: boolean
   scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean; suggestedTitle: string; institutionalUnit?: string; institutionalUnitType?: string }[]
+  canCreateDerived?: boolean
   defaultJustification?: string
 }
 export interface PlanPage { items: Pick<WorkPlan, 'id' | 'title' | 'groupName' | 'periodName' | 'documentState' | 'formalVersion' | 'updatedAt' | 'editable' | 'documentType' | 'archivedAt' | 'canManage' | 'rowVersion'>[]; total: number; page: number; size: number }
+export type PlanSummary = PlanPage['items'][number]
+
+export type ScopeOption = PlanOptions['scopes'][number]
+export interface CareerCopyOptions {
+  rowVersion: number
+  canCopy: boolean
+  scopes: ScopeOption[]
+}
+export interface CareerCopyResult {
+  documentIds: string[]
+}

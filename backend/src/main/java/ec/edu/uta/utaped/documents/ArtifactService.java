@@ -44,7 +44,7 @@ public class ArtifactService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La vista de edición solo está disponible para borradores T1 editables.");
         if(plan.rowVersion()!=input.rowVersion()) throw new ResponseStatusException(HttpStatus.CONFLICT,"El Plan cambió en el servidor. Sus cambios locales se conservan; resuelva el conflicto antes de actualizar la vista.");
         // The elaboration date is provisional until the final artifact is prepared for signing.
-        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()).withPreparationDate(plans.today()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors(),null,saved.structure());
+        var draft=new Snapshot(plan.withDraftContent(input.title(),input.institutionalUnit(),input.career(),input.justification(),input.objective()).withPreparationDate(plans.today()),saved.matrixSource(),saved.elaboratedBy(),saved.privacyNoticeEnabled(),saved.activities(),saved.attachments(),saved.workflow(),null,saved.externalReferences(),saved.authors(),null,saved.structure(),saved.matrixNote());
         String key=email+":"+id+":"+hash(draft);PreviewCache cached;
         synchronized(draftPreviews) {
             draftPreviews.values().removeIf(value->value.expiresAt()<System.currentTimeMillis());
@@ -94,6 +94,8 @@ public class ArtifactService {
         if(plan.objective().isBlank()) blockers.add(new Blocker("Contenido","Complete el objetivo."));
         if(jdbc.queryForObject("SELECT count(*) FROM work_plan_matrix WHERE work_plan_id=?",Integer.class,id)==0 || matrix.activities().isEmpty())
             blockers.add(new Blocker("Actividades y matriz","Guarde al menos una actividad completa."));
+        if(matrix.definitions().stream().anyMatch(d->d.active() && d.category().equals("IMPROVEMENT_ACTION")) && matrix.activities().stream().noneMatch(a->a.category().equals("IMPROVEMENT_ACTION")))
+            blockers.add(new Blocker("Actividades y matriz","Seleccione al menos una acción de mejora aplicable a su comisión."));
         var members=new HashSet<UUID>();matrix.members().forEach(m->members.add(m.id()));
         for(var a:matrix.activities()) {
             boolean invalid=a.startsOn()==null || a.endsOn()==null || a.responsibleIds().isEmpty() || a.resources().isEmpty() || a.means().isEmpty();
@@ -117,7 +119,7 @@ public class ArtifactService {
         var names=new HashMap<UUID,String>();matrix.members().forEach(m->names.put(m.id(),m.name()));
         List<Activity> rows=matrix.activities().stream().map(a->new Activity(a.title(),a.category(),a.startsOn()==null?null:a.startsOn().toString(),a.endsOn()==null?null:a.endsOn().toString(),
             a.collective()?matrix.collectiveLabel():String.join("\n",a.responsibleIds().stream().map(m->names.getOrDefault(m,"Responsable no disponible")).toList()),
-            a.responsibleIds(),a.resources().stream().map(c->c.label()).toList(),a.means().stream().map(c->c.label()).toList())).toList();
+            a.responsibleIds(),a.resources().stream().map(c->c.label()).toList(),a.means().stream().map(c->c.label()).toList(),a.context())).toList();
         var annexList=new ArrayList<>(annexes.items());
         var references=new ArrayList<ExternalReference>();
         var report=plan.documentType().equals("T2")?reports.data(id,email):null;
@@ -135,7 +137,7 @@ public class ArtifactService {
                         references.add(new ExternalReference(reference.id(),reference.version(),a.title(),medium.label(),reference.referenceTitle(),reference.externalUrl()));
                     } else means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
                 }
-                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means)));
+                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means),a.context()));
             }
             rows=List.copyOf(linked);annexList.addAll(evidence.annexes(report.basePlanId(),email));
         }
@@ -154,14 +156,14 @@ public class ArtifactService {
                         references.add(new ExternalReference(reference.id(),reference.version(),a.title(),medium.label(),reference.referenceTitle(),reference.externalUrl()));
                     } else means.add(medium.label()+(medium.versions().isEmpty()?"":" ("+AttachmentService.label(annexIndex++)+")"));
                 }
-                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means)));
+                linked.add(new Activity(a.title(),a.category(),a.startsOn(),a.endsOn(),a.responsibleDisplay(),a.responsibleIds(),a.resources(),List.copyOf(means),a.context()));
             }
             rows=List.copyOf(linked);annexList.addAll(evidence.annexes(execution.basePlanId(),email,selected));
         }
         // Labels are derived once for the complete sequence, including evidence PDFs.
         var labelled=new ArrayList<AttachmentModels.Attachment>();
         for(var a:annexList) labelled.add(new AttachmentModels.Attachment(a.id(),a.fileId(),AttachmentService.label(labelled.size()),a.title(),a.description(),a.originalName(),a.sizeBytes(),a.pageCount(),a.sha256()));
-        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email),execution,structures.snapshot(id));
+        return new Snapshot(plan,matrix.source(),matrix.elaboratedBy(),annexes.privacyNoticeEnabled(),rows,List.copyOf(labelled),workflows.capture(plan.groupId(),plan.scopeId(),plan.documentType()),report,List.copyOf(references),authors.authors(id,email),execution,structures.snapshot(id),matrix.note());
     }
     private String hash(Snapshot snapshot) {
         // Permissions belong to the requesting account, not to the document content.
@@ -232,6 +234,7 @@ public class ArtifactService {
         blockers.addAll(readiness(id,email).blockers());
         if(frozen.workflow()==null) blockers.add(new Blocker("Flujo","Esta previsualización no contiene una revisión de flujo configurada."));
         else for(var stage:frozen.workflow().stages()) {
+            if(!stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) blockers.add(new Blocker("Flujo",stage.label()+": actualice la previsualización para incluir la firma de sus participantes personales."));
             if((!stage.recipientKind().equals("COLLEGIATE") || stage.requiresSignature()) && stage.participants().isEmpty())
                 blockers.add(new Blocker("Flujo",stage.label()+": no hay participantes resueltos."));
             if(stage.participants().stream().anyMatch(p->!p.active())) blockers.add(new Blocker("Flujo",stage.label()+": contiene participantes inactivos."));

@@ -17,6 +17,13 @@ public class DocumentStructures {
     public record Section(@NotBlank @Size(max=160) String key,@NotBlank @Size(max=160) String label,boolean required,@NotNull @Size(max=10000) String initialText) {}
     public record Structure(long revision,List<Section> sections,Map<String,String> contents) {}
     public record Save(@NotNull @PositiveOrZero Long revision,@NotNull @Size(max=30) List<@Valid Section> sections) {}
+    public record Transfer(@Min(1) @Max(1) int formatVersion,@NotBlank @Pattern(regexp="T1|T2|T3") String documentType,@NotNull @Size(max=30) List<@NotNull @Valid Section> sections) {}
+    public record Import(@NotNull @PositiveOrZero Long revision,@NotNull @Valid Transfer structure) {}
+    public Transfer export(String type,String email) { return new Transfer(1,type,template(type,email).sections()); }
+    @Transactional public Structure importStructure(String type,String email,Import input) {
+        if(!type.equals(input.structure().documentType())) throw invalid("El archivo pertenece a otro formato documental.");
+        return save(type,email,new Save(input.revision(),input.structure().sections()));
+    }
     public record Values(@NotNull @PositiveOrZero Long rowVersion,@NotNull @Size(max=20) Map<String,String> contents) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final AuditService audit;private final JsonMapper json=JsonMapper.builder().build();
     public DocumentStructures(JdbcTemplate jdbc,Accounts accounts,AuditService audit) { this.jdbc=jdbc;this.accounts=accounts;this.audit=audit; }

@@ -32,7 +32,7 @@ class DevelopmentSeedTests {
             var jdbc=new JdbcTemplate(source); var seed=new DevelopmentSeed(jdbc,new BCryptPasswordEncoder(),"Seed-Example-Only-2026!");
             seed.run(new DefaultApplicationArguments()); seed.run(new DefaultApplicationArguments());
             assertEquals(23,jdbc.queryForObject("SELECT count(*) FROM institutional_group",Integer.class));
-            assertEquals(3,jdbc.queryForObject("SELECT count(*) FROM academic_career",Integer.class));
+            assertEquals(6,jdbc.queryForObject("SELECT count(*) FROM academic_career",Integer.class));
             assertEquals(30,jdbc.queryForObject("SELECT count(*) FROM organizational_scope",Integer.class));
             assertEquals(7,jdbc.queryForObject("SELECT count(*) FROM app_user",Integer.class));
             var referenceCatalog=ec.edu.uta.utaped.institution.DevelopmentReference.load();

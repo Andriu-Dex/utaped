@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react'
 import { api, type Group, type User } from '../shared/api'
 import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
+
 interface Stage { positionLabel?: string; positionId?: string | null; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
 interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
+
 export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyChange }: { groups: Group[]; users: User[]; suggestedQuery: string; onDirtyChange: (dirty: boolean) => void }) {
   const [group, setGroup] = useState(''); const [type, setType] = useState('T1'); const [state, setState] = useState<State | null>(null)
   const [draft, setDraft] = useState<Definition>({ name: '', stages: [] }); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false)
@@ -38,8 +40,9 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     <div className="section-heading">
       <div className="section-heading-icon" aria-hidden="true"><Icon name="settings" size={24} /></div>
       <div>
+        <span className="section-heading-kicker">GESTIÓN DE PROCESOS</span>
         <h3>Plantillas de flujo por grupo</h3>
-        <p>Prepare revisiones reutilizables para T1 y T2. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
+        <p className="muted">Prepare revisiones reutilizables para Planes e Informes. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
       </div>
     </div>
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
@@ -49,6 +52,12 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       </div>
     </div>
     {error && <Toast message={error} />}{notice && <Toast tone="success" message={notice} />}
+    {!group && (
+      <div className="empty-state" style={{ margin: '24px 0 12px' }}>
+        <Icon name="settings" size={32} />
+        <p>Seleccione un grupo institucional y un tipo documental para consultar o configurar sus etapas de aprobación.</p>
+      </div>
+    )}
     {group && !state && (loadFailed ? <div className="empty-state"><p>No se pudo cargar la configuración del flujo.</p><button type="button" className="secondary" onClick={() => { setLoadFailed(false); setError(''); setRefresh(n => n + 1) }}>Reintentar configuración del flujo</button></div> : <p role="status">Cargando flujo…</p>)}
     {state && <>
       <div className="workflow-status-card">
@@ -56,7 +65,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
         {!state.groupActive && <p className="muted" style={{ margin: 0 }}>Grupo inactivo: configuración de solo lectura.</p>}
       </div>
       <div className="filter-toolbar" style={{ margin: '16px 0' }}>
-        <label>Buscar participantes del flujo<input maxLength={200} value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} /></label>
+        <label>Buscar participantes del flujo<input maxLength={200} value={search} onChange={e => { setSearch(e.currentTarget.value); setOptions({ items: [], total: 0 }); setPage(0) }} /></label>
         <p style={{ margin: '8px 0 0' }}>{options.total} participantes activos coinciden.</p>
       </div>
       <div className="pagination">
@@ -77,21 +86,21 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button className="secondary" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={16} /></button>
-                  <button className="secondary" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}><Icon name="arrowDown" size={16} /></button>
-                  <button className="danger" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}><Icon name="trash" size={16} /></button>
+                  <button className="secondary table-action-icon-btn" type="button" title="Subir etapa" aria-label={'Subir etapa ' + (index + 1)} disabled={index === 0} onClick={() => move(index, -1)}><Icon name="arrowUp" size={16} /></button>
+                  <button className="secondary table-action-icon-btn" type="button" title="Bajar etapa" aria-label={'Bajar etapa ' + (index + 1)} disabled={index + 1 === draft.stages.length} onClick={() => move(index, 1)}><Icon name="arrowDown" size={16} /></button>
+                  <button className="danger table-action-icon-btn" type="button" title="Quitar etapa del borrador" aria-label={'Quitar etapa ' + (index + 1)} onClick={() => setDraft(d => ({ ...d, stages: d.stages.filter(a => a.id !== s.id) }))}><Icon name="trash" size={16} /></button>
                 </div>
               </div>
               <div className="grid">
                 <label>Nombre de la etapa<input required maxLength={160} value={s.label} onChange={e => change(s.id, { label: e.target.value })} /></label>
                 <label>Acción de la etapa<select value={s.action} onChange={e => change(s.id, { action: e.target.value })}><option value="REVIEW">Revisión</option><option value="VALIDATE">Validación</option><option value="APPROVE">Aprobación</option></select></label>
-                <label>Destinatario de la etapa<select value={s.recipientKind} onChange={e => change(s.id, { recipientKind: e.target.value, assigneeIds: [], groupRole: e.target.value === 'GROUP_ROLE' ? 'COORDINATOR' : null, recipientLabel: '', positionId: e.target.value === 'POSITION' ? (positions.find(p => p.active)?.id ?? null) : null })}><option value="POSITION">Cargo institucional</option><option value="PERSON">Personas</option><option value="GROUP_ROLE">Rol de pertenencia del grupo</option><option value="COLLEGIATE">Órgano colegiado</option></select></label>
+                <label>Destinatario de la etapa<select value={s.recipientKind} onChange={e => change(s.id, { recipientKind: e.target.value, requiresSignature: e.target.value !== 'COLLEGIATE', assigneeIds: [], groupRole: e.target.value === 'GROUP_ROLE' ? 'COORDINATOR' : null, recipientLabel: '', positionId: e.target.value === 'POSITION' ? (positions.find(p => p.active)?.id ?? null) : null })}><option value="POSITION">Cargo institucional</option><option value="PERSON">Personas</option><option value="GROUP_ROLE">Rol de pertenencia del grupo</option><option value="COLLEGIATE">Órgano colegiado</option></select></label>
                 {s.recipientKind === 'COLLEGIATE' && <label>Nombre del órgano colegiado<input required maxLength={160} value={s.recipientLabel} onChange={e => change(s.id, { recipientLabel: e.target.value })} /></label>}
                 {s.recipientKind === 'POSITION' && <label>Cargo destinatario<select required value={s.positionId ?? ''} onChange={e => change(s.id, { positionId: e.target.value || null })}><option value="">Seleccione un cargo</option>{positions.filter(p => p.active || p.id === s.positionId).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select><small className="field-help">Se resuelve con la persona asignada al cargo en el período y la carrera de cada ámbito.</small></label>}
                 {s.recipientKind === 'GROUP_ROLE' && <label>Rol destinatario<select value={s.groupRole ?? ''} onChange={e => change(s.id, { groupRole: e.target.value })}><option value="MEMBER">Miembros</option><option value="COORDINATOR">Coordinadores</option></select></label>}
               </div>
               <label>Cargo institucional de esta etapa<input maxLength={160} value={s.positionLabel ?? ''} onChange={event => change(s.id, { positionLabel: event.target.value })} placeholder="Cargo que aparecerá en la matriz de firmas" /></label>
-              <label className="check"><input type="checkbox" checked={s.requiresSignature} onChange={e => change(s.id, { requiresSignature: e.target.checked, assigneeIds: s.assigneeIds })} />Requiere firma personal</label>
+              <label className="check"><input type="checkbox" disabled={s.recipientKind !== 'COLLEGIATE'} checked={s.recipientKind !== 'COLLEGIATE' || s.requiresSignature} onChange={e => change(s.id, { requiresSignature: e.target.checked, assigneeIds: s.assigneeIds })} />Requiere firma personal</label>
               {(s.recipientKind === 'PERSON' || s.recipientKind === 'COLLEGIATE') && <fieldset className="choice-group">
                 <legend>{s.recipientKind === 'COLLEGIATE' && !s.requiresSignature ? 'Persona que registra la decisión del órgano' : 'Participantes de la etapa'}</legend>
                 <p>{s.recipientKind === 'COLLEGIATE' && !s.requiresSignature ? 'Designe una sola persona. Se registrará en auditoría, sin figurar como firmante del órgano.' : 'Seleccione las personas que intervienen secuencialmente en esta etapa.'}</p>
@@ -102,7 +111,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
               </fieldset>}
             </section>)}
             <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-              <button type="button" className="secondary" disabled={draft.stages.length >= 20} onClick={() => setDraft(d => ({ ...d, stages: [...d.stages, { id: crypto.randomUUID(), label: '', action: 'REVIEW', recipientKind: 'PERSON', assigneeIds: [], groupRole: null, recipientLabel: '', requiresSignature: false }] }))}>Agregar etapa</button>
+              <button type="button" className="secondary" disabled={draft.stages.length >= 20} onClick={() => setDraft(d => ({ ...d, stages: [...d.stages, { id: crypto.randomUUID(), label: '', action: 'REVIEW', recipientKind: 'PERSON', assigneeIds: [], groupRole: null, recipientLabel: '', requiresSignature: true }] }))}>Agregar etapa</button>
               <button disabled={!dirty}>Guardar borrador del flujo</button>
             </div>
           </fieldset>

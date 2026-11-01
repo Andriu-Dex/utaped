@@ -25,9 +25,19 @@ public class ReviewService {
     public record Observation(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=4000) String message,
         @PositiveOrZero Integer pageIndex,@DecimalMin("0") @DecimalMax("1") Double x,@DecimalMin("0") @DecimalMax("1") Double y,
         @DecimalMin(value="0",inclusive=false) @DecimalMax("1") Double width,@DecimalMin(value="0",inclusive=false) @DecimalMax("1") Double height) {}
+    public record ObservationUpdate(@NotNull @PositiveOrZero Long rowVersion,@NotBlank @Size(max=4000) String message,
+        @PositiveOrZero Integer pageIndex,@DecimalMin("0") @DecimalMax("1") Double x,@DecimalMin("0") @DecimalMax("1") Double y,
+        @DecimalMin(value="0",inclusive=false) @DecimalMax("1") Double width,@DecimalMin(value="0",inclusive=false) @DecimalMax("1") Double height) {}
+    public static String displayStageLabel(String label, String action) {
+        if(label==null) return "";
+        if("REVIEW".equals(action)&&"Revisión de ejemplo".equals(label)) return "Revisión documental";
+        if("APPROVE".equals(action)&&"Aprobación de ejemplo".equals(label)) return "Aprobación del documento";
+        return label;
+    }
     public record Task(UUID id,UUID reviewId,UUID documentId,String title,String groupName,String periodName,String actorName,String stageLabel,String action,
         boolean requiresSignature,String status,long rowVersion,int roundNumber,int position) {}
     public record State(Map<String,Object> review,List<Map<String,Object>> tasks,List<Map<String,Object>> observations,int pageCount,String pdfHash,boolean canAct) {}
+    public record Comparison(UUID currentReviewId,int currentRound,UUID previousReviewId,Integer previousRound,List<SnapshotComparison.Change> changes) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final WorkPlanService plans;private final ArtifactService artifacts;
     private final StoredFiles files;private final AuditService audit;private final boolean allowHttp;
     private final JsonMapper json=JsonMapper.builder().build();private final Semaphore signing=new Semaphore(1);
@@ -76,19 +86,23 @@ public class ReviewService {
             FROM review_task t JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id
             JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id
             WHERE t.actor_id=? AND t.status IN ('ACTIVE','COMPLETED','RETURNED') AND g.active ORDER BY (t.status='ACTIVE') DESC,r.created_at DESC,t.position LIMIT 200
-            """,(rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),rs.getString("stage_label"),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),accounts.current(email).id());
+            """,(rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),displayStageLabel(rs.getString("stage_label"),rs.getString("stage_action")),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),accounts.current(email).id());
     }
     public record InboxMetrics(long active,long completed,long returned) {}
     public record InboxPage(List<Task> items,long total,int page,int size,InboxMetrics metrics) {}
     @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
-    public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) {
-        if(query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
+    public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) { return inboxPage(email,query,status,documentType,"",page,size); }
+    @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public InboxPage inboxPage(String email,String query,String status,String documentType,String action,int page,int size) {
+        if(!Set.of("","REVIEW","APPROVE").contains(action) || query==null || query.length()>200 || !Set.of("","ACTIVE","COMPLETED","RETURNED").contains(status)
             || !Set.of("","T1","T2","T3").contains(documentType) || page<0 || page>1000000 || size<1 || size>100)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revise los filtros de la bandeja.");
         UUID actor=accounts.current(email).id();
         String from=" FROM review_task t JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id "
             + "JOIN institutional_group g ON g.id=w.group_id JOIN academic_period p ON p.id=w.period_id "
             + "WHERE t.actor_id=? AND t.status IN ('ACTIVE','COMPLETED','RETURNED') AND g.active";
+        if(action.equals("REVIEW")) from+=" AND t.stage_action IN ('REVIEW','VALIDATE')";
+        else if(action.equals("APPROVE")) from+=" AND t.stage_action='APPROVE'";
         var counts=jdbc.queryForMap("SELECT count(*) FILTER(WHERE t.status='ACTIVE') AS active,count(*) FILTER(WHERE t.status='COMPLETED') AS completed,count(*) FILTER(WHERE t.status='RETURNED') AS returned"+from,actor);
         String filtered=from+" AND (?='' OR t.status=?) AND (?='' OR w.document_type=?) "
             + "AND (?='' OR position(? in lower(w.title||' '||g.name||' '||p.name))>0)";
@@ -98,21 +112,54 @@ public class ReviewService {
         var parameters=new ArrayList<Object>(Arrays.asList(arguments));parameters.add(size);parameters.add((long)page*size);
         var items=jdbc.query("SELECT t.*,r.work_plan_id,r.round_number,w.title,g.name AS group_name,p.name AS period_name"+filtered
             +" ORDER BY (t.status='ACTIVE') DESC,r.created_at DESC,t.position,t.id LIMIT ? OFFSET ?",
-            (rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),rs.getString("stage_label"),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),parameters.toArray());
+            (rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),displayStageLabel(rs.getString("stage_label"),rs.getString("stage_action")),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),parameters.toArray());
         return new InboxPage(items,total,page,size,new InboxMetrics(((Number)counts.get("active")).longValue(),((Number)counts.get("completed")).longValue(),((Number)counts.get("returned")).longValue()));
     }
     private Map<String,Object> authorized(UUID review,String email) {
-        var record=jdbc.queryForList("SELECT * FROM document_review WHERE id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));
+        var record=jdbc.queryForList("SELECT r.*, w.title, w.document_type FROM document_review r JOIN work_plan w ON w.id=r.work_plan_id WHERE r.id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));
         plans.get((UUID)record.get("work_plan_id"),email);return record;
     }
     @Transactional(readOnly=true) public State state(UUID review,String email) {
         var record=authorized(review,email);var file=files.metadata((UUID)record.get("current_file_id"));
-        var tasks=jdbc.queryForList("SELECT id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,status,row_version,acted_at FROM review_task WHERE review_id=? ORDER BY position",review);
-        var observations=jdbc.queryForList("SELECT o.*,u.display_name AS actor_name FROM review_observation o JOIN app_user u ON u.id=o.actor_id WHERE o.review_id=? ORDER BY o.created_at,o.id",review);
-        boolean canAct=jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN academic_period p ON p.id=w.period_id WHERE w.id=? AND p.status='ACTIVE'",Integer.class,record.get("work_plan_id"))>0&&tasks.stream().anyMatch(t->accounts.current(email).id().equals(t.get("actor_id"))&&t.get("status").equals("ACTIVE"));
+        var tasks=jdbc.queryForList("SELECT id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,status,row_version,acted_at,slot_actor_id FROM review_task WHERE review_id=? ORDER BY position",review);
+        var replacements=jdbc.queryForList("SELECT h.task_id,h.previous_actor_id,h.previous_actor_name,h.actor_id,h.actor_name,h.authorized_by,h.authorized_by_name,h.reason,h.created_at FROM review_task_reassignment h JOIN review_task t ON t.id=h.task_id WHERE t.review_id=? ORDER BY h.created_at,h.id",review);
+        for(var t:tasks) {
+            t.put("reassignments",replacements.stream().filter(h->t.get("id").equals(h.get("task_id"))).toList());
+            t.put("display_stage_label",displayStageLabel((String)t.get("stage_label"),(String)t.get("stage_action")));
+        }
+        var observations=jdbc.queryForList("""
+            SELECT o.id,o.review_id,o.task_id,o.actor_id,o.message,o.page_index,o.x,o.y,o.width,o.height,
+                   o.created_at,o.updated_at,u.display_name AS actor_name
+            FROM review_observation o JOIN app_user u ON u.id=o.actor_id
+            WHERE o.review_id=? AND o.deleted_at IS NULL
+            ORDER BY o.created_at,o.id
+            """,review);
+        UUID currentUserId=accounts.current(email).id();
+        boolean periodActive=jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN academic_period p ON p.id=w.period_id WHERE w.id=? AND p.status='ACTIVE'",Integer.class,record.get("work_plan_id"))>0;
+        boolean isReviewActive="IN_REVIEW".equals(record.get("status"));
+        boolean coordinator=isReviewActive&&periodActive&&jdbc.queryForObject("SELECT count(*) FROM work_plan w JOIN organizational_scope s ON s.id=w.scope_id AND s.active JOIN scope_member m ON m.scope_id=s.id AND m.active AND m.membership_role='COORDINATOR' WHERE w.id=? AND m.user_id=? AND NOT w.discarded AND w.archived_at IS NULL",Integer.class,record.get("work_plan_id"),currentUserId)>0;
+        var unavailable=jdbc.queryForList("SELECT t.id FROM review_task t JOIN app_user u ON u.id=t.actor_id JOIN document_review r ON r.id=t.review_id JOIN work_plan w ON w.id=r.work_plan_id WHERE t.review_id=? AND (NOT u.active OR EXISTS(SELECT 1 FROM scope_member m WHERE m.scope_id=w.scope_id AND m.user_id=t.actor_id AND NOT m.active))",UUID.class,review);
+        for(var t:tasks) t.put("can_reassign",coordinator&&Set.of("ACTIVE","PENDING").contains(t.get("status"))&&t.get("acted_at")==null&&unavailable.contains(t.get("id")));
+        boolean canAct=periodActive&&tasks.stream().anyMatch(t->currentUserId.equals(t.get("actor_id"))&&t.get("status").equals("ACTIVE"));
+        for(var obs:observations) {
+            UUID obsTaskId=(UUID)obs.get("task_id");
+            UUID obsActorId=(UUID)obs.get("actor_id");
+            boolean taskIsActive=tasks.stream().anyMatch(t->obsTaskId.equals(t.get("id"))&&"ACTIVE".equals(t.get("status"))&&currentUserId.equals(t.get("actor_id")));
+            boolean canModify=isReviewActive&&periodActive&&currentUserId.equals(obsActorId)&&taskIsActive;
+            obs.put("can_edit",canModify);
+            obs.put("can_delete",canModify);
+        }
         return new State(record,tasks,observations,file.pageCount(),file.sha256(),canAct);
     }
     public List<Map<String,Object>> history(UUID doc,String email) { plans.get(doc,email);return jdbc.queryForList("SELECT id,round_number,status,created_at,closed_at FROM document_review WHERE work_plan_id=? ORDER BY round_number DESC",doc); }
+    @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public Comparison comparison(UUID review,String email) {
+        var current=authorized(review,email);UUID doc=(UUID)current.get("work_plan_id");int round=((Number)current.get("round_number")).intValue();
+        var earlier=jdbc.queryForList("SELECT id,artifact_id,round_number FROM document_review WHERE work_plan_id=? AND round_number<? ORDER BY round_number DESC LIMIT 1",doc,round);
+        if(earlier.isEmpty()) return new Comparison(review,round,null,null,List.of());
+        var previous=earlier.getFirst();authorized((UUID)previous.get("id"),email);
+        return new Comparison(review,round,(UUID)previous.get("id"),((Number)previous.get("round_number")).intValue(),SnapshotComparison.compare(frozen(doc,(UUID)previous.get("artifact_id")),frozen(doc,(UUID)current.get("artifact_id"))));
+    }
     public byte[] content(UUID review,String email) {
         var record=authorized(review,email);
         if(!record.get("status").equals("APPROVED")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La descarga final está disponible después de la aprobación.");
@@ -123,24 +170,78 @@ public class ReviewService {
         var initial=jdbc.queryForList("SELECT review_id FROM review_task WHERE id=? AND actor_id=?",task,accounts.current(email).id()).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Tarea no disponible."));
         jdbc.queryForList("SELECT id FROM document_review WHERE id=? FOR UPDATE",initial.get("review_id"));
         var record=jdbc.queryForMap("SELECT t.*,r.work_plan_id,r.artifact_id,r.current_file_id,r.status AS review_status FROM review_task t JOIN document_review r ON r.id=t.review_id WHERE t.id=?",task);
+        if(!accounts.current(email).id().equals(record.get("actor_id"))) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Tarea no disponible.");
         authorized((UUID)record.get("review_id"),email);
         plans.lock((UUID)record.get("work_plan_id"),email);
         if(!"ACTIVE".equals(record.get("status"))||!"IN_REVIEW".equals(record.get("review_status"))) throw conflict("Esta tarea ya no está activa.");
         if(((Number)record.get("row_version")).longValue()!=rowVersion) throw conflict("La tarea cambió. Recargue antes de actuar.");return record;
     }
+    private void validateGeometry(Integer pageIndex,Double x,Double y,Double width,Double height,int pageCount) {
+        boolean geometry=x!=null||y!=null||width!=null||height!=null;
+        if(pageIndex!=null&&(pageIndex<0||pageIndex>=pageCount)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Página no disponible.");
+        if(geometry) {
+            if(pageIndex==null||x==null||y==null||width==null||height==null
+                ||!Double.isFinite(x)||!Double.isFinite(y)||!Double.isFinite(width)||!Double.isFinite(height)
+                ||x<0||y<0||width<=0||height<=0||x+width>1.000001||y+height>1.000001)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El resaltado debe quedar dentro de la página.");
+        }
+    }
     @Transactional public void observe(UUID task,String email,Observation data) {
         var record=lockTask(task,email,data.rowVersion());var meta=files.metadata((UUID)record.get("current_file_id"));
-        boolean geometry=data.x()!=null||data.y()!=null||data.width()!=null||data.height()!=null;
-        if(data.pageIndex()!=null&&data.pageIndex()>=meta.pageCount()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Página no disponible.");
-        if(geometry&&(data.pageIndex()==null||data.x()==null||data.y()==null||data.width()==null||data.height()==null||!Double.isFinite(data.x()+data.y()+data.width()+data.height())||data.x()<0||data.y()<0||data.width()<=0||data.height()<=0||data.x()+data.width()>1.000001||data.y()+data.height()>1.000001)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El resaltado debe quedar dentro de la página.");
+        validateGeometry(data.pageIndex(),data.x(),data.y(),data.width(),data.height(),meta.pageCount());
         jdbc.update("INSERT INTO review_observation(id,review_id,task_id,actor_id,message,page_index,x,y,width,height) VALUES (?,?,?,?,?,?,?,?,?,?)",UUID.randomUUID(),record.get("review_id"),task,accounts.current(email).id(),data.message().trim(),data.pageIndex(),data.x(),data.y(),data.width(),data.height());
         jdbc.update("UPDATE review_task SET row_version=row_version+1 WHERE id=?",task);audit.record(accounts.current(email).id(),"REVIEW_OBSERVATION_ADDED",(UUID)record.get("work_plan_id"));
+    }
+    @Transactional public void updateObservation(UUID task,UUID observationId,String email,ObservationUpdate data) {
+        UUID actorId=accounts.current(email).id();
+        var record=lockTask(task,email,data.rowVersion());
+        var meta=files.metadata((UUID)record.get("current_file_id"));
+        validateGeometry(data.pageIndex(),data.x(),data.y(),data.width(),data.height(),meta.pageCount());
+        var rows=jdbc.queryForList("SELECT * FROM review_observation WHERE id=? AND task_id=? AND review_id=? AND actor_id=? AND deleted_at IS NULL",observationId,task,record.get("review_id"),actorId);
+        if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Observación no disponible.");
+        var existing=rows.getFirst();
+        var beforeState=new LinkedHashMap<String,Object>();
+        beforeState.put("message",existing.get("message"));beforeState.put("pageIndex",existing.get("page_index"));
+        beforeState.put("x",existing.get("x"));beforeState.put("y",existing.get("y"));
+        beforeState.put("width",existing.get("width"));beforeState.put("height",existing.get("height"));
+        beforeState.put("updatedAt",existing.get("updated_at"));
+        var afterState=new LinkedHashMap<String,Object>();
+        afterState.put("message",data.message().trim());afterState.put("pageIndex",data.pageIndex());
+        afterState.put("x",data.x());afterState.put("y",data.y());
+        afterState.put("width",data.width());afterState.put("height",data.height());
+        try {
+            jdbc.update("INSERT INTO review_observation_history(id,observation_id,task_id,actor_id,operation,before_state,after_state) VALUES (?,?,?,?,'UPDATE',?::jsonb,?::jsonb)",
+                UUID.randomUUID(),observationId,task,actorId,json.writeValueAsString(beforeState),json.writeValueAsString(afterState));
+        } catch(Exception e) { throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"No se pudo registrar el historial de la observación."); }
+        jdbc.update("UPDATE review_observation SET message=?,page_index=?,x=?,y=?,width=?,height=?,updated_at=now() WHERE id=?",
+            data.message().trim(),data.pageIndex(),data.x(),data.y(),data.width(),data.height(),observationId);
+        jdbc.update("UPDATE review_task SET row_version=row_version+1 WHERE id=?",task);
+        audit.record(actorId,"REVIEW_OBSERVATION_UPDATED",(UUID)record.get("work_plan_id"));
+    }
+    @Transactional public void deleteObservation(UUID task,UUID observationId,String email,long rowVersion) {
+        UUID actorId=accounts.current(email).id();
+        var record=lockTask(task,email,rowVersion);
+        var rows=jdbc.queryForList("SELECT * FROM review_observation WHERE id=? AND task_id=? AND review_id=? AND actor_id=? AND deleted_at IS NULL",observationId,task,record.get("review_id"),actorId);
+        if(rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Observación no disponible.");
+        var existing=rows.getFirst();
+        var beforeState=new LinkedHashMap<String,Object>();
+        beforeState.put("message",existing.get("message"));beforeState.put("pageIndex",existing.get("page_index"));
+        beforeState.put("x",existing.get("x"));beforeState.put("y",existing.get("y"));
+        beforeState.put("width",existing.get("width"));beforeState.put("height",existing.get("height"));
+        beforeState.put("createdAt",existing.get("created_at"));beforeState.put("updatedAt",existing.get("updated_at"));
+        try {
+            jdbc.update("INSERT INTO review_observation_history(id,observation_id,task_id,actor_id,operation,before_state,after_state) VALUES (?,?,?,?,'DELETE',?::jsonb,NULL)",
+                UUID.randomUUID(),observationId,task,actorId,json.writeValueAsString(beforeState));
+        } catch(Exception e) { throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"No se pudo registrar el historial de la observación."); }
+        jdbc.update("UPDATE review_observation SET deleted_at=now(),deleted_by=? WHERE id=?",actorId,observationId);
+        jdbc.update("UPDATE review_task SET row_version=row_version+1 WHERE id=?",task);
+        audit.record(actorId,"REVIEW_OBSERVATION_DELETED",(UUID)record.get("work_plan_id"));
     }
     @Transactional public void decide(UUID task,String email,Decision data) {
         if(idempotent(task,email,data.requestKey(),data.action())) return;
         var record=lockTask(task,email,data.rowVersion());
         if(data.action().equals("RETURN")) {
-            if(data.message().isBlank()&&jdbc.queryForObject("SELECT count(*) FROM review_observation WHERE task_id=?",Integer.class,task)==0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Registre al menos una observación para devolver el documento.");
+            if(data.message().isBlank()&&jdbc.queryForObject("SELECT count(*) FROM review_observation WHERE task_id=? AND deleted_at IS NULL",Integer.class,task)==0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Registre al menos una observación para devolver el documento.");
             if(!data.message().isBlank()) jdbc.update("INSERT INTO review_observation(id,review_id,task_id,actor_id,message) VALUES (?,?,?,?,?)",UUID.randomUUID(),record.get("review_id"),task,accounts.current(email).id(),data.message().trim());
             jdbc.update("UPDATE review_task SET status='RETURNED',row_version=row_version+1,acted_at=now(),request_key=? WHERE id=?",data.requestKey(),task);
             jdbc.update("UPDATE review_task SET status='CANCELLED',row_version=row_version+1 WHERE review_id=? AND status='PENDING'",record.get("review_id"));
@@ -160,7 +261,7 @@ public class ReviewService {
         authorized((UUID)previous.get("review_id"),email);return true;
     }
     private void requireNoObservations(Map<String,Object> record) {
-        if(jdbc.queryForObject("SELECT count(*) FROM review_observation WHERE review_id=?",Integer.class,record.get("review_id"))>0)
+        if(jdbc.queryForObject("SELECT count(*) FROM review_observation WHERE review_id=? AND deleted_at IS NULL",Integer.class,record.get("review_id"))>0)
             throw conflict("Hay observaciones en esta ronda. Devuelva el documento para corregirlas antes de aprobar.");
     }
     private void advance(Map<String,Object> record,UUID task,String email,UUID key,UUID output,UUID binding) {
@@ -190,7 +291,8 @@ public class ReviewService {
             try { certificate=material.certificate(certificateFingerprint); }
             catch(Pkcs12PdfSigner.SigningException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage()); }
             var source=jdbc.queryForObject("SELECT signature_slots::text FROM document_artifact WHERE id=?",String.class,record.get("artifact_id"));
-            var slot=Arrays.stream(json.readValue(source,SignatureSlot[].class)).filter(s->accounts.current(email).id().equals(s.actorId())&&record.get("signature_action").equals(s.action())).findFirst().orElseThrow(()->conflict("Artefacto sin ubicación válida de firma."));
+            var slot=Arrays.stream(json.readValue(source,SignatureSlot[].class)).filter(s->Objects.equals(record.get("slot_actor_id")==null?accounts.current(email).id():record.get("slot_actor_id"),s.actorId())&&record.get("signature_action").equals(s.action())).findFirst().orElseThrow(()->conflict("Artefacto sin ubicación válida de firma."));
+            if(record.get("slot_actor_id")!=null) slot=new SignatureSlot(slot.role(),slot.action()+"_EN_SUSTITUCION",slot.label(),slot.actorId(),slot.pageIndex(),slot.pageNumber(),slot.bounds());
             if(!signing.tryAcquire()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Hay otra firma en curso. Intente nuevamente.");
             byte[] output;
             try { output=new Pkcs12PdfSigner().signProvided(files.read(meta.id()),material.container,material.password,certificate,Instant.now(),slot,true); }

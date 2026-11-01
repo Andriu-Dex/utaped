@@ -17,25 +17,26 @@ public final class WorkPlanModels {
     public record Plan(UUID id,UUID teacherId,String teacherName,UUID groupId,String groupName,UUID periodId,String periodName,
         String title,String institutionalUnit,String career,String justification,String objective,String documentState,
         String formalVersion,long rowVersion,LocalDate preparationDate,OffsetDateTime createdAt,OffsetDateTime updatedAt,boolean editable,
-        UUID scopeId,UUID createdBy,int reviewRound,OffsetDateTime archivedAt,String documentType,UUID basePlanId,boolean canManage,String institutionalUnitType) {
-        public Plan discarded() { return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion+1,preparationDate,createdAt,OffsetDateTime.now(),false,scopeId,createdBy,reviewRound,OffsetDateTime.now(),documentType,basePlanId,false,institutionalUnitType); }
+        UUID scopeId,UUID createdBy,int reviewRound,OffsetDateTime archivedAt,String documentType,UUID basePlanId,boolean canManage,String institutionalUnitType,String readOnlyReason) {
+        public Plan discarded() { return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion+1,preparationDate,createdAt,OffsetDateTime.now(),false,scopeId,createdBy,reviewRound,OffsetDateTime.now(),documentType,basePlanId,false,institutionalUnitType,"ARCHIVED"); }
         public Plan withDraftContent(String draftTitle,String unit,String draftCareer,String justification,String objective) {
             return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,draftTitle==null?title:draftTitle,unit==null?institutionalUnit:unit,draftCareer==null?career:draftCareer,
                 justification,objective,documentState,formalVersion,rowVersion,preparationDate,createdAt,updatedAt,editable,
-                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType);
+                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType,readOnlyReason);
         }
         public Plan withPreparationDate(LocalDate date) {
             return new Plan(id,teacherId,teacherName,groupId,groupName,periodId,periodName,title,institutionalUnit,career,justification,objective,documentState,formalVersion,rowVersion,date,createdAt,updatedAt,editable,
-                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType);
+                scopeId,createdBy,reviewRound,archivedAt,documentType,basePlanId,canManage,institutionalUnitType,readOnlyReason);
         }
     }
     public record Summary(UUID id,String title,String groupName,String periodName,String documentState,
         String formalVersion,OffsetDateTime updatedAt,boolean editable,String documentType,OffsetDateTime archivedAt,boolean canManage,long rowVersion) {}
     public record Page(List<Summary> items,long total,int page,int size) {}
     public record GroupOption(UUID id,String name) {}
-    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status) {}
+    public record PeriodOption(UUID id,String name,LocalDate preparationStartsOn,LocalDate preparationEndsOn,boolean editable,String status,boolean current) {}
     public record ScopeOption(UUID id,UUID groupId,UUID periodId,String groupName,String periodName,String careerName,boolean canCreate,String suggestedTitle,String institutionalUnit,String institutionalUnitType) {}
-    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes,String defaultJustification) {
+    public record Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes,String defaultJustification,boolean canCreateDerived) {
+        public Options(List<GroupOption> groups,List<PeriodOption> periods,boolean single,boolean enforce,List<ScopeOption> scopes,String justification) { this(groups,periods,single,enforce,scopes,justification,false); }
         public Options(List<GroupOption> groups,List<PeriodOption> periods,boolean singlePlanPerScope,boolean enforcePreparationWindow,List<ScopeOption> scopes) {
             this(groups,periods,singlePlanPerScope,enforcePreparationWindow,scopes,InstitutionalTemplates.DEFAULT_JUSTIFICATION);
         }

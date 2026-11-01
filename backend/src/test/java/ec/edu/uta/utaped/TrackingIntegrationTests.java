@@ -46,6 +46,39 @@ class TrackingIntegrationTests {
         jdbc.update("UPDATE institutional_group SET active=false WHERE id=?",group);assertEquals(0,JsonPath.<Integer>read(u.request("GET","/api/tracking",null,false).body(),"$.documents"));assertEquals(8,jdbc.queryForObject("SELECT count(*) FROM work_plan",Integer.class));
         assertEquals(401,new Browser().request("GET","/api/tracking",null,false).statusCode());assertEquals(400,u.request("GET","/api/tracking?groupId=invalid",null,false).statusCode());
     }
+    @Test void homeRecentIsBoundedPrivateOrderedAndIndependentOfAnalytics() throws Exception {
+        UUID period=period(true);
+        for(int n=0;n<8;n++) {
+            plan(user,group,period,"Recent "+n);
+            jdbc.update("UPDATE work_plan SET updated_at=timestamp '2026-01-01' + (? * interval '1 day') WHERE title=?",n,"Recent "+n);
+        }
+        plan(user,group,period,"Archived");
+        jdbc.update("UPDATE work_plan SET archived_at=now() WHERE title='Archived'");
+        plan(user,group,period,"Discarded");
+        jdbc.update("UPDATE work_plan SET discarded=true WHERE title='Discarded'");
+        plan(admin,group,period,"Private other owner");
+        var browser=new Browser();browser.login("user@example.invalid");
+        var response=browser.request("GET","/api/tracking/recent",null,false);
+        assertEquals(200,response.statusCode());
+        assertEquals("no-store",response.headers().firstValue("Cache-Control").orElseThrow());
+        assertEquals(8,JsonPath.<Integer>read(response.body(),"$.total"));
+        assertEquals(5,JsonPath.<Integer>read(response.body(),"$.items.length()"));
+        assertEquals("Recent 7",JsonPath.read(response.body(),"$.items[0].title"));
+        assertEquals("Recent 3",JsonPath.read(response.body(),"$.items[4].title"));
+        assertFalse(response.body().contains("Private other owner"));
+        assertFalse(response.body().contains("Archived"));assertFalse(response.body().contains("Discarded"));
+        assertFalse(response.body().contains("editableDrafts"));
+        assertEquals(0,JsonPath.<Integer>read(browser.request("GET","/api/tracking/recent?groupId="+UUID.randomUUID(),null,false).body(),"$.total"));
+        assertEquals(0,JsonPath.<Integer>read(browser.request("GET","/api/tracking/recent?periodId="+UUID.randomUUID(),null,false).body(),"$.total"));
+        assertEquals(400,browser.request("GET","/api/tracking/recent?periodId=invalid",null,false).statusCode());
+        assertEquals(401,new Browser().request("GET","/api/tracking/recent",null,false).statusCode());
+        var administrator=new Browser();administrator.login("admin@example.invalid");
+        var own=administrator.request("GET","/api/tracking/recent",null,false);
+        assertEquals(0,JsonPath.<Integer>read(own.body(),"$.total"));
+        jdbc.update("DELETE FROM membership WHERE user_id=?",user);
+        assertEquals(0,JsonPath.<Integer>read(browser.request("GET","/api/tracking/recent",null,false).body(),"$.total"));
+    }
+
 }
 
 

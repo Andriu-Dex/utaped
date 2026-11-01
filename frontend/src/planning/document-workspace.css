@@ -2383,6 +2383,22 @@ dialog.activity-modal-overlay::backdrop { background: transparent; }
 }
 
 .document-keyboard-viewer:focus-visible { outline: 3px solid var(--blue-700); outline-offset: 3px; }
+.plan-preparation .document-keyboard-viewer > .document-page-navigator,
+.plan-preparation > .document-page-navigator {
+  position: sticky;
+  top: calc(var(--plan-topbar-height, 72px) + 8px);
+  z-index: 10;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgba(12, 41, 68, 0.08);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+:root[data-theme='dark'] .plan-preparation .document-keyboard-viewer > .document-page-navigator,
+:root[data-theme='dark'] .plan-preparation > .document-page-navigator {
+  background: #172b3e;
+  border-color: #33495e;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
 .filter-toolbar.document-list-filters { grid-template-columns: minmax(180px, 1.5fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(180px, 1.2fr) auto; }
 .document-list-filters > label { min-width: 0; }
 @media (min-width: 768px) and (max-width: 1199px) {
@@ -2390,9 +2406,9 @@ dialog.activity-modal-overlay::backdrop { background: transparent; }
   .document-list-filters > button { grid-column: 1 / -1; justify-self: end; }
 }
 
-/* One persistent workspace for the six Plan steps. */
+/* One persistent workspace for the five Plan steps. */
 .plan-wizard { min-width: 0; }
-.plan-wizard-header { margin: 16px 0 16px; }
+.plan-wizard-header { position: relative; z-index: 10; margin: 16px 0 16px; }
 .plan-wizard-header h1 { margin: 6px 0 12px; overflow-wrap: anywhere; }
 .plan-header-title-row {
   display: flex;

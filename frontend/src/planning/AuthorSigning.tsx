@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, download } from '../shared/api'
 import { confirmAndSign, type SigningPhase } from '../shared/confirmed-signature'
 import { Icon } from '../shared/Icon'
+import { SignatureChecklist } from './SignatureChecklist'
 
 export interface SignedArtifact { id: string; signerName: string; signedAt: string; pageCount: number; signaturePageIndex: number; actorName?: string; certificateSubject?: string; approvedReviewId?: string }
 interface SigningState {
@@ -11,7 +12,7 @@ interface SigningState {
   signingEnabled: boolean; signingBlockers: { section: string; message: string }[]; signed: SignedArtifact[]
   preparation: { rowVersion: number; pdfHash: string }
 }
-export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange, onBusyChange, onPreviewChange, onFinish, disabled = false }: { targetDocId: string; artifactId: string; onSigned?: () => void; onFinish?: () => void; onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void; onPreviewChange?: (signed: SignedArtifact | null, actorSigned: boolean) => void; disabled?: boolean }) {
+export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange, onBusyChange, onPreviewChange, onFinish, onResolveSection, onResolveRequirement, documentType = 'T1', disabled = false }: { targetDocId: string; artifactId: string; documentType?: 'T1' | 'T2' | 'T3'; onSigned?: () => void; onFinish?: () => void; onResolveSection?: (section: 'general' | 'content' | 'matrix' | 'attachments') => void; onResolveRequirement?: (section: string) => void; onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void; onPreviewChange?: (signed: SignedArtifact | null, actorSigned: boolean) => void; disabled?: boolean }) {
   const path = '/work-plans/' + targetDocId + '/artifacts/' + artifactId + '/signing'
   const operationContext = useRef({ active: false })
   useEffect(() => { const context = { active: true }; operationContext.current = context; return () => { context.active = false } }, [path])
@@ -81,7 +82,7 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
     {!state ? (error ? <button type="button" className="secondary" disabled={busy || disabled} onClick={() => { setError(''); setRefresh(value => value + 1) }}>Reintentar requisitos de firma</button> : <p role="status">Consultando requisitos de firma…</p>) : <>
       {signed && state.pendingAuthors.length > 0 && <p className="field-help">Recopilando firmas de elaboradores. El contenido está bloqueado; la revisión empezará al completar todas las firmas.</p>}
       {state.pendingAuthors.length > 0 && <p role="status">Pendientes de firma: {state.pendingAuthors.map(person => person.name).join(' → ')}.</p>}
-      {collectingSignatures && !state.actorSigned && state.signingBlockers.length > 0 && <ul>{state.signingBlockers.map((b, i) => <li key={i}><strong>{b.section}:</strong> {b.message}</li>)}</ul>}
+      {collectingSignatures && !state.actorSigned && <SignatureChecklist documentType={documentType} onResolveRequirement={onResolveRequirement} signing blockers={state.signingBlockers} onResolve={onResolveSection} disabled={busy || dirty} />}
       {collectingSignatures && !state.actorSigned && <ActionForm label="Preparar firma" dirty={dirty} onCancel={() => markPending(false)} disabled={busy || disabled || !state.signingEnabled}><form onChangeCapture={() => markPending(true)} onResetCapture={() => markPending(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || disabled || !state.signingEnabled}>
         <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>

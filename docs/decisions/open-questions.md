@@ -1,5 +1,13 @@
 # Decisiones pendientes y contradicciones
 
+## Reunión corregida del 30/10/2026 — revisión del 31/10/2026
+
+El [plan OCT30](../planning/2026-10-30-client-corrections.md) usa la transcripción corregida por el propietario. Firma de todos los participantes **personales** (incluidos varios revisores/aprobadores), nota de matriz siempre presente y editable, autoguardado y correo administrativo son explícitos: no dejarlos como dudas basadas en el TXT automático anterior.
+
+El propietario confirmó seleccionar solo T3 aprobados del mismo Plan; se implementan tablas editables como anexos y la leyenda de la imagen «Validar únicamente con FirmaEC». Siguen pendientes la matriz institucional de participantes y su tratamiento colegiado, agregación de resultados de cortes, mapeos de actividades no proporcionados, audio como anexo, política de contraseñas e integración/contrato FirmaEC. Alcance y trabajo que puede avanzar sin inventarlos: apartado 6 del plan.
+
+La nueva regla de firmas personales no permite convertir registradores colegiados en firmantes personales por deducción ni reescribir artefactos/decisiones históricas. La lectura de vigencia del `.p12` ya existe y no depende de una nueva API.
+
 ## Firma — precisión del propietario, 2026-10-27
 
 La firma real usa el certificado aportado y confirmado en la operación, sin vinculación administrativa obligatoria. No existe una fuente institucional confiable que permita demostrar la correspondencia entre cuenta y titular: se registran por separado y no se afirma equivalencia. Cadena emisora, revocación y tiempo confiable siguen pendientes de contrato institucional. Esta decisión sustituye el requisito anterior de pin administrativo, preservando su historia. [Contrato vigente](../api/author-signing.md).

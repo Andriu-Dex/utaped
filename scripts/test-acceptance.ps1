@@ -1,4 +1,4 @@
-﻿param([switch]$KeepOnFailure)
+﻿param([switch]$KeepOnFailure, [string]$TestPattern, [switch]$PreparedDocuments, [string]$BackupDestination)
 $ErrorActionPreference = 'Stop'
 # The fixed acceptance project and ports must have only one owner at a time.
 $taskAcceptanceMutex = New-Object System.Threading.Mutex($false, 'Local\UTAPED-Acceptance')
@@ -14,7 +14,7 @@ try {
 $root = Split-Path $PSScriptRoot -Parent
 $failed = $true
 $previous = @{}
-foreach ($key in @('SAMPLE_BASE_URL', 'SAMPLE_COMPOSE_PROJECT', 'SAMPLE_ENV_FILE')) {
+foreach ($key in @('SAMPLE_BASE_URL', 'SAMPLE_COMPOSE_PROJECT', 'SAMPLE_ENV_FILE', 'UTAPED_SEED_DOCUMENTS')) {
     $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
 }
 Push-Location $root
@@ -29,12 +29,14 @@ $accountSecret = [Convert]::ToBase64String($accountBytes)
 $random.Dispose()
 
 try {
+    $env:UTAPED_SEED_DOCUMENTS = if ($PreparedDocuments) { 'true' } else { 'false' }
     if (Test-Path -LiteralPath '.env.acceptance') {
         & docker @composeArguments down --volumes --remove-orphans
         if ($LASTEXITCODE -ne 0) { throw 'No se pudo limpiar el entorno de aceptación anterior.' }
     }
     @"
 DB_PASSWORD=$databaseSecret
+UTAPED_SEED_DOCUMENTS=$($PreparedDocuments.IsPresent.ToString().ToLowerInvariant())
 UTAPED_SEED_PASSWORD=$accountSecret
 WEB_PORT=24431
 BACKEND_PORT=28082
@@ -49,20 +51,38 @@ SIGNING_ALLOW_HTTP=true
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar el entorno de aceptación.' }
     $ready = $false
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
+        $backendState = & docker @composeArguments ps -a --format '{{.State}}' backend
+        if ($LASTEXITCODE -eq 0 -and "$backendState".Trim() -eq 'exited') { throw 'El backend de aceptación terminó durante el arranque. Revise sus logs.' }
         try {
             $response = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:24431/api/auth/csrf' -TimeoutSec 3
             if ($response.StatusCode -eq 200) { $ready = $true; break }
         } catch { Start-Sleep -Seconds 2 }
     }
     if (-not $ready) { throw 'El backend de aceptación no estuvo disponible a tiempo.' }
+    if ($PreparedDocuments) {
+        $preparedReady = $false
+        for ($attempt = 0; $attempt -lt 120; $attempt++) {
+            $backendState = & docker @composeArguments ps -a --format '{{.State}}' backend
+            if ($LASTEXITCODE -eq 0 -and "$backendState".Trim() -eq 'exited') { throw 'El backend terminó al preparar los documentos de aceptación. Revise sus logs.' }
+            $seedCount = & docker @composeArguments exec -T db psql -U utaped -d utaped_dev -Atc "SELECT count(*) FROM audit_event WHERE action='DEVELOPMENT_DOCUMENTS_CREATED'"
+            if ($LASTEXITCODE -eq 0 -and "$seedCount".Trim() -eq '1') { $preparedReady = $true; break }
+            Start-Sleep -Seconds 2
+        }
+        if (-not $preparedReady) { throw 'Los documentos preparados de aceptación no terminaron de crearse.' }
+    }
     $env:SAMPLE_BASE_URL = 'http://127.0.0.1:24431'
     $env:SAMPLE_COMPOSE_PROJECT = 'utaped-acceptance'
     $env:SAMPLE_ENV_FILE = Join-Path $root '.env.acceptance'
     Push-Location frontend
     try {
-        npx playwright test --config playwright.sample.config.ts
+        if ($TestPattern) { npx playwright test --config playwright.sample.config.ts --grep $TestPattern }
+        else { npx playwright test --config playwright.sample.config.ts }
         if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas de aceptación.' }
     } finally { Pop-Location }
+    if ($BackupDestination) {
+        python scripts/operations.py backup --project utaped-acceptance --destination $BackupDestination
+        if ($LASTEXITCODE -ne 0) { throw 'No se pudo verificar el respaldo aislado de aceptación.' }
+    }
     $failed = $false
 } finally {
     if ($failed -and $KeepOnFailure) { Write-Warning 'Se conserva utaped-acceptance para diagnóstico. La siguiente ejecución lo recreará.' }

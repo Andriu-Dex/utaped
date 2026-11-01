@@ -1,0 +1,7 @@
+.notice.document-read-only-notice {
+  background: var(--blue-50);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: .85rem;
+  line-height: 1.6;
+}

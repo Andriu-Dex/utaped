@@ -1,5 +1,7 @@
 # Requisitos funcionales y aceptación
 
+Nota de vigencia (auditoría 2026-10-27): este documento conserva requisitos/estados heredados. No mantiene abiertos comportamientos ya resueltos por decisiones posteriores. Consultar [requisitos vigentes](../../requirements.md), [matriz de auditoría](../testing/integral-audit-matrix.md) y [estado de entrega](../../implementation-status.md); las reglas de firma, autoría, cinco pasos y custodia actuales prevalecen sobre las menciones históricas.
+
 Estado HEREDADO salvo indicación contraria. Las referencias § remiten a [baseline-requirements.md](../reference/baseline-requirements.md). Cada fila reúne requisitos relacionados sin eliminar IDs originales. Prioridades propuestas.
 
 | Área / prioridad | Fuente | Comportamiento y aceptación observable |

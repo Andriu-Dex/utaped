@@ -53,4 +53,15 @@ class DocumentStructureIntegrationTests extends DocumentIntegrationTests {
         assertArrayEquals(bytes,artifacts.content(id,artifact.id(),email));assertEquals(2,structures.template("T1",email).revision());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->structures.save("T1",email,new DocumentStructures.Save(1L,ordered))).getStatusCode().value());
     }
+    @Test void portableStructureValidatesFormatAndMandatorySectionsWithoutChangingDocuments() {
+        jdbc.update("UPDATE app_user SET system_role='ADMIN' WHERE id=?",user);
+        var exported=structures.export("T1",email);assertEquals(1,exported.formatVersion());
+        var original=structures.snapshot(id);
+        var imported=structures.importStructure("T1",email,new DocumentStructures.Import(0L,exported));assertEquals(1,imported.revision());
+        assertEquals(original,structures.snapshot(id));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->structures.importStructure("T2",email,new DocumentStructures.Import(0L,exported))).getStatusCode().value());
+        var missing=new DocumentStructures.Transfer(1,"T1",exported.sections().subList(1,exported.sections().size()));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->structures.importStructure("T1",email,new DocumentStructures.Import(1L,missing))).getStatusCode().value());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->structures.importStructure("T1",email,new DocumentStructures.Import(0L,exported))).getStatusCode().value());
+    }
 }

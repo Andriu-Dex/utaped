@@ -12,7 +12,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class ActivityController {
     private final ActivityService service;
-    public ActivityController(ActivityService service) { this.service=service; }
+    private final InstitutionalActivityCatalog reference;
+    private final HolidayAssistance assistance;
+    public ActivityController(ActivityService service,InstitutionalActivityCatalog reference,HolidayAssistance assistance) { this.service=service;this.reference=reference;this.assistance=assistance; }
+    @GetMapping("/admin/planning/activity-reference") public InstitutionalActivityCatalog.Reference reference(Principal p) { return reference.reference(p.getName()); }
+    @PostMapping("/admin/planning/activity-reference/import") public InstitutionalActivityCatalog.Result importReference(@Valid @RequestBody InstitutionalActivityCatalog.Import input,Principal p) { return reference.apply(input,p.getName()); }
+    @PostMapping("/admin/planning/holiday-suggestions") public HolidayAssistance.Proposal holidaySuggestions(@Valid @RequestBody HolidayAssistance.Query input,Principal p) { return assistance.suggest(p.getName(),input); }
+    @PostMapping("/admin/planning/holiday-suggestions/apply") public void applyHolidays(@Valid @RequestBody HolidayAssistance.Apply input,Principal p) { assistance.apply(p.getName(),input); }
     @GetMapping("/work-plans/{targetDocId}/matrix") public Matrix matrix(@PathVariable UUID targetDocId,Principal p) { return service.get(targetDocId,p.getName()); }
     @PutMapping("/work-plans/{targetDocId}/matrix") public Matrix save(@PathVariable UUID targetDocId,@Valid @RequestBody Save body,Principal p) { return service.save(targetDocId,p.getName(),body); }
     @GetMapping("/admin/planning/catalogs") public List<Catalog> catalogs() { return service.catalogs(); }

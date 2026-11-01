@@ -52,9 +52,16 @@ public class HttpAiProvider implements AiProvider {
     public String suggest(String field, String tone, String text) {
         if (!configuration.available()) throw unavailable();
         String input="Campo: " + field + "\nEstilo solicitado: " + tone + "\nTexto para mejorar:\n" + text;
+        return complete(INSTRUCTIONS,input);
+    }
+    public String holidays(int year) {
+        return complete("Propón fechas no laborables para revisar en Ambato, Ecuador. No inventes normas, traslados ni fuentes. Responde solo JSON, sin Markdown: {\"items\":[{\"date\":\"AAAA-MM-DD\",\"label\":\"Nombre\",\"sourceUrl\":\"https://fuente\"}]}. Incluye únicamente fechas del año solicitado respaldadas por una URL verificable de una fuente oficial. Omite las que no puedas sustentar; devuelve items vacío si no dispones de información fiable. La respuesta es una propuesta y requiere revisión administrativa.","Año: "+year);
+    }
+    private String complete(String instructions,String input) {
+        if (!configuration.available()) throw unavailable();
         Map<String,Object> payload = provider.equals("OPENAI")
-            ? Map.of("model",model,"instructions",INSTRUCTIONS,"input",input,"max_output_tokens",maxOutputTokens,"store",false)
-            : Map.of("model",model,"messages",List.of(Map.of("role","system","content",INSTRUCTIONS),Map.of("role","user","content",input)),"max_completion_tokens",maxOutputTokens,"stream",false);
+            ? Map.of("model",model,"instructions",instructions,"input",input,"max_output_tokens",maxOutputTokens,"store",false)
+            : Map.of("model",model,"messages",List.of(Map.of("role","system","content",instructions),Map.of("role","user","content",input)),"max_completion_tokens",maxOutputTokens,"stream",false);
         try {
             var request=HttpRequest.newBuilder(endpoint).timeout(timeout).header("Authorization","Bearer " + key)
                 .header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(payload))).build();

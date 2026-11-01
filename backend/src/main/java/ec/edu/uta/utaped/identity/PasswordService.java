@@ -28,9 +28,10 @@ public class PasswordService {
     private final AuditService audit;
     private final String publicUrl;
     private final String mailFrom;
+    private final org.springframework.transaction.PlatformTransactionManager transactions;
     public PasswordService(JdbcTemplate jdbc, Accounts accounts, PasswordEncoder encoder, JdbcIndexedSessionRepository sessions, JavaMailSender mail, AuditService audit,
-        @Value("${app.public-url}") String publicUrl, @Value("${app.mail-from}") String mailFrom) {
-        this.jdbc=jdbc; this.accounts=accounts; this.encoder=encoder; this.sessions=sessions; this.mail=mail; this.audit=audit; this.publicUrl=publicUrl; this.mailFrom=mailFrom;
+        @Value("${app.public-url}") String publicUrl, @Value("${app.mail-from}") String mailFrom,org.springframework.transaction.PlatformTransactionManager transactions) {
+        this.jdbc=jdbc; this.accounts=accounts; this.encoder=encoder; this.sessions=sessions; this.mail=mail; this.audit=audit; this.publicUrl=publicUrl; this.mailFrom=mailFrom;this.transactions=transactions;
     }
     public static void validate(String password) {
         if (password == null || password.length() < 12 || password.getBytes(StandardCharsets.UTF_8).length > 72)
@@ -71,6 +72,20 @@ public class PasswordService {
         jdbc.update("UPDATE app_user SET password_hash=?,must_change_password=true,row_version=row_version+1 WHERE id=?",encoder.encode(next),id);
         jdbc.update("DELETE FROM password_reset WHERE user_id=?",id);revoke((String)row.get("email"));
         audit.record(actor.id(),action,id,id);
+        var message=new SimpleMailMessage();message.setFrom(mailFrom);message.setTo((String)row.get("email"));
+        message.setSubject("Contraseña temporal de UTAPED");
+        message.setText("Se ha restablecido su acceso a UTAPED.\nContraseña temporal: "+next+"\nIngrese en "+publicUrl+" y cambie la contraseña al iniciar sesión.\nSi no esperaba este cambio, comuníquese con la administración institucional.");
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization() {
+            @Override public void afterCommit() {
+                try { mail.send(message); }
+                catch (org.springframework.mail.MailException error) {
+                    var recovery=new org.springframework.transaction.support.TransactionTemplate(transactions);
+                    recovery.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                    recovery.executeWithoutResult(status->audit.record(actor.id(),"TEMPORARY_PASSWORD_DELIVERY_FAILED",id,id));
+                    throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"La contraseña se restableció, pero no se pudo enviar el correo. Revise el servicio de correo, recargue la cuenta y vuelva a restablecer el acceso.");
+                } finally { message.setText(""); }
+            }
+        });
     }
     @Transactional public void change(Accounts.Account account, String current, String next) {
         validate(next);

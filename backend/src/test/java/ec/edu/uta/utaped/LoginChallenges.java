@@ -12,7 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /** Sets a known answer through the isolated test database; the production API has no bypass. */
 final class LoginChallenges {
     static String answer(HttpClient client,int port,JdbcTemplate jdbc) throws Exception {
-        return issue(client,port,jdbc,"ABC234").answer();
+        return issue(client,port,jdbc,"ABC23").answer();
     }
     record Fixture(UUID id,String answer) {}
     static Fixture issue(HttpClient client,int port,JdbcTemplate jdbc,String answer) throws Exception {

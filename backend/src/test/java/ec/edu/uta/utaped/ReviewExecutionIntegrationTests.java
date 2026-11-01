@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired OrganizationService organization;
+    @Autowired ec.edu.uta.utaped.planning.ActivityProposals proposals;
     @Autowired ReviewService reviews;
     @Autowired WorkflowService workflows;
     @Autowired PeriodWorkflowService periodWorkflows;
@@ -23,8 +24,68 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ReportingService reporting;
     @Autowired ec.edu.uta.utaped.planning.BusinessCalendar calendar;
     @Autowired ec.edu.uta.utaped.planning.PreparationExtensionService extensions;
+    @Autowired ec.edu.uta.utaped.planning.PendingWorkService pendingWork;
+    @Autowired ec.edu.uta.utaped.institution.AdminOverviewService overview;
     @Autowired ec.edu.uta.utaped.planning.ExecutionReportService executions;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void administrativeReviewAlertCountsDocumentsNotStagesAndDisappearsAfterDecision() throws Exception {
+        UUID review=submit(false);var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
+        jdbc.update("UPDATE academic_period SET review_starts_on=?,review_ends_on=? WHERE id=?",today.minusDays(5),today.minusDays(1),period);
+        assertEquals(1,overview.get(email,period,false).alerts().reviewsOutsideWindow());
+        var task=reviews.inbox(reviewerEmail).getFirst();reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Corrección pendiente",UUID.randomUUID()));
+        assertEquals(0,overview.get(email,period,false).alerts().reviewsOutsideWindow());
+        assertEquals("RETURNED",reviews.state(review,email).review().get("status"));
+    }
+    @Test void personalPendingWorkFollowsAssignmentsCorrectionsAndOwnSignatureTurn() throws Exception {
+        UUID review=submit(false);
+        assertEquals(1,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertEquals(0,pendingWork.get(approverEmail,true,"REVIEW",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"REVIEW",0,10).total());
+        assertNull(reviews.comparison(review,email).previousRound());
+        var task=reviews.inbox(reviewerEmail).getFirst();
+        reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Precise el objetivo",UUID.randomUUID()));
+        assertEquals(0,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertEquals(1,pendingWork.get(email,true,"CORRECTION",0,10).total());
+        var prepared=artifacts.generate(id,email,new Generate(version()));
+        assertEquals(1,pendingWork.get(email,true,"SIGNATURE",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"SIGNATURE",1,10).items().size());
+        var originalEnd=jdbc.queryForObject("SELECT preparation_ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,period);
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil")).minusDays(1),period);
+        assertEquals("Consultar requisitos",pendingWork.get(email,true,"SIGNATURE",0,10).items().getFirst().action());
+        jdbc.update("UPDATE academic_period SET preparation_ends_on=? WHERE id=?",originalEnd,period);
+        var signing=signatures.state(id,prepared.id(),email,true);var fixture=signingFixture();
+        signatures.sign(id,prepared.id(),email,version(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        assertEquals(0,pendingWork.get(email,true,"CORRECTION",0,10).total());
+        assertEquals(0,pendingWork.get(email,true,"SIGNATURE",0,10).total());
+        assertEquals(1,pendingWork.get(reviewerEmail,true,"REVIEW",0,10).total());
+        assertThrows(ResponseStatusException.class,()->pendingWork.get(email,true,"UNKNOWN",0,10));
+    }
+    @Test void comparisonUsesOnlyPreviousConservedRoundAndKeepsSignedBytes() throws Exception {
+        UUID first=submit(false);var oldState=reviews.state(first,email);UUID oldFile=(UUID)oldState.review().get("current_file_id");byte[] original=files.read(oldFile);
+        var task=reviews.inbox(reviewerEmail).getFirst();reviews.decide(task.id(),reviewerEmail,new ReviewService.Decision(task.rowVersion(),"RETURN","Actualizar justificación",UUID.randomUUID()));
+        var source=plans.get(id,email);plans.update(id,email,new ec.edu.uta.utaped.planning.WorkPlanModels.Update(version(),source.title(),source.institutionalUnit(),source.career(),"Justificación corregida para segunda ronda",source.objective()));
+        var artifact=artifacts.generate(id,email,new Generate(version()));var state=signatures.state(id,artifact.id(),email,true);var fixture=signingFixture();
+        signatures.sign(id,artifact.id(),email,version(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        UUID second=reviews.inbox(reviewerEmail).stream().filter(t->t.status().equals("ACTIVE")).findFirst().orElseThrow().reviewId();
+        var compared=reviews.comparison(second,reviewerEmail);assertEquals(first,compared.previousReviewId());assertEquals(1,compared.previousRound());assertEquals(2,compared.currentRound());
+        var change=compared.changes().stream().filter(c->c.section().equals("Justificación")).findFirst().orElseThrow();assertEquals(source.justification(),change.before());assertEquals("Justificación corregida para segunda ronda",change.after());
+        assertArrayEquals(original,files.read(oldFile));assertEquals(oldState.pdfHash(),reviews.state(first,email).pdfHash());
+        String stranger="pending-stranger@example.invalid";jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Ajeno','unused','USER',false)",UUID.randomUUID(),stranger);
+        assertEquals(0,pendingWork.get(stranger,true,"",0,10).total());
+        assertEquals(404,assertThrows(ResponseStatusException.class,()->reviews.comparison(second,stranger)).getStatusCode().value());
+    }
+    @Test void personalEvidencePendingDisappearsWhenCoveredAndRespectsPeriodClosure() throws Exception {
+        UUID review=submit(false);approve(review);
+        var pending=pendingWork.get(email,true,"EVIDENCE",0,10);assertEquals(1,pending.total());
+        assertEquals(0,pendingWork.get(reviewerEmail,true,"EVIDENCE",0,10).total());
+        var activity=activities.get(id,email).activities().getFirst();
+        jdbc.update("INSERT INTO deadline_extension(work_plan_id,activity_id,user_id,ends_on,reason,granted_by) VALUES (?,?,?,?,'Prórroga de prueba',?)",id,activity.id(),user,activity.endsOn().plusDays(1),user);
+        assertEquals(activity.endsOn().plusDays(1),pendingWork.get(email,true,"EVIDENCE",0,10).items().getFirst().deadline());
+        evidence.upload(id,activity.id(),0,0,email,new org.springframework.mock.web.MockMultipartFile("file","evidencia.pdf","application/pdf",pdf(1,false,false)));
+        assertEquals(0,pendingWork.get(email,true,"EVIDENCE",0,10).total());
+        jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);
+        assertEquals(0,pendingWork.get(email,true,"",0,10).total());
+    }
     @Test void reportCreationOptionsRequireApprovedAccessiblePlansAndPreserveExistingNames() throws Exception {
         UUID review=submit(false);assertEquals(0,reports.options(email,"",0,20).total());approve(review);
         var source=plans.get(id,email);String originalHash=reviews.state(review,email).pdfHash();
@@ -37,10 +98,10 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("UPDATE app_user SET password_hash=? WHERE id=?",encoder.encode("Test-only-password-2026"),user);
         var browser=new DocumentLoadProbe.Browser(port,jdbc,email);var response=browser.request("GET","/api/reports/options?size=1",null,null);assertEquals(200,response.status());
         assertEquals(400,browser.request("GET","/api/reports/options?size=51",null,null).status());
-        var report=reports.create(id,email);assertEquals(options.items().getFirst().suggestedTitle(),report.title());
+        var report=finalWithApprovedCut();assertEquals(options.items().getFirst().suggestedTitle(),report.title());
         var draft=reports.data(report.id(),email);reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),"Informe revisado por el responsable","","","",draft.results(),draft.delegations()));
         var existing=reports.options(email,"",0,20).items().getFirst();assertEquals(report.id(),existing.reportId());assertEquals("Informe revisado por el responsable",existing.suggestedTitle());
-        assertEquals(report.id(),reports.create(id,email).id());assertEquals(source.rowVersion(),plans.get(id,email).rowVersion());assertEquals(originalHash,reviews.state(review,email).pdfHash());
+        assertEquals(report.id(),finalWithApprovedCut().id());assertEquals(source.rowVersion(),plans.get(id,email).rowVersion());assertEquals(originalHash,reviews.state(review,email).pdfHash());
         jdbc.update("UPDATE academic_period SET status='CLOSED' WHERE id=?",period);assertEquals(0,reports.options(email,"",0,20).total());
     }
     @Test void boundedHttpLoadGeneratesAndRendersLongDocumentsForThreeIsolatedAuthors() throws Exception {
@@ -55,7 +116,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             UUID ownScope=organization.createScope(email,new OrganizationService.ScopeInput(ownGroup,period,null));
             organization.member(ownScope,email,new OrganizationService.MemberInput(actor,"MEMBER","Autor",true,0L));
             organization.principal(ownScope,email,new OrganizationService.PrincipalInput(actor,0L));
-            var definition=new Definition("Aprobación ficticia de carga",List.of(new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(user),null,"",false)));
+            var definition=new Definition("Aprobación ficticia de carga",List.of(new Stage(UUID.randomUUID(),"Aprobación","APPROVE","COLLEGIATE",List.of(user),null,"Órgano de prueba de carga",false)));
             for(String type:List.of("T1","T2")) {
                 workflows.save(ownGroup,type,email,new Save(0L,definition));workflows.configure(ownGroup,type,email,new Version(1L));
                 periodWorkflows.assign(ownScope,type,email,new PeriodWorkflowService.Assign(workflows.get(ownGroup,type,email).current().id(),0L));
@@ -134,7 +195,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         }
         var evidenceVersions=evidence.get(id,email).activities().getFirst().media().getFirst().versions();assertEquals(2,evidenceVersions.size());
         for(var item:evidenceVersions) assertArrayEquals(evidencePdf,evidence.content(id,item.id(),email));
-        var report=reports.create(id,email);reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),"Informe extenso de carga","Antecedentes de carga. ".repeat(220),"Conclusiones. ".repeat(100),"Mejoras. ".repeat(100),List.of(new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.valueOf(100),"Cumplida con evidencia")),List.of()));
+        var report=finalWithApprovedCut();reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),"Informe extenso de carga","Antecedentes de carga. ".repeat(220),"Conclusiones. ".repeat(100),"Mejoras. ".repeat(100),List.of(new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.valueOf(100),"Cumplida con evidencia")),List.of()));
         var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));byte[] unsigned=artifacts.content(report.id(),artifact.id(),email);
         var preparation=signatures.state(report.id(),artifact.id(),email,true).preparation();UUID key=UUID.randomUUID();
         var signing=new ArrayList<java.util.concurrent.Callable<DocumentLoadProbe.Result>>();
@@ -155,7 +216,8 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         probe.save("evidence-and-signing");
     }
     @Autowired ec.edu.uta.utaped.planning.DocumentAuthors authors;
-    boolean multipleAuthors,collegiate,requiresQuipux;
+    boolean multipleAuthors,collegiate,requiresQuipux,multiplePersonalStages;
+    UUID secondReviewer,secondApprover;
     UUID coauthor;
     String coauthorEmail="coauthor@example.invalid";
     SigningFixture authorFixture,coauthorFixture;
@@ -184,7 +246,13 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             var matrix=activities.get(id,email);var a=matrix.activities().getFirst();
             activities.save(id,email,new ec.edu.uta.utaped.planning.ActivityModels.Save(version(),matrix.source(),List.of(new ec.edu.uta.utaped.planning.ActivityModels.Activity(a.id(),a.catalogId(),a.title(),a.category(),a.mandatory(),a.startsOn(),a.endsOn(),a.responsibleIds(),false,a.resources(),a.means()))));
         }
-        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW",collegiate?"COLLEGIATE":"PERSON",List.of(reviewer),null,collegiate?"Consejo Directivo":"",signatureRequired,"Responsable de revisión"),new Stage(UUID.randomUUID(),"Aprobación","APPROVE","PERSON",List.of(approver),null,"",false)),requiresQuipux);
+        List<UUID> reviewerIds=List.of(reviewer),approverIds=List.of(approver);
+        if(multiplePersonalStages) {
+            secondReviewer=UUID.randomUUID();secondApprover=UUID.randomUUID();
+            for(var actor:Map.of(secondReviewer,"reviewer2@example.invalid",secondApprover,"approver2@example.invalid").entrySet()) jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','USER',false)",actor.getKey(),actor.getValue(),actor.getValue());
+            reviewerIds=List.of(reviewer,secondReviewer);approverIds=List.of(approver,secondApprover);
+        }
+        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW",(collegiate||!signatureRequired)?"COLLEGIATE":"PERSON",reviewerIds,null,(collegiate||!signatureRequired)?"Consejo Directivo":"",signatureRequired,"Responsable de revisión"),new Stage(UUID.randomUUID(),"Aprobación","APPROVE",multiplePersonalStages?"PERSON":"COLLEGIATE",approverIds,null,multiplePersonalStages?"":"Órgano de aprobación de prueba",multiplePersonalStages)),requiresQuipux);
         workflows.save(group,"T1",email,new Save(0L,definition));workflows.configure(group,"T1",email,new Version(1L));
         workflows.save(group,"T2",email,new Save(0L,definition));workflows.configure(group,"T2",email,new Version(1L));
         workflows.save(group,"T3",email,new Save(0L,definition));workflows.configure(group,"T3",email,new Version(1L));
@@ -201,6 +269,8 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             var first=signatures.list(id,artifact.id(),email).getFirst();byte[] signedBefore=signatures.content(id,first.id(),email);
             var coauthorCert=signingFixture();coauthorFixture=coauthorCert;bindings.register(coauthor,email,new CertificateBindings.Register(fingerprint(coauthorCert),true,"Identidad de coautor de prueba",null));
             var next=signatures.state(id,artifact.id(),coauthorEmail,true);assertTrue(next.signingEnabled(),next.signingBlockers().toString());
+            assertEquals(1,pendingWork.get(coauthorEmail,true,"SIGNATURE",0,10).total());
+            assertEquals(0,pendingWork.get(email,true,"SIGNATURE",0,10).total());
             var signed=signatures.sign(id,artifact.id(),coauthorEmail,version(),next.preparation().pdfHash(),UUID.randomUUID(),signingBody(coauthorCert,"Test-only-signing-password"),true);
             byte[] cumulative=signatures.content(id,signed.id(),email);assertArrayEquals(signedBefore,Arrays.copyOf(cumulative,signedBefore.length));
             try(var parsed=org.apache.pdfbox.Loader.loadPDF(cumulative)) { assertEquals(2,parsed.getSignatureDictionaries().size()); }
@@ -215,7 +285,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var artifact=artifacts.list(id,email).getFirst();assertEquals(2,artifact.signatureSlots().stream().filter(slot->slot.action().equals("ELABORADO_POR")).count());
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM document_review WHERE work_plan_id=?",Integer.class,id));
         approve(review);byte[] planBytes=reviews.content(review,email);
-        var report=reports.create(id,email);authors.save(report.id(),email,new ec.edu.uta.utaped.planning.DocumentAuthors.Save(report.rowVersion(),List.of(coauthor)));
+        var report=finalWithApprovedCut();authors.save(report.id(),email,new ec.edu.uta.utaped.planning.DocumentAuthors.Save(report.rowVersion(),List.of(coauthor)));
         var data=reports.get(report.id(),email);
         reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(data.document().rowVersion(),data.document().title(),"Antecedentes del informe académico","Conclusiones de ejecución","Mejorar el seguimiento",data.data().results().stream().map(result->new ec.edu.uta.utaped.planning.ReportService.Result(result.activityId(),java.math.BigDecimal.valueOf(100),"Resultado declarado; medios pendientes explicados.")).toList(),List.of()));
         var updated=plans.get(report.id(),email);attachments.settings(report.id(),email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(updated.rowVersion(),false,false));
@@ -306,6 +376,24 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var after=files.read((UUID)reviews.state(review,reviewerEmail).review().get("current_file_id"));assertArrayEquals(before,Arrays.copyOf(after,before.length));
         assertEquals(1,reviews.inbox(approverEmail).size());assertEquals("IN_REVIEW",plans.get(id,email).documentState());
     }
+    ec.edu.uta.utaped.planning.WorkPlanModels.Plan finalWithApprovedCut() throws Exception {
+        var report=reports.create(id,email);
+        if(!reports.get(report.id(),email).data().executionReferences().isEmpty()) return report;
+        var cuts=reports.approvedCuts(id,email);
+        if(cuts.isEmpty()) {
+            var cut=executions.create(id,email);var activity=activities.get(id,email).activities().getFirst();
+            var result=new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.valueOf(50),"Resultado del corte de referencia.");
+            executions.save(cut.id(),email,new ec.edu.uta.utaped.planning.ExecutionReportService.Save(cut.rowVersion(),cut.title(),List.of(activity.id()),List.of(result),"Análisis del corte.","Fortaleza.","Debilidad.","Oportunidad.","Amenaza.","Conclusión.","Recomendación.",List.of(),""));
+            var artifact=artifacts.generate(cut.id(),email,new Generate(plans.get(cut.id(),email).rowVersion()));
+            var state=signatures.state(cut.id(),artifact.id(),email,true);
+            signatures.sign(cut.id(),artifact.id(),email,state.preparation().rowVersion(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+            var review=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(cut.id())).findFirst().orElseThrow().reviewId();approve(review);
+            cuts=reports.approvedCuts(id,email);
+        }
+        var data=reports.get(report.id(),email).data();
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),data.background(),data.conclusions(),data.improvements(),data.results(),data.delegations(),List.of(cuts.getFirst().documentId())));
+        return plans.get(report.id(),email);
+    }
     void approve(UUID review) {
         var first=reviews.inbox(reviewerEmail).stream().filter(t->t.reviewId().equals(review)).findFirst().orElseThrow();reviews.decide(first.id(),reviewerEmail,new ReviewService.Decision(first.rowVersion(),"COMPLETE","",UUID.randomUUID()));
         var last=reviews.inbox(approverEmail).stream().filter(t->t.reviewId().equals(review)).findFirst().orElseThrow();reviews.decide(last.id(),approverEmail,new ReviewService.Decision(last.rowVersion(),"COMPLETE","",UUID.randomUUID()));
@@ -315,7 +403,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         var base=plans.get(id,email);var baseHash=reviews.state(baseReview,email).pdfHash();
         var activity=activities.get(id,email).activities().getFirst();
         evidence.upload(id,activity.id(),0,0,email,new org.springframework.mock.web.MockMultipartFile("file","evidencia-extensa.pdf","application/pdf",pdf(7,false,false)));
-        var report=reports.create(id,email);var data=reports.get(report.id(),email).data();
+        var report=finalWithApprovedCut();var data=reports.get(report.id(),email).data();
         String background="Antecedente institucional verificable de la planificación, ejecución y conservación de evidencias. ".repeat(220)+"FIN_ANTECEDENTES_EXTENSOS";
         String conclusions="La ejecución documentada permite identificar resultados y conservar la trazabilidad del trabajo. ".repeat(90)+"FIN_CONCLUSIONES_EXTENSAS";
         String improvements="Organizar el seguimiento de actividades y mejorar la documentación de resultados verificables. ".repeat(90)+"FIN_MEJORAS_EXTENSAS";
@@ -355,13 +443,13 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertEquals(409,assertThrows(ResponseStatusException.class,()->evidence.upload(id,activity.id(),0,0,email,upload)).getStatusCode().value());
         var second=evidence.upload(id,activity.id(),0,1,email,upload);assertEquals(2,second.version());assertEquals(2,evidence.get(id,email).activities().getFirst().media().getFirst().versions().size());
         assertEquals(403,assertThrows(ResponseStatusException.class,()->evidence.upload(id,activity.id(),0,2,reviewerEmail,upload)).getStatusCode().value());
-        var report=reports.create(id,email);assertNotEquals(id,report.id());assertEquals("T2",report.documentType());assertEquals(report.id(),reports.create(id,email).id());
+        var report=finalWithApprovedCut();assertNotEquals(id,report.id());assertEquals("T2",report.documentType());assertEquals(report.id(),finalWithApprovedCut().id());
         var state=reports.get(report.id(),email);var results=state.data().results().stream().map(r->new ec.edu.uta.utaped.planning.ReportService.Result(r.activityId(),java.math.BigDecimal.valueOf(100),"Actividad ejecutada con evidencia de prueba.")).toList();
         reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Informe basado en el Plan aprobado, sin resolución ficticia.","Se completó la actividad de prueba.","Mejorar la organización del seguimiento.",results,List.of(new ec.edu.uta.utaped.planning.ReportService.Delegation("Gestión de prueba","Ambato","Unidad de ejemplo","Persona de ejemplo","contacto@example.invalid","Coordinación de actividades","Acuerdo de prueba"))));
         var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
         var signing=signatures.state(report.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
         signatures.sign(report.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
-        UUID reportReview=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(reportReview);
+        UUID reportReview=returnAndResubmitReport(report.id());approve(reportReview);
         assertEquals("APPROVED",plans.get(report.id(),email).documentState());assertEquals(parent.rowVersion(),plans.get(id,email).rowVersion());assertEquals(parent.formalVersion(),plans.get(id,email).formalVersion());
         byte[] pdf=reviews.content(reportReview,email);java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-approved.pdf"),pdf);
         try(var rendered=org.apache.pdfbox.Loader.loadPDF(pdf)) { String text=new org.apache.pdfbox.text.PDFTextStripper().getText(rendered);assertFalse(text.contains("INFORME DE: Informe:"));assertHeaderDateIsInTheRightCell(rendered);assertTrue(text.replaceAll("\\s+"," ").contains("UNIDAD ACADÉMICA: Facultad de Ingeniería en Sistemas, Electrónica e Industrial"));assertFalse(text.contains("UNIDAD ACADÉMICA / ADMINISTRATIVA"));assertTrue(text.contains("ANTECEDENTES"));assertTrue(text.contains("CONCLUSIONES"));assertFalse(text.contains("@@SIG"));for(int i=0;i<rendered.getNumberOfPages();i++) java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t2-page-"+i+".png"),artifacts.renderPage(pdf,i)); }
@@ -369,7 +457,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Test void emptyReportAnnexesKeepTheirHeadingAndNotApplicableText() throws Exception {
         UUID review=submit(false);approve(review);var activity=activities.get(id,email).activities().getFirst();
         var result=new ec.edu.uta.utaped.planning.ReportService.Result(activity.id(),java.math.BigDecimal.ZERO,"No se adjunta evidencia porque la actividad no se ejecutó en este corte.");
-        var report=reports.create(id,email);
+        var report=finalWithApprovedCut();
         reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Antecedentes del período.","La actividad permanece pendiente.","Reprogramar el seguimiento.",List.of(result),List.of()));
         assertEmptyAnnexes(report.id(),"t2-no-annex");
         var execution=executions.create(id,email);
@@ -420,22 +508,41 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/document-qa"));java.nio.file.Files.write(java.nio.file.Path.of("target/document-qa/t3-execution.pdf"),artifacts.content(first.id(),artifact.id(),email));
         var signing=signatures.state(first.id(),artifact.id(),email,true);assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
         signatures.sign(first.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
-        approve(reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(first.id())).findFirst().orElseThrow().reviewId());
+        approve(returnAndResubmitReport(first.id()));
         assertEquals("APPROVED",plans.get(first.id(),email).documentState());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->lifecycle.nextVersion(first.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(plans.get(first.id(),email).rowVersion(),"No se versiona"))).getStatusCode().value());
         var second=executions.create(id,email);assertNotEquals(first.id(),second.id());assertTrue(second.title().startsWith("Informe de ejecución II —"),second.title());assertEquals(2,executions.data(second.id(),email).sequenceNumber());
         var metric=reporting.get(email,group,period,false).rows().getFirst();assertEquals(0,java.math.BigDecimal.valueOf(75).compareTo(metric.declaredExecution()));assertEquals(0,java.math.BigDecimal.valueOf(100).compareTo(metric.evidenceCoverage()));
         String admin="discard-auditor@example.invalid";jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','ADMIN',false)",UUID.randomUUID(),admin,"Administración de descartados");
-        var finalDraft=reports.create(id,email);lifecycle.archive(finalDraft.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(finalDraft.rowVersion(),"Descartar Informe final de prueba"));lifecycle.archive(second.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(second.rowVersion(),"Descartar corte de prueba"));
+        var finalDraft=finalWithApprovedCut();lifecycle.archive(finalDraft.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(finalDraft.rowVersion(),"Descartar Informe final de prueba"));lifecycle.archive(second.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(second.rowVersion(),"Descartar corte de prueba"));
         assertNull(reports.get(finalDraft.id(),admin).evidence());assertNull(executions.get(second.id(),admin).evidence());assertFalse(artifacts.readiness(finalDraft.id(),admin).ready());
         assertEquals(404,assertThrows(ResponseStatusException.class,()->plans.get(id,admin)).getStatusCode().value());
+    }
+    private UUID returnAndResubmitReport(UUID reportId) throws Exception {
+        var parent=plans.get(id,email);var original=plans.get(reportId,email);
+        var task=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(reportId)).findFirst().orElseThrow();
+        var previous=reviews.state(task.reviewId(),email);
+        var previousFile=(UUID)previous.review().get("current_file_id");byte[] bytes=files.read(previousFile);
+        reviews.observe(task.id(),reviewerEmail,new ReviewService.Observation(task.rowVersion(),"Revisar el contenido del informe en este corte",0,.1,.1,.2,.1));
+        var pending=reviews.inbox(reviewerEmail).stream().filter(t->t.id().equals(task.id())).findFirst().orElseThrow();
+        reviews.decide(pending.id(),reviewerEmail,new ReviewService.Decision(pending.rowVersion(),"RETURN","",UUID.randomUUID()));
+        var correction=plans.get(reportId,email);assertEquals("DRAFT",correction.documentState());assertTrue(correction.editable());
+        assertEquals(original.formalVersion(),correction.formalVersion());assertEquals(original.reviewRound()+1,correction.reviewRound());
+        var artifact=artifacts.generate(reportId,email,new Generate(correction.rowVersion()));
+        var signing=signatures.state(reportId,artifact.id(),email,true);assertFalse(signing.actorSigned());assertTrue(signing.signingEnabled(),signing.signingBlockers().toString());
+        signatures.sign(reportId,artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        var next=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(reportId)).findFirst().orElseThrow();
+        assertNotEquals(task.reviewId(),next.reviewId());assertEquals(correction.reviewRound(),next.roundNumber());
+        assertArrayEquals(bytes,files.read(previousFile));assertEquals(previous.pdfHash(),reviews.state(task.reviewId(),email).pdfHash());
+        assertEquals(parent.rowVersion(),plans.get(id,email).rowVersion());assertEquals("APPROVED",plans.get(id,email).documentState());
+        return next.reviewId();
     }
     @org.springframework.beans.factory.annotation.Autowired ec.edu.uta.utaped.planning.FormalSubmissionService submissions;
     @org.springframework.beans.factory.annotation.Autowired ec.edu.uta.utaped.institution.PositionService positions;
     @Test void approvedQuipuxGateRequiresCoordinatorProofAndNeverChangesSignedBytes() throws Exception {
         requiresQuipux=true;UUID review=submit(false);approve(review);byte[] frozen=reviews.content(review,email);
         assertTrue(submissions.state(id,email).required());assertFalse(evidence.get(id,email).activities().getFirst().canUpload());
-        assertEquals(409,assertThrows(ResponseStatusException.class,()->reports.create(id,email)).getStatusCode().value());
+        assertEquals(409,assertThrows(ResponseStatusException.class,()->finalWithApprovedCut()).getStatusCode().value());
         assertEquals(409,assertThrows(ResponseStatusException.class,()->periodArchives.close(period,email,new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L,"Constancia pendiente"))).getStatusCode().value());
         var file=new org.springframework.mock.web.MockMultipartFile("file","constancia.pdf","application/pdf",pdf(1,false,false));
         assertEquals(403,assertThrows(ResponseStatusException.class,()->submissions.register(id,email,file)).getStatusCode().value());
@@ -444,7 +551,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         jdbc.update("INSERT INTO scope_member(scope_id,user_id,membership_role,position_label) VALUES (?,?,'COORDINATOR','Coordinación')",plan.scopeId(),coordinator);
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?)",id,coordinator,user);
         assertTrue(submissions.register(id,coordinatorEmail,file).registered());assertArrayEquals(frozen,reviews.content(review,email));
-        assertNotNull(reports.create(id,email));assertTrue(submissions.content(id,coordinatorEmail).length>0);
+        assertNotNull(finalWithApprovedCut());assertTrue(submissions.content(id,coordinatorEmail).length>0);
     }
     @Test void closedDocumentHistoryRequiresAnExplicitCurrentPositionAndArchivedDraftIsAdminOnly() throws Exception {
         UUID review=submit(false);approve(review);byte[] frozen=reviews.content(review,email);
@@ -470,11 +577,11 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertTrue(new String(reporting.csv(email,group,period,true),java.nio.charset.StandardCharsets.UTF_8).contains("Comisión de prueba"));
     }
     @Test void archivedDraftReportDoesNotBlockAReplacementOrResetItsFormalVersion() throws Exception {
-        UUID review=submit(false);approve(review);var first=reports.create(id,email);
+        UUID review=submit(false);approve(review);var first=finalWithApprovedCut();
         lifecycle.archive(first.id(),email,new ec.edu.uta.utaped.planning.DocumentLifecycleService.Change(first.rowVersion(),"Descartar borrador incompleto"));
-        var next=reports.create(id,email);assertNotEquals(first.id(),next.id());assertEquals(first.formalVersion(),next.formalVersion());
+        var next=finalWithApprovedCut();assertNotEquals(first.id(),next.id());assertEquals(first.formalVersion(),next.formalVersion());
         assertEquals("DRAFT",next.documentState());assertEquals(2,lifecycle.history(next.id(),email).size());
-        assertEquals(next.id(),reports.create(id,email).id());assertNotNull(plans.get(first.id(),email).archivedAt());
+        assertEquals(next.id(),finalWithApprovedCut().id());assertNotNull(plans.get(first.id(),email).archivedAt());
     }
     @Test void individualExtensionRetainsOriginalDeadlineAndHistory() throws Exception {
         UUID review=submit(false);approve(review);var plan=plans.get(id,email);var activity=evidence.get(id,email).activities().getFirst();
@@ -530,7 +637,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertEquals(409,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,reference)).getStatusCode().value());
         assertEquals(1,evidence.get(id,email).coveredMedia());assertFalse(evidence.get(id,email).activities().getFirst().complete());
         evidence.upload(id,activity.id(),0,0,email,upload);assertEquals(2,evidence.get(id,email).coveredMedia());assertTrue(evidence.get(id,email).activities().getFirst().complete());
-        var report=reports.create(id,email);var state=reports.get(report.id(),email);
+        var report=finalWithApprovedCut();var state=reports.get(report.id(),email);
         reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Antecedentes de prueba","Conclusiones de prueba","Recomendaciones de prueba",state.data().results().stream().map(r->new ec.edu.uta.utaped.planning.ReportService.Result(r.activityId(),java.math.BigDecimal.valueOf(100),"Cumplimiento documentado")).toList(),List.of()));
         var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));
         assertEquals(1,artifact.pages().stream().filter(p->p.kind().equals("ANNEX")).count());
@@ -546,5 +653,234 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         periodArchives.close(period,email,new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L,"Cierre de prueba con referencias"));
         boolean found=false;try(var zip=new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(periodArchives.custody(period,email)))) {java.util.zip.ZipEntry entry;while((entry=zip.getNextEntry())!=null) {byte[] bytes=zip.readAllBytes();if(entry.getName().equals("documents/"+id+"/manifest.json")) {String manifest=new String(bytes,java.nio.charset.StandardCharsets.UTF_8);assertTrue(manifest.contains(first.externalUrl()));assertTrue(manifest.contains(second.externalUrl()));found=true;}}}assertTrue(found);
         assertEquals(404,assertThrows(ResponseStatusException.class,()->evidence.reference(id,activity.id(),1,email,new ec.edu.uta.utaped.planning.EvidenceService.Reference(2,"Acta","https://example.invalid/acta"))).getStatusCode().value());
+    }
+    @Test void editableObservationsLifecycleAndAudit() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+        long v0 = task.rowVersion();
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(v0, "Observación inicial", 0, 0.1, 0.2, 0.3, 0.4));
+        var stateAfterAdd = reviews.state(review, reviewerEmail);
+        assertEquals(1, stateAfterAdd.observations().size());
+        var obs = stateAfterAdd.observations().getFirst();
+        UUID obsId = (UUID) obs.get("id");
+        assertEquals("Observación inicial", obs.get("message"));
+        assertNull(obs.get("updated_at"));
+        assertTrue((boolean) obs.get("can_edit"));
+        assertTrue((boolean) obs.get("can_delete"));
+
+        var taskAfterAdd = reviews.inbox(reviewerEmail).getFirst();
+        long v1 = taskAfterAdd.rowVersion();
+        assertEquals(v0 + 1, v1);
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(v1, "Observación modificada", 0, 0.15, 0.25, 0.35, 0.45));
+
+        var stateAfterUpdate = reviews.state(review, reviewerEmail);
+        assertEquals(1, stateAfterUpdate.observations().size());
+        var obsUpdated = stateAfterUpdate.observations().getFirst();
+        assertEquals("Observación modificada", obsUpdated.get("message"));
+        assertNotNull(obsUpdated.get("updated_at"));
+
+        var history = jdbc.queryForList("SELECT * FROM review_observation_history WHERE observation_id=? ORDER BY occurred_at ASC", obsId);
+        assertEquals(1, history.size());
+        assertEquals("UPDATE", history.getFirst().get("operation"));
+        String beforeJson = history.getFirst().get("before_state").toString();
+        String afterJson = history.getFirst().get("after_state").toString();
+        assertTrue(beforeJson.contains("Observación inicial"));
+        assertTrue(afterJson.contains("Observación modificada"));
+
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(v1, "Conflicto", 0, 0.1, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        var taskAfterUpdate = reviews.inbox(reviewerEmail).getFirst();
+        long v2 = taskAfterUpdate.rowVersion();
+        assertEquals(v1 + 1, v2);
+        reviews.deleteObservation(task.id(), obsId, reviewerEmail, v2);
+
+        var stateAfterDelete = reviews.state(review, reviewerEmail);
+        assertEquals(0, stateAfterDelete.observations().size());
+
+        var dbRow = jdbc.queryForMap("SELECT deleted_at, deleted_by FROM review_observation WHERE id=?", obsId);
+        assertNotNull(dbRow.get("deleted_at"));
+        assertNotNull(dbRow.get("deleted_by"));
+
+        var historyAfterDelete = jdbc.queryForList("SELECT * FROM review_observation_history WHERE observation_id=? ORDER BY occurred_at ASC", obsId);
+        assertEquals(2, historyAfterDelete.size());
+        assertEquals("DELETE", historyAfterDelete.get(1).get("operation"));
+        assertNull(historyAfterDelete.get(1).get("after_state"));
+
+        var taskAfterDelete = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(taskAfterDelete.rowVersion(), "No se puede revivir", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task.id(), obsId, reviewerEmail, taskAfterDelete.rowVersion())
+        ).getStatusCode().value());
+    }
+
+    @Test void observationValidationAndGeometryConstraints() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Página fuera de rango", 999, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Página negativa", -1, null, null, null, null))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Geometría incompleta", 0, 0.1, null, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Sin página", null, 0.1, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Fuera de límite", 0, 0.8, 0.2, 0.3, 0.4))
+        ).getStatusCode().value());
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Observación general", null, null, null, null, null));
+        var obs = reviews.state(review, reviewerEmail).observations().getFirst();
+        assertNull(obs.get("page_index"));
+        assertNull(obs.get("x"));
+
+        var task2 = reviews.inbox(reviewerEmail).getFirst();
+        UUID obsId = (UUID) obs.get("id");
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(task2.rowVersion(), "Solo página", 0, null, null, null, null));
+        var obsUpdated = reviews.state(review, reviewerEmail).observations().getFirst();
+        assertEquals(0, obsUpdated.get("page_index"));
+        assertNull(obsUpdated.get("x"));
+    }
+
+    @Test void withdrawnObservationDoesNotBlockOrJustifyReturn() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Error temporal", null, null, null, null, null));
+        var obsId = (UUID) reviews.state(review, reviewerEmail).observations().getFirst().get("id");
+        var taskAfterAdd = reviews.inbox(reviewerEmail).getFirst();
+        reviews.deleteObservation(task.id(), obsId, reviewerEmail, taskAfterAdd.rowVersion());
+
+        var taskAfterDel = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(400, assertThrows(ResponseStatusException.class, () ->
+            reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(taskAfterDel.rowVersion(), "RETURN", "   ", UUID.randomUUID()))
+        ).getStatusCode().value());
+
+        reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(taskAfterDel.rowVersion(), "COMPLETE", "", UUID.randomUUID()));
+        var state = reviews.state(review, reviewerEmail);
+        assertEquals("COMPLETED", state.tasks().getFirst().get("status"));
+    }
+
+    @Test void observationPermissionsAndIsolationBetweenDocuments() throws Exception {
+        UUID review1 = submit(false);
+        var task1 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.observe(task1.id(), reviewerEmail, new ReviewService.Observation(task1.rowVersion(), "Nota en doc 1", null, null, null, null, null));
+        var obs1Id = (UUID) reviews.state(review1, reviewerEmail).observations().getFirst().get("id");
+
+        String adminEmail = "sample-admin@example.invalid";
+        jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','ADMIN',false)", UUID.randomUUID(), adminEmail, "Admin Prueba");
+
+        var taskCurrent = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, adminEmail, new ReviewService.ObservationUpdate(taskCurrent.rowVersion(), "Admin modificando", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task1.id(), obs1Id, adminEmail, taskCurrent.rowVersion())
+        ).getStatusCode().value());
+
+        assertEquals(404, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, email, new ReviewService.ObservationUpdate(taskCurrent.rowVersion(), "Autor modificando", null, null, null, null, null))
+        ).getStatusCode().value());
+
+        reviews.decide(task1.id(), reviewerEmail, new ReviewService.Decision(taskCurrent.rowVersion(), "RETURN", "Devolución formal", UUID.randomUUID()));
+        var taskReturned = reviews.inbox(reviewerEmail).getFirst();
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.updateObservation(task1.id(), obs1Id, reviewerEmail, new ReviewService.ObservationUpdate(taskReturned.rowVersion(), "Intento post-decisión", null, null, null, null, null))
+        ).getStatusCode().value());
+        assertEquals(409, assertThrows(ResponseStatusException.class, () ->
+            reviews.deleteObservation(task1.id(), obs1Id, reviewerEmail, taskReturned.rowVersion())
+        ).getStatusCode().value());
+    }
+
+    @Test void stageLabelPresentationNormalization() {
+        assertEquals("Revisión documental", ReviewService.displayStageLabel("Revisión de ejemplo", "REVIEW"));
+        assertEquals("Aprobación del documento", ReviewService.displayStageLabel("Aprobación de ejemplo", "APPROVE"));
+        assertEquals("Revisión de ejemplo", ReviewService.displayStageLabel("Revisión de ejemplo", "APPROVE"));
+        assertEquals("Aprobación de ejemplo", ReviewService.displayStageLabel("Aprobación de ejemplo", "REVIEW"));
+        assertEquals("Revisión jurídica", ReviewService.displayStageLabel("Revisión jurídica", "REVIEW"));
+        assertEquals("Aprobación de Decanato", ReviewService.displayStageLabel("Aprobación de Decanato", "APPROVE"));
+        assertEquals("", ReviewService.displayStageLabel(null, "REVIEW"));
+    }
+
+    @Test void observationHistoryPreservedInPeriodCustodyArchive() throws Exception {
+        UUID review = submit(false);
+        var task = reviews.inbox(reviewerEmail).getFirst();
+        reviews.observe(task.id(), reviewerEmail, new ReviewService.Observation(task.rowVersion(), "Obs inicial", null, null, null, null, null));
+        var obsId = (UUID) reviews.state(review, reviewerEmail).observations().getFirst().get("id");
+        var task2 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.updateObservation(task.id(), obsId, reviewerEmail, new ReviewService.ObservationUpdate(task2.rowVersion(), "Obs corregida", null, null, null, null, null));
+
+        var task3 = reviews.inbox(reviewerEmail).getFirst();
+        reviews.decide(task.id(), reviewerEmail, new ReviewService.Decision(task3.rowVersion(), "RETURN", "Corregir", UUID.randomUUID()));
+
+        periodArchives.close(period, email, new ec.edu.uta.utaped.institution.PeriodArchiveService.Close(1L, "Cierre para verificar historial de observaciones"));
+        byte[] custodyZip = periodArchives.custody(period, email);
+        boolean foundHistory = false;
+        try (var zip = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(custodyZip))) {
+            java.util.zip.ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if (entry.getName().equals("documents/" + id + "/manifest.json")) {
+                    String manifest = new String(zip.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    assertTrue(manifest.contains("observationHistory"), "El manifiesto debe incluir observationHistory");
+                    assertTrue(manifest.contains("Obs inicial"), "El manifiesto debe contener el texto previo");
+                    assertTrue(manifest.contains("Obs corregida"), "El manifiesto debe contener el texto corregido");
+                    foundHistory = true;
+                }
+            }
+        }
+        assertTrue(foundHistory, "Debe encontrarse el manifiesto con el historial de observaciones");
+    }
+    @Test void finalReportReferencesOnlyApprovedCutsFromItsPlanAndFreezesTheirIdentity() throws Exception {
+        UUID baseReview=submit(false);approve(baseReview);
+        var empty=reports.create(id,email);assertTrue(reports.blockers(empty.id(),email).stream().anyMatch(b->b.message().contains("corte") || b.message().contains("Informe de ejecución")));
+        var report=finalWithApprovedCut();var state=reports.get(report.id(),email);var reference=state.data().executionReferences().getFirst();
+        assertEquals(1,state.executionOptions().size());assertEquals(64,reference.pdfHash().length());
+        var draftCut=executions.create(id,email);
+        assertTrue(reports.approvedCuts(id,email).stream().noneMatch(c->c.documentId().equals(draftCut.id())));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"", "", "",state.data().results(),List.of(),List.of(draftCut.id())))).getStatusCode().value());
+        assertEquals(reference,reports.get(report.id(),email).data().executionReferences().getFirst());
+    }
+    @Test void approvedFinalReportProposesFutureActivityWithoutChangingItsSignedArtifact() throws Exception {
+        UUID baseReview=submit(false);approve(baseReview);var report=finalWithApprovedCut();var state=reports.get(report.id(),email);
+        reports.save(report.id(),email,new ec.edu.uta.utaped.planning.ReportService.Save(report.rowVersion(),report.title(),"Antecedentes verificables.","Conclusiones del período.","Mejorar el seguimiento.",state.data().results().stream().map(r->new ec.edu.uta.utaped.planning.ReportService.Result(r.activityId(),java.math.BigDecimal.valueOf(50),"Resultado del período.")).toList(),List.of()));
+        var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));var signing=signatures.state(report.id(),artifact.id(),email,true);
+        signatures.sign(report.id(),artifact.id(),email,signing.preparation().rowVersion(),signing.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        UUID review=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(review);byte[] frozen=reviews.content(review,email);
+        var request=new ec.edu.uta.utaped.planning.ActivityProposals.Create(UUID.randomUUID(),"Fortalecer el seguimiento del próximo período");UUID proposal=proposals.create(report.id(),email,request);assertEquals(proposal,proposals.create(report.id(),email,request));
+        assertEquals(403,assertThrows(ResponseStatusException.class,()->proposals.create(report.id(),reviewerEmail,request)).getStatusCode().value());
+        var ends=jdbc.queryForObject("SELECT ends_on FROM academic_period WHERE id=?",java.time.LocalDate.class,period);UUID future=UUID.randomUUID();
+        jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Período posterior',?,?,?,?,?,?)",future,ends.plusDays(1),ends.plusMonths(6),ends.plusDays(1),ends.plusMonths(6),ends.plusDays(1),ends.plusMonths(6));
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->proposals.accept(proposal,email,new ec.edu.uta.utaped.planning.ActivityProposals.Accept(0L,period,null,request.title()))).getStatusCode().value());
+        var definition=proposals.accept(proposal,email,new ec.edu.uta.utaped.planning.ActivityProposals.Accept(0L,future,null,request.title()));assertEquals(future,definition.context().periodId());assertFalse(definition.mandatory());
+        assertTrue(activities.get(id,email).definitions().stream().noneMatch(d->d.id().equals(definition.id())));
+        assertArrayEquals(frozen,reviews.content(review,email));assertEquals("APPROVED",plans.get(report.id(),email).documentState());
+    }
+    @Test void twoReviewersAndTwoApproversMustAllSignTheirOwnStage() throws Exception {
+        multiplePersonalStages=true;UUID review=submit(true);
+        assertEquals(1,reviews.inboxPage(reviewerEmail,"","","","REVIEW",0,20).total());
+        assertEquals(0,reviews.inboxPage(reviewerEmail,"","","","APPROVE",0,20).total());
+        assertEquals(400,assertThrows(ResponseStatusException.class,()->reviews.inboxPage(reviewerEmail,"","","","INVALID",0,20)).getStatusCode().value());
+        for(String actor:List.of(reviewerEmail,"reviewer2@example.invalid",approverEmail,"approver2@example.invalid")) {
+            assertEquals("IN_REVIEW",plans.get(id,email).documentState());
+            var task=reviews.inbox(actor).stream().filter(t->t.reviewId().equals(review)).findFirst().orElseThrow();assertTrue(task.requiresSignature());
+            assertEquals(409,assertThrows(ResponseStatusException.class,()->reviews.decide(task.id(),actor,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()))).getStatusCode().value());
+            var state=reviews.state(review,actor);var fixture=signingFixture();
+            reviews.sign(task.id(),actor,task.rowVersion(),state.pdfHash(),UUID.randomUUID(),signingBody(fixture,"Test-only-signing-password"),true);
+        }
+        assertEquals("APPROVED",plans.get(id,email).documentState());
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(reviews.content(review,email))) { assertEquals(5,pdf.getSignatureDictionaries().size()); }
+        assertEquals(4,jdbc.queryForObject("SELECT count(*) FROM review_task WHERE review_id=? AND status='COMPLETED'",Integer.class,review));
     }
 }

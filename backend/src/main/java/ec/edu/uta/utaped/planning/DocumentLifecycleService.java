@@ -51,12 +51,12 @@ public class DocumentLifecycleService {
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM document_access WHERE work_plan_id=?",id,actor,doc);
         jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?) ON CONFLICT DO NOTHING",id,actor,actor);
         jdbc.update("""
-            INSERT INTO document_attachment(id,work_plan_id,file_id,title,description,sort_order,request_key)
-            SELECT gen_random_uuid(),?,file_id,title,description,sort_order,gen_random_uuid() FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL
+            INSERT INTO document_attachment(id,work_plan_id,file_id,title,description,sort_order,request_key,original_file_id,original_media_type)
+            SELECT gen_random_uuid(),?,file_id,title,description,sort_order,gen_random_uuid(),original_file_id,original_media_type FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL
             """,id,doc);
         if(plan.documentType().equals("T2")) jdbc.update("""
-            INSERT INTO work_report(id,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,previous_version_id)
-            SELECT ?,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,id FROM work_report WHERE id=?
+            INSERT INTO work_report(id,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,previous_version_id,execution_references)
+            SELECT ?,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,id,execution_references FROM work_report WHERE id=?
             """,id,doc);
         audit.record(actor,"DOCUMENT_FORMAL_VERSION_CREATED",id);return plans.get(id,email);
     }

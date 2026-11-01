@@ -1,4 +1,23 @@
 .import-heading,.import-file,.import-toolbar { display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; }
+.import-workspace.is-collapsed {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.import-workspace.is-collapsed .import-heading {
+  margin-bottom: 0;
+}
+.import-desc {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.import-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
 .import-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:0; list-style:none; margin:26px 0; }
 .import-steps li { display:flex; align-items:center; gap:10px; padding:14px; border:1px solid var(--border); border-radius:12px; color:var(--muted); background:var(--surface); }
 .import-steps li span { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; border:1px solid var(--border); flex-shrink:0; }

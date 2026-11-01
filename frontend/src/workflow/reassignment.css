@@ -1,0 +1,144 @@
+/* Task Reassignment Modal & Stage Details */
+.action-form-dialog.task-reassignment-dialog[open] {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.reassignment-context-card {
+  background: var(--surface-raised, rgba(19, 78, 122, 0.05));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+:root[data-theme='dark'] .reassignment-context-card {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.reassignment-document-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px 0;
+  font-size: 0.94rem;
+  color: var(--text);
+}
+
+.reassignment-document-title strong {
+  color: var(--blue-700, #134e7a);
+}
+
+:root[data-theme='dark'] .reassignment-document-title strong {
+  color: #60a5fa;
+}
+
+.reassignment-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.reassignment-metadata-grid .metadata-label {
+  display: block;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.reassignment-no-candidates {
+  padding: 12px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+:root[data-theme='dark'] .reassignment-no-candidates {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Stage Reassignment Button */
+.stage-reassign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stage-reassign-btn:hover:not(:disabled) {
+  background: var(--blue-50, #eff6ff);
+  border-color: var(--blue-500, #3b82f6);
+  color: var(--blue-700, #1d4ed8);
+}
+
+:root[data-theme='dark'] .stage-reassign-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+/* Stage Reassignment History */
+.stage-reassignments-history {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--surface-raised, rgba(0, 0, 0, 0.02));
+  border-left: 2px solid var(--blue-500, #3b82f6);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.8rem;
+}
+
+:root[data-theme='dark'] .stage-reassignments-history {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: #60a5fa;
+}
+
+.stage-reassignments-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+
+.stage-reassignment-item {
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+.stage-reassignment-item small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.stage-reassignment-reason {
+  font-style: italic;
+  color: var(--muted);
+  margin-top: 2px;
+  font-size: 0.76rem;
+}

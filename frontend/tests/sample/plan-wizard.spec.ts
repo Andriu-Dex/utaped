@@ -63,8 +63,8 @@ test('persistent Plan steps protect drafts, validate matrix and keep attachment 
     for (const title of ['Primer anexo', 'Segundo anexo']) {
       await openAction(page, 'Agregar anexo')
       await page.getByLabel('Título del anexo', { exact: true }).fill(title)
-      await page.getByLabel('Archivo PDF del anexo', { exact: true }).setInputFiles({ name: 'anexo.pdf', mimeType: 'application/pdf', buffer: pdf() })
-      await page.getByRole('button', { name: 'Agregar PDF', exact: true }).click()
+      await page.getByLabel('Archivo del anexo (PDF o imagen)', { exact: true }).setInputFiles({ name: 'anexo.pdf', mimeType: 'application/pdf', buffer: pdf() })
+      await page.getByRole('button', { name: 'Agregar anexo', exact: true }).click()
       await expect(page.getByText('Anexo agregado.', { exact: true })).toBeVisible()
       await page.getByRole('button', { name: 'Cancelar: Agregar anexo', exact: true }).click()
     }
