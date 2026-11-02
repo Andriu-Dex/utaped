@@ -13,11 +13,22 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class DevelopmentSeedTests {
+    @Test void rejectsWhenCookieSecureIsTrue() {
+        var jdbc=mock(JdbcTemplate.class);
+        assertThrows(IllegalStateException.class,() -> new DevelopmentSeed(jdbc,new BCryptPasswordEncoder(),"Seed-Example-Only-2026!",true).run(new DefaultApplicationArguments()));
+    }
+    @Test void rejectsWhenRealAdminExists() {
+        var jdbc=mock(JdbcTemplate.class);
+        when(jdbc.queryForObject("SELECT current_database()",String.class)).thenReturn("utaped");
+        when(jdbc.queryForObject(contains("EXISTS"),eq(Boolean.class))).thenReturn(true);
+        assertThrows(IllegalStateException.class,() -> new DevelopmentSeed(jdbc,new BCryptPasswordEncoder(),"Seed-Example-Only-2026!",false).run(new DefaultApplicationArguments()));
+    }
     @Test void rejectsAnyDatabaseOtherThanTheExplicitDevelopmentDatabaseBeforeWriting() {
         var jdbc=mock(JdbcTemplate.class);
         when(jdbc.queryForObject("SELECT current_database()",String.class)).thenReturn("utaped_test");
+        when(jdbc.queryForObject(contains("EXISTS"),eq(Boolean.class))).thenReturn(false);
         assertThrows(IllegalStateException.class,() -> new DevelopmentSeed(jdbc,new BCryptPasswordEncoder(),"Seed-Example-Only-2026!").run(new DefaultApplicationArguments()));
-        verify(jdbc).queryForObject("SELECT current_database()",String.class); verifyNoMoreInteractions(jdbc);
+        verify(jdbc).queryForObject("SELECT current_database()",String.class);
     }
     @Test void referenceSeedingIsIdempotentAndPreservesAdministratorChanges() {
         String url=System.getenv("DB_URL");

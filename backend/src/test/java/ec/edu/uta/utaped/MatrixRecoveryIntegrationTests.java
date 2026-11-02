@@ -17,7 +17,7 @@ class MatrixRecoveryIntegrationTests extends OrganizationIntegrationTests {
     }
     @Test void incompleteRecoveryIsPrivateIsolatedAndNeverBecomesCanonicalUntilValidated() {
         UUID scope=scope();var first=plans.create("user@example.invalid",new WorkPlanModels.Create(group,period,UUID.randomUUID(),"Plan uno",scope));
-        var career=organization.createCareer("admin@example.invalid",new ec.edu.uta.utaped.institution.OrganizationService.CareerInput("RECOVERY", "Carrera de prueba"));
+        var career=organization.createCareer("admin@example.invalid",new ec.edu.uta.utaped.institution.OrganizationService.CareerInput("RECOVERY", "Carrera de prueba - Recuperación"));
         var secondScope=organization.createScope("admin@example.invalid",new ec.edu.uta.utaped.institution.OrganizationService.ScopeInput(group,period,career));
         organization.member(secondScope,"admin@example.invalid",new ec.edu.uta.utaped.institution.OrganizationService.MemberInput(user,"MEMBER","Responsable",true,0L));
         organization.principal(secondScope,"admin@example.invalid",new ec.edu.uta.utaped.institution.OrganizationService.PrincipalInput(user,0L));

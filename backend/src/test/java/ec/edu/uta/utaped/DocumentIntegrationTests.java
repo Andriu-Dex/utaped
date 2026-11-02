@@ -35,7 +35,7 @@ class DocumentIntegrationTests {
     UUID user,group,period,id;String email="document@example.invalid";
     @BeforeEach void setup() {
         assertEquals("utaped_test",jdbc.queryForObject("SELECT current_database()",String.class));
-        jdbc.execute("TRUNCATE stored_file,planning_catalog,planning_holiday,app_user,institutional_group,academic_period,auth_throttle,SPRING_SESSION CASCADE");
+        jdbc.execute("TRUNCATE stored_file,planning_catalog,planning_holiday,institutional_position,app_user,institutional_group,academic_period,auth_throttle,SPRING_SESSION CASCADE");
         user=UUID.randomUUID();group=UUID.randomUUID();period=UUID.randomUUID();
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Docente de prueba',?,'USER',false)",user,email,encoder.encode("Test-only-password-2026"));
         jdbc.update("INSERT INTO institutional_group(id,name,group_type,collective_label) VALUES (?,'Comisión de prueba','COMMISSION','Responsable de la comisión')",group);
