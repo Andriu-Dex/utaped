@@ -1,5 +1,9 @@
 # Reportes
 
+- [01/11/2026 — Simplificación de ejecución local y unificación del entorno](2026-11-01-57-simplify-local-execution.md).
+
+- [01/11/2026 — Recuperación de actividades incompletas](2026-11-01-56-matrix-recovery.md).
+
 - [31/10/2026 — Implementación de correcciones OCT30](2026-10-31-55-client-corrections-implementation.md).
 
 - [Plan tras la transcripción corregida del cliente](2026-10-31-54-corrected-client-meeting-plan.md).

@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## 01/11/2026 — Simplificación de ejecución local y unificación del entorno
+
+Unificado el entorno de desarrollo en el proyecto Docker `utaped` y base de datos `utaped`, estandarizando en el archivo `.env` (con plantilla `.env.example`). Los scripts `./scripts/start-development.ps1` y `./scripts/start-development.sh` autogeneran `.env` con contraseñas seguras si no existe y levantan por defecto la aplicación completa (PostgreSQL, backend, Mailpit y frontend compilado) sin exigir dependencias del host (Node/Java/Maven). Se mantiene soporte opcional para Vite (`-Vite`), documentos preparados (`-PreparedDocuments`), reseteo de semillas (`-ResetData`) y parada controlada (`-Stop`). Migración de datos sin pérdida desde `utaped-sample` (730 MB documentales, 8 planes, 7 usuarios dev y 47 migraciones) respaldada y verificada mediante SHA-256. [Detalles y verificación](docs/reports/2026-11-01-57-simplify-local-execution.md).
+
 ## 01/11/2026 — Recuperación de actividades incompletas
 
 La matriz conserva borradores incompletos por documento y usuario, separados de los datos oficiales, con control de concurrencia y reintento. [Detalles y comprobaciones dirigidas](docs/reports/2026-11-01-56-matrix-recovery.md).

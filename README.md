@@ -1,43 +1,132 @@
 # UTAPED — Gestión Documental Académica
 
-Aplicación productiva modular para FISEI / Universidad Técnica de Ambato. Incluye identidad local, administración por ámbitos, Planes T1, revisión secuencial con firmas, evidencias e Informes T2 derivados, versiones formales, flujos por período, cierre histórico y reportes de gestión. La interfaz conserva una base visual común para PC y tabletas, con modo claro y oscuro.
+Sistema modular para la gestión, elaboración, revisión secuencial con firmas digitales y archivo histórico de planes de trabajo (T1) e informes finales (T2) en la FISEI / Universidad Técnica de Ambato.
 
-## Arranque
+## Requisitos previos
 
-El entorno diario único es **utaped-sample**, conservando sus datos y credenciales:
+- **Git**: para clonar el repositorio.
+- **Docker** y **Docker Compose**: versión con soporte de Compose v2.
+  - Windows: Docker Desktop con motor WSL2 / Linux Containers activo.
+  - Linux: Docker Engine y plugin `docker-compose-plugin`.
+  - macOS: Docker Desktop para Mac.
+- **Puertos locales utilizados por defecto**:
+  - `64430`: Aplicación web (interfaz compilada en Nginx).
+  - `18080`: Backend API (Spring Boot).
+  - `15433`: PostgreSQL 18.
+  - `18025`: Interfaz web de Mailpit (buzón local de correos).
+  - `11025`: Servidor SMTP local de Mailpit.
+  *(Todos los puertos son configurables en `.env`)*.
 
-```powershell
-./scripts/start-development.ps1
-cd frontend
-npm run dev
+> [!NOTE]
+> Para el uso estándar y la evaluación no es necesario tener instalados Node.js, Java ni Maven en el equipo anfitrión; la aplicación completa se construye y ejecuta dentro de contenedores Docker.
+
+---
+
+## Inicio rápido (Recomendado)
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/Andriu-Dex/utaped.git
+cd utaped
 ```
 
-Abrir http://127.0.0.1:5173. Solo backend, PostgreSQL y Mailpit quedan en Docker. Primera instalación: `npm ci` dentro de frontend. Los cambios de interfaz se reflejan al guardar.
+### 2. Iniciar la aplicación
+En el primer arranque se genera automáticamente un archivo `.env` local con contraseñas criptográficas seguras y se levantan los servicios:
 
-Para probar el frontend compilado sobre la misma base: `./scripts/start-development.ps1 -Web` desde la raíz, URL http://127.0.0.1:64431. Volver a ejecutar sin -Web para regresar a Vite. No iniciar simultáneamente la copia histórica utaped. [Guía y pruebas aisladas](docs/development/sample-environment.md).
+- **En Windows (PowerShell):**
+  ```powershell
+  ./scripts/start-development.ps1
+  ```
+- **En Linux o macOS (Bash):**
+  ```bash
+  ./scripts/start-development.sh
+  ```
 
-El puerto institucional continúa siendo **64430**, con [configuración HTTPS/SMTP de operación](docs/operations/production-readiness.md). La configuración base sin semillas sigue disponible para instalaciones independientes; no es una segunda aplicación diaria obligatoria.
+> [!NOTE]
+> **Alternativa directa con Docker Compose:**
+> Docker Compose no genera automáticamente el archivo `.env`. Si prefiere no usar los scripts de inicio rápido recomendados, copie primero `.env.example` a `.env` (`cp .env.example .env`) y configure las contraseñas requeridas (`DB_PASSWORD` y `UTAPED_SEED_PASSWORD`) antes de ejecutar `docker compose up -d --build`.
 
-El acceso admite usuario o correo y exige CAPTCHA generado por servidor. El directorio permite consultar los usernames migrados y restablecer cuentas administrativamente. No hay registro público. [Contrato de acceso](docs/api/local-access.md).
+La primera construcción compilará las imágenes de backend (Java 21) y frontend. Al finalizar, la aplicación estará disponible en:
+👉 **http://127.0.0.1:64430**
 
-## Stack
+---
 
-React/TypeScript/Vite; Java 21/Spring Boot; PostgreSQL/Flyway; sesiones JDBC y Spring Security. [Decisión y fuentes](docs/architecture/adr/0001-production-foundation.md).
+## Cuentas de desarrollo y primer acceso
 
-## Documentación
+El entorno local se inicializa con el catálogo oficial y siete cuentas de desarrollo para recorrer los diferentes roles del circuito:
 
-- [Requisitos](requirements.md) y [estado real](implementation-status.md).
-- [Plan Maestro vigente](docs/decisions/PLAN_MAESTRO_AGENTE_DESARROLLO_GESTION_DOCUMENTAL_ACADEMICA.md) y [base de interfaz](docs/design/interface-foundations.md).
-- [Índice documental](docs/README.md) y [contrato API](docs/api/foundation.md).
-- [Pruebas y entorno](docs/development/local-setup.md).
-- [Flujo Git](docs/development/git-workflow.md) y [reportes](docs/reports/README.md).
+| Usuario | Rol del circuito | Función |
+|---|---|---|
+| `dev.admin` | Administrador | Asignación de flujos, catálogos institucionales y certificados. |
+| `dev.principal` | Elaborador | Creación y edición de planes T1 e informes T2. |
+| `dev.coordinator` | Coordinador | Coordinación académica y prórrogas. |
+| `dev.reviewer` | Revisor | Primera etapa de revisión documental. |
+| `dev.approver` | Aprobador | Aprobación final y cierre de etapa. |
+| `dev.member` | Integrante | Responsable de actividades asignadas. |
+| `dev.outsider` | Sin ámbito | Usuario de prueba para verificar aislamiento de permisos. |
 
-El mockup permanece congelado fuera del repositorio en `C:\Documentos\Documentos\Universidad UTA\Ingenieria De Software\Semestre 7\Gestion de Proyectos\Proyecto\Prototipos`.
+### Contraseña de acceso
+En el primer inicio, el lanzador genera una contraseña aleatoria segura que se asigna a todas las cuentas `dev.*`. Para consultarla:
+- Abra su archivo local `.env` (ignorado por Git).
+- Busque el valor de `UTAPED_SEED_PASSWORD`.
+- Inicie sesión en la pantalla de acceso con el usuario deseado, dicha contraseña y el código CAPTCHA de seguridad.
 
-Para desarrollo con cuentas y catálogos ficticios: `./scripts/start-development.ps1` (el comando anterior start-development-sample sigue disponible). [Guía de ejemplo](docs/development/sample-environment.md) y [contrato del circuito documental](docs/api/document-circuit.md).
+---
 
-Administración asigna T1/T2 a cada ámbito y activa sus flujos antes de nuevas firmas. El cierre conserva datos y genera un archivo histórico; la descarga respeta los permisos documentales. [Configuración y operación](docs/api/period-control.md).
+## Opciones del entorno
 
-La entrega permite recorrer el circuito documental de desarrollo, incluyendo referencias HTTPS versionadas y bandeja de revisión paginada. La asistencia de redacción T1/T2 está integrada y deshabilitada hasta [configurar el proveedor](docs/development/writing-configuration.md). El propietario construye el agente de código/Trello por separado.
+### Documentos preparados de ejemplo (Opcional)
+Para incluir planes de trabajo y documentos de prueba ya elaborados y en distintas etapas del flujo, agregue el parámetro `-PreparedDocuments`:
+```powershell
+./scripts/start-development.ps1 -PreparedDocuments
+```
+*(En Linux/macOS: `./scripts/start-development.sh --prepared-documents`)*.
+Esta opción es **idempotente**: ejecutarla no borra ni duplica planes ya existentes.
 
-No acredita todavía todo el Plan Maestro ni la preparación institucional para producción. Siguen pendientes retención/reapertura, sustitución de ejecutores y capacidades administrativas adicionales. [Estado y límites](implementation-status.md). HTTPS, SMTP, respaldo/restauración y aceptación de firma siguen siendo condiciones de operación. [Almacenamiento](docs/development/document-storage.md).
+### Correo saliente de prueba (Mailpit)
+Los correos electrónicos salientes del sistema (como los enlaces y códigos de recuperación de acceso) se capturan localmente en Mailpit para evitar envíos a servidores reales durante el desarrollo. Las notificaciones internas del sistema se gestionan dentro de la propia aplicación mediante sesión web y no utilizan SMTP:
+👉 **Bandeja de correo local (Mailpit):** **http://127.0.0.1:18025**
+*(Si desea probar entrega externa SMTP real, configure las variables `SMTP_*` en su archivo `.env`)*.
+
+### Detener el sistema conservando los datos
+Para detener los contenedores sin perder sus planes, documentos ni configuraciones:
+```powershell
+./scripts/start-development.ps1 -Stop
+```
+*(En Linux/macOS: `./scripts/start-development.sh --stop`, o `docker compose stop`)*.
+
+---
+
+## Desarrollo activo de Frontend con Vite (Opcional)
+
+Si desea modificar el código de la interfaz con recarga instantánea en caliente (HMR):
+1. Inicie los servicios de backend y base de datos con el flag `-Vite`:
+   ```powershell
+   ./scripts/start-development.ps1 -Vite
+   ```
+2. En otra terminal, ingrese a la carpeta frontend con Node 24+ y ejecute:
+   ```bash
+   cd frontend
+   npm ci
+   npm run dev
+   ```
+3. Abra **http://127.0.0.1:5173**. Vite redirigirá automáticamente las llamadas `/api` al backend local.
+
+---
+
+## Pruebas y verificación
+
+El repositorio incluye suites de pruebas completamente aisladas que nunca escriben sobre su base de datos local:
+- **Pruebas de integración del backend:** `./scripts/test-backend.ps1` (usa un contenedor descartable `utaped-tests`).
+- **Pruebas de aceptación E2E:** `./scripts/test-acceptance.ps1` (usa un entorno temporal `utaped-acceptance`).
+- **Verificación frontend:** `npm --prefix frontend run lint` y `npm --prefix frontend run typecheck`.
+
+---
+
+## Documentación del proyecto
+
+- [Requisitos formales](requirements.md) y [Estado de implementación](implementation-status.md).
+- [Configuración del entorno local](docs/development/local-setup.md).
+- [Referencia y catálogo institucional](docs/development/institutional-reference.md).
+- [Auditoría y reportes técnicos](docs/reports/README.md).
+- [Operación institucional y puesta en marcha](docs/operations/production-readiness.md).
