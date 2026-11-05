@@ -28,16 +28,24 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
     })
     return () => { controller.abort(); if (image) URL.revokeObjectURL(image) }
   }, [nonce, onReady])
-  function showAudio() {
-    setAudioShown(shown => {
-      const next = !shown
-      if (next) {
-        setError('')
-        requestAnimationFrame(() => audio.current?.focus())
-      }
-      return next
-    })
+  function playAudio() {
+    if (!challenge) return
+    setError('')
+    if (audioShown && audio.current) {
+      audio.current.currentTime = 0
+      audio.current.play().catch(() => {})
+      audio.current.focus()
+    } else {
+      setAudioShown(true)
+    }
   }
+  useEffect(() => {
+    if (audioShown && audio.current) {
+      audio.current.currentTime = 0
+      audio.current.play().catch(() => {})
+      audio.current.focus()
+    }
+  }, [audioShown])
   return <div className="captcha-field">
     <div className="captcha-heading"><label htmlFor="captcha-answer">Código de verificación</label>
       <div className="captcha-actions">
@@ -49,7 +57,7 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
           aria-expanded={audioShown}
           aria-controls="captcha-audio"
           disabled={busy || (!challenge && !error)}
-          onClick={showAudio}
+          onClick={playAudio}
         >
           <Icon name="volume" size={18} />
         </button>
@@ -59,7 +67,7 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
           title="Cambiar código de verificación"
           aria-label="Cambiar código de verificación"
           disabled={busy || (!challenge && !error)}
-          onClick={onRenew}
+          onClick={() => { setAudioShown(false); onRenew() }}
         >
           <Icon name="refresh" />
         </button>
@@ -72,7 +80,7 @@ export function CaptchaField({ nonce, busy, answer, onReady, onRenew }: {
         ref={audio}
         tabIndex={0}
         controls
-        preload="none"
+        preload="auto"
         aria-label="Audio del código de verificación"
         src={'/api/auth/captcha/audio?id=' + challenge.id}
         onError={() => setError('No se pudo reproducir el audio o el código expiró. Cambia el código de verificación para reintentar.')}
