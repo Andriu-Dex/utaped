@@ -44,3 +44,4 @@ Resolver la colisión de estilos CSS que deformaba los filtros de la bandeja de 
   - `dev.reviewer` (revisor institucional): verificación de que «Revisión documental» **SÍ aparece** en la barra lateral. Al pulsar, abre la bandeja con pestañas segmentadas horizontales, métricas KPI (3 pendientes, 2 completadas), filtro de búsqueda y la tabla con los documentos pendientes y botón «Abrir» (`reviewer_inbox_with_tasks_light.png` y `reviewer_inbox_with_tasks_dark.png`).
 - **Verificación de temas y accesibilidad:**
   - Modo claro y modo oscuro validados con contraste cromático institucional y tipografía legible.
+
