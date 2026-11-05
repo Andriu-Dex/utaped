@@ -98,6 +98,7 @@ export default function App() {
   const [allPeriods,setAllPeriods] = useState(false)
   const [reportingPeriod, setReportingPeriod] = useState(initialRoute.periodId ?? '')
   const [organizationScope, setOrganizationScope] = useState(initialRoute.scopeId ?? '')
+  const [hasReviewAccess, setHasReviewAccess] = useState<boolean | null>(null)
   const identityEpoch = useRef(0)
   const [workspace, setWorkspace] = useState<'administration' | 'documents'>(initialRoute.workspace ?? 'administration')
   const documentGroups = groups.filter(group => group.membership_role != null)
@@ -169,6 +170,7 @@ export default function App() {
     setAllPeriods(false)
     setReportingPeriod('')
     setOrganizationScope('')
+    setHasReviewAccess(null)
     setWorkspace('administration')
     window.history.replaceState(null, '', window.location.pathname)
   }
@@ -208,8 +210,25 @@ export default function App() {
   }, [account])
 
   async function load() {
-    const epoch=identityEpoch.current
-    const [g,p] = await Promise.all([api<Group[]>('/groups'),api<Period[]>('/periods')]); if(epoch!==identityEpoch.current) return; setGroups(g); setPeriods(p)
+    const epoch = identityEpoch.current
+    const [g, p, inbox] = await Promise.all([
+      api<Group[]>('/groups'),
+      api<Period[]>('/periods'),
+      api<{ canReview?: boolean; total?: number; items?: unknown[]; metrics?: { active?: number; completed?: number; returned?: number } }>('/reviews/inbox?size=1').catch(() => null)
+    ])
+    if (epoch !== identityEpoch.current) return
+    setGroups(g)
+    setPeriods(p)
+    if (inbox) {
+      const allowed = Boolean(
+        inbox.canReview ?? (
+          (inbox.total ?? 0) > 0 ||
+          (inbox.items?.length ?? 0) > 0 ||
+          (inbox.metrics && ((inbox.metrics.active ?? 0) > 0 || (inbox.metrics.completed ?? 0) > 0 || (inbox.metrics.returned ?? 0) > 0))
+        )
+      )
+      setHasReviewAccess(allowed)
+    }
     setSelected(current => g.some(group => group.id === current) ? current : '')
   }
 
@@ -292,7 +311,7 @@ export default function App() {
           <>
             {navButton('home', 'Inicio', 'home')}
             {navButton('documents', 'Documentos', 'document')}
-            {navButton('reviews', 'Revisión documental', 'eye')}
+            {(hasReviewAccess !== false || view === 'reviews') && navButton('reviews', 'Revisión documental', 'eye')}
             {navButton('my-organization', 'Mi organización', 'users')}
             {navButton('reporting', 'Reportes de gestión', 'document')}
           </>
@@ -318,7 +337,7 @@ export default function App() {
       </header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
-        {view === 'my-organization' && !administrative ? <ContextualOrganization initialScopeId={organizationScope} onScopeChange={setOrganizationScope} onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} onPeriodChange={setReportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} initialReviewId={documentTarget} onReviewSelect={selectDocument} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
+        {view === 'my-organization' && !administrative ? <ContextualOrganization initialScopeId={organizationScope} onScopeChange={setOrganizationScope} onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} onPeriodChange={setReportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} initialReviewId={documentTarget} onReviewSelect={selectDocument} onNavigateToDocuments={() => navigate('documents')} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
 
           <TrackingDashboard displayName={account.displayName} onOpen={(id, step = 'general') => navigate('documents', id, step)} onOpenReports={() => navigate('reporting')} onOpenDocuments={() => navigate('documents')} />
           <div className="context-grid"><section className="card context-card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">COLABORACIÓN</span><h2>Grupos institucionales</h2></div></div><p className="muted">Consulta tus integrantes. Tu identidad se conserva al cambiar de contexto.</p>
