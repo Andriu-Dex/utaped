@@ -59,6 +59,7 @@
 .action-form-dialog[open] {
   width: min(1060px, calc(100vw - 64px));
   max-width: none;
+  min-height: min(660px, calc(100dvh - 64px));
   max-height: calc(100dvh - 64px);
   box-sizing: border-box;
   overflow: hidden;
