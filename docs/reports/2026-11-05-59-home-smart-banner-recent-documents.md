@@ -27,3 +27,4 @@ Optimizar la pantalla de Inicio (`/`) para eliminar el espacio en blanco improdu
   - Estado expandido interactivo con filtros visibles.
   - Modo oscuro en tableta vertical (820x1180).
 - **Pruebas automatizadas Playwright:** Verificada la navegación y autenticación sin regresiones.
+
