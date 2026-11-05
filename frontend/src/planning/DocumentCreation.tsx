@@ -109,12 +109,15 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
                 aria-expanded={comboboxOpen}
                 aria-controls="scope-combobox-list"
                 aria-autocomplete="list"
+                aria-activedescendant={comboboxOpen && filteredScopes[highlightIndex] ? 'scope-option-' + filteredScopes[highlightIndex].id : undefined}
                 placeholder={scope ? scope.groupName : 'Buscar o seleccionar comisión asignada…'}
                 value={comboboxOpen ? scopeSearch : (scope ? scope.groupName : scopeSearch)}
                 disabled={busy}
                 onFocus={() => { setComboboxOpen(true); setHighlightIndex(0) }}
                 onChange={e => {
                   setScopeSearch(e.target.value)
+                  setScopeId('')
+                  setTitleOverride(null)
                   setComboboxOpen(true)
                   setHighlightIndex(0)
                 }}
@@ -182,6 +185,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
                   filteredScopes.map((s, idx) => (
                     <li
                       key={s.id}
+                      id={'scope-option-' + s.id}
                       role="option"
                       aria-selected={s.id === scopeId}
                       className={'scope-combobox-item' + (s.id === scopeId ? ' is-selected' : '') + (idx === highlightIndex ? ' is-highlighted' : '')}

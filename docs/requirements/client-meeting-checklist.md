@@ -175,7 +175,7 @@ Los enlaces a pruebas representan cobertura existente, no una ejecución nueva d
 
 ### E01 — Cuentas y recuperación
 
-[Accounts](../../backend/src/main/java/ec/edu/uta/utaped/identity/Accounts.java), [PasswordService](../../backend/src/main/java/ec/edu/uta/utaped/identity/PasswordService.java), [UserImportService](../../backend/src/main/java/ec/edu/uta/utaped/identity/UserImportService.java), [FoundationIntegrationTests](../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java), [UserImportIntegrationTests](../../backend/src/test/java/ec/edu/uta/utaped/UserImportIntegrationTests.java), [alcance real de SMTP](../reports/2026-10-28-41-external-smtp-local-configuration.md).
+[Accounts](../../backend/src/main/java/ec/edu/uta/utaped/identity/Accounts.java), [PasswordService](../../backend/src/main/java/ec/edu/uta/utaped/identity/PasswordService.java), [UserImportService](../../backend/src/main/java/ec/edu/uta/utaped/identity/UserImportService.java), [FoundationIntegrationTests](../../backend/src/test/java/ec/edu/uta/utaped/FoundationIntegrationTests.java), [UserImportIntegrationTests](../../backend/src/test/java/ec/edu/uta/utaped/UserImportIntegrationTests.java), [alcance real de SMTP](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-28-41-external-smtp-local-configuration.md).
 
 <a id="e02"></a>
 
@@ -241,7 +241,7 @@ Los enlaces a pruebas representan cobertura existente, no una ejecución nueva d
 
 ### E12 — Interfaz
 
-[App](../../frontend/src/App.tsx), [reglas visuales vigentes](../../AGENTS.md), [auditoría previa](../testing/integral-audit-matrix.md), [aceptación administrativa](../../frontend/tests/sample/admin-overview.spec.ts), [revisión reciente de Inicio](../reports/2026-10-30-48-home-reporting-separation-frontend.md).
+[App](../../frontend/src/App.tsx), [reglas visuales vigentes](../../AGENTS.md), [auditoría previa](../testing/integral-audit-matrix.md), [aceptación administrativa](../../frontend/tests/sample/admin-overview.spec.ts), [revisión reciente de Inicio](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-30-48-home-reporting-separation-frontend.md).
 
 <a id="e13"></a>
 

@@ -16,10 +16,8 @@ export interface PreviewArtifact {
   signatureSlots: { label: string; pageNumber: number }[]
 }
 export interface PreparedPreview { artifact: PreviewArtifact | null; signed?: SignedArtifact | null; busy: boolean; error: string }
-type Focus = 'COVER' | 'JUSTIFICATION' | 'OBJECTIVE' | 'MATRIX' | 'ANNEXES' | 'SIGNATURES'
-interface DraftView { sourceRowVersion: number; pages: PreviewArtifact['pages']; sections: Partial<Record<Focus, number>>; pageIndex: number; image: string }
+import { draftViewCache, type DraftView, type PreviewFocus as Focus } from './draft-preview-cache'
 const sectionLabels: Record<Focus, string> = { COVER: 'Portada', JUSTIFICATION: 'Justificación', OBJECTIVE: 'Objetivo', MATRIX: 'Matriz de actividades', ANNEXES: 'Anexos', SIGNATURES: 'Firmas' }
-const draftViewCache = new Map<string, DraftView>()
 
 export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepared }: {
   plan: WorkPlan; draft: Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>

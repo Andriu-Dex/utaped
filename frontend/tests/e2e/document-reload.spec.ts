@@ -90,7 +90,7 @@ test('page reload preserves active document editor and step without resetting to
 
   // 3. Create a document in our scope
   await openAction(page, 'Crear documento')
-  await page.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
+  await page.getByRole('combobox', { name: 'Comisión o unidad asignada' }).click(); await page.locator('#scope-option-' + scope.id).click()
   await page.getByRole('button', { name: 'Crear borrador', exact: true }).click()
 
   // Verify we are inside the document editor

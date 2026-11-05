@@ -89,7 +89,7 @@ public class ReviewService {
             """,(rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),displayStageLabel(rs.getString("stage_label"),rs.getString("stage_action")),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),accounts.current(email).id());
     }
     public record InboxMetrics(long active,long completed,long returned) {}
-    public record InboxPage(List<Task> items,long total,int page,int size,InboxMetrics metrics,boolean canReview) {}
+    public record InboxPage(List<Task> items,long total,int page,int size,InboxMetrics metrics) {}
     @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public InboxPage inboxPage(String email,String query,String status,String documentType,int page,int size) { return inboxPage(email,query,status,documentType,"",page,size); }
     @Transactional(readOnly=true, isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
@@ -113,19 +113,7 @@ public class ReviewService {
         var items=jdbc.query("SELECT t.*,r.work_plan_id,r.round_number,w.title,g.name AS group_name,p.name AS period_name"+filtered
             +" ORDER BY (t.status='ACTIVE') DESC,r.created_at DESC,t.position,t.id LIMIT ? OFFSET ?",
             (rs,n)->new Task(rs.getObject("id",UUID.class),rs.getObject("review_id",UUID.class),rs.getObject("work_plan_id",UUID.class),rs.getString("title"),rs.getString("group_name"),rs.getString("period_name"),rs.getString("actor_name"),displayStageLabel(rs.getString("stage_label"),rs.getString("stage_action")),rs.getString("stage_action"),rs.getBoolean("requires_signature"),rs.getString("status"),rs.getLong("row_version"),rs.getInt("round_number"),rs.getInt("position")),parameters.toArray());
-        long activeCount = ((Number)counts.get("active")).longValue();
-        long completedCount = ((Number)counts.get("completed")).longValue();
-        long returnedCount = ((Number)counts.get("returned")).longValue();
-        boolean canReview = total > 0 || activeCount > 0 || completedCount > 0 || returnedCount > 0 || jdbc.queryForObject("""
-            SELECT EXISTS(
-                SELECT 1 FROM period_workflow_assignment pwa
-                JOIN organizational_scope s ON s.id=pwa.scope_id
-                JOIN academic_period p ON p.id=s.period_id
-                WHERE p.status='ACTIVE' AND s.active
-                  AND pwa.frozen_workflow::text LIKE '%' || ? || '%'
-            )
-            """, Boolean.class, actor.toString());
-        return new InboxPage(items,total,page,size,new InboxMetrics(activeCount,completedCount,returnedCount),canReview);
+        return new InboxPage(items,total,page,size,new InboxMetrics(((Number)counts.get("active")).longValue(),((Number)counts.get("completed")).longValue(),((Number)counts.get("returned")).longValue()));
     }
     private Map<String,Object> authorized(UUID review,String email) {
         var record=jdbc.queryForList("SELECT r.*, w.title, w.document_type FROM document_review r JOIN work_plan w ON w.id=r.work_plan_id WHERE r.id=?",review).stream().findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Revisión no disponible."));

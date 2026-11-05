@@ -6,6 +6,7 @@ import { AdminDashboard } from './institution/AdminDashboard'
 import { adminPages, adminNavGroups, isAdminPage, type AdminPage } from './institution/adminNavigation'
 import { Administration } from './institution/Administration'
 import { WorkPlans } from './planning/WorkPlans'
+import { clearDraftPreviewCache } from './planning/draft-preview-cache'
 import { TrackingDashboard } from './planning/TrackingDashboard'
 import { NotificationIndicator, type NotificationTarget } from './notifications/Notifications'
 import { api, ApiError, refreshCsrf, type Account, type Group, type Member, type Period } from './shared/api'
@@ -98,7 +99,6 @@ export default function App() {
   const [allPeriods,setAllPeriods] = useState(false)
   const [reportingPeriod, setReportingPeriod] = useState(initialRoute.periodId ?? '')
   const [organizationScope, setOrganizationScope] = useState(initialRoute.scopeId ?? '')
-  const [hasReviewAccess, setHasReviewAccess] = useState<boolean | null>(null)
   const identityEpoch = useRef(0)
   const [workspace, setWorkspace] = useState<'administration' | 'documents'>(initialRoute.workspace ?? 'administration')
   const documentGroups = groups.filter(group => group.membership_role != null)
@@ -158,6 +158,7 @@ export default function App() {
 
   function clearAccount() {
     identityEpoch.current += 1
+    clearDraftPreviewCache()
     setAccount(null)
     setSelected('')
     setGroups([])
@@ -170,7 +171,6 @@ export default function App() {
     setAllPeriods(false)
     setReportingPeriod('')
     setOrganizationScope('')
-    setHasReviewAccess(null)
     setWorkspace('administration')
     window.history.replaceState(null, '', window.location.pathname)
   }
@@ -211,24 +211,13 @@ export default function App() {
 
   async function load() {
     const epoch = identityEpoch.current
-    const [g, p, inbox] = await Promise.all([
+    const [g, p] = await Promise.all([
       api<Group[]>('/groups'),
-      api<Period[]>('/periods'),
-      api<{ canReview?: boolean; total?: number; items?: unknown[]; metrics?: { active?: number; completed?: number; returned?: number } }>('/reviews/inbox?size=1').catch(() => null)
+      api<Period[]>('/periods')
     ])
     if (epoch !== identityEpoch.current) return
     setGroups(g)
     setPeriods(p)
-    if (inbox) {
-      const allowed = Boolean(
-        inbox.canReview ?? (
-          (inbox.total ?? 0) > 0 ||
-          (inbox.items?.length ?? 0) > 0 ||
-          (inbox.metrics && ((inbox.metrics.active ?? 0) > 0 || (inbox.metrics.completed ?? 0) > 0 || (inbox.metrics.returned ?? 0) > 0))
-        )
-      )
-      setHasReviewAccess(allowed)
-    }
     setSelected(current => g.some(group => group.id === current) ? current : '')
   }
 
@@ -311,7 +300,7 @@ export default function App() {
           <>
             {navButton('home', 'Inicio', 'home')}
             {navButton('documents', 'Documentos', 'document')}
-            {(hasReviewAccess !== false || view === 'reviews') && navButton('reviews', 'Revisión documental', 'eye')}
+            {navButton('reviews', 'Revisión documental', 'eye')}
             {navButton('my-organization', 'Mi organización', 'users')}
             {navButton('reporting', 'Reportes de gestión', 'document')}
           </>
