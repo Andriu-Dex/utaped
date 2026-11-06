@@ -4,6 +4,7 @@ import { confirmAction } from '../shared/confirm-action'
 import { Icon } from '../shared/Icon'
 import { Toast } from '../shared/Toast'
 import { AuditViewer } from '../audit/AuditViewer'
+import { DocumentTimeline } from './DocumentTimeline'
 import { ReviewInspector } from '../workflow/ReviewWorkspace'
 import { ReviewHistory } from '../workflow/ReviewHistory'
 import { ExecutionWorkspace } from './ExecutionWorkspace'
@@ -16,7 +17,7 @@ type Round = { id: string; status: string; round_number: number; closed_at: stri
 type StoredArtifact = PreviewArtifact & { createdAt: string }
 type Author = { id: string; name: string; position: string }
 type Consultation = { plan: WorkPlan; rounds: Round[]; authors: Author[]; artifact: PreviewArtifact | null; signed: SignedArtifact | null; actorSigned: boolean }
-const modes = ['consultation', 'rounds', 'execution', 'history'] as const
+const modes = ['consultation', 'timeline', 'rounds', 'execution', 'history'] as const
 type Mode = typeof modes[number]
 export function DocumentConsultation({ initial, accountId, initialStep, onStepChange, onBack, onDirtyChange }: {
   initial: WorkPlan; accountId: string; initialStep?: string | null; onStepChange?: (step: string) => void
@@ -61,10 +62,12 @@ export function DocumentConsultation({ initial, accountId, initialStep, onStepCh
   const latest = state?.rounds[0]
   const toolbar = <div className="review-actions consultation-actions">
     <button type="button" className="secondary" disabled={dirty || signingBusy} onClick={() => setReload(value => value + 1)}>Actualizar consulta</button>
+    <button type="button" className="secondary" disabled={dirty} onClick={() => navigate('timeline')}>Línea de tiempo</button>
     <button type="button" className="secondary" disabled={dirty} onClick={() => navigate('rounds')}>Rondas y observaciones</button>
     {plan.documentType === 'T1' && plan.documentState === 'APPROVED' && <button type="button" className="secondary" disabled={dirty} onClick={() => navigate('execution')}>Ejecución y evidencias</button>}
     <button type="button" className="secondary" disabled={dirty} onClick={() => navigate('history')}>Historial del documento</button>
   </div>
+  if (mode === 'timeline') return <DocumentTimeline documentId={plan.id} title={plan.title} documentType={plan.documentType} formalVersion={plan.formalVersion} documentState={plan.documentState} onBack={() => navigate('consultation')} onDirtyChange={setDirty} />
   if (mode === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onBack={() => navigate('consultation')} onDirtyChange={setDirty} />
   if (mode === 'history') return <AuditViewer targetDocId={plan.id} onBack={() => navigate('consultation')} />
   if (mode === 'execution' && plan.documentType === 'T1' && plan.documentState === 'APPROVED') return <ExecutionWorkspace targetDocId={plan.id} onBack={() => navigate('consultation')} onDirtyChange={setDirty} />
