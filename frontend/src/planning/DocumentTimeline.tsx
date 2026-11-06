@@ -140,7 +140,8 @@ export function DocumentTimeline({
     return true
   })
 
-  function formatTime(isoString: string): string {
+  function formatTime(isoString?: string | null): string {
+    if (!isoString) return 'Fecha no registrada'
     try {
       const date = new Date(isoString)
       return date.toLocaleString('es-EC', {
@@ -354,9 +355,11 @@ export function DocumentTimeline({
                                 'status-badge ' +
                                 (item.status === 'APPROVED' || item.status === 'COMPLETED'
                                   ? 'active'
-                                  : item.status === 'RETURNED'
+                                  : item.status === 'RETURNED' || item.status === 'REJECTED' || item.status === 'DISCARDED'
                                     ? 'rejected'
-                                    : 'pending')
+                                    : item.status === 'ARCHIVED'
+                                      ? 'archived'
+                                      : 'pending')
                               }
                             >
                               {item.status === 'APPROVED'
@@ -365,16 +368,29 @@ export function DocumentTimeline({
                                   ? 'Devuelto'
                                   : item.status === 'COMPLETED'
                                     ? 'Completado'
-                                    : item.status === 'ACTIVE'
-                                      ? 'En curso'
-                                      : item.status}
+                                    : item.status === 'ACTIVE' || item.status === 'IN_REVIEW'
+                                      ? 'En revisión'
+                                      : item.status === 'DRAFT'
+                                        ? 'Borrador'
+                                        : item.status === 'ARCHIVED'
+                                          ? 'Archivado'
+                                          : item.status === 'DISCARDED'
+                                            ? 'Descartado'
+                                            : item.status}
                             </span>
                           )}
                         </div>
-                        <time className="timeline-card-time" dateTime={item.occurredAt}>
-                          <Icon name="clock" size={13} />
-                          {formatTime(item.occurredAt)}
-                        </time>
+                        {item.occurredAt ? (
+                          <time className="timeline-card-time" dateTime={item.occurredAt}>
+                            <Icon name="clock" size={13} />
+                            {formatTime(item.occurredAt)}
+                          </time>
+                        ) : (
+                          <span className="timeline-card-time muted" title="Fecha no registrada">
+                            <Icon name="clock" size={13} />
+                            Fecha no registrada
+                          </span>
+                        )}
                       </header>
 
                       <p className="timeline-card-body">{item.detail}</p>
@@ -424,3 +440,4 @@ export function DocumentTimeline({
     </section>
   )
 }
+

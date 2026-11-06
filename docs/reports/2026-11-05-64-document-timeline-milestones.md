@@ -10,14 +10,14 @@ Implementar la **Fase 2 (Línea de tiempo documental)** especificada en el plan 
   - Servicio transaccional de lectura (`@Transactional(readOnly = true)`) que reúne y estructura cronológicamente los acontecimientos del documento:
     1. **Elaboración**: Registro del inicio del borrador a partir de `audit_event` o metadatos de creación del plan.
     2. **Firmas de elaboración**: Firmas electrónicas de autores registradas en `signed_document_artifact` con orden y nombre del firmante.
-    3. **Rondas de revisión y etapas**: Envíos de ronda desde `document_review`, tareas actuadas desde `review_task` (devoluciones `RETURNED` y firmas/revisiones completadas `COMPLETED`).
-    4. **Aprobación formal**: Cierre exitoso del flujo de revisión (`status = 'APPROVED'`).
-    5. **Versiones formales**: Trazabilidad de nuevas versiones formales aprobadas (`work_plan.formal_version`, `previous_version_id`).
-    6. **Informes derivados**: Para Planes T1, enlace directo con informes finales (T2) o de ejecución (T3) generados; para Informes (T2/T3), enlace con su Plan de Trabajo base.
+    3. **Rondas de revisión y etapas**: Envíos de ronda desde `document_review`, tareas actuadas desde `review_task` (devoluciones `RETURNED` y firmas/revisiones completadas `COMPLETED`), respetando la fecha genuina de actuación (`acted_at`) sin suplantarla por la creación de la ronda.
+    4. **Aprobación formal**: Cierre exitoso del flujo de revisión (`status = 'APPROVED'`), preservando el timestamp real de cierre (`closed_at`) sin fabricar fechas previas.
+    5. **Versiones formales**: Trazabilidad de nuevas versiones formales aprobadas (`work_plan.formal_version`, `previous_version_id`), con validación individual de acceso por documento (`canAccess`).
+    6. **Informes derivados y planes base**: Enlace bidireccional entre Planes T1 e Informes T2/T3, validando autorización individual en el servidor para cada documento vinculado y reflejando con fidelidad su estado completo (`Borrador`, `En revisión`, `Aprobado`, `Archivado` o `Descartado`).
     7. **Archivado formal**: Registro del estado y motivo cuando el documento ha sido archivado.
-  - Ordenación estable configurable (`asc` cronológico o `desc` inverso).
+  - Verificación rigurosa de control de acceso previo (`plans.get(targetDocId, email)`), y comprobación perimetral por documento vinculado (`canAccess(UUID, String)`), impidiendo cualquier fuga de identificadores o títulos de documentos restringidos.
+  - Ordenación estable configurable (`asc` cronológico o `desc` inverso) con manejo `nullsLast` seguro ante fechas no registradas y desempate determinista por identificador de hito.
   - Conversión segura y robusta de marcas temporales con zona horaria institucional (`America/Guayaquil`).
-  - Verificación rigurosa de control de acceso previo (`plans.get(targetDocId, email)`), impidiendo cualquier fuga de información a usuarios no autorizados.
 - `backend/src/main/java/ec/edu/uta/utaped/planning/DocumentTimelineController.java`:
   - Controlador REST que expone el endpoint seguro `GET /api/work-plans/{targetDocId}/timeline?order=asc|desc`.
 - `backend/src/test/java/ec/edu/uta/utaped/DocumentTimelineIntegrationTests.java`:
@@ -26,6 +26,9 @@ Implementar la **Fase 2 (Línea de tiempo documental)** especificada en el plan 
     - Rechazo de acceso a usuarios no autorizados (`ResponseStatusException`).
     - Inversión estable del orden cronológico (`asc` vs `desc`).
     - Aislamiento estricto de eventos entre documentos distintos.
+    - Exclusión estricta de informes derivados vinculados a los que el usuario no tiene acceso.
+    - No fabricación de fechas ficticias ante tareas sin `acted_at` o aprobaciones sin `closed_at`.
+    - Reflejo preciso de la taxonomía completa de estados documentales (`DRAFT`, `IN_REVIEW`, `APPROVED`, `ARCHIVED`, `DISCARDED`).
 
 ### Frontend (React / TypeScript / Vite)
 - `frontend/src/planning/DocumentTimeline.tsx`:
@@ -50,11 +53,19 @@ Implementar la **Fase 2 (Línea de tiempo documental)** especificada en el plan 
 ## Validaciones ejecutadas
 - **Pruebas de Integración Backend (`DocumentTimelineIntegrationTests`):**
   - Ejecutada la suite completa en contenedor aislado `utaped-tests` con PostgreSQL 18.
-  - 4 pruebas específicas superadas exitosamente (100% aprobadas, código de salida 0).
+  - 7 pruebas específicas superadas exitosamente (100% aprobadas, código de salida 0):
+    1. `timelineBuildsExpectedMilestonesForNewPlan`
+    2. `unauthorizedUserCannotReadTimeline`
+    3. `timelineOrderAscendingAndDescending`
+    4. `timelineEventsAreIsolatedBetweenDocuments`
+    5. `relatedDerivedReportsWithoutAccessAreExcludedFromTimeline`
+    6. `tasksWithoutActedAtOrApprovalWithoutClosedAtDoNotFabricateDates`
+    7. `derivedReportsAccuratelyReflectAllDocumentStates`
 - **Linter Frontend (`oxlint`):**
   - 0 errores, 0 advertencias en 136 archivos analizados con 116 reglas activas.
 - **Compilación TypeScript y Empaquetado Vite (`tsc -b && vite build`):**
   - Tipos comprobados sin discrepancias y empaquetado completado limpiamente (código de salida 0).
 - **Despliegue y Verificación en Contenedores Locales:**
-  - Reconstruida e iniciada la imagen `utaped-backend` en `utaped-backend-1`. Estado verificado: `UP` en `/actuator/health`.
+  - Reconstruida e iniciada la imagen `utaped-backend` en `utaped-backend-1`. Estado verificado: `UP` en `http://127.0.0.1:18080/actuator/health`.
   - Sincronizados los estáticos compilados en `utaped-frontend-1` (`http://127.0.0.1:64430`).
+

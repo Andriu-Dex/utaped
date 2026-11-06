@@ -23,3 +23,4 @@ public class DocumentTimelineController {
         return service.timeline(targetDocId, principal.getName(), order);
     }
 }
+

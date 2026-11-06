@@ -5,9 +5,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DocumentTimelineService {
@@ -43,6 +45,34 @@ public class DocumentTimelineService {
         if (value instanceof java.sql.Timestamp ts) return ts.toInstant().atZone(zone).toOffsetDateTime();
         if (value instanceof java.time.Instant inst) return inst.atZone(zone).toOffsetDateTime();
         return OffsetDateTime.parse(value.toString());
+    }
+
+    private boolean canAccess(UUID docId, String email) {
+        if (docId == null) return false;
+        try {
+            plans.get(docId, email);
+            return true;
+        } catch (ResponseStatusException denied) {
+            if (denied.getStatusCode() != HttpStatus.NOT_FOUND && denied.getStatusCode() != HttpStatus.FORBIDDEN) {
+                throw denied;
+            }
+            return false;
+        }
+    }
+
+    public static String documentStateLabel(String state, Object archivedAt, Boolean discarded) {
+        if (Boolean.TRUE.equals(discarded)) return "Descartado";
+        if (archivedAt != null) return "Archivado";
+        if ("APPROVED".equals(state)) return "Aprobado";
+        if ("IN_REVIEW".equals(state)) return "En revisión";
+        if ("DRAFT".equals(state)) return "Borrador";
+        return state != null && !state.isBlank() ? state : "Sin estado";
+    }
+
+    public static String documentStatus(String state, Object archivedAt, Boolean discarded) {
+        if (Boolean.TRUE.equals(discarded)) return "DISCARDED";
+        if (archivedAt != null) return "ARCHIVED";
+        return state != null && !state.isBlank() ? state : "DRAFT";
     }
 
     @Transactional(readOnly = true)
@@ -161,8 +191,8 @@ public class DocumentTimelineService {
             for (var task : tasks) {
                 String taskStatus = (String) task.get("status");
                 String stage = ReviewService.displayStageLabel((String) task.get("stage_label"), (String) task.get("stage_action"));
+                // Never fabricate or guess the timestamp if acted_at is null
                 OffsetDateTime actedAt = toOffsetDateTime(task.get("acted_at"));
-                if (actedAt == null) actedAt = createdAt;
 
                 if ("RETURNED".equals(taskStatus)) {
                     items.add(new Item(
@@ -198,7 +228,7 @@ public class DocumentTimelineService {
                 }
             }
 
-            // If round closed with APPROVED
+            // If round closed with APPROVED - use genuine closedAt timestamp without fabricating createdAt
             if ("APPROVED".equals(revStatus)) {
                 items.add(new Item(
                     "review-approval-" + revId,
@@ -209,7 +239,7 @@ public class DocumentTimelineService {
                     "APPROVED",
                     roundNumber,
                     plan.formalVersion(),
-                    closedAt != null ? closedAt : createdAt,
+                    closedAt,
                     revId,
                     null,
                     null
@@ -217,9 +247,9 @@ public class DocumentTimelineService {
             }
         }
 
-        // 4. FORMAL VERSIONS
+        // 4. FORMAL VERSIONS - Each related document's access is strictly validated individually
         var formalVersions = jdbc.queryForList("""
-            SELECT w.id, w.title, w.formal_version, w.version_reason, w.created_at,
+            SELECT w.id, w.title, w.formal_version, w.document_state, w.archived_at, w.discarded, w.version_reason, w.created_at,
                    COALESCE(u.display_name, 'Sistema institucional') AS actor_name
             FROM work_plan w
             LEFT JOIN app_user u ON u.id = w.created_by
@@ -228,15 +258,24 @@ public class DocumentTimelineService {
             """, targetDocId, targetDocId);
         for (var fv : formalVersions) {
             UUID fvId = (UUID) fv.get("id");
+            if (!canAccess(fvId, email)) continue;
+
             String fvVersion = (String) fv.get("formal_version");
             String reason = (String) fv.get("version_reason");
+            String fvState = (String) fv.get("document_state");
+            String fvStateLabel = documentStateLabel(fvState, fv.get("archived_at"), (Boolean) fv.get("discarded"));
+            String fvStatus = documentStatus(fvState, fv.get("archived_at"), (Boolean) fv.get("discarded"));
+
+            String detail = (reason != null && !reason.isBlank()) ? reason : "Nueva versión formal aprobada del documento.";
+            detail += " · Estado: " + fvStateLabel + ".";
+
             items.add(new Item(
                 "formal-version-" + fvId,
                 "FORMAL_VERSION",
                 "Versión formal " + fvVersion + " creada",
-                (reason != null && !reason.isBlank()) ? reason : "Nueva versión formal aprobada del documento.",
+                detail,
                 (String) fv.get("actor_name"),
-                "COMPLETED",
+                fvStatus,
                 null,
                 fvVersion,
                 toOffsetDateTime(fv.get("created_at")),
@@ -246,53 +285,62 @@ public class DocumentTimelineService {
             ));
         }
 
-        // 5. LINKED DERIVED REPORTS
+        // 5. LINKED DERIVED REPORTS - Each related report is strictly checked for individual user access
         if ("T1".equals(plan.documentType())) {
             var derivedReports = jdbc.queryForList("""
-                SELECT r.id, r.title, r.document_type, r.formal_version, r.document_state, r.created_at,
+                SELECT r.id, r.title, r.document_type, r.formal_version, r.document_state, r.archived_at, r.discarded, r.created_at,
                        COALESCE(u.display_name, 'Sistema institucional') AS actor_name
                 FROM work_plan r
                 LEFT JOIN app_user u ON u.id = r.created_by
-                WHERE r.base_plan_id = ? AND NOT r.discarded
+                WHERE r.base_plan_id = ?
                 ORDER BY r.created_at ASC, r.id ASC
                 """, targetDocId);
             for (var rep : derivedReports) {
+                UUID repId = (UUID) rep.get("id");
+                if (!canAccess(repId, email)) continue;
+
                 String repType = (String) rep.get("document_type");
                 String state = (String) rep.get("document_state");
-                String stateLabel = "APPROVED".equals(state) ? "Aprobado" : "IN_REVIEW".equals(state) ? "En revisión" : "Borrador";
+                String stateLabel = documentStateLabel(state, rep.get("archived_at"), (Boolean) rep.get("discarded"));
+                String status = documentStatus(state, rep.get("archived_at"), (Boolean) rep.get("discarded"));
+
                 items.add(new Item(
                     "linked-report-" + rep.get("id"),
                     "LINKED_REPORT",
                     ("T2".equals(repType) ? "Informe final (T2)" : "Informe de ejecución (T3)") + " derivado",
                     (String) rep.get("title") + " · Estado: " + stateLabel + ".",
                     (String) rep.get("actor_name"),
-                    state,
+                    status,
                     null,
                     (String) rep.get("formal_version"),
                     toOffsetDateTime(rep.get("created_at")),
                     null,
-                    (UUID) rep.get("id"),
+                    repId,
                     repType
                 ));
             }
         } else if ("T2".equals(plan.documentType()) || "T3".equals(plan.documentType())) {
-            if (plan.basePlanId() != null) {
+            if (plan.basePlanId() != null && canAccess(plan.basePlanId(), email)) {
                 var basePlans = jdbc.queryForList("""
-                    SELECT b.id, b.title, b.document_type, b.formal_version, b.document_state, b.created_at,
+                    SELECT b.id, b.title, b.document_type, b.formal_version, b.document_state, b.archived_at, b.discarded, b.created_at,
                            COALESCE(u.display_name, 'Sistema institucional') AS actor_name
                     FROM work_plan b
                     LEFT JOIN app_user u ON u.id = b.created_by
-                    WHERE b.id = ? AND NOT b.discarded
+                    WHERE b.id = ?
                     """, plan.basePlanId());
                 if (!basePlans.isEmpty()) {
                     var base = basePlans.getFirst();
+                    String baseState = (String) base.get("document_state");
+                    String baseStateLabel = documentStateLabel(baseState, base.get("archived_at"), (Boolean) base.get("discarded"));
+                    String baseStatus = documentStatus(baseState, base.get("archived_at"), (Boolean) base.get("discarded"));
+
                     items.add(new Item(
                         "linked-base-" + base.get("id"),
                         "LINKED_REPORT",
                         "Plan de Trabajo base (T1)",
-                        (String) base.get("title") + " · Versión formal: " + base.get("formal_version") + ".",
+                        (String) base.get("title") + " · Versión formal: " + base.get("formal_version") + " · Estado: " + baseStateLabel + ".",
                         (String) base.get("actor_name"),
-                        (String) base.get("document_state"),
+                        baseStatus,
                         null,
                         (String) base.get("formal_version"),
                         toOffsetDateTime(base.get("created_at")),
@@ -326,13 +374,23 @@ public class DocumentTimelineService {
             ));
         }
 
-        // Sort items stably
-        Comparator<Item> comparator = Comparator.comparing(Item::occurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
-                                                .thenComparing(Item::id);
+        // Sort items stably: non-null dates ordered, null dates placed last, ties broken by id
         if ("desc".equalsIgnoreCase(order)) {
-            items.sort(comparator.reversed());
+            items.sort((a, b) -> {
+                if (a.occurredAt() == null && b.occurredAt() == null) return a.id().compareTo(b.id());
+                if (a.occurredAt() == null) return 1;
+                if (b.occurredAt() == null) return -1;
+                int cmp = b.occurredAt().compareTo(a.occurredAt());
+                return cmp != 0 ? cmp : a.id().compareTo(b.id());
+            });
         } else {
-            items.sort(comparator);
+            items.sort((a, b) -> {
+                if (a.occurredAt() == null && b.occurredAt() == null) return a.id().compareTo(b.id());
+                if (a.occurredAt() == null) return 1;
+                if (b.occurredAt() == null) return -1;
+                int cmp = a.occurredAt().compareTo(b.occurredAt());
+                return cmp != 0 ? cmp : a.id().compareTo(b.id());
+            });
         }
 
         return Collections.unmodifiableList(items);
