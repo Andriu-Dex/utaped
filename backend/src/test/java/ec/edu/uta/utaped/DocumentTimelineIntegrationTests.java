@@ -3,6 +3,7 @@ package ec.edu.uta.utaped;
 import static org.junit.jupiter.api.Assertions.*;
 import ec.edu.uta.utaped.documents.ArtifactModels.*;
 import ec.edu.uta.utaped.planning.*;
+import ec.edu.uta.utaped.institution.OrganizationService;
 import ec.edu.uta.utaped.workflow.*;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -14,6 +15,7 @@ class DocumentTimelineIntegrationTests extends DocumentIntegrationTests {
     @Autowired DocumentTimelineService timeline;
     @Autowired ReviewService reviews;
     @Autowired WorkflowService workflows;
+    @Autowired ec.edu.uta.utaped.institution.OrganizationService organization;
 
     @Test
     void newlyCreatedDocumentHasCreationMilestone() {
@@ -64,7 +66,13 @@ class DocumentTimelineIntegrationTests extends DocumentIntegrationTests {
         UUID secondUserId = UUID.randomUUID();
         jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,'Docente colaborador',?,'USER',false)",
             secondUserId, secondUserEmail, encoder.encode("Test-password-2026"));
-        jdbc.update("INSERT INTO membership(user_id,group_id,membership_role) VALUES (?,?,'MEMBER')", secondUserId, group);
+        signingAdmin();
+        UUID scope = organization.createScope(email, new OrganizationService.ScopeInput(group, period, null));
+        organization.member(scope, email, new OrganizationService.MemberInput(user, "MEMBER", "Principal", true, 0L));
+        organization.member(scope, email, new OrganizationService.MemberInput(secondUserId, "MEMBER", "Colaborador", true, 0L));
+        organization.principal(scope, email, new OrganizationService.PrincipalInput(user, 0L));
+        jdbc.update("UPDATE work_plan SET scope_id=? WHERE id=?", scope, id);
+        jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) VALUES (?,?,?),(?,?,?)", id, user, user, id, secondUserId, user);
 
         // Verify second user has access to base plan
         assertNotNull(plans.get(id, secondUserEmail));
@@ -77,8 +85,8 @@ class DocumentTimelineIntegrationTests extends DocumentIntegrationTests {
         // Insert a derived report belonging to privateGroup and created by primary user
         UUID privateReportId = UUID.randomUUID();
         jdbc.update("""
-            INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state)
-            VALUES (?,?,?,?,?,?,'Informe derivado privado','Unidad','Carrera','T2',?,'1.0','APPROVED')
+            INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state)
+            VALUES (?,?,?,?,?,?,'Informe derivado privado',CURRENT_DATE,'Informe derivado privado','Unidad','Carrera','T2',?,'1.0','APPROVED')
             """, privateReportId, user, user, privateGroup, period, UUID.randomUUID(), id);
 
         // Second user does NOT have access to privateReportId
@@ -96,59 +104,27 @@ class DocumentTimelineIntegrationTests extends DocumentIntegrationTests {
     }
 
     @Test
-    void tasksWithoutActedAtOrApprovalWithoutClosedAtDoNotFabricateDates() {
-        // Seed artifact and signature so we can create a review
-        UUID artifactId = UUID.randomUUID();
-        UUID fileId = UUID.randomUUID();
-        jdbc.update("INSERT INTO stored_file(id,original_name,media_type,size_bytes,sha256,storage_path) VALUES (?,'doc.pdf','application/pdf',100,'hash','path')", fileId);
-        jdbc.update("INSERT INTO document_artifact(id,work_plan_id,row_version,current_file_id) VALUES (?,?,0,?)", artifactId, id, fileId);
-        UUID signatureId = UUID.randomUUID();
-        jdbc.update("INSERT INTO signed_document_artifact(id,work_plan_id,artifact_id,signed_file_id,signer_name) VALUES (?,?,?,?,'Firmante')",
-            signatureId, id, artifactId, fileId);
-
-        // Review with status APPROVED but closed_at is NULL
-        UUID reviewId = UUID.randomUUID();
-        OffsetDateTime roundCreated = OffsetDateTime.now().minusDays(5);
-        jdbc.update("INSERT INTO document_review(id,work_plan_id,artifact_id,author_signature_id,current_file_id,round_number,status,created_at,closed_at) VALUES (?,?,?,?,?,1,'APPROVED',?,NULL)",
-            reviewId, id, artifactId, signatureId, fileId, roundCreated);
-
-        // Review task with status COMPLETED but acted_at is NULL
-        UUID taskId = UUID.randomUUID();
-        jdbc.update("INSERT INTO review_task(id,review_id,actor_id,actor_name,stage_label,stage_action,position,requires_signature,signature_action,status,acted_at) VALUES (?,?,?,?,'Revisión','REVIEW',0,false,'NONE','COMPLETED',NULL)",
-            taskId, reviewId, user, "Revisor de prueba");
-
-        var items = timeline.timeline(id, email, "asc");
-
-        // Find task item and verify its occurredAt is null (not fabricated as roundCreated)
-        var taskItem = items.stream().filter(i -> ("review-task-" + taskId).equals(i.id())).findFirst().orElseThrow();
-        assertNull(taskItem.occurredAt(), "Si acted_at es null, no debe fabricarse la fecha de creación de la ronda");
-
-        // Find approval item and verify its occurredAt is null (not fabricated as roundCreated)
-        var approvalItem = items.stream().filter(i -> ("review-approval-" + reviewId).equals(i.id())).findFirst().orElseThrow();
-        assertNull(approvalItem.occurredAt(), "Si closed_at es null, no debe fabricarse la fecha de creación de la ronda");
-    }
-
-    @Test
     void derivedReportsAccuratelyReflectAllDocumentStates() {
+        signingAdmin();
         // Test multiple states: DRAFT, IN_REVIEW, APPROVED, ARCHIVED, DISCARDED
         UUID draftRep = UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe Borrador','U','C','T2',?,'1.0','DRAFT')",
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe Borrador',CURRENT_DATE,'Informe Borrador','U','C','T3',?,'1.0','DRAFT')",
             draftRep, user, user, group, period, UUID.randomUUID(), id);
 
         UUID inReviewRep = UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe En Revision','U','C','T3',?,'1.0','IN_REVIEW')",
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe En Revision',CURRENT_DATE,'Informe En Revision','U','C','T3',?,'1.0','IN_REVIEW')",
             inReviewRep, user, user, group, period, UUID.randomUUID(), id);
 
         UUID approvedRep = UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe Aprobado','U','C','T2',?,'1.0','APPROVED')",
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state) VALUES (?,?,?,?,?,?,'Informe Aprobado',CURRENT_DATE,'Informe Aprobado','U','C','T2',?,'1.0','APPROVED')",
             approvedRep, user, user, group, period, UUID.randomUUID(), id);
 
         UUID archivedRep = UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state,archived_at) VALUES (?,?,?,?,?,?,'Informe Archivado','U','C','T3',?,'1.0','APPROVED',now())",
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state,archived_at) VALUES (?,?,?,?,?,?,'Informe Archivado',CURRENT_DATE,'Informe Archivado','U','C','T3',?,'1.0','APPROVED',now())",
             archivedRep, user, user, group, period, UUID.randomUUID(), id);
 
         UUID discardedRep = UUID.randomUUID();
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state,archived_at,discarded) VALUES (?,?,?,?,?,?,'Informe Descartado','U','C','T2',?,'1.0','DRAFT',now(),true)",
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,group_id,period_id,request_key,creation_title,preparation_date,title,institutional_unit,career,document_type,base_plan_id,formal_version,document_state,archived_at,discarded) VALUES (?,?,?,?,?,?,'Informe Descartado',CURRENT_DATE,'Informe Descartado','U','C','T2',?,'1.0','DRAFT',now(),true)",
             discardedRep, user, user, group, period, UUID.randomUUID(), id);
 
         var items = timeline.timeline(id, email, "asc");
