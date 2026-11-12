@@ -39,7 +39,7 @@ Textos iguales en indicadores diferentes son registros distintos. Una clave esta
 
 ## 4. Registro trazable del trabajo
 
-Actualización de implementación: ver [entrega y verificaciones](../reports/2026-10-31-55-client-corrections-implementation.md). El texto de situación de cada fila conserva el diagnóstico de partida; los estados actuales están en el apartado 9. La aceptación institucional sigue separada de las pruebas técnicas. P0 ordena dependencias funcionales; P1 completa el circuito y la experiencia; P2 corresponde a administración, aclaraciones o integraciones investigables.
+Actualización de implementación: ver [entrega y verificaciones](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-31-55-client-corrections-implementation.md). El texto de situación de cada fila conserva el diagnóstico de partida; los estados actuales están en el apartado 9. La aceptación institucional sigue separada de las pruebas técnicas. P0 ordena dependencias funcionales; P1 completa el circuito y la experiencia; P2 corresponde a administración, aclaraciones o integraciones investigables.
 
 | ID | Prioridad | Decisión o tarea | Evidencia corregida | Situación y alcance |
 |---|---|---|---|---|
@@ -234,4 +234,4 @@ Decisiones posteriores del propietario: T2 selecciona exclusivamente cortes T3 *
 | 24–25 | Hoja administrativa cargada y asistencia Groq/OpenAI conservada. | Gemini no se incorpora como requisito no confirmado. |
 | 26 | Configuración y ejemplos separados de asignaciones oficiales. | Bloqueado institucionalmente por ausencia de matriz, según respuesta expresa del propietario. |
 
-Los ensayos se realizan en entornos desechables, no sobre los datos manuales. Informe de pruebas y límites: [reporte de implementación](../reports/2026-10-31-55-client-corrections-implementation.md).
+Los ensayos se realizan en entornos desechables, no sobre los datos manuales. Informe de pruebas y límites: [reporte de implementación](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-31-55-client-corrections-implementation.md).

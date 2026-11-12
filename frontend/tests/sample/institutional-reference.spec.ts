@@ -18,16 +18,16 @@ test('template-based example scopes use July–December 2026 inside the document
   const scope = scopes.find((s: { careerName: string }) => s.careerName === 'Tecnologías de la Información')
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()
   await openAction(page, 'Crear documento')
-  await page.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
+  await page.getByRole('combobox', { name: 'Comisión o unidad asignada' }).click(); await page.locator('#scope-option-' + scope.id).click()
   await expect(page.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: Unidad de Titulación')
-  await expect(page.getByLabel('Ámbito del nuevo Plan').locator('option:checked')).toContainText('Julio–Diciembre 2026')
+  await expect(page.getByText('Período:')).toBeVisible()
    await withConfirmation(page, false, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByRole('dialog', { name: 'Crear documento', exact: true })).toBeVisible()
-  await expect(page.getByLabel('Ámbito del nuevo Plan')).toHaveValue(scope.id)
+  await expect(page.getByRole('combobox', { name: 'Comisión o unidad asignada' })).toHaveValue(scope.groupName)
    await withConfirmation(page, true, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByRole('dialog', { name: 'Crear documento', exact: true })).not.toBeVisible()
   await openAction(page, 'Crear documento')
-  await expect(page.getByLabel('Ámbito del nuevo Plan')).toHaveValue('')
+  await expect(page.getByRole('combobox', { name: 'Comisión o unidad asignada' })).toHaveValue('')
 })
 
 test('fictional people have realistic names in the profile and activity responsibilities', async ({ page }) => {

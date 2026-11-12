@@ -128,5 +128,5 @@ El repositorio incluye suites de pruebas completamente aisladas que nunca escrib
 - [Requisitos formales](requirements.md) y [Estado de implementación](implementation-status.md).
 - [Configuración del entorno local](docs/development/local-setup.md).
 - [Referencia y catálogo institucional](docs/development/institutional-reference.md).
-- [Auditoría y reportes técnicos](docs/reports/README.md).
+- [Auditoría y reportes técnicos](docs/reports/README-REPORTS.md).
 - [Operación institucional y puesta en marcha](docs/operations/production-readiness.md).

@@ -24,7 +24,7 @@
 - [Fuentes](reference/source-register.md).
 - [Plan de entrega](planning/roadmap.md).
 - [Estado productivo](../implementation-status.md).
-- [Reportes](reports/README.md).
+- [Reportes](reports/README-REPORTS.md).
 - [Catálogo trazable](requirements/catalog.md).
 - [Reconciliación](validation/reconciliation.md), [permisos](validation/permission-matrix.md) y [validación](validation/validation-plan.md).
 

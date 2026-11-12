@@ -1,5 +1,8 @@
 .pending-inbox { overflow: hidden; margin: 24px 0; }
 .assistance-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.assistance-heading-actions { display: flex; align-items: center; gap: 10px; }
+.pending-collapse-btn { font-size: 0.82rem; font-weight: 600; color: var(--muted); background: transparent; border: none; cursor: pointer; padding: 5px 8px; border-radius: 6px; }
+.pending-collapse-btn:hover { color: var(--text); text-decoration: underline; }
 .assistance-heading .section-heading { align-items: flex-start; }
 .assistance-heading p { margin: 8px 0 0; font-size: .88rem; }
 .pending-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 8px; }
@@ -20,6 +23,133 @@
 .assistance-empty { text-align: center; padding: 32px 16px; color: var(--muted); }
 .assistance-empty .section-icon { margin: 0 auto 12px; }
 .assistance-empty h3 { color: var(--text); margin: 8px 0; }
+
+/* ==========================================================================
+   Pending Banner Cleared (Alternativa B: Banner dinámico inteligente)
+   ========================================================================== */
+.pending-banner-cleared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  margin: 14px 0 24px;
+  border-radius: var(--radius, 12px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal-600, #059669);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.pending-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pending-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  flex-shrink: 0;
+}
+
+.pending-banner-text {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.pending-banner-text strong {
+  color: #047857;
+  font-weight: 750;
+  margin-right: 4px;
+}
+
+.pending-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pending-banner-expand-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--blue-700);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.pending-banner-expand-btn:hover {
+  text-decoration: underline;
+  background: var(--blue-50);
+}
+
+.pending-banner-refresh-btn {
+  padding: 6px 9px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:root[data-theme='dark'] .pending-banner-cleared {
+  background: var(--surface);
+  border-color: var(--border);
+  border-left-color: #34d399;
+}
+
+:root[data-theme='dark'] .pending-banner-icon {
+  background: rgba(16, 52, 40, 0.5);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+:root[data-theme='dark'] .pending-banner-text strong {
+  color: #6ee7b7;
+}
+
+:root[data-theme='dark'] .pending-banner-expand-btn {
+  color: #79bbf4;
+}
+
+:root[data-theme='dark'] .pending-banner-expand-btn:hover {
+  background: rgba(30, 60, 90, 0.4);
+}
+
+:root[data-theme='dark'] .pending-collapse-btn {
+  color: #9cb5cb;
+}
+
+:root[data-theme='dark'] .pending-collapse-btn:hover {
+  color: #e2eaf2;
+}
+
+@media (max-width: 640px) {
+  .pending-banner-cleared {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .pending-banner-actions {
+    align-self: flex-end;
+  }
+}
 .signature-checklist { margin: 20px 0; }
 .signature-checklist ul { list-style: none; margin: 20px 0 0; padding: 0; }
 .signature-checklist li { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-top: 1px solid var(--border); }
