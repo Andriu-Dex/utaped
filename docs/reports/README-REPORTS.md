@@ -4,6 +4,7 @@ Crear Markdown nuevo por entrega: YYYY-MM-DD-NN-description.md. No restaurar rep
 
 Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alcance.
 
+- [2026-11-12 — Auditoría legible y reparación de pruebas](2026-11-12-65-readable-audit-and-test-repairs.md).
 - [2026-11-05 — Línea de Tiempo Documental y Trazabilidad Cronológica de Hitos](2026-11-05-64-document-timeline-milestones.md).
 - [2026-11-05 — Acceso a revisión, previsualización y selector de comisión](2026-11-05-63-review-preview-and-selector.md).
 - [2026-11-05 — Carga Inmediata y Transición Suave en la Previsualización Documental](2026-11-05-62-preview-instant-load-and-smooth-transition.md).

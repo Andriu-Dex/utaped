@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## 12/11/2026 — Auditoría legible y pruebas reparadas
+
+La Auditoría administrativa muestra nombres de personas y objetos en lugar de identificadores internos, filtra por nombre y traduce todas las acciones registradas; el CSV conserva los identificadores en columnas propias. Se repararon tres pruebas de la cronología documental que no cumplían el esquema real y dos escenarios E2E desactualizados por el ocultamiento de «Crear documento» sin ámbitos. [Reporte](docs/reports/2026-11-12-65-readable-audit-and-test-repairs.md).
+
 ## 05/11/2026 — Línea de Tiempo Documental y Trazabilidad Cronológica de Hitos
 
 Implementada la Fase 2 del plan de mejoras: cronología estructurada, legible y accesible para la trazabilidad completa del ciclo de vida documental (`DocumentTimeline.tsx`, `document-timeline.css`, `DocumentTimelineService.java`, `DocumentTimelineController.java`). Reúne hitos existentes validados por ACL (`audit_event`, `document_review`, `review_task`, `signed_document_artifact` y árboles de versiones formales): inicio de elaboración, firmas electrónicas de autor registradas en orden, envíos a revisión, devoluciones con observaciones por etapa, aprobaciones formales, versiones formales y relación con informes derivados (T2/T3) o planes base (T1). Soporta ordenación cronológica o inversa (`asc`/`desc`), filtros por categoría (Firmas, Revisiones, Versiones, Informes) y conmutación fluida a la pestaña de «Auditoría técnica» (`AuditViewer`). Integrado en el menú «Seguimiento del documento» (`DocumentFollowUp.tsx`) y disponible en los editores de Plan (T1), Informe final (T2), Informe de ejecución (T3) y en Consulta Documental. Validado: suite backend en contenedor aislado PostgreSQL `DocumentTimelineIntegrationTests` (4/4 aprobadas), `oxlint` (0 advertencias/errores), `tsc -b && vite build` correcto, y despliegue local sincronizado. [Reporte](docs/reports/2026-11-05-64-document-timeline-milestones.md).
