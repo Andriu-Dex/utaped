@@ -64,7 +64,7 @@ F1 → F2 → F3 son acotadas y desbloquean reglas ya decididas. F4 antes de F5/
 
 ## Cierre de implementación — 2026-10-21
 
-F1–F7 implementadas en el alcance detallado en [el contrato](../api/institutional-rules-and-execution.md); F8 se comprueba mediante recorridos automatizados y revisión visual PC/tablet. [Reporte de estabilización](../reports/2026-10-21-01-institutional-completion-and-stabilization.md).
+F1–F7 implementadas en el alcance detallado en [el contrato](../api/institutional-rules-and-execution.md); F8 se comprueba mediante recorridos automatizados y revisión visual PC/tablet. [Reporte de estabilización](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-21-01-institutional-completion-and-stabilization.md).
 
 Precisiones frente al plan inicial: la custodia exige verificar la copia local; la fecha documental es la preparación previa a firmas y cada firma retiene su propia fecha; el QR no afirma validación externa; cinco días hábiles se aplican cuando no se proporciona un fin explícito. T2/T3 usan el período vigente y no requieren una reapertura separada. La habilitación de un T3 ausente en un período activado es explícita y no modifica los T1/T2 congelados. Los descartes manuales se distinguen del archivo automático al cerrar.
 

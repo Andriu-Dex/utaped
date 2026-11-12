@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Icon, type IconName } from '../shared/Icon'
 import './document-follow-up.css'
 
-export type FollowUpSection = 'rounds' | 'execution' | 'history'
+export type FollowUpSection = 'timeline' | 'rounds' | 'execution' | 'history'
 
 export function DocumentFollowUp({ approved, disabled, pendingChanges, onOpen }: {
   approved: boolean; disabled: boolean; pendingChanges: boolean; onOpen: (section: FollowUpSection) => void
@@ -17,6 +17,7 @@ export function DocumentFollowUp({ approved, disabled, pendingChanges, onOpen }:
   }, [open])
   const options: { key: FollowUpSection; icon: IconName; label: string; description: string }[] = [
     { key: 'rounds', icon: 'eye', label: 'Rondas y observaciones', description: 'Revisiones, devoluciones y comentarios.' },
+    { key: 'timeline', icon: 'clock', label: 'Línea de tiempo documental', description: 'Cronología de hitos, firmas, revisiones y versiones formales.' },
     ...(approved ? [{ key: 'execution' as const, icon: 'document' as const, label: 'Ejecución y evidencias', description: 'Seguimiento de las actividades del Plan aprobado.' }] : []),
     { key: 'history', icon: 'clock', label: 'Historial del documento', description: 'Registro de cambios y acciones realizadas.' },
   ]

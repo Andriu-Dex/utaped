@@ -102,7 +102,7 @@ export function TrackingDashboard({
             <span className="section-icon"><Icon name="document" /></span>
             <div>
               <span className="section-kicker">TU ESPACIO DE TRABAJO</span>
-              <h3>Documentos recientes</h3>
+              <h2>Documentos recientes</h2>
               <p className="muted">Retoma tus borradores en curso y consulta tus documentos vigentes.</p>
             </div>
           </div>

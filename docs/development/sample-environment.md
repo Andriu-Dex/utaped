@@ -1,18 +1,28 @@
 # Entorno de desarrollo con datos de ejemplo
 
-El entorno de ejemplo tiene su propia base `utaped_dev`, volúmenes, credenciales y proyecto Compose `utaped-sample`. Es el único entorno diario recomendado; la copia histórica utaped permanece detenida con sus datos intactos. Requiere Docker Desktop activo con contenedores Linux.
+El entorno de desarrollo unificado utiliza el proyecto Compose `utaped`, base de datos `utaped`, volúmenes dedicados y el archivo `.env`. Requiere Docker Desktop activo con contenedores Linux.
 
-Desde la raíz del repositorio, en PowerShell:
+Desde la raíz del repositorio:
 
+- En Windows (PowerShell):
+  ```powershell
+  ./scripts/start-development.ps1
+  ```
+- En Linux / macOS (Bash):
+  ```bash
+  ./scripts/start-development.sh
+  ```
+
+Por defecto, se levantan cuatro contenedores: PostgreSQL, Mailpit, backend y frontend compilado.
+Abrir http://localhost:64430 directamente en el navegador.
+
+Si se prefiere desarrollo frontend interactivo con Vite y HMR:
 ```powershell
-./scripts/start-development.ps1
+./scripts/start-development.ps1 -Vite
 ```
+Y en otra terminal: `cd frontend` y `npm run dev` (http://localhost:5173).
 
-Después ejecutar `cd frontend` y `npm run dev` en otra terminal; abrir http://127.0.0.1:5173. Primera instalación: npm ci. Son tres contenedores: PostgreSQL, backend y Mailpit.
-
-Para probar la distribución Docker: `./scripts/start-development.ps1 -Web` desde la raíz y abrir http://127.0.0.1:64431. Es la misma base, añadiendo un cuarto contenedor. Volver a ejecutar sin -Web detiene ese frontend. El script ajusta APP_PUBLIC_URL al modo seleccionado para que funcionen los enlaces de recuperación.
-
-La primera ejecución genera `.env.sample`, ignorado por Git, con contraseñas aleatorias. Consultar localmente `UTAPED_SEED_PASSWORD` para iniciar sesión; no compartir este archivo. El puerto institucional principal sigue siendo 64430. En este entorno aislado se usan API 18082, PostgreSQL 15435 y Mailpit 18027.
+La primera ejecución genera `.env`, ignorado por Git, con contraseñas aleatorias seguras a partir de `.env.example`. Consultar localmente `UTAPED_SEED_PASSWORD` en `.env` (o en la consola de arranque) para iniciar sesión; no compartir este archivo. Puertos locales: Web 64430, API 18080, PostgreSQL 15433 y Mailpit Web 18025 / SMTP 11025.
 
 | Usuario | Nombre ficticio | Uso del escenario |
 |---|---|---|
@@ -28,22 +38,22 @@ Nombres ficticios con presentación realista, sin importar identidades ni autori
 
 Los correos usan `example.invalid`. El período de referencia es **Julio–Diciembre 2026**, del 01/07/2026 al 31/12/2026. Los nombres de carreras, unidades/comisiones y los catálogos proceden de `docs/templates`; las cuentas y sus asignaciones son ficticias. Se incluyen 3 carreras, 23 grupos, 30 ámbitos, 15 recursos, 11 medios de verificación y 55 actividades opcionales. Las ventanas de elaboración y revisión abarcan el semestre para facilitar las pruebas; no son fechas oficiales ratificadas. No se importa un Plan firmado ni las firmas del PDF. Los flujos iniciales T1/T2 tienen dos personas sin firma de revisión obligatoria; ADMIN puede configurar una política distinta. [Procedencia y límites](institutional-reference.md).
 
-Para firmar, vincular la huella pública de un certificado de pruebas al usuario desde Certificados. Después el usuario aporta su .p12/.pfx y contraseña en cada firma. No hay certificados ni claves privadas preinstalados. El perfil permite HTTP exclusivamente para este escenario local; la operación institucional requiere HTTPS. Los datos de ejemplo no acreditan asignaciones institucionales.
+Para firmar, el usuario aporta directamente su archivo `.p12`/`.pfx` de pruebas y su contraseña en el diálogo de firma (no requiere vinculación administrativa previa). No hay certificados ni claves privadas preinstalados. La variable `SIGNING_ALLOW_HTTP=true` en `.env` permite la firma sobre HTTP exclusivamente para este escenario local; la operación institucional requiere HTTPS. Los datos de ejemplo no acreditan asignaciones institucionales.
 
-Las semillas son idempotentes: repetir el arranque no restablece contraseñas ni sobrescribe cambios administrativos. La actualización transforma exclusivamente las etiquetas genéricas originales y el período original si no tienen documentos asociados, y retira las opciones genéricas de catálogo sin borrar sus registros. Si ya existen documentos en ese período o cambiaste sus nombres, conserva esos registros. El perfil `development-seed` rechaza bases distintas de `utaped_dev`. El arranque no borra los escenarios adicionales creados en revisiones o pruebas.
+Las semillas son idempotentes: repetir el arranque no restablece contraseñas ni sobrescribe cambios administrativos. La actualización transforma exclusivamente las etiquetas genéricas originales y el período original si no tienen documentos asociados, y retira las opciones genéricas de catálogo sin borrar sus registros. Si ya existen documentos en ese período o cambiaste sus nombres, conserva esos registros. El perfil `development-seed` opera sobre la base `utaped` (o histórica `utaped_dev`). El arranque no borra los escenarios adicionales creados en revisiones o pruebas.
 
-Para reiniciar voluntariamente solo los datos del entorno de ejemplo:
+Para reiniciar voluntariamente solo los datos del entorno de desarrollo:
 
 ```powershell
-./scripts/start-development-sample.ps1 -ResetData
+./scripts/start-development.ps1 -ResetData
 ```
 
-Este comando detiene la aplicación de ejemplo antes de truncar sus tablas, verifica el nombre de base, conserva Flyway y regenera usuarios/catálogos. Destruye registros de ese escenario; no usarlo para una base institucional. Los archivos privados antiguos del volumen pueden permanecer sin referencia hasta su limpieza administrativa; el comando no declara una purga de almacenamiento.
+Este comando detiene backend y frontend antes de truncar las tablas operativas, solicita confirmación interactiva para evitar pérdidas accidentales (o `-Force` en scripts de automatización), comprueba que la configuración efectiva de Docker sea de desarrollo y no productiva (`COOKIE_SECURE!=true`), conserva Flyway, preserva las 7 cuentas de desarrollo con sus contraseñas (incluso si fueron cambiadas por el usuario) y regenera los catálogos semilla. Destruye registros de ese escenario; no usarlo para una base institucional. Los archivos privados antiguos del volumen pueden permanecer sin referencia hasta su limpieza administrativa; el comando no declara una purga de almacenamiento.
 
 Para detener sin borrar datos:
 
 ```powershell
-docker compose --env-file .env.sample -p utaped-sample -f compose.yml -f compose.sample.yml --profile web down
+./scripts/start-development.ps1 -Stop
 ```
 
 ## Prueba del circuito
@@ -84,7 +94,7 @@ Las restauraciones siguen siendo ensayos explícitos con evidencia. Al terminar 
 
 ## Limpieza de ejemplos manteniendo credenciales
 
-Con autorización del propietario para reemplazar datos de desarrollo, se puede reconstruir el escenario oficial sin regenerar las contraseñas de los siete usuarios dev. Crear primero un respaldo nuevo con scripts/operations.py backup --project utaped-sample --destination backups/NOMBRE-NUEVO. Esperar a que termine correctamente antes del siguiente comando.
+Con autorización del propietario para reemplazar datos de desarrollo, se puede reconstruir el escenario oficial sin regenerar las contraseñas de los siete usuarios dev. Crear primero un respaldo nuevo con `python scripts/operations.py backup --project utaped --destination backups/NOMBRE-NUEVO`. Esperar a que termine correctamente antes del siguiente comando.
 
 ```powershell
 python scripts/clean-development-data.py --backup backups/NOMBRE-NUEVO
@@ -99,7 +109,7 @@ El primer comando solo previsualiza. El segundo elimina los datos operativos de 
 ./scripts/start-development.ps1 -PreparedDocuments
 ```
 
-También admite `-Web`. No requiere nuevas contraseñas ni editar `.env.sample`. El inicio normal no activa esta carga. Solo funciona con perfil `development-seed` y base `utaped_dev`; `compose.sample.yml` deja `APP_DEVELOPMENT_DOCUMENTS` desactivado por defecto. El script espera la confirmación de carga antes de anunciar que está listo.
+No requiere nuevas contraseñas ni editar `.env`. El inicio normal no activa esta carga. Funciona con perfil `development-seed` y base `utaped` (o histórica `utaped_dev`). El script espera la confirmación de carga antes de anunciar que está listo.
 
 Con `dev.principal`, abrir Documentos y buscar **Ejemplo**:
 
@@ -112,6 +122,6 @@ Con `dev.principal`, abrir Documentos y buscar **Ejemplo**:
 
 La carga selecciona tres ámbitos disponibles del período Julio–Diciembre 2026, sin ocupar ámbitos que ya tengan un Plan. Usa carreras/grupos/catálogos de las referencias y cuentas ficticias existentes. Los nombres concretos pueden variar si otros ámbitos ya están ocupados. No modifica el documento que ya estuviera trabajando el usuario.
 
-Se activan los flujos configurados del período de desarrollo si aún no estaban activados; sus asignaciones quedan congeladas conforme al comportamiento normal. Las firmas de elaboración utilizan un certificado autofirmado efímero con nombre **UTAPED EJEMPLO SIN VALIDEZ INSTITUCIONAL**, únicamente para construir escenarios operables. No se importan firmas de templates ni se afirma confianza institucional. Los certificados privados y contraseñas no se guardan; las vinculaciones temporales se revocan y se conserva/restablece cualquier vinculación pública anterior. Los PDF firmados, certificados públicos y auditoría permanecen como parte del ejemplo. Para firmar el Informe o reenviar un documento devuelto se utiliza el proceso normal de vinculación y firma con un certificado propio de prueba; la clave efímera de la carga no puede recuperarse ni reutilizarse.
+Se activan los flujos configurados del período de desarrollo si aún no estaban activados; sus asignaciones quedan congeladas conforme al comportamiento normal. Las firmas de elaboración utilizan un certificado autofirmado efímero con nombre **UTAPED EJEMPLO SIN VALIDEZ INSTITUCIONAL**, únicamente para construir escenarios operables. No se importan firmas de templates ni se afirma confianza institucional. Los certificados privados y contraseñas no se guardan; las vinculaciones temporales se revocan y se conserva/restablece cualquier vinculación pública anterior. Los PDF firmados, certificados públicos y auditoría permanecen como parte del ejemplo. Para firmar el Informe o reenviar un documento devuelto se utiliza el proceso normal de firma con un certificado propio de prueba (.p12/.pfx); la clave efímera de la carga no puede recuperarse ni reutilizarse.
 
 Un evento de auditoría marca la carga completada. Repetir el comando o reiniciar no duplica documentos ni restablece sus cambios, observaciones o estados. La ejecución es transaccional y serializada. Para reconstruir ejemplos después de modificarlos, planificar expresamente un reinicio del entorno; no borrar el marcador ni ejecutar SQL de limpieza como rutina. Mantener respaldo conjunto antes de operaciones masivas.

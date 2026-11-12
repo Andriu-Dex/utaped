@@ -1,3 +1,4 @@
+import { FileInput } from '../shared/FileInput'
 import { ActionForm } from '../shared/ActionForm'
 import { Toast } from '../shared/Toast'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
@@ -84,7 +85,7 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
       {state.pendingAuthors.length > 0 && <p role="status">Pendientes de firma: {state.pendingAuthors.map(person => person.name).join(' → ')}.</p>}
       {collectingSignatures && !state.actorSigned && <SignatureChecklist documentType={documentType} onResolveRequirement={onResolveRequirement} signing blockers={state.signingBlockers} onResolve={onResolveSection} disabled={busy || dirty} />}
       {collectingSignatures && !state.actorSigned && <ActionForm label="Preparar firma" dirty={dirty} onCancel={() => markPending(false)} disabled={busy || disabled || !state.signingEnabled}><form onChangeCapture={() => markPending(true)} onResetCapture={() => markPending(false)} onSubmit={event => void sign(event)}><fieldset disabled={busy || disabled || !state.signingEnabled}>
-        <label>Certificado personal (.p12/.pfx)<input type="file" name="certificate" accept=".p12,.pfx" required /></label>
+        <label>Certificado personal (.p12/.pfx)<FileInput name="certificate" accept=".p12,.pfx" required /></label>
         <label>Contraseña del certificado<input type="password" name="certificatePassword" autoComplete="off" required maxLength={128} /></label>
         <button>{busy ? signingPhase === 'checking' ? 'Comprobando certificado…' : signingPhase === 'confirming' ? 'Esperando confirmación…' : 'Firmando…' : 'Firmar'}</button>
       </fieldset></form></ActionForm>}

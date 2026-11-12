@@ -43,7 +43,7 @@ El propietario confirma un registrador designado por Administración para cada p
 
 ## Evidencia de reuniones auditada — 2026-10-17
 
-Se incorpora análisis del TXT «Todas las reuniones hasta la del 6-10-2026», sin convertir demostraciones de Prototipos en aceptación del software actual. [Auditoría completa](../reports/2026-10-17-06-meeting-transcripts-gap-audit.md).
+Se incorpora análisis del TXT «Todas las reuniones hasta la del 6-10-2026», sin convertir demostraciones de Prototipos en aceptación del software actual. [Auditoría completa](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-17-06-meeting-transcripts-gap-audit.md).
 
 El procedimiento QIPOC/QIPUX se describe en L451–472 con constancia obligatoria y registro por coordinador; esta evidencia merece confirmación expresa, pero el Plan Maestro §34 continúa siendo la regla vigente que lo mantiene pendiente. Aclarar también cualquier descarga previa requerida para ese trámite. No implementar una integración externa por deducción.
 

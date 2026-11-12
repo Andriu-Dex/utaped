@@ -33,13 +33,19 @@ public class CaptchaAudio {
         for(char character:answer.toCharArray()) {
             byte[] clip=clips.get(character);
             if(clip==null) throw new IllegalArgumentException("Invalid CAPTCHA character");
-            // Slightly vary timing and gain without adding noise that obscures speech.
-            double speed=.96+random.nextDouble()*.08,gain=.85+random.nextDouble()*.15;
-            for(double offset=0;offset<clip.length/2;offset+=speed) {
-                int i=((int)offset)*2;short value=(short)((clip[i]&255)|(clip[i+1]<<8));
-                short adjusted=(short)(value*gain);samples.write(adjusted&255);samples.write((adjusted>>>8)&255);
+            // Linear interpolation preserves speech clarity without aliasing or harsh discontinuities.
+            double speed=.97+random.nextDouble()*.06,gain=.88+random.nextDouble()*.12;
+            int totalSamples=clip.length/2;
+            for(double offset=0;offset<totalSamples-1;offset+=speed) {
+                int idx=(int)offset;
+                double frac=offset-idx;
+                int i0=idx*2,i1=i0+2;
+                short s0=(short)((clip[i0]&255)|(clip[i0+1]<<8));
+                short s1=(short)((clip[i1]&255)|(clip[i1+1]<<8));
+                short adjusted=(short)Math.max(-32768,Math.min(32767,Math.round(((1.0-frac)*s0+frac*s1)*gain)));
+                samples.write(adjusted&255);samples.write((adjusted>>>8)&255);
             }
-            samples.writeBytes(new byte[(2205+random.nextInt(2205))*2]);
+            samples.writeBytes(new byte[(7718+random.nextInt(1102))*2]);
         }
         byte[] pcm=samples.toByteArray();
         return ByteBuffer.allocate(44+pcm.length).order(ByteOrder.LITTLE_ENDIAN)

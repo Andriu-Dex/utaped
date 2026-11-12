@@ -31,10 +31,11 @@ class DevelopmentDocumentsTests {
     @Autowired JdbcTemplate jdbc;@Autowired DevelopmentDocuments seed;@Autowired ArtifactService artifacts;
     @Test void preparedScenariosHaveRealArtifactsEvidenceAndTasksAndNeverResetOwnerEdits() throws Exception {
         var states=jdbc.queryForList("SELECT document_type,document_state,count(*) AS total FROM work_plan GROUP BY document_type,document_state");
-        assertEquals(4,jdbc.queryForObject("SELECT count(*) FROM work_plan",Integer.class));
+        assertEquals(5,jdbc.queryForObject("SELECT count(*) FROM work_plan",Integer.class));
         assertTrue(states.stream().anyMatch(s->s.get("document_state").equals("APPROVED")),states.toString());
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE document_state='IN_REVIEW'",Integer.class));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE document_type='T2' AND document_state='DRAFT'",Integer.class));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE document_type='T3' AND document_state='APPROVED'",Integer.class));
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM signing_certificate_binding WHERE active",Integer.class));
         assertTrue(jdbc.queryForObject("SELECT count(*) FROM execution_evidence",Integer.class)>0);
         var docs=jdbc.queryForList("SELECT id FROM work_plan");
@@ -49,7 +50,7 @@ class DevelopmentDocumentsTests {
         jdbc.update("UPDATE work_plan SET objective='Cambio manual conservado' WHERE id=?",editable);
         int files=jdbc.queryForObject("SELECT count(*) FROM stored_file",Integer.class);
         seed.run(new DefaultApplicationArguments());
-        assertEquals(4,jdbc.queryForObject("SELECT count(*) FROM work_plan",Integer.class));
+        assertEquals(5,jdbc.queryForObject("SELECT count(*) FROM work_plan",Integer.class));
         assertEquals(files,jdbc.queryForObject("SELECT count(*) FROM stored_file",Integer.class));
         assertEquals("Cambio manual conservado",jdbc.queryForObject("SELECT objective FROM work_plan WHERE id=?",String.class,editable));
     }

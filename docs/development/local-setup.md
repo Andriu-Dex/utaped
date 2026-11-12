@@ -2,25 +2,63 @@
 
 Anexos y previsualizaciones requieren volumen documental persistente además de DB: [configuración y respaldo](document-storage.md). Docker incluye fuentes para el conversor T1; sin Docker instalar Liberation Sans/DejaVu Sans.
 
-## Entorno diario recomendado
+## Inicio rápido (entorno unificado)
 
-Desde raíz: `./scripts/start-development.ps1`; después `cd frontend` y `npm run dev` (primera instalación npm ci). URL http://127.0.0.1:5173. Para el compilado Docker: `./scripts/start-development.ps1 -Web`, URL 64431. Mismos datos. [Guía y credenciales](sample-environment.md). No iniciar otra copia local de la aplicación.
+Desde la raíz del repositorio, ejecutar:
 
-## Configuración base sin semillas (alternativa histórica)
+- En Windows (PowerShell):
+  ```powershell
+  ./scripts/start-development.ps1
+  ```
+- En Linux / macOS (Bash):
+  ```bash
+  ./scripts/start-development.sh
+  ```
+
+El script genera automáticamente el archivo `.env` a partir de `.env.example` con contraseñas seguras si aún no existe, levanta PostgreSQL (`utaped`), Mailpit, backend y frontend compilado en Docker bajo el proyecto Compose `utaped`.
+
+- **Web (Frontend compilado):** http://localhost:64430
+- **API Backend:** http://localhost:18080 (Health / CSRF: http://localhost:18080/api/auth/csrf)
+- **Bandeja Mailpit:** http://localhost:18025
+- **Base de datos PostgreSQL:** `localhost:15433` (BD: `utaped`, usuario: `utaped`)
+
+Para iniciar sesión, utilice cualquiera de las cuentas de desarrollo preconfiguradas con la contraseña `UTAPED_SEED_PASSWORD` (indicada en la consola y registrada en `.env`). [Guía y credenciales](sample-environment.md).
+
+### Desarrollo frontend con Vite (opcional)
+
+Si se desea modificar la interfaz React con recarga en caliente (HMR):
+
+```powershell
+./scripts/start-development.ps1 -Vite
+```
+
+Y en otra terminal:
+```powershell
+cd frontend
+npm run dev
+```
+
+Vite abrirá en http://localhost:5173 y reenviará las llamadas `/api` al backend Docker (leyendo `BACKEND_PORT` automáticamente desde `.env`).
+
+### Parámetros adicionales del lanzador
+
+- `-PreparedDocuments`: Arranca cargando el lote de documentos preparados (Planes e Informes en distintos estados de avance y firma).
+- `-ResetData`: Trunca las tablas operativas de la base de datos conservando las 7 cuentas de desarrollo y sus credenciales (incluso si fueron modificadas), eliminando usuarios temporales adicionales y regenerando catálogos semilla. Solicita confirmación interactiva previa.
+- `-Force`: Omite la confirmación interactiva al reiniciar datos con `-ResetData` (útil para automatización).
+- `-Stop`: Detiene todos los contenedores del entorno de desarrollo conservando datos y volúmenes.
+
+## Configuración base sin semillas (producción o mínima)
 
 Requisitos: Docker Desktop con contenedores Linux y Compose. No es necesario instalar Java/Maven para este modo.
 
-1. En la raíz, copiar .env.example a .env y sustituir DB_PASSWORD y BOOTSTRAP_ADMIN_PASSWORD por valores únicos. Elegir correo del administrador; no publicar .env.
-2. Para usar interfaz Docker establecer APP_PUBLIC_URL=http://localhost:64430.
-3. Ejecutar `docker compose --profile web up --build -d`.
-4. Abrir http://localhost:64430, ingresar con el correo/usuario configurado, contraseña y CAPTCHA; cambiar la contraseña temporal. Username inicial se deriva del prefijo del correo, que también sirve como alias.
-5. Retirar los valores BOOTSTRAP_ADMIN_* del entorno después de provisionar. No son contraseña permanente: solo se usan con DB vacía.
+1. En la raíz, configurar `.env` estableciendo `SPRING_PROFILES_ACTIVE=` (vacío) y contraseñas seguras.
+2. Ejecutar `docker compose up --build -d`.
+3. Abrir http://localhost:64430, ingresar con el usuario administrador inicial provisionado.
+4. Retirar los valores `BOOTSTRAP_ADMIN_*` del entorno tras el primer arranque.
 
 El backend aplica Flyway al arrancar. El volumen conserva DB y sesiones. `docker compose down` detiene servicios conservando datos; no borrar volúmenes para solucionar errores ordinarios.
 
-V12 agrega username/perfil y CAPTCHA sin borrar cuentas. No hay variables nuevas obligatorias; revisar identificadores migrados en el directorio. Las pruebas CAPTCHA fijan una respuesta únicamente mediante la BD aislada, sin bypass de aplicación. [Contrato](../api/local-access.md).
-
-Puertos locales: web 64430, API 8080, DB 5433, bandeja Mailpit 8025. Todos vinculados a localhost. Compose es entorno local HTTP; no receta de publicación institucional. Producción exige HTTPS, COOKIE_SECURE=true, secretos externos, SMTP institucional, restricciones de red y plan de respaldo.
+Puertos locales por defecto: web 64430, API 18080, DB 15433, Mailpit web 18025 / SMTP 11025. Todos vinculados a localhost para evitar colisiones. Compose es entorno local HTTP; no receta de publicación institucional. Producción exige HTTPS, COOKIE_SECURE=true, secretos externos, SMTP institucional, restricciones de red y plan de respaldo.
 
 ## Desarrollo frontend
 
@@ -54,4 +92,4 @@ AUDIT_EXPORT_MAX_ROWS limita filas de CSV administrativo (10000 por defecto, aju
 
 ## Firma local
 
-La firma del elaborador requiere HTTPS por defecto y vinculación administrativa previa de su huella pública. Para desarrollo HTTP aislado puede habilitarse SIGNING_ALLOW_HTTP=true en el entorno local, nunca en un despliegue institucional. E2E lo configura en su entorno privado. No use certificados personales reales en pruebas. [Vinculación, límites y transporte](../api/author-signing.md).
+La firma electrónica del elaborador y de las etapas de revisión utiliza certificados criptográficos reales y requiere HTTPS por defecto. La firma no requiere vinculación administrativa previa: el usuario aporta directamente su contenedor `.p12`/`.pfx` con su contraseña en el diálogo de firma. Para desarrollo HTTP aislado se habilita `SIGNING_ALLOW_HTTP=true` en el entorno local (`.env`), nunca en un despliegue institucional. E2E lo configura en su entorno privado. No use certificados personales reales en pruebas. [Límites criptográficos y transporte](../api/author-signing.md).

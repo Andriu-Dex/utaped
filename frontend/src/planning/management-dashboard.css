@@ -665,7 +665,7 @@ button.management-open {
 
 /* Recent Documents Section */
 .recent-documents-card {
-  margin: 24px 0 32px;
+  margin: 0 0 32px;
 }
 
 .recent-documents-card .management-page-header {
@@ -674,10 +674,19 @@ button.management-open {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: nowrap;
 }
 
 .recent-documents-card .section-heading {
   align-items: flex-start;
+}
+
+.recent-documents-card .section-heading h2 {
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: var(--text);
+  margin: 2px 0 0;
+  letter-spacing: -0.015em;
 }
 
 .recent-documents-card .section-heading p {

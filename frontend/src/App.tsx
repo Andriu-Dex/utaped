@@ -6,6 +6,7 @@ import { AdminDashboard } from './institution/AdminDashboard'
 import { adminPages, adminNavGroups, isAdminPage, type AdminPage } from './institution/adminNavigation'
 import { Administration } from './institution/Administration'
 import { WorkPlans } from './planning/WorkPlans'
+import { clearDraftPreviewCache } from './planning/draft-preview-cache'
 import { TrackingDashboard } from './planning/TrackingDashboard'
 import { NotificationIndicator, type NotificationTarget } from './notifications/Notifications'
 import { api, ApiError, refreshCsrf, type Account, type Group, type Member, type Period } from './shared/api'
@@ -157,6 +158,7 @@ export default function App() {
 
   function clearAccount() {
     identityEpoch.current += 1
+    clearDraftPreviewCache()
     setAccount(null)
     setSelected('')
     setGroups([])
@@ -208,8 +210,14 @@ export default function App() {
   }, [account])
 
   async function load() {
-    const epoch=identityEpoch.current
-    const [g,p] = await Promise.all([api<Group[]>('/groups'),api<Period[]>('/periods')]); if(epoch!==identityEpoch.current) return; setGroups(g); setPeriods(p)
+    const epoch = identityEpoch.current
+    const [g, p] = await Promise.all([
+      api<Group[]>('/groups'),
+      api<Period[]>('/periods')
+    ])
+    if (epoch !== identityEpoch.current) return
+    setGroups(g)
+    setPeriods(p)
     setSelected(current => g.some(group => group.id === current) ? current : '')
   }
 
@@ -318,7 +326,7 @@ export default function App() {
       </header>
       <main id="main-content" ref={content} tabIndex={-1}>{error && <Toast message={error} />}
       {account.mustChangePassword ? <ChangePassword temporary onComplete={async () => { try { setAccount(await api<Account>('/auth/me')); setView('home') } catch { clearAccount() } }} /> : <>
-        {view === 'my-organization' && !administrative ? <ContextualOrganization initialScopeId={organizationScope} onScopeChange={setOrganizationScope} onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} onPeriodChange={setReportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} initialReviewId={documentTarget} onReviewSelect={selectDocument} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
+        {view === 'my-organization' && !administrative ? <ContextualOrganization initialScopeId={organizationScope} onScopeChange={setOrganizationScope} onDirtyChange={setDraftDirty} /> : view === 'reporting' ? <ReportingDashboard initialPeriodId={reportingPeriod} onPeriodChange={setReportingPeriod} administrative={administrative} onOpenDocument={administrative ? undefined : id => navigate('documents', id, 'execution')} /> : view === 'reviews' && !administrative ? <ReviewWorkspace accountId={account.id} onDirtyChange={setDraftDirty} initialReviewId={documentTarget} onReviewSelect={selectDocument} onNavigateToDocuments={() => navigate('documents')} /> : view === 'documents' && !administrative && canUseDocuments ? <WorkPlans accountId={account.id} onDirtyChange={setDraftDirty} initialDocId={documentTarget} initialStep={documentStep} onDocumentSelect={selectDocument} onStepChange={setDocumentStep} /> : view === 'password' ? <ChangePassword temporary={false} onComplete={clearAccount} /> : isAdminPage(view) && account.systemRole === 'ADMIN' ? <Administration key={view + (view === 'groups' ? selected : '')} page={view} periods={periods} initialGroupId={selected} onChange={refreshInstitution} onDirtyChange={setDraftDirty} /> : administrative ? <AdminDashboard onOpen={(page, periodId) => { if (page === 'reporting') setReportingPeriod(periodId ?? ''); void navigate(page) }} /> : <>
 
           <TrackingDashboard displayName={account.displayName} onOpen={(id, step = 'general') => navigate('documents', id, step)} onOpenReports={() => navigate('reporting')} onOpenDocuments={() => navigate('documents')} />
           <div className="context-grid"><section className="card context-card"><div className="section-heading"><span className="section-icon"><Icon name="users" /></span><div><span className="section-kicker">COLABORACIÓN</span><h2>Grupos institucionales</h2></div></div><p className="muted">Consulta tus integrantes. Tu identidad se conserva al cambiar de contexto.</p>

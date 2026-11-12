@@ -35,7 +35,9 @@ public class DevelopmentDocuments implements ApplicationRunner {
         this.execution=execution;this.bindings=bindings;this.signatures=signatures;this.reviews=reviews;this.evidence=evidence;this.reports=reports;this.periods=periods;this.audit=audit;
     }
     @Override @Transactional(rollbackFor=Exception.class) public void run(ApplicationArguments args) throws Exception {
-        if(!"utaped_dev".equals(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Example documents require utaped_dev");
+        if(!Set.of("utaped","utaped_dev").contains(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Example documents require utaped or utaped_dev");
+        if(Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM app_user WHERE system_role='ADMIN' AND email NOT LIKE '%@utaped.example.invalid')",Boolean.class)))
+            throw new IllegalStateException("Example documents cannot run on a database containing non-example administrator accounts");
         jdbc.queryForList("SELECT pg_advisory_xact_lock(hashtextextended('utaped-prepared-documents',0))");
         // A completed fixture is never reset, even after the owner edits or returns it.
         if(jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='DEVELOPMENT_DOCUMENTS_CREATED'",Integer.class)>0) return;

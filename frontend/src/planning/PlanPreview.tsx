@@ -16,21 +16,24 @@ export interface PreviewArtifact {
   signatureSlots: { label: string; pageNumber: number }[]
 }
 export interface PreparedPreview { artifact: PreviewArtifact | null; signed?: SignedArtifact | null; busy: boolean; error: string }
-type Focus = 'COVER' | 'JUSTIFICATION' | 'OBJECTIVE' | 'MATRIX' | 'ANNEXES' | 'SIGNATURES'
-interface DraftView { sourceRowVersion: number; pages: PreviewArtifact['pages']; sections: Partial<Record<Focus, number>>; pageIndex: number; image: string }
+import { draftViewCache, type DraftView, type PreviewFocus as Focus } from './draft-preview-cache'
 const sectionLabels: Record<Focus, string> = { COVER: 'Portada', JUSTIFICATION: 'Justificación', OBJECTIVE: 'Objetivo', MATRIX: 'Matriz de actividades', ANNEXES: 'Anexos', SIGNATURES: 'Firmas' }
 
 export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepared }: {
   plan: WorkPlan; draft: Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
   step: PlanStep; focus: 'JUSTIFICATION' | 'OBJECTIVE'; dirty: boolean; textDirty: boolean; prepared: PreparedPreview | null
 }) {
-  const [result, setResult] = useState<{ value: DraftView; fingerprint: string } | null>(null)
+  const [result, setResult] = useState<{ value: DraftView; fingerprint: string } | null>(() => {
+    const cached = draftViewCache.get(plan.id)
+    return cached ? { value: cached, fingerprint: '' } : null
+  })
   const [requestedPage, setRequestedPage] = useState(-1), [retry, setRetry] = useState(0)
   const [busy, setBusy] = useState(false), [error, setError] = useState('')
   const [retained, setRetained] = useState<PreviewArtifact | null>(null)
   const [artifactPage, setArtifactPage] = useState(0)
   const [loadedImage, setLoadedImage] = useState(''), [imageError, setImageError] = useState(''), [imageRetry, setImageRetry] = useState(0)
   const pending = useRef<Promise<void> | null>(null)
+  const loadedPlanId = useRef<string | null>(null)
   const [expanded, setExpanded] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null), origin = useRef<HTMLElement | null>(null)
   const helpId = useId(), titleId = useId()
@@ -38,14 +41,24 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   const editing = plan.editable && plan.documentState === 'DRAFT' && !finalStep
   const section: Focus = step === 'general' ? 'COVER' : step === 'content' ? focus : step === 'matrix' ? 'MATRIX' : step === 'attachments' ? 'ANNEXES' : step === 'preparation' ? 'SIGNATURES' : 'COVER'
   const fingerprint = JSON.stringify([plan.id, plan.rowVersion, draft])
-  const [previous, setPrevious] = useState({ fingerprint, section, step })
-  if (previous.fingerprint !== fingerprint || previous.section !== section || previous.step !== step) {
-    setPrevious({ fingerprint, section, step }); setRequestedPage(-1)
+  const [previous, setPrevious] = useState({ fingerprint, section, step, planId: plan.id })
+  if (previous.planId !== plan.id) {
+    const cached = draftViewCache.get(plan.id)
+    setResult(cached ? { value: cached, fingerprint: '' } : null)
+    setPrevious({ fingerprint, section, step, planId: plan.id })
+    setRequestedPage(-1)
+    setArtifactPage(0)
+  } else if (previous.fingerprint !== fingerprint || previous.section !== section || previous.step !== step) {
+    setPrevious({ fingerprint, section, step, planId: plan.id })
+    setRequestedPage(-1)
     setArtifactPage(step === 'preparation' ? Math.max(0, (prepared?.artifact?.signatureSlots[0]?.pageNumber ?? 1) - 1) : 0)
   }
   useEffect(() => {
     if (!editing) return
     let active = true
+    const isFirstLoadForPlan = loadedPlanId.current !== plan.id && !draftViewCache.has(plan.id)
+    const isImmediate = requestedPage >= 0 || !textDirty || isFirstLoadForPlan
+    const delay = isImmediate ? 0 : 900
     const timer = window.setTimeout(() => {
       const earlier = pending.current
       pending.current = (async () => {
@@ -56,13 +69,21 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
           const value = await api<DraftView>('/work-plans/' + plan.id + '/artifacts/draft-preview', 'POST', {
             ...draft, rowVersion: plan.rowVersion, section, pageIndex: requestedPage,
           })
-          if (active) setResult({ value, fingerprint })
+          if (active) {
+            loadedPlanId.current = plan.id
+            draftViewCache.set(plan.id, value)
+            if (draftViewCache.size > 8) {
+              const oldest = draftViewCache.keys().next().value
+              if (oldest) draftViewCache.delete(oldest)
+            }
+            setResult({ value, fingerprint })
+          }
         } catch (e) { if (active) setError(e instanceof Error ? e.message : 'No se pudo actualizar la vista.') }
         finally { if (active) setBusy(false) }
       })()
-    }, requestedPage >= 0 ? 0 : 1400)
+    }, delay)
     return () => { active = false; window.clearTimeout(timer) }
-  }, [editing, plan.id, plan.rowVersion, draft, fingerprint, section, requestedPage, retry])
+  }, [editing, plan.id, plan.rowVersion, draft, fingerprint, section, requestedPage, retry, textDirty])
   useEffect(() => {
     if (editing || finalStep) return
     let active = true
@@ -81,10 +102,11 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   }
   const pages = editing ? result?.value.pages : artifact?.pages
   const page = editing ? result?.value.pageIndex ?? 0 : Math.min(artifactPage, Math.max(0, (pages?.length ?? 1) - 1))
-  const stale = editing && result?.fingerprint !== fingerprint
-  const awaitingSection = editing && requestedPage < 0 && !!result && result.value.pageIndex !== (result.value.sections[section] ?? result.value.sections.SIGNATURES)
-  const loading = editing ? busy || stale || awaitingSection : finalStep && (!prepared || prepared.busy)
   const image = editing ? result ? 'data:image/png;base64,' + result.value.image : '' : signed?.approvedReviewId ? '/api/reviews/' + signed.approvedReviewId + '/pages/' + page + '?attempt=' + imageRetry : signed ? '/api/work-plans/' + plan.id + '/signed-artifacts/' + signed.id + '/pages/' + page + '?attempt=' + imageRetry : artifact ? '/api/work-plans/' + plan.id + '/artifacts/' + artifact.id + '/pages/' + page + '?attempt=' + imageRetry : ''
+  const awaitingSection = editing && requestedPage < 0 && !!result && result.value.pageIndex !== (result.value.sections[section] ?? result.value.sections.SIGNATURES)
+  const imagePending = editing && !!image && loadedImage !== image && imageError !== image
+  const stale = editing && (result?.fingerprint !== fingerprint || awaitingSection || busy || imagePending)
+  const loading = editing ? busy || stale || awaitingSection : finalStep && (!prepared || prepared.busy)
   const references = editing ? Object.entries(result?.value.sections ?? {}).map(([key, value]) => ({ page: value!, label: sectionLabels[key as Focus] })) : [
     { page: 0, label: 'Portada' }, ...(artifact?.signatureSlots.map(slot => ({ page: slot.pageNumber - 1, label: slot.label })) ?? []),
     ...(artifact?.pages.filter((item, index) => item.kind === 'ANNEX' && artifact.pages[index - 1]?.kind !== 'ANNEX').map(item => ({ page: item.number - 1, label: 'Anexos y evidencias' })) ?? []),
@@ -128,7 +150,14 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
           <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : signed ? ' del PDF firmado' : ' del ' + (plan.documentType === 'T1' ? 'Plan T1' : 'Informe ' + plan.documentType))} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
         </button>
       </div>
-    </div> : <div className="plan-preview-empty" role="status"><Icon name="document" size={36} /><strong>{loading || editing ? 'Preparando su documento…' : 'Sin documento preparado'}</strong><p>{finalStep ? 'Revise la preparación y los pendientes de este paso.' : 'Puede continuar trabajando mientras se prepara la vista.'}</p></div>}
+    </div> : <div className={'plan-preview-empty' + (loading || editing ? ' is-loading' : '')} role="status">
+      <div className="preview-empty-icon-wrap">
+        <Icon name="document" size={36} />
+        {(loading || editing) && <span className="preview-spinner" aria-hidden="true" />}
+      </div>
+      <strong>{loading || editing ? 'Preparando su documento…' : 'Sin documento preparado'}</strong>
+      <p>{finalStep ? 'Revise la preparación y los pendientes de este paso.' : 'Puede continuar trabajando mientras se prepara la vista.'}</p>
+    </div>}
     <dialog ref={dialog} className="plan-preview-dialog" aria-labelledby={titleId}>
       <header><h2 id={titleId}>{editing ? 'Borrador A4' : signed ? 'Documento firmado' : 'Documento preparado'} · Página {page + 1} de {pages?.length ?? 0}</h2><button type="button" className="secondary" onClick={() => dialog.current?.close()}>Cerrar vista ampliada</button></header>
       {expanded && <><DocumentPageNavigator page={page} pageCount={pages?.length ?? 1} onChange={go} disabled={!!loading || loadedImage !== image && imageError !== image} references={references} />

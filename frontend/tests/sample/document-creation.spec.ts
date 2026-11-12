@@ -26,23 +26,30 @@ test('document type chooser proposes the institutional name and excludes draft P
     const planChoice = principal.getByRole('radio', { name: /^Plan de Trabajo/ }), reportChoice = principal.getByRole('radio', { name: /^Informe final/ })
     await expect(planChoice).toBeChecked()
     await expect(principal.getByLabel('Título del nuevo Plan')).toBeDisabled()
-    await openAction(principal, 'Crear documento');await principal.getByLabel('Ámbito del nuevo Plan').selectOption(scope.id)
+    await openAction(principal, 'Crear documento');await principal.getByRole('combobox', { name: 'Comisión o unidad asignada' }).click(); await principal.locator('#scope-option-' + scope.id).click()
     await expect(principal.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: ' + groupName)
     await expect(principal.getByLabel('Título del nuevo Plan')).toBeEnabled()
-    await expect(principal.getByLabel('Ámbito del nuevo Plan')).toHaveValue(scope.id)
-     await withConfirmation(principal, false, async () => { await reportChoice.click(); }); await expect(planChoice).toBeChecked()
+    await expect(principal.getByRole('combobox', { name: 'Comisión o unidad asignada' })).toHaveValue(groupName)
+    // Final reports are offered only when the principal has an approved Plan in force (shared environment state).
+    const canCreateDerived = (await api(principal, '/work-plans/options')).canCreateDerived as boolean
+    if (canCreateDerived) { await withConfirmation(principal, false, async () => { await reportChoice.click(); }); await expect(planChoice).toBeChecked() }
+    else await expect(reportChoice).toBeDisabled()
     await principal.screenshot({ path: 'test-results/document-creation-plan-desktop.png', fullPage: true })
     await principal.getByRole('button', { name: 'Crear borrador', exact: true }).click()
     await expect(principal.getByRole('heading', { name: 'Plan de Trabajo: ' + groupName, exact: true })).toBeVisible()
     const created = (await api(principal, '/work-plans?query=' + encodeURIComponent(groupName))).items[0]
     await principal.getByRole('button', { name: 'Volver a documentos', exact: true }).click()
-    await openAction(principal, 'Crear documento'); await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click()
-    await expect(principal.getByText('No hay Planes aprobados que coincidan con la búsqueda.', { exact: true })).toBeVisible()
+    // The draft Plan never becomes a Report base; the server excludes it either way.
     expect((await api(principal, '/reports/options?query=' + encodeURIComponent(groupName))).total).toBe(0)
-    await principal.keyboard.press('Escape')
+    if (canCreateDerived) {
+      await openAction(principal, 'Crear documento'); await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click()
+      await expect(principal.getByText('No hay Planes aprobados que coincidan con la búsqueda.', { exact: true })).toBeVisible()
+      await principal.keyboard.press('Escape')
+    }
     await principal.setViewportSize({ width: 820, height: 1180 }); await principal.getByRole('button', { name: 'Modo oscuro', exact: true }).click()
-    await openAction(principal, 'Crear documento'); await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click()
-    await expect(principal.getByText('No hay Planes aprobados que coincidan con la búsqueda.', { exact: true })).toBeVisible()
+    await openAction(principal, 'Crear documento')
+    if (canCreateDerived) { await reportChoice.check(); await principal.getByLabel('Buscar Plan aprobado').fill(groupName); await principal.getByRole('button', { name: 'Buscar Plan', exact: true }).click(); await expect(principal.getByText('No hay Planes aprobados que coincidan con la búsqueda.', { exact: true })).toBeVisible() }
+    else await expect(reportChoice).toBeDisabled()
     await principal.screenshot({ path: 'test-results/document-creation-report-tablet-dark.png', fullPage: true })
     expect(await principal.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     expect((await api(principal, '/work-plans/' + created.id)).documentState).toBe('DRAFT')

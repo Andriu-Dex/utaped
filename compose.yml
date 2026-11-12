@@ -1,7 +1,6 @@
 name: utaped
 services:
   frontend:
-    profiles: [web]
     build: ./frontend
     ports:
       - "127.0.0.1:${WEB_PORT:-64430}:80"
@@ -10,28 +9,31 @@ services:
   db:
     image: postgres:18
     environment:
-      POSTGRES_DB: utaped
-      POSTGRES_USER: utaped
+      POSTGRES_DB: ${POSTGRES_DB:-utaped}
+      POSTGRES_USER: ${POSTGRES_USER:-utaped}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "127.0.0.1:${DB_PORT:-5433}:5432"
+      - "127.0.0.1:${DB_PORT:-15433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U utaped -d utaped"]
+      test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER:-utaped} -d ${POSTGRES_DB:-utaped}"]
       interval: 3s
       timeout: 3s
       retries: 20
   mail:
     image: axllent/mailpit:v1.31.1
     ports:
-      - "127.0.0.1:${MAIL_UI_PORT:-8025}:8025"
-      - "127.0.0.1:${MAIL_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAIL_UI_PORT:-18025}:8025"
+      - "127.0.0.1:${MAIL_SMTP_PORT:-11025}:1025"
   backend:
     build: ./backend
     environment:
-      DB_URL: jdbc:postgresql://db:5432/utaped
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-utaped}
       DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      UTAPED_SEED_PASSWORD: ${UTAPED_SEED_PASSWORD:-}
+      APP_DEVELOPMENT_DOCUMENTS: ${UTAPED_SEED_DOCUMENTS:-false}
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -64,7 +66,7 @@ services:
       PERIOD_ARCHIVE_MAX_BYTES: ${PERIOD_ARCHIVE_MAX_BYTES:-134217728}
       PERIOD_PURGE_GRACE_DAYS: ${PERIOD_PURGE_GRACE_DAYS:-30}
       AUDIT_EXPORT_MAX_ROWS: ${AUDIT_EXPORT_MAX_ROWS:-10000}
-      SIGNING_ALLOW_HTTP: ${SIGNING_ALLOW_HTTP:-false}
+      SIGNING_ALLOW_HTTP: ${SIGNING_ALLOW_HTTP:-true}
       PLANNING_SINGLE_PLAN_PER_SCOPE: ${PLANNING_SINGLE_PLAN_PER_SCOPE:-false}
       PLANNING_ENFORCE_PREPARATION_WINDOW: ${PLANNING_ENFORCE_PREPARATION_WINDOW:-true}
       PLANNING_MAX_EXTENSION_DAYS: ${PLANNING_MAX_EXTENSION_DAYS:-3}

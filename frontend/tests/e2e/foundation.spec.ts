@@ -133,5 +133,6 @@ test('local identity, administration, context isolation, recovery and logout', a
   await expect(page.getByRole('heading', { name: 'Bienvenido, ' + displayName })).toBeVisible()
   await page.screenshot({ path: 'test-results/home-desktop.png', fullPage: true })
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()
-  await openAction(page, 'Crear documento'); await expect(page.getByText('No tiene ámbitos disponibles para crear un Plan.', { exact: true })).toBeVisible()
+  // Without a creatable scope the action is hidden instead of opening an empty dialog.
+  await expect(page.getByRole('heading', { name: 'Mis documentos', exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Crear documento', exact: true })).toHaveCount(0)
 })

@@ -1,5 +1,4 @@
 import { withConfirmation } from '../confirmation'
-import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { solveCaptcha } from './login'
@@ -146,7 +145,8 @@ test('modern access preserves credentials, supports username and administrative 
     await page.screenshot({ path: 'test-results/workspace-' + name + '.png', fullPage: true })
   }
   await page.getByRole('button', { name: 'Documentos', exact: true }).click()
-  await openAction(page, 'Crear documento'); await expect(page.getByText('No tiene ámbitos disponibles para crear un Plan.')).toBeVisible()
+  // Without a creatable scope the action is hidden instead of opening an empty dialog.
+  await expect(page.getByRole('heading', { name: 'Mis documentos', exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: 'Crear documento', exact: true })).toHaveCount(0)
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await page.setViewportSize({ width: 820, height: 1180 })

@@ -27,6 +27,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.PendingWorkService pendingWork;
     @Autowired ec.edu.uta.utaped.institution.AdminOverviewService overview;
     @Autowired ec.edu.uta.utaped.planning.ExecutionReportService executions;
+    @Autowired ec.edu.uta.utaped.planning.DocumentTimelineService timeline;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
     @Test void administrativeReviewAlertCountsDocumentsNotStagesAndDisappearsAfterDecision() throws Exception {
         UUID review=submit(false);var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
@@ -565,6 +566,15 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
         assertArrayEquals(frozen,reviews.content(review,reviewerEmail));
         positions.historyPermission(position,email,new ec.edu.uta.utaped.institution.PositionService.HistoryPermission(false,1L));
         assertEquals(404,assertThrows(ResponseStatusException.class,()->reviews.content(review,reviewerEmail)).getStatusCode().value());
+    }
+    @Test void timelineDoesNotFabricateDatesForTasksOrApprovalsWithoutTimestamps() throws Exception {
+        UUID review=submit(false);approve(review);
+        jdbc.update("UPDATE review_task SET acted_at=NULL WHERE review_id=?",review);
+        jdbc.update("UPDATE document_review SET closed_at=NULL WHERE id=?",review);
+        var items=timeline.timeline(id,email,"asc");
+        var tasks=jdbc.queryForList("SELECT id FROM review_task WHERE review_id=?",UUID.class,review);assertFalse(tasks.isEmpty());
+        for(UUID task:tasks) assertNull(items.stream().filter(i->("review-task-"+task).equals(i.id())).findFirst().orElseThrow().occurredAt(),"Sin acted_at no se debe usar la fecha de la ronda");
+        assertNull(items.stream().filter(i->("review-approval-"+review).equals(i.id())).findFirst().orElseThrow().occurredAt(),"Sin closed_at no se debe usar la fecha de la ronda");
     }
     @Test void formalVersionsArchivePriorBytesAndReportingHonorsAccess() throws Exception {
         UUID review=submit(false);approve(review);byte[] original=reviews.content(review,email);var prior=plans.get(id,email);

@@ -13,6 +13,7 @@ import type { WorkPlan } from './types'
 import { MatrixEditor } from './MatrixEditor'
 import { AttachmentEditor } from './AttachmentEditor'
 import { DocumentPreparation } from './DocumentPreparation'
+import { DocumentTimeline } from './DocumentTimeline'
 import { AuditViewer } from '../audit/AuditViewer'
 import { ReviewHistory } from '../workflow/ReviewHistory'
 import { ExecutionWorkspace } from './ExecutionWorkspace'
@@ -29,8 +30,8 @@ function fields(plan: WorkPlan): DraftFields {
   return { title: plan.title, institutionalUnit: plan.institutionalUnit, career: plan.career, justification: plan.justification, objective: plan.objective }
 }
 
-export type WorkPlanSection = 'general' | 'content' | 'matrix' | 'attachments' | 'preparation' | 'signing' | 'rounds' | 'execution' | 'history'
-const validSections: WorkPlanSection[] = ['general', 'content', 'matrix', 'attachments', 'preparation', 'signing', 'rounds', 'execution', 'history']
+export type WorkPlanSection = 'general' | 'content' | 'matrix' | 'attachments' | 'preparation' | 'signing' | 'timeline' | 'rounds' | 'execution' | 'history'
+const validSections: WorkPlanSection[] = ['general', 'content', 'matrix', 'attachments', 'preparation', 'signing', 'timeline', 'rounds', 'execution', 'history']
 
 export const INSTITUTIONAL_JUSTIFICATION =
   'El presente Plan de Trabajo se formula en cumplimiento del Estatuto de la Universidad Técnica de Ambato, ' +
@@ -192,7 +193,7 @@ export function WorkPlanEditor({
     finally { navigationLock.current = false; setNavigating(false) }
   }
   async function returnToPlan() {
-    try { await navigateStep(['rounds', 'execution', 'history'].includes(section) ? followUpReturn : 'general') }
+    try { await navigateStep(['timeline', 'rounds', 'execution', 'history'].includes(section) ? followUpReturn : 'general') }
     catch (e) { setError(e instanceof Error ? e.message : 'No se pudo recargar el Plan.') }
   }
   function openFollowUp(next: FollowUpSection) {
@@ -200,6 +201,7 @@ export function WorkPlanEditor({
     if (planSteps.some(step => step.key === section)) setFollowUpReturn(section as PlanStep)
     setSection(next)
   }
+  if (section === 'timeline') return <DocumentTimeline documentId={plan.id} title={plan.title} documentType="T1" formalVersion={plan.formalVersion} documentState={plan.documentState} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} onOpenDocument={onDocumentOpen ? docId => { api<WorkPlan>('/work-plans/' + docId).then(onDocumentOpen) } : undefined} />
   if (section === 'rounds') return <ReviewHistory documentId={plan.id} title={plan.title} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'execution') return <ExecutionWorkspace targetDocId={plan.id} onDirtyChange={onDirtyChange} onBack={() => void returnToPlan()} />
   if (section === 'history') return <AuditViewer targetDocId={plan.id} onBack={() => void returnToPlan()} />

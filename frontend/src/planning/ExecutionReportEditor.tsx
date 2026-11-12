@@ -11,6 +11,7 @@ import { AttachmentEditor } from './AttachmentEditor'
 import { DocumentPreparation } from './DocumentPreparation'
 import { ReviewHistory } from '../workflow/ReviewHistory'
 import { AuditViewer } from '../audit/AuditViewer'
+import { DocumentTimeline } from './DocumentTimeline'
 import type { WorkPlan } from './types'
 import './document-workspace.css'
 
@@ -60,6 +61,7 @@ export function ExecutionReportEditor({ initial, initialStep, onStepChange, onBa
   const back = () => { setPanel('edit'); setStep(step < 5 ? step : 4); setReload(n => n + 1) }
   if (panel === 'attachments') return <AttachmentEditor documentType="T3" targetDocId={initial.id} onDirtyChange={onDirtyChange} onBack={back} previousLabel="Acciones de mejora" nextLabel="Firma y finalización" onPrevious={async () => back()} onNext={async () => { setStep(6); setPanel('preparation') }} />
   if (panel === 'preparation') return <DocumentPreparation onResolveRequirement={async section => { const destination = section === "Anexos" ? 5 : section === "Resultados" ? 1 : section === "Análisis de resultados" || section === "Análisis FODA" ? 2 : 3; setStep(destination); setPanel(section === "Anexos" ? "attachments" : "edit"); setReload(value => value + 1) }} onDirtyChange={onDirtyChange} targetDocId={initial.id} documentType="T3" onBack={back} onPrevious={async () => { setStep(5); setPanel('attachments') }} />
+  if (panel === 'timeline') return <DocumentTimeline documentId={initial.id} title={title} documentType="T3" formalVersion={state?.document.formalVersion} documentState={state?.document.documentState} onBack={back} onDirtyChange={onDirtyChange} />
   if (panel === 'rounds') return <ReviewHistory documentId={initial.id} title={title} onBack={back} onDirtyChange={onDirtyChange} />
   if (panel === 'history') return <AuditViewer targetDocId={initial.id} onBack={back} />
   function result(id: string, patch: Partial<Result>) { setDraft(current => current && ({ ...current, results: current.results.some(r => r.activityId === id) ? current.results.map(r => r.activityId === id ? { ...r, ...patch } : r) : [...current.results, { activityId: id, percentage: null, observations: '', ...patch }] })) }
@@ -84,7 +86,7 @@ export function ExecutionReportEditor({ initial, initialStep, onStepChange, onBa
     <p className="muted">Documente avances, analice resultados y proponga mejoras. Este corte conserva el Plan aprobado y no reemplaza al Informe final.</p>
     {error && <Toast message={error} onDismiss={() => setError('')} />}{notice && <Toast tone="success" message={notice} onDismiss={() => setNotice('')} />}
     {!state || !draft ? loadFailed ? <div className="notice"><p>No se pudo cargar el Informe de ejecución.</p><button type="button" className="secondary" onClick={() => { setError(''); setLoadFailed(false); setReload(value => value + 1) }}>Reintentar carga del Informe</button></div> : <p role="status">Cargando Informe de ejecución…</p> : <>
-      <div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Ronda {state.document.reviewRound} · Corte {draft.sequenceNumber}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div>
+      <div className="document-status-line"><span className="status-badge">{state.document.documentState === 'DRAFT' ? 'Borrador' : state.document.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Ronda {state.document.reviewRound} · Corte {draft.sequenceNumber}</span><button type="button" className="link" disabled={dirty} onClick={() => setPanel('timeline')}>Línea de tiempo</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('rounds')}>Rondas y observaciones</button><button type="button" className="link" disabled={dirty} onClick={() => setPanel('history')}>Historial</button></div>
       <nav className="document-steps" aria-label="Pasos del Informe de ejecución">{steps.map((label, i) => <button type="button" className="secondary" key={label} disabled={busy || autosaving} aria-current={step === i ? 'step' : undefined} onClick={() => choose(i)}><span>{i + 1}</span>{label}</button>)}</nav>
       <section className="card"><div className="section-heading"><span className="section-icon"><Icon name="document" /></span><div><span className="section-kicker">PASO {step + 1} DE {steps.length}</span><h2>{steps[step]}</h2></div></div>
         <DocumentReadOnlyNotice document={state.document} />

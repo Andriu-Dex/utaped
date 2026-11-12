@@ -6,7 +6,7 @@ from pathlib import Path
 import uuid
 from operations import ROOT, METADATA_SQL, environment, one, sql, run, verify_backup
 
-PROJECT = "utaped-sample"
+PROJECT = "utaped"
 ROLES = ("admin", "principal", "coordinator", "reviewer", "approver", "member", "outsider")
 
 
@@ -14,10 +14,11 @@ def seed_id(key):
     return str(uuid.UUID(bytes=hashlib.md5(("utaped-development:" + key).encode()).digest(), version=3))
 
 
-def clean(backup_directory, apply=False):
-    db, backend, frontend = one(PROJECT, "db"), one(PROJECT, "backend"), one(PROJECT, "frontend")
-    if environment(db).get("POSTGRES_DB") != "utaped_dev" or sql(db, "SELECT current_database()") != "utaped_dev":
-        raise RuntimeError("Cleanup requires the manual development database utaped_dev.")
+def clean(backup_directory, apply=False, project="utaped"):
+    db, backend, frontend = one(project, "db"), one(project, "backend"), one(project, "frontend")
+    current_db = sql(db, "SELECT current_database()")
+    if current_db not in ("utaped", "utaped_dev"):
+        raise RuntimeError("Cleanup requires development database utaped or utaped_dev.")
     if environment(backend).get("SPRING_PROFILES_ACTIVE") != "development-seed":
         raise RuntimeError("Cleanup requires the development-seed profile.")
     # Validate the curated reference before changing any records.
@@ -28,14 +29,14 @@ def clean(backup_directory, apply=False):
     before = json.loads(sql(db, METADATA_SQL))
     if sql(db, "SELECT count(*) FROM app_user WHERE id IN (" + ids + ")") != "7":
         raise RuntimeError("All seven development accounts must already exist; no credentials will be regenerated.")
-    result = {"project": PROJECT, "usersBefore": before["users"], "documentsBefore": before["documents"],
+    result = {"project": project, "usersBefore": before["users"], "documentsBefore": before["documents"],
               "accountsRetained": 7, "apply": apply}
     if not apply:
         print(json.dumps(result))
         return
     manifest = verify_backup(backup_directory.resolve())
-    if manifest["sourceProject"] != PROJECT:
-        raise RuntimeError("Backup is not from the manual development project.")
+    if manifest["sourceProject"] != project:
+        raise RuntimeError(f"Backup is from project '{manifest['sourceProject']}', expected '{project}'.")
     running = [item["Id"] for item in (frontend, backend) if item["State"]["Running"]]
     if running:
         run(["docker", "stop", *running])
@@ -48,7 +49,7 @@ def clean(backup_directory, apply=False):
 DO $$
 DECLARE targets text;
 BEGIN
-    IF current_database() <> 'utaped_dev' THEN RAISE EXCEPTION 'Wrong cleanup database'; END IF;
+    IF current_database() NOT IN ('utaped', 'utaped_dev') THEN RAISE EXCEPTION 'Wrong cleanup database'; END IF;
     SELECT string_agg(format('public.%I',tablename),',') INTO targets FROM pg_tables
       WHERE schemaname='public' AND tablename NOT IN ('app_user','flyway_schema_history');
     EXECUTE 'TRUNCATE TABLE ' || targets || ' CASCADE';

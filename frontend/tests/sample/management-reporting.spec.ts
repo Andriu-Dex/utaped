@@ -246,6 +246,10 @@ test('recent documents and pending work isolate errors and support local recover
   // PendingInbox remains functional
   const inbox = page.getByRole('region', { name: 'Mis pendientes', exact: true })
   await expect(inbox).toBeVisible()
+  // With no pending work the inbox collapses into the «Al día» banner (2026-11-05); its filters open on demand.
+  const expand = inbox.getByRole('button', { name: 'Ver filtros', exact: true })
+  await expect(inbox.getByRole('button', { name: /^(Todos|Ver filtros$)/ }).first()).toBeVisible()
+  if (await expand.isVisible()) await expand.click()
   await expect(inbox.getByRole('button', { name: /^Todos/ })).toBeVisible()
 
   // Recover recent

@@ -19,11 +19,21 @@ import ec.edu.uta.utaped.workflow.WorkflowModels.*;
 @Profile("development-seed")
 @org.springframework.core.annotation.Order(10)
 public class DevelopmentSeed implements ApplicationRunner {
-    private final JdbcTemplate jdbc; private final PasswordEncoder encoder; private final String password;
-    public DevelopmentSeed(JdbcTemplate jdbc,PasswordEncoder encoder,@Value("${UTAPED_SEED_PASSWORD:}") String password) { this.jdbc=jdbc;this.encoder=encoder;this.password=password; }
+    private final JdbcTemplate jdbc; private final PasswordEncoder encoder; private final String password; private final boolean cookieSecure;
+    @org.springframework.beans.factory.annotation.Autowired
+    public DevelopmentSeed(JdbcTemplate jdbc,PasswordEncoder encoder,@Value("${UTAPED_SEED_PASSWORD:}") String password,
+                           @Value("${server.servlet.session.cookie.secure:false}") boolean cookieSecure) {
+        this.jdbc=jdbc;this.encoder=encoder;this.password=password;this.cookieSecure=cookieSecure;
+    }
+    public DevelopmentSeed(JdbcTemplate jdbc,PasswordEncoder encoder,String password) {
+        this(jdbc,encoder,password,false);
+    }
     public static UUID id(String key) { return UUID.nameUUIDFromBytes(("utaped-development:"+key).getBytes(StandardCharsets.UTF_8)); }
     @Override @Transactional public void run(ApplicationArguments args) {
-        if(!"utaped_dev".equals(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Development seeds require a separate database named utaped_dev");
+        if(cookieSecure) throw new IllegalStateException("Development seeds cannot run when session cookies are marked secure (COOKIE_SECURE=true)");
+        if(!Set.of("utaped","utaped_dev").contains(jdbc.queryForObject("SELECT current_database()",String.class))) throw new IllegalStateException("Development seeds require utaped or utaped_dev");
+        if(Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM app_user WHERE system_role='ADMIN' AND email NOT LIKE '%@utaped.example.invalid')",Boolean.class)))
+            throw new IllegalStateException("Development seeds cannot run on a database containing non-example administrator accounts");
         PasswordService.validate(password);
         for (var person : people()) {
             String role=person.role();

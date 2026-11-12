@@ -16,7 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuditQueryService {
-    public record Event(UUID id,UUID actorId,String actorName,boolean historicalActorName,String action,UUID targetId,UUID subjectUserId,OffsetDateTime occurredAt) {}
+    public record Event(UUID id,UUID actorId,String actorName,boolean historicalActorName,String action,UUID targetId,UUID subjectUserId,OffsetDateTime occurredAt,String targetLabel,String subjectUserName) {}
     public record Page(List<Event> items,long total,int page,int size) {}
     private final JdbcTemplate jdbc;private final Accounts accounts;private final WorkPlanService plans;private final AuditService audit;private final int exportMaxRows;
     public AuditQueryService(JdbcTemplate jdbc,Accounts accounts,WorkPlanService plans,AuditService audit,@Value("${app.audit.export-max-rows:10000}") int exportMaxRows) {
@@ -25,15 +25,17 @@ public class AuditQueryService {
     }
     private void admin(String email) { if(!accounts.current(email).systemRole().equals("ADMIN")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Acceso administrativo requerido."); }
     public List<String> actions(String email) { admin(email);return jdbc.queryForList("SELECT DISTINCT action FROM audit_event ORDER BY action",String.class); }
-    public Page administration(String email,String action,UUID actorId,UUID targetId,OffsetDateTime from,OffsetDateTime to,int page,int size) {
-        admin(email);return query(action,actorId,targetId,from,to,page,size,false);
+    public Page administration(String email,String action,UUID actorId,UUID targetId,String actor,String target,OffsetDateTime from,OffsetDateTime to,int page,int size) {
+        admin(email);return query(action,actorId,targetId,actor,target,from,to,page,size,false);
     }
     @Transactional(isolation=Isolation.REPEATABLE_READ)
-    public byte[] export(String email,String action,UUID actorId,UUID targetId,OffsetDateTime from,OffsetDateTime to) {
-        admin(email);var result=query(action,actorId,targetId,from,to,0,exportMaxRows+1,false);
+    public byte[] export(String email,String action,UUID actorId,UUID targetId,OffsetDateTime from,OffsetDateTime to) { return export(email,action,actorId,targetId,"","",from,to); }
+    @Transactional(isolation=Isolation.REPEATABLE_READ)
+    public byte[] export(String email,String action,UUID actorId,UUID targetId,String actor,String target,OffsetDateTime from,OffsetDateTime to) {
+        admin(email);var result=query(action,actorId,targetId,actor,target,from,to,0,exportMaxRows+1,false);
         if(result.total()>exportMaxRows) throw new ResponseStatusException(HttpStatus.CONFLICT,"La exportación supera "+exportMaxRows+" eventos. Reduzca el intervalo o aplique más filtros.");
-        var csv=new StringBuilder("\uFEFF");row(csv,"Evento","Fecha UTC","Acción","Actor","ID actor","Nombre histórico","Objeto","Usuario afectado");
-        for(var event:result.items()) row(csv,event.id(),event.occurredAt().withOffsetSameInstant(ZoneOffset.UTC),event.action(),event.actorName(),event.actorId(),event.historicalActorName(),event.targetId(),event.subjectUserId());
+        var csv=new StringBuilder("\uFEFF");row(csv,"Evento","Fecha UTC","Acción","Actor","ID actor","Nombre histórico","Objeto","ID objeto","Usuario afectado","ID usuario afectado");
+        for(var event:result.items()) row(csv,event.id(),event.occurredAt().withOffsetSameInstant(ZoneOffset.UTC),event.action(),event.actorName(),event.actorId(),event.historicalActorName(),event.targetLabel(),event.targetId(),event.subjectUserName(),event.subjectUserId());
         audit.record(accounts.current(email).id(),"AUDIT_EXPORTED",null);
         return csv.toString().getBytes(StandardCharsets.UTF_8);
     }
@@ -47,15 +49,24 @@ public class AuditQueryService {
     }
     @Transactional(readOnly=true)
     public Page history(String email,UUID targetDocId,int page,int size) {
-        plans.get(targetDocId,email);return query("",null,targetDocId,null,null,page,size,true);
+        plans.get(targetDocId,email);return query("",null,targetDocId,"","",null,null,page,size,true);
     }
-    private Page query(String action,UUID actorId,UUID targetId,OffsetDateTime from,OffsetDateTime to,int page,int size,boolean documentOnly) {
+    // Events only store identifiers; show the current name of whatever the target is instead of the raw UUID.
+    private static final String FROM="""
+         FROM audit_event e LEFT JOIN app_user u ON u.id=e.actor_id LEFT JOIN app_user su ON su.id=e.subject_user_id
+         LEFT JOIN LATERAL (SELECT COALESCE((SELECT title FROM work_plan WHERE id=e.target_id),(SELECT display_name FROM app_user WHERE id=e.target_id),
+           (SELECT name FROM institutional_group WHERE id=e.target_id),(SELECT name FROM academic_period WHERE id=e.target_id),(SELECT name FROM academic_career WHERE id=e.target_id),
+           (SELECT name FROM institutional_position WHERE id=e.target_id),(SELECT g.name FROM organizational_scope s JOIN institutional_group g ON g.id=s.group_id WHERE s.id=e.target_id)) AS label) t ON true
+        """;
+    private Page query(String action,UUID actorId,UUID targetId,String actor,String target,OffsetDateTime from,OffsetDateTime to,int page,int size,boolean documentOnly) {
         if(from!=null && to!=null && from.isAfter(to)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El inicio debe preceder al fin del intervalo.");
-        String where=" WHERE (?='' OR e.action=?) AND (?::uuid IS NULL OR e.actor_id=?::uuid) AND (?::uuid IS NULL OR e.target_id=?::uuid) AND (?::timestamptz IS NULL OR e.occurred_at>=?::timestamptz) AND (?::timestamptz IS NULL OR e.occurred_at<=?::timestamptz)";
+        actor=actor==null?"":actor.strip();target=target==null?"":target.strip();
+        String where=" WHERE (?='' OR e.action=?) AND (?::uuid IS NULL OR e.actor_id=?::uuid) AND (?::uuid IS NULL OR e.target_id=?::uuid) AND (?::timestamptz IS NULL OR e.occurred_at>=?::timestamptz) AND (?::timestamptz IS NULL OR e.occurred_at<=?::timestamptz)"
+            +" AND (?='' OR position(lower(?) in lower(COALESCE(e.actor_display_name,u.display_name,'')))>0) AND (?='' OR position(lower(?) in lower(COALESCE(t.label,'')))>0)";
         if(documentOnly) where+=" AND e.action IN ('WORK_PLAN_CREATED','WORK_PLAN_COPIED','REVIEW_TASK_REASSIGNED','DOCUMENT_AUTHORS_UPDATED','AUTHOR_SIGNATURE_REQUESTED','WORK_PLAN_DRAFT_SAVED','WORK_PLAN_MATRIX_SAVED','DOCUMENT_ATTACHMENT_SETTINGS_SAVED','DOCUMENT_ATTACHMENT_ADDED','DOCUMENT_ATTACHMENT_UPDATED','DOCUMENT_ATTACHMENT_REMOVED','DOCUMENT_ATTACHMENTS_REORDERED','T1_PREVIEW_GENERATED','T2_PREVIEW_GENERATED','T1_ARTIFACT_SIGNED','T2_ARTIFACT_SIGNED','REPORT_CREATED','REPORT_DRAFT_SAVED','EXECUTION_REPORT_CREATED','EXECUTION_REPORT_DRAFT_SAVED','T3_PREVIEW_GENERATED','T3_ARTIFACT_SIGNED','DOCUMENT_SECTIONS_SAVED','QUIPUX_PROOF_REGISTERED','REVIEW_TASK_ASSIGNED','REVIEW_OBSERVATION_ADDED','REVIEW_OBSERVATION_UPDATED','REVIEW_OBSERVATION_DELETED','DOCUMENT_RETURNED','DOCUMENT_APPROVED','REVIEW_TASK_COMPLETED','EXECUTION_EVIDENCE_UPLOADED','ACTIVITY_EXTENSION_GRANTED','DOCUMENT_ARCHIVED','DOCUMENT_FORMAL_VERSION_CREATED')";
-        var args=new ArrayList<Object>(Arrays.asList(action,action,actorId,actorId,targetId,targetId,from,from,to,to));
-        long total=jdbc.queryForObject("SELECT count(*) FROM audit_event e"+where,Long.class,args.toArray());args.add(size);args.add((long)page*size);
-        var items=jdbc.query("SELECT e.*,COALESCE(e.actor_display_name,u.display_name) AS actor_name FROM audit_event e LEFT JOIN app_user u ON u.id=e.actor_id"+where+" ORDER BY e.occurred_at DESC,e.id DESC LIMIT ? OFFSET ?",(rs,n)->new Event(rs.getObject("id",UUID.class),rs.getObject("actor_id",UUID.class),rs.getString("actor_name"),rs.getString("actor_display_name")!=null,rs.getString("action"),rs.getObject("target_id",UUID.class),rs.getObject("subject_user_id",UUID.class),rs.getObject("occurred_at",OffsetDateTime.class)),args.toArray());
+        var args=new ArrayList<Object>(Arrays.asList(action,action,actorId,actorId,targetId,targetId,from,from,to,to,actor,actor,target,target));
+        long total=jdbc.queryForObject("SELECT count(*)"+FROM+where,Long.class,args.toArray());args.add(size);args.add((long)page*size);
+        var items=jdbc.query("SELECT e.*,COALESCE(e.actor_display_name,u.display_name) AS actor_name,t.label AS target_label,su.display_name AS subject_user_name"+FROM+where+" ORDER BY e.occurred_at DESC,e.id DESC LIMIT ? OFFSET ?",(rs,n)->new Event(rs.getObject("id",UUID.class),rs.getObject("actor_id",UUID.class),rs.getString("actor_name"),rs.getString("actor_display_name")!=null,rs.getString("action"),rs.getObject("target_id",UUID.class),rs.getObject("subject_user_id",UUID.class),rs.getObject("occurred_at",OffsetDateTime.class),rs.getString("target_label"),rs.getString("subject_user_name")),args.toArray());
         return new Page(items,total,page,size);
     }
 }
