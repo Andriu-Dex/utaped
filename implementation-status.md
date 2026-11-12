@@ -1,5 +1,9 @@
 # Estado de implementación productiva
 
+## 12/11/2026 — Selector de archivos institucional
+
+Los nueve campos de archivo usan el componente compartido `FileInput`, con botón y nombre en español y modo oscuro, en lugar del control nativo del navegador. Las pruebas de aceptación que suben archivos aprueban; seis pruebas que ya fallaban en `develop` siguen pendientes. [Reporte](docs/reports/2026-11-12-66-styled-file-input.md).
+
 ## 12/11/2026 — Auditoría legible y pruebas reparadas
 
 La Auditoría administrativa muestra nombres de personas y objetos en lugar de identificadores internos, filtra por nombre y traduce todas las acciones registradas; el CSV conserva los identificadores en columnas propias. Se repararon tres pruebas de la cronología documental que no cumplían el esquema real y dos escenarios E2E desactualizados por el ocultamiento de «Crear documento» sin ámbitos. [Reporte](docs/reports/2026-11-12-65-readable-audit-and-test-repairs.md).

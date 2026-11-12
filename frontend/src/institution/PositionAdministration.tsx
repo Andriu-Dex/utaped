@@ -1,3 +1,4 @@
+import { FileInput } from '../shared/FileInput'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ActionForm } from '../shared/ActionForm'
 import { api, type Period } from '../shared/api'
@@ -287,7 +288,7 @@ export function PositionAdministration({ periods, onDirtyChange }: { periods: Pe
                   <fieldset disabled={busy}>
                     <label>
                       Archivo CSV
-                      <input type="file" name="file" accept=".csv,text/csv" required />
+                      <FileInput name="file" accept=".csv,text/csv" required />
                     </label>
                     <p className="field-help">
                       Columnas: <code>cargo,carrera,usuario</code>. El cargo y la carrera usan su código; deje la carrera vacía para cargos de facultad. El usuario es el identificador o el correo. Si una fila falla, no se aplica ninguna.

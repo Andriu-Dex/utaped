@@ -1,3 +1,4 @@
+import { FileInput } from '../shared/FileInput'
 import { confirmAction } from '../shared/confirm-action'
 import { ActionForm } from '../shared/ActionForm'
 import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react'
@@ -830,7 +831,7 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
                 >
                   <form onChangeCapture={() => setSigningDirty(true)} onResetCapture={() => setSigningDirty(false)} onSubmit={sign}>
                     <fieldset disabled={busy || isFormDirty}>
-                      <label>Certificado personal (.p12/.pfx)<input name="certificate" type="file" accept=".p12,.pfx" required /></label>
+                      <label>Certificado personal (.p12/.pfx)<FileInput name="certificate" accept=".p12,.pfx" required /></label>
                       <label>Contraseña del certificado<input name="password" type="password" autoComplete="off" required maxLength={128} /></label>
                       <button>
                         <Icon name="lock" size={16} />

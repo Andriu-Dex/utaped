@@ -1,5 +1,4 @@
 import { withConfirmation } from '../confirmation'
-import { openAction } from '../open-action'
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { solveCaptcha } from './login'

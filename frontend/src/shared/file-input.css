@@ -1,0 +1,56 @@
+.file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.file-input:hover { border-color: var(--blue-700); }
+/* Visually hidden but focusable and still part of the form. */
+.file-input-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-input:focus-within { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(26, 86, 145, 0.18); }
+.file-input-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--blue-700);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.file-input-button::after { content: 'Seleccionar archivo'; }
+.file-input-name::before { content: attr(data-label); }
+.file-input-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.file-input-name.is-empty { color: var(--muted); }
+.file-input.is-disabled { opacity: 0.6; cursor: not-allowed; }
+.file-input.is-disabled .file-input-native { cursor: not-allowed; }
+
+:root[data-theme='dark'] .file-input { background: #14283b; border-color: #244360; }
+:root[data-theme='dark'] .file-input:hover,
+:root[data-theme='dark'] .file-input:focus-within { border-color: #bce0fc; }
+:root[data-theme='dark'] .file-input-button { background: #1f5a8c; color: #e2e8f0; }
+:root[data-theme='dark'] .file-input-name { color: #e2e8f0; }
+:root[data-theme='dark'] .file-input-name.is-empty { color: #94a3b8; }
