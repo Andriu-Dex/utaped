@@ -39,6 +39,14 @@ class AuditExportIntegrationTests {
         assertEquals("text/csv;charset=UTF-8",exported.headers().firstValue("Content-Type").orElse(""));assertTrue(exported.headers().firstValue("Content-Disposition").orElse("").contains("utaped-auditoria.csv"));assertTrue(exported.headers().firstValue("Cache-Control").orElse("").contains("no-store"));
         assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='AUDIT_EXPORTED' AND actor_id=?",Integer.class,admin));assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM personal_notification",Integer.class));
     }
+    @Test void eventsShowReadableTargetsAndFilterByPersonAndObjectName() throws Exception {
+        var b=new Browser();b.login("admin@example.invalid");events.record(user,"LABEL_TEST",group);events.record(admin,"LABEL_TEST",UUID.randomUUID());
+        var page=b.request("GET","/api/admin/audit-events?action=LABEL_TEST&target=grou",null,false);assertEquals(200,page.statusCode());
+        assertEquals(1,(int)JsonPath.read(page.body(),"$.total"));assertEquals("Group",JsonPath.read(page.body(),"$.items[0].targetLabel"));
+        assertEquals(1,(int)JsonPath.read(b.request("GET","/api/admin/audit-events?action=LABEL_TEST&actor=USER",null,false).body(),"$.total"));
+        assertEquals(0,(int)JsonPath.read(b.request("GET","/api/admin/audit-events?action=LABEL_TEST&actor=nadie",null,false).body(),"$.total"));
+        assertTrue(b.request("GET","/api/admin/audit-events/export?action=LABEL_TEST&target=Group",null,false).body().contains("\"Group\""));
+    }
     @Test void formulaLikeNamesAreMarkedAsTextAndQuotesStayInsideCells() throws Exception {
         var b=new Browser();b.login("admin@example.invalid");String[] names={"=1+2"," \t@SUM(1)","＠SUM(1)","=SUM(1,2)\";ignored","\uFEFF=1+2","Normal, \"Nombre\""};
         for(String name:names) { jdbc.update("UPDATE app_user SET display_name=? WHERE id=?",name,user);events.record(user,"FORMULA_TEST",UUID.randomUUID()); }

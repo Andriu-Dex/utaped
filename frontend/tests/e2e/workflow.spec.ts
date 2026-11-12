@@ -132,7 +132,7 @@ test('versioned workflows preserve history and require explicit recipients', asy
   const audit = page.getByRole('region', { name: 'Auditoría administrativa', exact: true })
   await expect(audit.getByRole('cell', { name: 'Perfil de usuario actualizado', exact: true }).first()).toBeVisible()
   // Unsaved filter edits must not affect the export of the applied query.
-  await page.getByLabel('ID del objeto').fill('00000000-0000-0000-0000-000000000000')
+  await page.getByLabel('Documento o registro afectado').fill('Registro inexistente de prueba')
   const pendingDownload = page.waitForEvent('download')
   await audit.getByRole('button', { name: 'Exportar CSV filtrado', exact: true }).click()
   const csvDownload = await pendingDownload
@@ -142,7 +142,7 @@ test('versioned workflows preserve history and require explicit recipients', asy
   expect(csv).toContain('USER_PROFILE_UPDATED')
   expect(csv).not.toContain('GROUP_PROFILE_UPDATED')
   expect(csv).not.toContain('password')
-  await page.getByLabel('ID del objeto').fill('00000000-0000-0000-0000-000000000000')
+  await page.getByLabel('Documento o registro afectado').fill('Registro inexistente de prueba')
   await page.getByRole('button', { name: 'Filtrar auditoría', exact: true }).click()
   await expect(audit.getByText('No hay eventos que coincidan.', { exact: true })).toBeVisible()
   await expect(audit.getByRole('button', { name: 'Exportar CSV filtrado', exact: true })).toBeDisabled()
