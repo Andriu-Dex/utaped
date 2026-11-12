@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { api, login } from './sample-fixtures'
 
-test('live A4 preview follows unsaved content without saving or creating an artifact, with tablet modes and retries', async ({ page }) => {
+test('live A4 preview follows autosaved content without creating an artifact, with tablet modes and retries', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1100 })
   await login(page, 'dev.principal')
   const options = await api(page, '/work-plans/options')
@@ -17,9 +17,10 @@ test('live A4 preview follows unsaved content without saving or creating an arti
   await objective.fill('Objetivo escrito mientras se revisa el documento.')
   const preview = page.getByRole('complementary', { name: 'Previsualización simultánea del Plan' })
   await expect(preview.getByRole('img', { name: /del borrador A4/ })).toBeVisible({ timeout: 90000 })
-  await expect(preview.getByRole('status').filter({ hasText: 'Vista actualizada · cambios sin guardar' })).toBeVisible()
-  expect((await api(page, '/work-plans/' + plan.id)).justification).not.toContain('Contenido local')
-  expect((await api(page, '/work-plans/' + plan.id)).justification).toContain('Plan de Trabajo')
+  // Since autosave (2026-10-31) the editor stores the text itself; the preview then reflects the saved content.
+  await expect(page.getByText('Contenido sincronizado').first()).toBeVisible({ timeout: 30000 })
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id)).justification, { timeout: 30000 }).toContain('Contenido local')
+  await expect(preview.getByRole('status').filter({ hasText: /Vista (del contenido guardado|actualizada)/ }).first()).toBeVisible({ timeout: 90000 })
   expect(await api(page, '/work-plans/' + plan.id + '/artifacts')).toHaveLength(0)
   await expect(preview.getByRole('button', { name: 'Página anterior' })).toBeEnabled()
   await preview.getByRole('spinbutton', { name: 'Ir a página', exact: true }).fill('0')
@@ -56,10 +57,9 @@ test('live A4 preview follows unsaved content without saving or creating an arti
   await expect(page.getByText('Vista temporalmente ocupada.', { exact: true })).toBeVisible()
   await page.unroute('**/artifacts/draft-preview')
   await preview.getByRole('button', { name: 'Actualizar vista', exact: true }).click()
-  await expect(preview.getByRole('status').filter({ hasText: 'Vista actualizada · cambios sin guardar' })).toBeVisible({ timeout: 90000 })
+  await expect(preview.getByRole('status').filter({ hasText: /Vista (del contenido guardado|actualizada)/ }).first()).toBeVisible({ timeout: 90000 })
   await page.getByRole('button', { name: 'Editar contenido', exact: true }).click()
   await expect(objective).toHaveValue('Objetivo escrito mientras se revisa el documento.')
-  await page.getByRole('button', { name: 'Guardar borrador', exact: true }).click()
-  await expect(page.getByText('Borrador guardado en el servidor.', { exact: true })).toBeVisible()
-  expect((await api(page, '/work-plans/' + plan.id)).objective).toBe('Objetivo escrito mientras se revisa el documento.')
+  await expect.poll(async () => (await api(page, '/work-plans/' + plan.id)).objective, { timeout: 30000 }).toBe('Objetivo escrito mientras se revisa el documento.')
+  expect(await api(page, '/work-plans/' + plan.id + '/artifacts')).toHaveLength(0)
 })

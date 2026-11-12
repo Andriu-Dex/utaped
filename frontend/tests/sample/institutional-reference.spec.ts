@@ -21,6 +21,8 @@ test('template-based example scopes use July–December 2026 inside the document
   await page.getByRole('combobox', { name: 'Comisión o unidad asignada' }).click(); await page.locator('#scope-option-' + scope.id).click()
   await expect(page.getByLabel('Título del nuevo Plan')).toHaveValue('Plan de Trabajo: Unidad de Titulación')
   await expect(page.getByText('Período:')).toBeVisible()
+  // Escape must reach the dialog, not a still-open scope list.
+  await expect(page.getByRole('listbox')).toHaveCount(0)
    await withConfirmation(page, false, async () => { await page.keyboard.press('Escape') });
   await expect(page.getByRole('dialog', { name: 'Crear documento', exact: true })).toBeVisible()
   await expect(page.getByRole('combobox', { name: 'Comisión o unidad asignada' })).toHaveValue(scope.groupName)
