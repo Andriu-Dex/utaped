@@ -44,7 +44,7 @@ export type Stage = {
 type Region = { x: number; y: number; width: number; height: number }
 type Observation = { id: string; task_id?: string; actor_id?: string; actor_name: string; message: string; page_index: number | null; x: number | null; y: number | null; width: number | null; height: number | null; created_at?: string; updated_at?: string | null; can_edit?: boolean; can_delete?: boolean }
 export type ReviewState = { review: { id: string; status: string; round_number: number; title?: string }; tasks: Stage[]; observations: Observation[]; pageCount: number; pdfHash: string; canAct: boolean }
-const labels: Record<string, string> = { ACTIVE: 'Tu turno', PENDING: 'Pendiente', COMPLETED: 'Completada', RETURNED: 'Devuelta', CANCELLED: 'Cancelada', IN_REVIEW: 'En revisión', APPROVED: 'Aprobado' }
+const labels: Record<string, string> = { ACTIVE: 'Tu turno', PENDING: 'Pendiente', COMPLETED: 'Completada', RETURNED: 'Devuelta', CANCELLED: 'Cancelada', IN_REVIEW: 'En revisión', APPROVED: 'Aprobado', VALIDATED: 'Validado internamente' }
 
 function actionNoun(action?: string) { return action === 'APPROVE' ? 'aprobación' : action === 'VALIDATE' ? 'validación' : 'revisión' }
 
@@ -437,15 +437,15 @@ export function ReviewInspector({ id, accountId, title, onBack, onDirtyChange, b
             <span>PDF conservado</span>
           </span>
         </div>
-        {state.review.status === 'APPROVED' && (
+        {['APPROVED', 'VALIDATED'].includes(String(state.review.status)) && (
           <button
             type="button"
             className="secondary review-download-btn"
             disabled={loading}
-            onClick={() => download('/reviews/' + id + '/content', 'documento-aprobado.pdf').catch(e => setError(e.message))}
+            onClick={() => download('/reviews/' + id + '/content', state.review.status === 'VALIDATED' ? 'documento-validado.pdf' : 'documento-aprobado.pdf').catch(e => setError(e.message))}
           >
             <Icon name="download" size={15} />
-            <span>Descargar aprobado</span>
+            <span>{state.review.status === 'VALIDATED' ? 'Descargar validado' : 'Descargar aprobado'}</span>
           </button>
         )}
       </div>

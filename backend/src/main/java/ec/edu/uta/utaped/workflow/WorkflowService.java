@@ -23,6 +23,11 @@ public class WorkflowService {
     private List<String> blockers(UUID groupId,Definition definition) {
         var result=new ArrayList<String>();var ids=new HashSet<UUID>();
         if(definition.stages().isEmpty()) result.add("Agregue al menos una etapa.");
+        if("VALIDATED".equals(definition.completionStatus())) {
+            if(definition.stages().isEmpty() || !"VALIDATE".equals(definition.stages().getLast().action())) result.add("El trámite externo debe terminar en una etapa de validación interna.");
+            if(definition.stages().stream().anyMatch(s->"APPROVE".equals(s.action()))) result.add("Un flujo de validación para trámite externo no incluye aprobación interna.");
+            if(Boolean.TRUE.equals(definition.requiresQuipux())) result.add("La constancia posterior a aprobación no corresponde a un flujo que termina en validación interna.");
+        }
         for(var stage:definition.stages()) {
             if(!stage.recipientKind().equals("COLLEGIATE") && !stage.requiresSignature()) result.add(stage.label()+": los participantes personales deben firmar.");
             if(!ids.add(stage.id())) result.add("No repita identificadores de etapa.");

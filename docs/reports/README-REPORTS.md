@@ -4,6 +4,7 @@ Crear Markdown nuevo por entrega: YYYY-MM-DD-NN-description.md. No restaurar rep
 
 Contenido: objetivo, cambios, fuentes, validaciones ejecutadas, pendientes y alcance.
 
+- [2026-11-23 — Validación interna y documentos de eventos](2026-11-23-67-internal-validation-and-event-documents.md)
 - [2026-11-12 — Selector de archivos institucional](2026-11-12-66-styled-file-input.md).
 - [2026-11-12 — Auditoría legible y reparación de pruebas](2026-11-12-65-readable-audit-and-test-repairs.md).
 - [2026-11-05 — Línea de Tiempo Documental y Trazabilidad Cronológica de Hitos](2026-11-05-64-document-timeline-milestones.md).

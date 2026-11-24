@@ -24,6 +24,7 @@ import { Icon } from '../shared/Icon'
 import { CareerCopyModal } from './CareerCopyModal'
 import { PlanStepNavigationContext, planSteps, type PlanStep, type PlanStepGuard } from './PlanStepNavigation'
 import './document-workspace.css'
+import { EventDocumentRouter } from './EventWorkspace'
 
 type DraftFields = Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
 function fields(plan: WorkPlan): DraftFields {
@@ -41,7 +42,10 @@ export const INSTITUTIONAL_JUSTIFICATION =
   'formativa y vinculación con la sociedad correspondientes al presente período académico, garantizando el rigor ' +
   'formativo y la calidad institucional.'
 
-export function WorkPlanEditor({
+export function WorkPlanEditor(props: Parameters<typeof GeneralWorkPlanEditor>[0]) {
+  return <EventDocumentRouter initial={props.initial} onBack={props.onBack} onDirtyChange={props.onDirtyChange} onDocumentOpen={props.onDocumentOpen} initialStep={props.initialSection} onStepChange={value => props.onSectionChange?.(value as WorkPlanSection)}><GeneralWorkPlanEditor {...props} /></EventDocumentRouter>
+}
+function GeneralWorkPlanEditor({
   initial,
   defaultJustification,
   initialSection,
@@ -229,7 +233,7 @@ export function WorkPlanEditor({
         </button>
         <h1>{plan.title}</h1>
       </div>
-      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{autosaving ? 'Guardando…' : contentDirty && autosaveFailed === JSON.stringify(draft) ? 'Autoguardado pendiente' : dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
+      <div className="document-status-line"><span className="status-badge">{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'VALIDATED' ? 'Validado internamente' : plan.documentState === 'APPROVED' ? 'Aprobado' : 'En revisión'}</span><span>Versión formal {plan.formalVersion} · Ronda {plan.reviewRound}</span><span className={'document-dirty-indicator ' + (dirty ? 'is-dirty' : 'is-clean')}>{autosaving ? 'Guardando…' : contentDirty && autosaveFailed === JSON.stringify(draft) ? 'Autoguardado pendiente' : dirty ? 'Cambios sin guardar' : 'Sin cambios pendientes'}</span></div>
       <div className="plan-document-tools" role="group" aria-label="Acciones del documento">
         <DocumentFollowUp approved={plan.documentState === 'APPROVED'} disabled={dirty || busy || stepBusy || navigating} pendingChanges={dirty} onOpen={openFollowUp} />
         {plan.documentState === 'APPROVED' && plan.canManage && !plan.archivedAt && <button type="button" disabled={dirty || busy || stepBusy || navigating} onClick={() => void createReport()}><Icon name="document" size={16} />Crear o abrir Informe T2</button>}

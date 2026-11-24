@@ -15,7 +15,7 @@ export interface TimelineItem {
   status: string | null
   roundNumber: number | null
   formalVersion: string | null
-  occurredAt: string
+  occurredAt: string | null
   reviewId: string | null
   linkedDocumentId: string | null
   linkedDocumentType: string | null
@@ -187,7 +187,7 @@ export function DocumentTimeline({
                 (documentState === 'APPROVED' ? 'active' : documentState === 'IN_REVIEW' ? 'pending' : '')
               }
             >
-              {documentState === 'APPROVED'
+              {documentState === 'VALIDATED' ? 'Validado internamente' : documentState === 'APPROVED'
                 ? 'Aprobado'
                 : documentState === 'IN_REVIEW'
                   ? 'En revisión'
@@ -362,7 +362,7 @@ export function DocumentTimeline({
                                       : 'pending')
                               }
                             >
-                              {item.status === 'APPROVED'
+                              {item.status === 'VALIDATED' ? 'Validado internamente' : item.status === 'APPROVED'
                                 ? 'Aprobado'
                                 : item.status === 'RETURNED'
                                   ? 'Devuelto'

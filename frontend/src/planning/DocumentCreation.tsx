@@ -11,8 +11,9 @@ type ReportOptions = { items: ReportOption[]; total: number; page: number; size:
 type ExecutionOption = { id: string; title: string; groupName: string; periodName: string; formalVersion: string; reports: number; draftId: string | null }
 const roman = (n: number) => [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']].reduce((text, [value, symbol]) => { let result = text; while (n >= (value as number)) { result += symbol; n -= value as number } return result }, '')
 export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDirtyChange }: { options: PlanOptions; busy: boolean; onBusyChange: (busy: boolean) => void; onCreated: (document: WorkPlan) => void; onDirtyChange: (dirty: boolean) => void }) {
-  const [kind, setKind] = useState<'T1' | 'T2' | 'T3'>(() => options.scopes.some(scope => scope.canCreate) ? 'T1' : 'T2'), [executionReload, setExecutionReload] = useState(0)
+  const [kind, setKind] = useState<'T1' | 'T2' | 'T3'>(() => options.scopes.some(scope => scope.canCreate || scope.canCreateEvent) ? 'T1' : 'T2'), [executionReload, setExecutionReload] = useState(0)
   const [executionOptions, setExecutionOptions] = useState<ExecutionOption[] | null>(null), [executionBaseId, setExecutionBaseId] = useState('')
+  const [eventVariant, setEventVariant] = useState(false)
   const [scopeId, setScopeId] = useState(''); const [titleOverride, setTitleOverride] = useState<string | null>(null)
   const [scopeSearch, setScopeSearch] = useState('')
   const [comboboxOpen, setComboboxOpen] = useState(false)
@@ -21,9 +22,9 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
   const [requestKey, setRequestKey] = useState(() => crypto.randomUUID())
   const [reportId, setReportId] = useState(''); const [candidates, setCandidates] = useState<ReportOptions | null>(null)
   const [search, setSearch] = useState(''); const [filter, setFilter] = useState({ query: '', page: 0 })
-  const [loading, setLoading] = useState(!options.scopes.some(scope => scope.canCreate)); const [error, setError] = useState('')
-  const scope = options.scopes.find(s => s.id === scopeId && s.canCreate)
-  const availableScopes = options.scopes.filter(s => s.canCreate)
+  const [loading, setLoading] = useState(!options.scopes.some(scope => scope.canCreate || scope.canCreateEvent)); const [error, setError] = useState('')
+  const scope = options.scopes.find(s => s.id === scopeId && (eventVariant ? s.canCreateEvent : s.canCreate))
+  const availableScopes = options.scopes.filter(s => eventVariant ? s.canCreateEvent : s.canCreate)
   const filteredScopes = availableScopes.filter(s => {
     if (!scopeSearch.trim()) return true
     const q = scopeSearch.toLowerCase()
@@ -33,7 +34,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
   })
   const report = candidates?.items.find(p => p.id === reportId)
   const executionBase = executionOptions?.find(p => p.id === executionBaseId)
-  const dirty = kind === 'T1' ? !!scopeId || titleOverride !== null : kind === 'T2' ? !!reportId : !!executionBaseId
+  const dirty = kind === 'T1' ? !!scopeId || titleOverride !== null || eventVariant : kind === 'T2' ? !!reportId : !!executionBaseId
   useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
   async function switchKind(next: typeof kind) {
     if (kind === next || busy) return
     if (dirty && !(await confirmAction('¿Descartar los datos de creación para cambiar de tipo documental?'))) return
-    setScopeId(''); setTitleOverride(null); setScopeSearch(''); setComboboxOpen(false); setHighlightIndex(0); setReportId(''); setExecutionBaseId(''); setError(''); setRequestKey(crypto.randomUUID()); setKind(next)
+    setEventVariant(false); setScopeId(''); setTitleOverride(null); setScopeSearch(''); setComboboxOpen(false); setHighlightIndex(0); setReportId(''); setExecutionBaseId(''); setError(''); setRequestKey(crypto.randomUUID()); setKind(next)
     if (next === 'T2') { setCandidates(null); setLoading(true); setSearch(''); setFilter({ query: '', page: 0 }) }
     if (next === 'T3') { setExecutionOptions(null); setLoading(true) }
   }
@@ -71,18 +72,19 @@ export function DocumentCreation({ options, busy, onBusyChange, onCreated, onDir
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); onBusyChange(true)
     try {
-      if (kind === 'T1' && scope) onCreated(await api<WorkPlan>('/work-plans', 'POST', { scopeId: scope.id, groupId: scope.groupId, periodId: scope.periodId, title: titleOverride, requestKey }))
+      if (kind === 'T1' && scope) onCreated(await api<WorkPlan>('/work-plans', 'POST', { scopeId: scope.id, groupId: scope.groupId, periodId: scope.periodId, title: titleOverride, requestKey, eventVariant }))
       else if (kind === 'T2' && report) onCreated(await api<WorkPlan>('/work-plans/' + report.id + '/report', 'POST'))
       else if (kind === 'T3' && executionBase) onCreated(await api<WorkPlan>('/work-plans/' + executionBase.id + '/execution-report', 'POST'))
     } catch (e) { setError(e instanceof TypeError ? 'No se pudo conectar con el servidor.' : e instanceof Error ? e.message : 'No se pudo crear el documento.') }
     finally { onBusyChange(false) }
   }
   return <section className="card animate-reveal document-creation">
+    {kind === 'T1' && <label>Formato del Plan<select value={eventVariant ? 'EVENT' : 'GENERAL'} disabled={busy} onChange={e => setEventVariant(e.target.value === 'EVENT')}><option value="GENERAL">Plan de trabajo general</option><option value="EVENT">Planificación específica de evento</option></select></label>}
     <div className="section-heading"><span className="section-icon"><Icon name="document" size={20} /></span><div><span className="section-kicker">NUEVO DOCUMENTO</span><h2>¿Qué documento desea crear?</h2></div></div>
     <p className="muted">Seleccione el formato y su ámbito institucional. El nombre se completa automáticamente.</p>
     <div className="document-kind-options" role="group" aria-label="Tipo de documento">
-      {([['T1', 'Plan de Trabajo', 'Organice objetivos, actividades y responsables.', 'UTA-SGC-A-2-1-P7-T1'], ['T3', 'Informe de ejecución', 'Reporte el avance de un corte del Plan aprobado.', 'UTA-SGC-A-1-1-P4-T2'], ['T2', 'Informe final', 'Cierre el Plan aprobado con sus resultados.', 'UTA-SGC-A-2-1-P7-T2']] as const).map(([type, label, help, format]) => <label key={type} className={'document-kind-card ' + (kind === type ? 'selected' : '')}>
-        <input type="radio" name="document-kind" value={type} checked={kind === type} disabled={busy || (type === 'T1' ? !options.scopes.some(scope => scope.canCreate) : !options.canCreateDerived)} onChange={() => switchKind(type)} />
+      {([['T1', 'Plan de Trabajo', 'Organice objetivos, actividades y responsables.', 'UTA-SGC-A-2-1-P7-T1'], ['T3', 'Informe de ejecución', 'Reporte el avance de un corte del Plan aprobado.', 'UTA-SGC-A-1-1-P4-T2'], ['T2', 'Informe', 'Informe final o ejecución de evento, según el Plan.', 'UTA-SGC-A-2-1-P7-T2']] as const).map(([type, label, help, format]) => <label key={type} className={'document-kind-card ' + (kind === type ? 'selected' : '')}>
+        <input type="radio" name="document-kind" value={type} checked={kind === type} disabled={busy || (type === 'T1' ? !options.scopes.some(scope => scope.canCreate || scope.canCreateEvent) : !options.canCreateDerived)} onChange={() => switchKind(type)} />
         <span className="document-kind-icon"><Icon name={type === 'T1' ? 'calendar' : 'document'} size={20} /></span>
         <span><strong>{label}</strong><small>{help}</small><span className="document-kind-format">{format}</span></span>
       </label>)}

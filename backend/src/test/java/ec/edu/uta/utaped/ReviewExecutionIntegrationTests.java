@@ -15,6 +15,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired OrganizationService organization;
     @Autowired ec.edu.uta.utaped.planning.ActivityProposals proposals;
     @Autowired ReviewService reviews;
+    @Autowired ec.edu.uta.utaped.planning.EventDocuments eventDocuments;
     @Autowired WorkflowService workflows;
     @Autowired PeriodWorkflowService periodWorkflows;
     @Autowired ec.edu.uta.utaped.institution.PeriodArchiveService periodArchives;
@@ -29,6 +30,51 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     @Autowired ec.edu.uta.utaped.planning.ExecutionReportService executions;
     @Autowired ec.edu.uta.utaped.planning.DocumentTimelineService timeline;
     @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Test void eventPlanningAndExecutionPreserveSeparateFormatsAndSignedArtifacts() throws Exception {
+        jdbc.update("UPDATE work_plan SET document_variant='EVENT' WHERE id=?",id);
+        eventDocuments.save(id,email,new ec.edu.uta.utaped.planning.EventDocuments.Save(version(),true,EventDocumentIntegrationTests.sample(user),"Justificación académica del evento."));
+        UUID review=submit(false);approve(review);byte[] planPdf=reviews.content(review,email);
+        var report=reports.create(id,email);var inherited=eventDocuments.get(report.id(),email);
+        assertTrue(inherited.enabled());assertNull(inherited.data().startsAt());assertNull(inherited.data().students());
+        assertNull(inherited.data().actions().getFirst().percentage());
+        assertFalse(artifacts.readiness(report.id(),email).ready());
+        var d=EventDocumentIntegrationTests.sample(user);
+        var rows=d.actions().stream().map(a->new ec.edu.uta.utaped.planning.EventDocuments.Action(a.id(),a.title(),a.date(),a.startsAt(),a.endsAt(),a.responsibleIds(),null,a.resources(),java.math.BigDecimal.valueOf(100),"Actividad ejecutada.")).toList();
+        var actual=new ec.edu.uta.utaped.planning.EventDocuments.Data(d.topic(),d.eventType(),d.otherType(),d.startsOn(),d.endsOn(),d.startsAt(),d.endsAt(),d.modality(),d.otherModality(),d.location(),d.capacity(),d.authorities(),d.teachers(),d.students(),d.otherAttendees(),d.logistics(),d.certificates(),d.diffusion(),d.generalObjective(),d.specificObjectives(),d.conclusions(),d.source(),d.privacyNoticeEnabled(),d.privacyNotice(),rows);
+        var saved=eventDocuments.save(report.id(),email,new ec.edu.uta.utaped.planning.EventDocuments.Save(inherited.rowVersion(),true,actual));
+        attachments.settings(report.id(),email,new ec.edu.uta.utaped.documents.AttachmentModels.Settings(saved.rowVersion(),false,false));
+        assertTrue(artifacts.readiness(report.id(),email).ready(),artifacts.readiness(report.id(),email).blockers().toString());
+        var artifact=artifacts.generate(report.id(),email,new Generate(plans.get(report.id(),email).rowVersion()));
+        assertTrue(artifact.templateVersion().startsWith("EVENT-T2-"));
+        var state=signatures.state(report.id(),artifact.id(),email,true);assertTrue(state.signingEnabled(),state.signingBlockers().toString());
+        signatures.sign(report.id(),artifact.id(),email,state.preparation().rowVersion(),state.preparation().pdfHash(),UUID.randomUUID(),signingBody(authorFixture,"Test-only-signing-password"),true);
+        var reportReview=reviews.inbox(reviewerEmail).stream().filter(t->t.documentId().equals(report.id())).findFirst().orElseThrow().reviewId();approve(reportReview);
+        var bytes=reviews.content(reportReview,email);
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(bytes)) {
+            var text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+            assertTrue(text.contains("CONCLUSIONES Y/O RECOMENDACIONES"));assertTrue(text.contains("100 %"));
+            java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/event-qa"));
+            java.nio.file.Files.write(java.nio.file.Path.of("target/event-qa/event-report.pdf"),bytes);
+            javax.imageio.ImageIO.write(new org.apache.pdfbox.rendering.PDFRenderer(pdf).renderImageWithDPI(Math.min(2,pdf.getNumberOfPages()-1),120),"png",java.nio.file.Path.of("target/event-qa/event-report.png").toFile());
+        }
+        assertArrayEquals(planPdf,reviews.content(review,email));
+    }
+    @Test void validationOnlyFlowClosesWithoutClaimingExternalApproval() throws Exception {
+        validationOnly=true;UUID review=submit(false);
+        for(String actor:List.of(reviewerEmail,approverEmail)) {
+            var task=reviews.inbox(actor).stream().filter(t->t.reviewId().equals(review)&&t.status().equals("ACTIVE")).findFirst().orElseThrow();
+            reviews.decide(task.id(),actor,new ReviewService.Decision(task.rowVersion(),"COMPLETE","",UUID.randomUUID()));
+        }
+        assertEquals("VALIDATED",plans.get(id,email).documentState());
+        assertEquals("VALIDATED",reviews.state(review,email).review().get("status"));
+        assertTrue(reviews.content(review,email).length>0);
+        assertEquals(0,reporting.get(email,group,period,false).approved());
+        assertEquals(1,reporting.get(email,group,period,false).validated());
+        assertTrue(timeline.timeline(id,email,"asc").stream().anyMatch(i->"VALIDATED".equals(i.status())));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE target_id=? AND action='DOCUMENT_VALIDATED'",Integer.class,id));
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE target_id=? AND action='DOCUMENT_APPROVED'",Integer.class,id));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM personal_notification WHERE target_id=? AND kind='DOCUMENT_VALIDATED'",Integer.class,id));
+    }
     @Test void administrativeReviewAlertCountsDocumentsNotStagesAndDisappearsAfterDecision() throws Exception {
         UUID review=submit(false);var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Guayaquil"));
         jdbc.update("UPDATE academic_period SET review_starts_on=?,review_ends_on=? WHERE id=?",today.minusDays(5),today.minusDays(1),period);
@@ -223,6 +269,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
     String coauthorEmail="coauthor@example.invalid";
     SigningFixture authorFixture,coauthorFixture;
     UUID reviewer,approver; String reviewerEmail="reviewer@example.invalid",approverEmail="approver@example.invalid";
+    boolean validationOnly;
     UUID submit(boolean signatureRequired) throws Exception { return submit(signatureRequired,false); }
     UUID submit(boolean signatureRequired,boolean external) throws Exception {
         complete("Justificación de prueba para revisión",1);signingAdmin();
@@ -253,7 +300,7 @@ class ReviewExecutionIntegrationTests extends DocumentIntegrationTests {
             for(var actor:Map.of(secondReviewer,"reviewer2@example.invalid",secondApprover,"approver2@example.invalid").entrySet()) jdbc.update("INSERT INTO app_user(id,email,display_name,password_hash,system_role,must_change_password) VALUES (?,?,?,'unused','USER',false)",actor.getKey(),actor.getValue(),actor.getValue());
             reviewerIds=List.of(reviewer,secondReviewer);approverIds=List.of(approver,secondApprover);
         }
-        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW",(collegiate||!signatureRequired)?"COLLEGIATE":"PERSON",reviewerIds,null,(collegiate||!signatureRequired)?"Consejo Directivo":"",signatureRequired,"Responsable de revisión"),new Stage(UUID.randomUUID(),"Aprobación","APPROVE",multiplePersonalStages?"PERSON":"COLLEGIATE",approverIds,null,multiplePersonalStages?"":"Órgano de aprobación de prueba",multiplePersonalStages)),requiresQuipux);
+        var definition=new Definition("Circuito de prueba",List.of(new Stage(UUID.randomUUID(),"Revisión","REVIEW",(collegiate||!signatureRequired)?"COLLEGIATE":"PERSON",reviewerIds,null,(collegiate||!signatureRequired)?"Consejo Directivo":"",signatureRequired,"Responsable de revisión"),new Stage(UUID.randomUUID(),validationOnly?"Validación interna":"Aprobación",validationOnly?"VALIDATE":"APPROVE",multiplePersonalStages?"PERSON":"COLLEGIATE",approverIds,null,multiplePersonalStages?"":"Órgano de aprobación de prueba",multiplePersonalStages)),requiresQuipux,validationOnly?"VALIDATED":"APPROVED");
         workflows.save(group,"T1",email,new Save(0L,definition));workflows.configure(group,"T1",email,new Version(1L));
         workflows.save(group,"T2",email,new Save(0L,definition));workflows.configure(group,"T2",email,new Version(1L));
         workflows.save(group,"T3",email,new Save(0L,definition));workflows.configure(group,"T3",email,new Version(1L));

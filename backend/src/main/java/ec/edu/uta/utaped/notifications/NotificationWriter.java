@@ -21,6 +21,7 @@ public class NotificationWriter {
             case "AUTHOR_SIGNATURE_REQUESTED" -> { recipient=subject;type="WORK_PLAN";title="Documento pendiente de su firma";message="Es su turno como elaborador. Abra el documento y continúe en Firma y Finalización; el contenido ya está congelado."; }
             case "REVIEW_TASK_ASSIGNED" -> { recipient=subject;type="WORK_PLAN";title="Documento pendiente de revisión";message="Tiene una etapa activa. Revise el documento firmado en su bandeja de revisión."; }
             case "DOCUMENT_RETURNED" -> { recipient=subject;type="WORK_PLAN";title="Documento devuelto";message="Consulte las observaciones, corrija y firme un nuevo artefacto para la siguiente ronda."; }
+            case "DOCUMENT_VALIDATED" -> { recipient=subject;type="WORK_PLAN";title="Documento validado internamente";message="La validación interna ha concluido. Puede descargar el PDF para continuar el trámite externo."; }
             case "DOCUMENT_APPROVED" -> { recipient=subject;type="WORK_PLAN";title="Documento aprobado";message="Todas las etapas configuradas han concluido. El artefacto y su historial se conservan."; }
             default -> { return; }
         }
@@ -28,6 +29,8 @@ public class NotificationWriter {
         String table=type.equals("GROUP")?"institutional_group":"work_plan",column=type.equals("GROUP")?"name":"title";
         String objectName=type.equals("ACCOUNT")?"":jdbc.queryForList("SELECT "+column+" FROM "+table+" WHERE id=?",String.class,target).stream().findFirst().orElse("");
         message+=(objectName.isBlank()?"":" Objeto: "+objectName);
-        jdbc.update("INSERT INTO personal_notification(id,recipient_id,source_event_id,kind,target_type,target_id,title,message) SELECT ?,id,?,?,?,?,?,? FROM app_user WHERE id=? AND active ON CONFLICT(source_event_id,recipient_id) DO NOTHING",UUID.randomUUID(),event,action,type,target,title,message,recipient);
+        UUID notification=UUID.randomUUID();
+        int inserted=jdbc.update("INSERT INTO personal_notification(id,recipient_id,source_event_id,kind,target_type,target_id,title,message) SELECT ?,id,?,?,?,?,?,? FROM app_user WHERE id=? AND active ON CONFLICT(source_event_id,recipient_id) DO NOTHING",notification,event,action,type,target,title,message,recipient);
+        if(inserted>0 && action.equals("AUTHOR_SIGNATURE_REQUESTED"))jdbc.update("INSERT INTO signature_mail_delivery(notification_id) VALUES (?)",notification);
     }
 }

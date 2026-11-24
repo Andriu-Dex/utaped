@@ -7,7 +7,7 @@ import { Icon } from '../shared/Icon'
 import './workflow-admin.css'
 
 interface Stage { positionLabel?: string; positionId?: string | null; id: string; label: string; action: string; recipientKind: string; assigneeIds: string[]; groupRole: string | null; recipientLabel: string; requiresSignature: boolean }
-interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean }
+interface Definition { name: string; stages: Stage[]; requiresQuipux?: boolean; completionStatus?: 'APPROVED' | 'VALIDATED' }
 interface Revision { id: string; revisionNumber: number; definition: Definition; configuredBy: string; configuredAt: string }
 interface State { rowVersion: number; groupActive: boolean; draft: Definition; current: Revision | null; revisions: Revision[]; blockers: string[] }
 
@@ -41,8 +41,8 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       <div className="section-heading-icon" aria-hidden="true"><Icon name="settings" size={24} /></div>
       <div>
         <span className="section-heading-kicker">GESTIÓN DE PROCESOS</span>
-        <h3>Plantillas de flujo por grupo</h3>
-        <p className="muted">Prepare revisiones reutilizables para Planes e Informes. En Períodos, asigne una revisión a cada ámbito y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
+        <h3>Revisores, validadores y aprobadores</h3>
+        <p className="muted">Prepare revisiones reutilizables para Planes e Informes. En Períodos, asigne la configuración al grupo, carrera y período correspondientes y active sus flujos. Cambiar esta plantilla no modifica las asignaciones ni los PDFs históricos.</p>
       </div>
     </div>
     <div className="filter-toolbar" style={{ margin: '16px 0' }}>
@@ -61,6 +61,7 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
     {group && !state && (loadFailed ? <div className="empty-state"><p>No se pudo cargar la configuración del flujo.</p><button type="button" className="secondary" onClick={() => { setLoadFailed(false); setError(''); setRefresh(n => n + 1) }}>Reintentar configuración del flujo</button></div> : <p role="status">Cargando flujo…</p>)}
     {state && <>
       <div className="workflow-status-card">
+        <p className="field-help">{state.current?.definition.completionStatus === 'VALIDATED' ? 'Termina en validación interna; la aprobación se tramita fuera del sistema.' : 'Termina en aprobación interna.'}</p><ol aria-label="Orden de participantes">{state.current?.definition.stages.map(stage => <li key={stage.id}>{stage.label} · {stage.action === 'APPROVE' ? 'Aprobación' : stage.action === 'VALIDATE' ? 'Validación' : 'Revisión'} · {stage.recipientKind === 'POSITION' ? positions.find(p => p.id === stage.positionId)?.name ?? 'Cargo institucional' : stage.recipientKind === 'GROUP_ROLE' ? stage.groupRole === 'COORDINATOR' ? 'Coordinación del grupo' : 'Integrantes del grupo' : stage.recipientKind === 'COLLEGIATE' ? stage.recipientLabel : stage.assigneeIds.map(id => known[id]?.display_name ?? 'Participante asignado').join(', ')}</li>)}</ol>
         <p className="workflow-status-badge">{state.current ? 'Revisión de configuración vigente: ' + state.current.revisionNumber : 'Sin configuración vigente.'}</p>
         {!state.groupActive && <p className="muted" style={{ margin: 0 }}>Grupo inactivo: configuración de solo lectura.</p>}
       </div>
@@ -75,7 +76,8 @@ export function WorkflowAdministration({ groups, users, suggestedQuery, onDirtyC
       <ActionForm label="Editar flujo" dirty={dirty} disabled={busy || !state.groupActive} onCancel={() => setDraft(state.draft)}>
         <form onSubmit={e => { e.preventDefault(); void operation('', 'PUT', { rowVersion: state.rowVersion, definition: draft }) }}>
           <fieldset disabled={busy || !state.groupActive}>
-            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label><label className="check"><input type="checkbox" checked={draft.requiresQuipux ?? false} onChange={e => setDraft(d => ({ ...d, requiresQuipux: e.target.checked }))} />Requerir constancia de Quipux después de aprobar</label><p className="field-help">El PDF aprobado se descarga para el trámite externo. La coordinación registra la constancia antes de iniciar ejecución o informes derivados. No hay conexión automática con Quipux.</p>
+            <label>Resultado del trámite interno<select value={draft.completionStatus ?? 'APPROVED'} onChange={e => setDraft(d => ({ ...d, completionStatus: e.target.value as 'APPROVED' | 'VALIDATED', requiresQuipux: e.target.value === 'VALIDATED' ? false : d.requiresQuipux }))}><option value="APPROVED">Aprobación interna</option><option value="VALIDATED">Validación interna para trámite externo</option></select></label>
+            <label>Nombre del flujo<input required maxLength={160} value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></label><label className="check"><input type="checkbox" disabled={draft.completionStatus === 'VALIDATED'} checked={draft.requiresQuipux ?? false} onChange={e => setDraft(d => ({ ...d, requiresQuipux: e.target.checked }))} />Requerir constancia de Quipux después de aprobar</label><p className="field-help">El PDF aprobado se descarga para el trámite externo. La coordinación registra la constancia antes de iniciar ejecución o informes derivados. No hay conexión automática con Quipux.</p>
             {draft.stages.map((s, index) => <section className="card workflow-stage-card" key={s.id} aria-label={'Etapa ' + (index + 1)}>
               <div className="activity-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

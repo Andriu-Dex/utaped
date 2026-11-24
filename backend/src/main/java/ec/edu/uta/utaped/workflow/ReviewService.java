@@ -162,7 +162,7 @@ public class ReviewService {
     }
     public byte[] content(UUID review,String email) {
         var record=authorized(review,email);
-        if(!record.get("status").equals("APPROVED")) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La descarga final está disponible después de la aprobación.");
+        if(!Set.of("APPROVED","VALIDATED").contains(record.get("status"))) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"La descarga está disponible al completar la aprobación o validación interna.");
         return files.read((UUID)record.get("current_file_id"));
     }
     public byte[] page(UUID review,int index,String email) { return artifacts.renderPage(files.read((UUID)authorized(review,email).get("current_file_id")),index); }
@@ -269,10 +269,13 @@ public class ReviewService {
         if(output!=null) jdbc.update("UPDATE document_review SET current_file_id=? WHERE id=?",output,record.get("review_id"));
         var next=jdbc.queryForList("SELECT id,actor_id FROM review_task WHERE review_id=? AND status='PENDING' ORDER BY position LIMIT 1",record.get("review_id"));
         if(next.isEmpty()) {
-            jdbc.update("UPDATE document_review SET status='APPROVED',closed_at=now() WHERE id=?",record.get("review_id"));
-            jdbc.update("UPDATE work_plan SET document_state='APPROVED',row_version=row_version+1,updated_at=now() WHERE id=?",record.get("work_plan_id"));
+            var reviewArtifact=jdbc.queryForObject("SELECT artifact_id FROM document_review WHERE id=?",UUID.class,record.get("review_id"));
+            var workflow=frozen((UUID)record.get("work_plan_id"),reviewArtifact).workflow();
+            String completion=workflow==null?"APPROVED":workflow.resolvedCompletionStatus();
+            jdbc.update("UPDATE document_review SET status=?,closed_at=now() WHERE id=?",completion,record.get("review_id"));
+            jdbc.update("UPDATE work_plan SET document_state=?,row_version=row_version+1,updated_at=now() WHERE id=?",completion,record.get("work_plan_id"));
             var owner=jdbc.queryForObject("SELECT COALESCE(s.principal_user_id,w.teacher_id) FROM work_plan w LEFT JOIN organizational_scope s ON s.id=w.scope_id WHERE w.id=?",UUID.class,record.get("work_plan_id"));
-            audit.record(accounts.current(email).id(),"DOCUMENT_APPROVED",(UUID)record.get("work_plan_id"),owner);
+            audit.record(accounts.current(email).id(),completion.equals("VALIDATED")?"DOCUMENT_VALIDATED":"DOCUMENT_APPROVED",(UUID)record.get("work_plan_id"),owner);
         } else { jdbc.update("UPDATE review_task SET status='ACTIVE',row_version=row_version+1 WHERE id=?",next.getFirst().get("id"));audit.record(accounts.current(email).id(),"REVIEW_TASK_ASSIGNED",(UUID)record.get("work_plan_id"),(UUID)next.getFirst().get("actor_id")); }
         audit.record(accounts.current(email).id(),"REVIEW_TASK_COMPLETED",(UUID)record.get("work_plan_id"));
     }

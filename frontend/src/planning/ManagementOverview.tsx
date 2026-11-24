@@ -6,6 +6,7 @@ export function ManagementOverview({ data, onOpenDocument }: { data: ReportingSu
   const states = [
     { key: 'draft', label: 'Borradores', value: data.drafts, color: 'blue' },
     { key: 'review', label: 'En revisión', value: data.inReview, color: 'amber' },
+    { key: 'validated', label: 'Validados internamente', value: data.validated ?? 0, color: 'blue' },
     { key: 'approved', label: 'Aprobados', value: data.approved, color: 'teal' },
   ]
   const total = data.plans + data.reports

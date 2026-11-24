@@ -23,9 +23,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class T1PdfEngine {
+    @org.springframework.beans.factory.annotation.Autowired private EventTemplate events;
     private final T1Template template;private final T2Template reports;private final T3Template executions;private final StoredFiles files;
     public T1PdfEngine(T1Template template,T2Template reports,T3Template executions,StoredFiles files) { this.template=template;this.reports=reports;this.executions=executions;this.files=files; }
     public String version(String type) { return switch(type) { case "T2" -> reports.version();case "T3" -> executions.version();default -> template.version(); }; }
+    public String version(Snapshot snapshot) { return snapshot.eventData()==null?version(snapshot.plan().documentType()):events.version(snapshot.plan().documentType()); }
     private byte[] export(byte[] docx) throws Exception {
         var pkg=WordprocessingMLPackage.load(new ByteArrayInputStream(docx));
         var mapper=new IdentityPlusMapper();var sans=PhysicalFonts.get("Liberation Sans");if(sans==null) sans=PhysicalFonts.get("DejaVu Sans");
@@ -44,13 +46,15 @@ public class T1PdfEngine {
         }
         if(found<0) throw new IOException("No se encontró la sección generada: "+section);return found;
     }
-    public Map<String,Integer> contentSections(byte[] bytes) {
+    public Map<String,Integer> contentSections(byte[] bytes) { return contentSections(bytes,false); }
+    public Map<String,Integer> contentSections(byte[] bytes,boolean event) { return contentSections(bytes,event,false); }
+    public Map<String,Integer> contentSections(byte[] bytes,boolean event,boolean report) {
         try(var pdf=Loader.loadPDF(bytes)) {
             var sections=new LinkedHashMap<String,Integer>();
             sections.put("COVER",0);
-            sections.put("JUSTIFICATION",sectionPage(pdf,"JUSTIFICACIÓN"));
-            sections.put("OBJECTIVE",sectionPage(pdf,"OBJETIVO"));
-            sections.put("MATRIX",sectionPage(pdf,"MATRIZ DE ACTIVIDADES"));
+            sections.put("JUSTIFICATION",sectionPage(pdf,event&&report?"DATOS INFORMATIVOS DEL EVENTO":"JUSTIFICACIÓN"));
+            sections.put("OBJECTIVE",sectionPage(pdf,event&&report?"CONCLUSIONES Y/O RECOMENDACIONES":"OBJETIVO"));
+            sections.put("MATRIX",sectionPage(pdf,event?"DESARROLLO DEL EVENTO":"MATRIZ DE ACTIVIDADES"));
             sections.put("ANNEXES",sectionPage(pdf,"ANEXOS"));
             sections.put("SIGNATURES",sectionPage(pdf,"FIRMAS DE RESPONSABILIDAD"));
             return Collections.unmodifiableMap(sections);
@@ -62,12 +66,12 @@ public class T1PdfEngine {
             Map<String,Integer> numbers=new LinkedHashMap<>();byte[] nativeBytes=null;
             var sections=snapshot.execution()!=null?new ArrayList<>(executions.sections(snapshot)):snapshot.report()!=null?new ArrayList<>(reports.sections(snapshot)):new ArrayList<>(List.of("JUSTIFICACIÓN","OBJETIVO","MATRIZ DE ACTIVIDADES"));
             if(snapshot.report()==null&&snapshot.execution()==null) { sections.add("ANEXOS");sections.addAll(List.of("FIRMAS DE RESPONSABILIDAD","CONTROL DE HISTORIAL DE CAMBIOS")); }
-            sections=new ArrayList<>(StructuredSections.sections(snapshot,sections));
-            if(snapshot.execution()==null&&snapshot.report()==null) sections.addAll(List.of("ÍNDICE DE CONTENIDO","ÍNDICE DE TABLAS"));
+            sections=snapshot.eventData()!=null?new ArrayList<>(events.sections(snapshot)):new ArrayList<>(StructuredSections.sections(snapshot,sections));
+            if(snapshot.eventData()==null&&snapshot.execution()==null&&snapshot.report()==null) sections.addAll(List.of("ÍNDICE DE CONTENIDO","ÍNDICE DE TABLAS"));
             int insertedPages=snapshot.attachments().stream().mapToInt(AttachmentModels.Attachment::pageCount).sum();
             boolean stable=false;
             for(int attempt=0;attempt<4;attempt++) {
-                nativeBytes=export(snapshot.execution()!=null?executions.compose(snapshot,numbers,markers):snapshot.report()!=null?reports.compose(snapshot,numbers,markers):template.compose(snapshot,numbers,markers));var actual=new LinkedHashMap<String,Integer>();
+                nativeBytes=export(snapshot.eventData()!=null?events.compose(snapshot,numbers,markers):snapshot.execution()!=null?executions.compose(snapshot,numbers,markers):snapshot.report()!=null?reports.compose(snapshot,numbers,markers):template.compose(snapshot,numbers,markers));var actual=new LinkedHashMap<String,Integer>();
                 try(var nativePdf=Loader.loadPDF(nativeBytes)) {
                     int insertion=sectionPage(nativePdf,"FIRMAS DE RESPONSABILIDAD");
                     for(String section:sections) { int page=sectionPage(nativePdf,section);actual.put(section,page+1+(page>=insertion?insertedPages:0)); }
