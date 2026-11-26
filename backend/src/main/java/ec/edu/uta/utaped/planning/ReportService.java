@@ -20,6 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class ReportService {
     @org.springframework.beans.factory.annotation.Autowired private FormalSubmissionService submissions;
     @org.springframework.beans.factory.annotation.Autowired private DocumentStructures structures;
+    @org.springframework.beans.factory.annotation.Autowired private EventDocuments events;
     public record Result(@NotNull UUID activityId,@DecimalMin("0") @DecimalMax("100") BigDecimal percentage,@NotNull @Size(max=4000) String observations) {}
     public record Delegation(@NotBlank @Size(max=500) String purpose,@NotNull @Size(max=500) String location,@NotNull @Size(max=500) String institution,
         @NotNull @Size(max=500) String contact,@NotNull @Size(max=500) String contactDetails,@NotNull @Size(max=2000) String topic,@NotNull @Size(max=2000) String agreement) {}
@@ -97,7 +98,7 @@ public class ReportService {
         var results=activities.get(id,email).activities().stream().map(a->new Result(a.id(),null,"")).toList();
         jdbc.update("INSERT INTO work_report(id,base_plan_id,base_artifact_id,base_formal_version,results,previous_version_id) VALUES (?,?,?,?,?::jsonb,?)",id,base,artifact,parent.formalVersion(),json.writeValueAsString(results),previous==null?null:previous.id());
         if(previous!=null) jdbc.update("UPDATE work_plan SET previous_version_id=?,formal_version=?,version_reason='Reemplazo de borrador archivado' WHERE id=?",previous.id(),previous.formalVersion(),id);
-        structures.initialize(id,"T2");audit.record(actor.id(),"REPORT_CREATED",id);return plans.get(id,email);
+        events.inherit(id,base);structures.initialize(id,"T2");audit.record(actor.id(),"REPORT_CREATED",id);return plans.get(id,email);
     }
     @Transactional public State save(UUID doc,String email,Save input) {
         var plan=plans.lock(doc,email);data(doc,email);

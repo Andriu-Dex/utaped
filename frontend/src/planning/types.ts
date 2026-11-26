@@ -1,7 +1,7 @@
 export interface WorkPlan {
   id: string; teacherId: string; teacherName: string; groupId: string; groupName: string; periodId: string; periodName: string
   institutionalUnitType?: 'ACADEMIC' | 'ADMINISTRATIVE'; title: string; institutionalUnit: string; career: string; justification: string; objective: string
-  documentState: 'DRAFT' | 'IN_REVIEW' | 'APPROVED'; formalVersion: string; rowVersion: number; preparationDate: string
+  documentState: 'DRAFT' | 'IN_REVIEW' | 'APPROVED' | 'VALIDATED'; formalVersion: string; rowVersion: number; preparationDate: string
   scopeId: string | null; createdBy: string; reviewRound: number; archivedAt: string | null
   documentType: 'T1' | 'T2' | 'T3'; basePlanId: string | null
   createdAt: string; updatedAt: string; readOnlyReason?: string | null; editable: boolean; canManage: boolean
@@ -10,7 +10,7 @@ export interface PlanOptions {
   groups: { id: string; name: string }[]
   periods: { id: string; name: string; preparationStartsOn: string; preparationEndsOn: string; editable: boolean; status: 'ACTIVE' | 'CLOSED'; current?: boolean }[]
   singlePlanPerScope: boolean; enforcePreparationWindow: boolean
-  scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean; suggestedTitle: string; institutionalUnit?: string; institutionalUnitType?: string }[]
+  scopes: { id: string; groupId: string; periodId: string; groupName: string; periodName: string; careerName: string | null; canCreate: boolean; canCreateEvent?: boolean; suggestedTitle: string; institutionalUnit?: string; institutionalUnitType?: string }[]
   canCreateDerived?: boolean
   defaultJustification?: string
 }

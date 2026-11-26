@@ -396,3 +396,8 @@ Fuente editable aclarada, «Elaborado por» automático y representación colect
 ## Reglas institucionales provisionales — 2026-10-20
 
 F1: prórrogas de evidencias en días hábiles (sin fines de semana ni feriados registrados) y reapertura individual de elaboración por ámbito concedida por su coordinador, con historial y auditoría (V25). F2: fecha de elaboración fijada al preparar la firma y sello visible con QR, firmante y fecha en el espacio asignado. F3: copia de custodia del período y eliminación de su documentación tras período de gracia, conservando inventario, huella y auditoría (V26). F4: cargos institucionales por período y carrera, etapas de flujo por cargo, importación CSV y alta/retiro de integrantes por el coordinador del ámbito (V27). [Reporte](https://github.com/Andriu-Dex/utaped/blob/f2243b23019f62243365d89a67bc12f031bf60ba/docs/reports/2026-10-20-04-institutional-rules-and-execution-report.md).
+
+
+## Validación interna para trámite externo — 2026-11-23
+
+Implementación de cierre explícito `VALIDATED`, distinto de `APPROVED`, conservado en el snapshot del flujo. Incluye configuración administrativa, finalización secuencial, descarga autenticada del PDF validado, auditoría, notificación, estados en consulta y contador separado en reportes/CSV. Los artefactos históricos conservan su resultado original; la validación interna no habilita ejecución ni informes reservados a aprobación. Se añadieron el Plan T1 y el Informe T2 de evento, sus editores, los PDF basados en los DOCX oficiales y el correo de turno de firma con reintentos. El alcance confirmado del trámite externo termina en la descarga del PDF validado. [Registro y pendientes](docs/planning/2026-11-23-internal-validation-and-events.md).

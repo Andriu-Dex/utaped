@@ -90,13 +90,13 @@ public class WorkPlanService {
         var scopes=jdbc.query("""
             SELECT s.id,s.group_id,s.period_id,iu.name AS unit_name,iu.unit_type,g.name AS group_name,p.name AS period_name,c.name AS career_name,
               (s.principal_user_id=? AND p.status='ACTIVE') AS is_principal,p.preparation_starts_on,GREATEST(p.preparation_ends_on,s.preparation_extended_until) AS preparation_ends_on,
-              NOT EXISTS (SELECT 1 FROM work_plan w WHERE w.scope_id=s.id AND (w.archived_at IS NULL OR w.document_state='APPROVED') AND w.document_type='T1') AS available
+              NOT EXISTS (SELECT 1 FROM work_plan w WHERE w.scope_id=s.id AND (w.archived_at IS NULL OR w.document_state='APPROVED') AND w.document_type='T1' AND w.document_variant='GENERAL') AS available
             FROM organizational_scope s JOIN institutional_unit iu ON iu.id=s.institutional_unit_id AND iu.active JOIN scope_member m ON m.scope_id=s.id AND m.user_id=? AND m.active
             JOIN institutional_group g ON g.id=s.group_id AND g.active JOIN academic_period p ON p.id=s.period_id
             LEFT JOIN academic_career c ON c.id=s.career_id WHERE s.active AND (c.id IS NULL OR c.active)
             ORDER BY p.starts_on DESC,g.name,c.name
             """,(rs,n)->new ScopeOption(rs.getObject("id",UUID.class),rs.getObject("group_id",UUID.class),rs.getObject("period_id",UUID.class),rs.getString("group_name"),rs.getString("period_name"),rs.getString("career_name"),
-                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name")),rs.getString("unit_name"),rs.getString("unit_type")),actor.id(),actor.id());
+                rs.getBoolean("is_principal")&&rs.getBoolean("available")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class))),DocumentTitles.plan(rs.getString("group_name")),rs.getString("unit_name"),rs.getString("unit_type"),rs.getBoolean("is_principal")&&(!enforceWindow||within(rs.getObject("preparation_starts_on",LocalDate.class),rs.getObject("preparation_ends_on",LocalDate.class)))),actor.id(),actor.id());
         var groups=jdbc.query("SELECT g.id,g.name FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND g.active ORDER BY g.name",(rs,n)->new GroupOption(rs.getObject("id",UUID.class),rs.getString("name")),actor.id());
         var periods=jdbc.query("SELECT id,name,status,status='ACTIVE' AND (now() at time zone 'America/Guayaquil')::date BETWEEN starts_on AND ends_on AS is_current,preparation_starts_on,preparation_ends_on FROM academic_period ORDER BY starts_on DESC",(rs,n)-> {
             var start=rs.getObject("preparation_starts_on",LocalDate.class);var end=rs.getObject("preparation_ends_on",LocalDate.class);
@@ -149,10 +149,10 @@ public class WorkPlanService {
         String requestedTitle=Objects.toString(data.title(),"").trim();
         new ec.edu.uta.utaped.institution.PeriodGuard(jdbc).writable(data.periodId());
         var actor=accounts.current(email);jdbc.queryForList("SELECT id FROM app_user WHERE id=? FOR UPDATE",actor.id());
-        var existing=jdbc.queryForList("SELECT id,group_id,period_id,scope_id,creation_title FROM work_plan WHERE created_by=? AND request_key=?",actor.id(),data.requestKey());
+        var existing=jdbc.queryForList("SELECT id,group_id,period_id,scope_id,creation_title,document_variant FROM work_plan WHERE created_by=? AND request_key=?",actor.id(),data.requestKey());
         if(!existing.isEmpty()) {
             var prior=existing.getFirst();
-            if(!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(requestedTitle)) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
+            if(!prior.get("document_variant").equals(data.eventVariant()?"EVENT":"GENERAL")||!prior.get("group_id").equals(data.groupId())||!prior.get("period_id").equals(data.periodId())||!Objects.equals(prior.get("scope_id"),data.scopeId())||!prior.get("creation_title").equals(requestedTitle)) throw new ResponseStatusException(HttpStatus.CONFLICT,"La solicitud ya fue utilizada para otro documento.");
             return get((UUID)prior.get("id"),email);
         }
         String career="",unitName=ec.edu.uta.utaped.institution.InstitutionalNames.FISEI,unitType="ACADEMIC";
@@ -165,19 +165,20 @@ public class WorkPlanService {
             if(scopes.isEmpty()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Ámbito no disponible.");
             var scope=scopes.getFirst();
             if(!data.groupId().equals(scope.get("group_id"))||!data.periodId().equals(scope.get("period_id"))||!actor.id().equals(scope.get("principal_user_id"))||jdbc.queryForObject("SELECT count(*) FROM scope_member WHERE scope_id=? AND user_id=? AND active",Integer.class,data.scopeId(),actor.id())==0) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo el responsable principal puede crear el Plan de su ámbito.");
-            if(jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE scope_id=? AND (archived_at IS NULL OR document_state='APPROVED') AND document_type='T1'",Integer.class,data.scopeId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan activo en este grupo, carrera y período.");
+            if(jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE scope_id=? AND (archived_at IS NULL OR document_state='APPROVED') AND document_type='T1' AND document_variant='GENERAL'",Integer.class,data.scopeId())>0 && !data.eventVariant()) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan activo en este grupo, carrera y período.");
             career=Objects.toString(scope.get("career_name"),"");unitName=(String)scope.get("unit_name");unitType=(String)scope.get("unit_type");
         } else {
             if(!legacyCreation) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Seleccione un ámbito institucional con responsable principal asignado.");
             if(jdbc.queryForObject("SELECT count(*) FROM membership m JOIN institutional_group g ON g.id=m.group_id WHERE m.user_id=? AND m.group_id=? AND g.active",Integer.class,actor.id(),data.groupId())==0) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Solo puede crear un Plan en sus grupos activos.");
-            if(singlePlan&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE teacher_id=? AND group_id=? AND period_id=? AND archived_at IS NULL",Integer.class,actor.id(),data.groupId(),data.periodId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan para este ámbito anterior.");
+            if(singlePlan&&!data.eventVariant()&&jdbc.queryForObject("SELECT count(*) FROM work_plan WHERE teacher_id=? AND group_id=? AND period_id=? AND archived_at IS NULL AND document_variant='GENERAL'",Integer.class,actor.id(),data.groupId(),data.periodId())>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Ya existe un Plan para este ámbito anterior.");
         }
         requireWindow(data.periodId(),data.scopeId());UUID id=UUID.randomUUID();
         if(data.scopeId()==null && requestedTitle.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Indique un título para el documento anterior.");
         String title=requestedTitle.isBlank()?DocumentTitles.plan(jdbc.queryForObject("SELECT name FROM institutional_group WHERE id=?",String.class,data.groupId())):requestedTitle;
-        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),unitName,career,templateService.getJustificationOrDefault("T1"));
+        jdbc.update("INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,justification,document_variant) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",id,actor.id(),actor.id(),data.scopeId(),data.groupId(),data.periodId(),data.requestKey(),title,requestedTitle,LocalDate.now(zone),unitName,career,templateService.getJustificationOrDefault("T1"),data.eventVariant()?"EVENT":"GENERAL");
         jdbc.update("UPDATE work_plan SET institutional_unit_type=? WHERE id=?",unitType,id);
         if(data.scopeId()!=null) jdbc.update("INSERT INTO document_access(work_plan_id,user_id,granted_by) SELECT ?,user_id,? FROM scope_member WHERE scope_id=? AND active",id,actor.id(),data.scopeId());
+        if(data.eventVariant()) jdbc.update("INSERT INTO event_document(work_plan_id,data) VALUES (?,?::jsonb)",id,tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(EventDocuments.empty()));
         structures.initialize(id,"T1");audit.record(actor.id(),"WORK_PLAN_CREATED",id);return get(id,email);
     }
     public boolean signatureWindowOpen(UUID doc,String email) {

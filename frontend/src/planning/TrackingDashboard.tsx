@@ -9,18 +9,19 @@ import './management-dashboard.css'
 function typeLabel(type: 'T1' | 'T2' | 'T3') {
   if (type === 'T1') return 'Plan T1'
   if (type === 'T3') return 'Informe de ejecución'
-  return 'Informe final T2'
+  return 'Informe T2'
 }
 
-function statusClass(archivedAt: string | null, state: 'DRAFT' | 'IN_REVIEW' | 'APPROVED') {
+function statusClass(archivedAt: string | null, state: 'DRAFT' | 'IN_REVIEW' | 'APPROVED' | 'VALIDATED') {
   if (archivedAt) return 'status-archived'
   if (state === 'APPROVED') return 'status-approved'
   if (state === 'IN_REVIEW') return 'status-in_review'
   return 'status-draft'
 }
 
-function statusLabel(archivedAt: string | null, state: 'DRAFT' | 'IN_REVIEW' | 'APPROVED') {
+function statusLabel(archivedAt: string | null, state: 'DRAFT' | 'IN_REVIEW' | 'APPROVED' | 'VALIDATED') {
   if (archivedAt) return 'Archivado'
+  if (state === 'VALIDATED') return 'Validado internamente'
   if (state === 'APPROVED') return 'Aprobado'
   if (state === 'IN_REVIEW') return 'En revisión'
   return 'Borrador'

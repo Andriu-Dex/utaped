@@ -41,8 +41,8 @@ public class DocumentLifecycleService {
         UUID actor=accounts.current(email).id(),id=UUID.randomUUID();int number=Integer.parseInt(plan.formalVersion().split("\\.")[0])+1;
         archiveRow(doc,email,"Actualización formal: "+data.reason());
         jdbc.update("""
-            INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,document_type,base_plan_id,justification,objective,formal_version,previous_version_id,version_reason,attachments_enabled,privacy_notice_enabled)
-            SELECT ?,?,?,scope_id,group_id,period_id,?,title,title,?,institutional_unit,career,document_type,base_plan_id,justification,objective,?,?,?,attachments_enabled,privacy_notice_enabled FROM work_plan WHERE id=?
+            INSERT INTO work_plan(id,teacher_id,created_by,scope_id,group_id,period_id,request_key,title,creation_title,preparation_date,institutional_unit,career,document_type,base_plan_id,justification,objective,formal_version,previous_version_id,version_reason,attachments_enabled,privacy_notice_enabled,document_variant)
+            SELECT ?,?,?,scope_id,group_id,period_id,?,title,title,?,institutional_unit,career,document_type,base_plan_id,justification,objective,?,?,?,attachments_enabled,privacy_notice_enabled,document_variant FROM work_plan WHERE id=?
             """,id,actor,actor,UUID.randomUUID(),today,number+".0",doc,data.reason().trim(),doc);
         jdbc.update("UPDATE work_plan SET institutional_unit_type=?,institutional_unit=? WHERE id=?",plan.institutionalUnitType(),ec.edu.uta.utaped.institution.InstitutionalNames.forNewDocument(plan.institutionalUnit()),id);
         jdbc.update("INSERT INTO document_structure(work_plan_id,revision,sections,contents) SELECT ?,revision,sections,contents FROM document_structure WHERE work_plan_id=?",id,doc);
@@ -58,6 +58,7 @@ public class DocumentLifecycleService {
             INSERT INTO work_report(id,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,previous_version_id,execution_references)
             SELECT ?,base_plan_id,base_artifact_id,base_formal_version,background,conclusions,improvements,results,delegations,id,execution_references FROM work_report WHERE id=?
             """,id,doc);
+        jdbc.update("INSERT INTO event_document(work_plan_id,data) SELECT ?,data FROM event_document WHERE work_plan_id=?",id,doc);
         audit.record(actor,"DOCUMENT_FORMAL_VERSION_CREATED",id);return plans.get(id,email);
     }
     public List<Map<String,Object>> history(UUID doc,String email) {

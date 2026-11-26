@@ -141,7 +141,7 @@ export function ReportingDashboard({ administrative = false, onOpenDocument, ini
                     <th>Grupo / carrera / período</th>
                     <th>Planes / Informes</th>
                     <th>Aprobados</th>
-                    <th>En revisión</th>
+                    <th>Validados internamente</th><th>En revisión</th>
                     <th>Borradores</th>
                     <th>Actividades con respaldo</th>
                     <th>Cobertura documental</th>
@@ -163,7 +163,7 @@ export function ReportingDashboard({ administrative = false, onOpenDocument, ini
                       <td>
                         <span className="status-badge active" style={{ fontSize: '0.76rem', padding: '2px 8px' }}>{r.approved}</span>
                       </td>
-                      <td>
+                      <td>{r.validated}</td><td>
                         <span className="status-badge pending" style={{ fontSize: '0.76rem', padding: '2px 8px' }}>{r.inReview}</span>
                       </td>
                       <td>

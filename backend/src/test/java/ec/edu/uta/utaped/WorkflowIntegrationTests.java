@@ -96,4 +96,15 @@ class WorkflowIntegrationTests {
         assertEquals(200,browser.request("PUT",path,new Save(1L,new Definition("Flujo",List.of(person()))),true).statusCode());
         assertEquals(200,browser.request("POST",path+"/revisions",new Version(2L),true).statusCode());
     }
+    @Test void externalValidationOutcomeMustEndInValidationWithoutInternalApproval() throws Exception {
+        var browser=new Browser();browser.login("admin@example.invalid");String path=path(group,"T1");
+        var stage=person();
+        assertEquals(200,browser.request("PUT",path,new Save(0L,new Definition("Trámite externo",List.of(stage),false,"VALIDATED")),true).statusCode());
+        assertEquals(400,browser.request("POST",path+"/revisions",new Version(1L),true).statusCode());
+        var validation=new Stage(stage.id(),"Validación interna","VALIDATE",stage.recipientKind(),stage.assigneeIds(),stage.groupRole(),stage.recipientLabel(),true);
+        assertEquals(200,browser.request("PUT",path,new Save(1L,new Definition("Trámite externo",List.of(validation),false,"VALIDATED")),true).statusCode());
+        assertEquals(200,browser.request("POST",path+"/revisions",new Version(2L),true).statusCode());
+        assertEquals("VALIDATED",JsonPath.read(browser.request("GET",path,null,false).body(),"$.current.definition.completionStatus"));
+    }
+
 }

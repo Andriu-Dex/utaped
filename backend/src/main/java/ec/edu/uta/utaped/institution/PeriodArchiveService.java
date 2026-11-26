@@ -202,7 +202,7 @@ public class PeriodArchiveService {
         if(permitted.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No tiene documentos autorizados en este archivo histórico.");
         var downloadable=new HashMap<UUID,Set<UUID>>();
         for(var document:permitted) downloadable.put(document,new HashSet<>(jdbc.queryForList("""
-            SELECT current_file_id FROM document_review WHERE work_plan_id=? AND status='APPROVED'
+            SELECT current_file_id FROM document_review WHERE work_plan_id=? AND status IN ('APPROVED','VALIDATED')
             UNION SELECT file_id FROM execution_evidence WHERE work_plan_id=? AND file_id IS NOT NULL
             UNION SELECT file_id FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL
             UNION SELECT original_file_id FROM document_attachment WHERE work_plan_id=? AND removed_at IS NULL AND original_file_id IS NOT NULL

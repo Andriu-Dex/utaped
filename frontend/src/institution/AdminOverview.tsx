@@ -76,6 +76,7 @@ export function AdminOverview({ onOpen }: { onOpen: (page: AdminPage, periodId?:
 
   const states = metrics ? [
     { label: 'Borradores', value: metrics.drafts, color: 'blue' },
+    { label: 'Validados internamente', value: metrics.validated ?? 0, color: 'blue' },
     { label: 'En revisión', value: metrics.inReview, color: 'amber' },
     { label: 'Aprobados', value: metrics.approved, color: 'teal' }
   ] : []

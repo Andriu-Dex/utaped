@@ -14,13 +14,13 @@ public class DocumentWorkflowSnapshot {
     }
     public record Stage(UUID id,String label,String action,String recipientKind,String recipientLabel,
         String groupRole,boolean requiresSignature,List<Participant> participants) {}
-    public record Workflow(UUID revisionId,int revisionNumber,String name,List<Stage> stages,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT) Boolean requiresQuipux) { public Workflow { requiresQuipux=Boolean.TRUE.equals(requiresQuipux); } public Workflow(UUID id,int number,String name,List<Stage> stages) { this(id,number,name,stages,false); } }
+    public record Workflow(UUID revisionId,int revisionNumber,String name,List<Stage> stages,@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT) Boolean requiresQuipux, @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) String completionStatus) { public Workflow { requiresQuipux=Boolean.TRUE.equals(requiresQuipux); } public Workflow(UUID id,int number,String name,List<Stage> stages) { this(id,number,name,stages,false,null); } public Workflow(UUID id,int number,String name,List<Stage> stages,Boolean quipux) { this(id,number,name,stages,quipux,null); } public String resolvedCompletionStatus() { return completionStatus==null?"APPROVED":completionStatus; } }
     private final JdbcTemplate jdbc;
     private final JsonMapper json=JsonMapper.builder().build();
     public DocumentWorkflowSnapshot(JdbcTemplate jdbc) { this.jdbc=jdbc; }
     // Applies only when composing a new artifact; stored signed snapshots are read unchanged.
     private Workflow requirePersonalSignatures(Workflow workflow) {
-        return new Workflow(workflow.revisionId(),workflow.revisionNumber(),workflow.name(),workflow.stages().stream().map(s->new Stage(s.id(),s.label(),s.action(),s.recipientKind(),s.recipientLabel(),s.groupRole(),!s.recipientKind().equals("COLLEGIATE") || s.requiresSignature(),s.participants())).toList(),workflow.requiresQuipux());
+        return new Workflow(workflow.revisionId(),workflow.revisionNumber(),workflow.name(),workflow.stages().stream().map(s->new Stage(s.id(),s.label(),s.action(),s.recipientKind(),s.recipientLabel(),s.groupRole(),!s.recipientKind().equals("COLLEGIATE") || s.requiresSignature(),s.participants())).toList(),workflow.requiresQuipux(),workflow.completionStatus());
     }
     public static String signatureAction(String action) {
         return switch(action) { case "APPROVE" -> "APROBADO_POR";case "VALIDATE" -> "VALIDADO_POR";default -> "REVISADO_POR"; };
@@ -68,6 +68,6 @@ public class DocumentWorkflowSnapshot {
             String label=position;people=people.stream().map(person->new Participant(person.id(),person.name(),person.active(),label)).toList();
             return new Stage(stage.id(),stage.label(),stage.action(),stage.recipientKind(),stage.recipientLabel(),stage.groupRole(),!stage.recipientKind().equals("COLLEGIATE") || stage.requiresSignature(),people);
         }).toList();
-        return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages,definition.requiresQuipux());
+        return new Workflow((UUID)revision.get("id"),((Number)revision.get("revision_number")).intValue(),definition.name(),stages,definition.requiresQuipux(),"VALIDATED".equals(definition.completionStatus())?"VALIDATED":null);
     }
 }

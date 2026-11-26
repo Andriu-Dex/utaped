@@ -31,10 +31,14 @@ class NotificationIntegrationTests {
     }
     @Autowired ec.edu.uta.utaped.audit.AuditService events;
     @Autowired ec.edu.uta.utaped.notifications.NotificationWriter writer;
+    @Autowired ec.edu.uta.utaped.notifications.SignatureMailDelivery signatureMail;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean org.springframework.mail.javamail.JavaMailSender mail;
     @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
     String plan(Browser u) throws Exception {
         UUID period=UUID.randomUUID();jdbc.update("INSERT INTO academic_period(id,name,starts_on,ends_on,preparation_starts_on,preparation_ends_on,review_starts_on,review_ends_on) VALUES (?,'Period',(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+100,(now() at time zone 'America/Guayaquil')::date-10,(now() at time zone 'America/Guayaquil')::date+10,(now() at time zone 'America/Guayaquil')::date+11,(now() at time zone 'America/Guayaquil')::date+20)",period);
-        return JsonPath.read(u.request("POST","/api/work-plans",Map.of("groupId",group,"periodId",period,"requestKey",UUID.randomUUID(),"title","Exact target"),true).body(),"$.id");
+        var response=u.request("POST","/api/work-plans",Map.of("groupId",group,"periodId",period,"requestKey",UUID.randomUUID(),"title","Exact target"),true);
+        assertEquals(200,response.statusCode(),response.body());
+        return JsonPath.read(response.body(),"$.id");
     }
     @Test void membershipNotificationsArePersonalIdempotentAndRespectCurrentAccess() throws Exception {
         var b=new Browser();b.login("admin@example.invalid");var u=new Browser();u.login("user@example.invalid");String path="/api/admin/groups/"+group+"/members";
@@ -59,6 +63,33 @@ class NotificationIntegrationTests {
         new org.springframework.transaction.support.TransactionTemplate(transactions).execute(status->{events.record(user,"T1_PREVIEW_GENERATED",UUID.fromString(target));status.setRollbackOnly();return null;});
         assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM personal_notification",Integer.class));assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM audit_event WHERE action='T1_PREVIEW_GENERATED'",Integer.class));
         assertEquals(401,new Browser().request("GET","/api/notifications",null,false).statusCode());
+    }
+    @Test void nextAuthorEmailIsDurableIdempotentAndDeliveredUsingSmtp() throws Exception {
+        var u=new Browser();u.login("user@example.invalid");UUID target=UUID.fromString(plan(u));
+        new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status->{
+            events.record(user,"AUTHOR_SIGNATURE_REQUESTED",target,user);status.setRollbackOnly();
+        });
+        assertEquals(0,jdbc.queryForObject("SELECT count(*) FROM signature_mail_delivery",Integer.class));
+        events.record(user,"AUTHOR_SIGNATURE_REQUESTED",target,user);
+        UUID event=jdbc.queryForObject("SELECT source_event_id FROM personal_notification WHERE kind='AUTHOR_SIGNATURE_REQUESTED'",UUID.class);
+        writer.fromEvent(event,user,"AUTHOR_SIGNATURE_REQUESTED",target,user);
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM signature_mail_delivery",Integer.class));
+        assertEquals(1,signatureMail.deliverPending());assertEquals(0,signatureMail.deliverPending());
+        var client=HttpClient.newHttpClient();String url=System.getenv("TEST_MAIL_URL");
+        String list=client.send(HttpRequest.newBuilder(URI.create(url+"/api/v1/messages")).GET().build(),HttpResponse.BodyHandlers.ofString()).body();
+        var messages=JsonPath.<List<Map<String,Object>>>read(list,"$.messages");boolean found=false;
+        for(var message:messages)if("UTAPED · Documento pendiente de su firma".equals(message.get("Subject"))) {
+            String content=client.send(HttpRequest.newBuilder(URI.create(url+"/api/v1/message/"+message.get("ID"))).GET().build(),HttpResponse.BodyHandlers.ofString()).body();
+            if(JsonPath.<String>read(content,"$.Text").contains(target.toString()))found=true;
+        }
+        assertTrue(found,"SMTP must contain the exact document link");
+    }
+    @Test void smtpFailurePreservesSignatureNotificationAndSchedulesRetry() throws Exception {
+        var u=new Browser();u.login("user@example.invalid");UUID target=UUID.fromString(plan(u));events.record(user,"AUTHOR_SIGNATURE_REQUESTED",target,user);
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("Test-only SMTP outage")).when(mail).send(org.mockito.ArgumentMatchers.any(org.springframework.mail.SimpleMailMessage.class));
+        assertEquals(0,signatureMail.deliverPending());
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM signature_mail_delivery WHERE delivered_at IS NULL AND attempts=1 AND available_at>now() AND last_error_code='SMTP_DELIVERY_FAILED'",Integer.class));
+        assertEquals(1,jdbc.queryForObject("SELECT count(*) FROM personal_notification WHERE kind='AUTHOR_SIGNATURE_REQUESTED'",Integer.class));
     }
 }
 

@@ -139,7 +139,8 @@ final class InstitutionalHeader {
             setText(first,"UNIVERSIDAD TÉCNICA DE AMBATO",22,true,"000000",0,"center");
 
             String title=title(snapshot).toUpperCase(Locale.ROOT);
-            String prefix=snapshot.plan().documentType().equals("T2")?"INFORME DE: ":"PLAN DE TRABAJO: ";
+            String prefix=snapshot.plan().documentType().equals("T2")?(snapshot.eventData()!=null?"INFORME DE EJECUCIÓN DE EVENTO: ":"INFORME DE: "):"PLAN DE TRABAJO: ";
+            if(snapshot.eventData()!=null)title=snapshot.eventData().topic().toUpperCase(Locale.ROOT);
             setText(children(rows.get(1),"tc").get(1),prefix+title,20,true,"2F5496",12,null);
 
             var data=children(rows.get(2),"tc");

@@ -63,6 +63,7 @@ public class DocumentTimelineService {
     public static String documentStateLabel(String state, Object archivedAt, Boolean discarded) {
         if (Boolean.TRUE.equals(discarded)) return "Descartado";
         if (archivedAt != null) return "Archivado";
+        if ("VALIDATED".equals(state)) return "Validado internamente";
         if ("APPROVED".equals(state)) return "Aprobado";
         if ("IN_REVIEW".equals(state)) return "En revisión";
         if ("DRAFT".equals(state)) return "Borrador";
@@ -91,7 +92,7 @@ public class DocumentTimelineService {
             """, targetDocId);
 
         String docTypeName = "T1".equals(plan.documentType()) ? "Plan de Trabajo" :
-                             "T2".equals(plan.documentType()) ? "Informe final" : "Informe de ejecución";
+                             "T2".equals(plan.documentType()) ? (jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM event_document WHERE work_plan_id=?)",Boolean.class,targetDocId)?"Informe de ejecución de evento":"Informe final") : "Informe de ejecución";
 
         if (!creationAudit.isEmpty()) {
             var row = creationAudit.getFirst();
@@ -229,14 +230,14 @@ public class DocumentTimelineService {
             }
 
             // If round closed with APPROVED - use genuine closedAt timestamp without fabricating createdAt
-            if ("APPROVED".equals(revStatus)) {
+            if (Set.of("APPROVED", "VALIDATED").contains(revStatus)) {
                 items.add(new Item(
                     "review-approval-" + revId,
                     "APPROVAL",
-                    "Aprobación formal del documento",
-                    "Flujo de revisión concluido con aprobación en Ronda " + roundNumber + ". Versión formal: " + plan.formalVersion() + ".",
+                    "VALIDATED".equals(revStatus)?"Validación interna del documento":"Aprobación formal del documento",
+                    "Flujo de revisión concluido con " + ("VALIDATED".equals(revStatus)?"validación interna":"aprobación") + " en Ronda " + roundNumber + ". Versión formal: " + plan.formalVersion() + ".",
                     null,
-                    "APPROVED",
+                    revStatus,
                     roundNumber,
                     plan.formalVersion(),
                     closedAt,

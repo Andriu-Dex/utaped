@@ -27,9 +27,9 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
   useEffect(() => {
     let active = true
     api<SigningState>(path).then(async value => {
-      if (value.documentState === 'APPROVED' && value.signed.length) {
+      if (['APPROVED', 'VALIDATED'].includes(value.documentState) && value.signed.length) {
         const rounds = await api<{ id: string; status: string }[]>('/work-plans/' + targetDocId + '/reviews')
-        const approved = rounds.find(round => round.status === 'APPROVED')
+        const approved = rounds.find(round => round.status === value.documentState)
         if (approved) {
           const review = await api<{ review: { artifact_id: string } }>('/reviews/' + approved.id)
           if (review.review.artifact_id === artifactId) value = { ...value, signed: value.signed.map(signature => ({ ...signature, approvedReviewId: approved.id })) }
@@ -57,14 +57,14 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
     finally { form.reset(); setBusy(false); setRefresh(value => value + 1) }
   }
   async function downloadApproved() {
-    if (busy || state?.documentState !== 'APPROVED') return
+    if (busy || !state || !['APPROVED', 'VALIDATED'].includes(state.documentState)) return
     setBusy(true); setError('')
     try {
       const rounds = await api<{ id: string; status: string }[]>('/work-plans/' + targetDocId + '/reviews')
-      const approved = rounds.find(round => round.status === 'APPROVED')
-      if (!approved) throw new Error('No hay un PDF aprobado disponible para este documento.')
-      await download('/reviews/' + approved.id + '/content', 'documento-aprobado.pdf')
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo descargar el documento aprobado.') }
+      const approved = rounds.find(round => round.status === state.documentState)
+      if (!approved) throw new Error('No hay un PDF final disponible para este documento.')
+      await download('/reviews/' + approved.id + '/content', state.documentState === 'VALIDATED' ? 'documento-validado.pdf' : 'documento-aprobado.pdf')
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo descargar el documento.') }
     finally { setBusy(false) }
   }
   const signed = state?.signed[0]
@@ -100,8 +100,8 @@ export function AuthorSigning({ targetDocId, artifactId, onSigned, onDirtyChange
         <h3>Firmas de elaboración registradas</h3><ol className="scope-timeline">{[...state.signed].reverse().map(signature => <li key={signature.id}><strong>{signature.signerName}</strong> · {new Date(signature.signedAt).toLocaleString('es-EC')}</li>)}</ol>
         {signed.actorName && <p className="field-help">Acción registrada por: {signed.actorName}.</p>}
         <p>Firmado por {signed.signerName} · {new Date(signed.signedAt).toLocaleString('es-EC')}.</p>
-        {state.documentState === 'APPROVED' && <button type="button" className="secondary" disabled={busy} onClick={() => void downloadApproved()}>Descargar PDF aprobado</button>}
-        {state.automaticSubmission && <p>Estado documental: {state.documentState === 'IN_REVIEW' ? 'En revisión' : state.documentState === 'APPROVED' ? 'Aprobado' : state.pendingAuthors.length ? 'Pendiente de otras firmas' : 'Borrador'}. Consulte las etapas y observaciones desde el documento.</p>}
+        {['APPROVED', 'VALIDATED'].includes(state.documentState) && <button type="button" className="secondary" disabled={busy} onClick={() => void downloadApproved()}>{state.documentState === 'VALIDATED' ? 'Descargar PDF validado' : 'Descargar PDF aprobado'}</button>}
+        {state.automaticSubmission && <p>Estado documental: {state.documentState === 'IN_REVIEW' ? 'En revisión' : state.documentState === 'VALIDATED' ? 'Validado internamente' : state.documentState === 'APPROVED' ? 'Aprobado' : state.pendingAuthors.length ? 'Pendiente de otras firmas' : 'Borrador'}. Consulte las etapas y observaciones desde el documento.</p>}
 
       </>}
     </>}

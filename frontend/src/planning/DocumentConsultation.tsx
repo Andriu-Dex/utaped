@@ -96,7 +96,7 @@ export function DocumentConsultation({ initial, accountId, initialStep, onStepCh
     {loading ? <p role="status">Cargando consulta del documento…</p> : error ? <button type="button" className="secondary" onClick={() => setReload(value => value + 1)}>Reintentar consulta</button> : state && <>
       {toolbar}<div className="document-consultation-layout"><div>
         <section className="card" aria-label="Información del documento"><h2>Información del documento</h2>
-          <dl><dt>Responsable principal</dt><dd>{plan.teacherName}</dd><dt>Grupo</dt><dd>{plan.groupName}</dd><dt>Período</dt><dd>{plan.periodName}</dd><dt>Estado</dt><dd>{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'IN_REVIEW' ? 'En revisión' : 'Aprobado'}</dd></dl>
+          <dl><dt>Responsable principal</dt><dd>{plan.teacherName}</dd><dt>Grupo</dt><dd>{plan.groupName}</dd><dt>Período</dt><dd>{plan.periodName}</dd><dt>Estado</dt><dd>{plan.documentState === 'DRAFT' ? 'Borrador' : plan.documentState === 'IN_REVIEW' ? 'En revisión' : plan.documentState === 'VALIDATED' ? 'Validado internamente' : 'Aprobado'}</dd></dl>
           <p className="field-help">La edición corresponde al responsable principal.</p>
         </section>
         {coauthor && plan.documentState === 'DRAFT' && state.artifact && <>

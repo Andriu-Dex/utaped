@@ -42,7 +42,7 @@ public class AdminOverviewService {
         if(selected==null&&!allPeriods&&current.size()==1) selected=current.getFirst().id();
         var metrics=reporting.get(email,null,selected,false);
         // This supervisory endpoint returns aggregates, never the private upcoming-document list.
-        metrics=new ReportingService.Summary(metrics.rows(),metrics.plans(),metrics.reports(),metrics.approved(),metrics.activities(),metrics.completedActivities(),metrics.inReview(),metrics.drafts(),metrics.pendingEvidence(),metrics.dueSoonActivities(),metrics.overdueActivities(),metrics.declaredExecution(),metrics.declaredActivities(),metrics.declarationCoverage(),metrics.dueSoonDays(),List.of());
+        metrics=new ReportingService.Summary(metrics.rows(),metrics.plans(),metrics.reports(),metrics.approved(),metrics.activities(),metrics.completedActivities(),metrics.inReview(),metrics.drafts(),metrics.pendingEvidence(),metrics.dueSoonActivities(),metrics.overdueActivities(),metrics.declaredExecution(),metrics.declaredActivities(),metrics.declarationCoverage(),metrics.dueSoonDays(),List.of(),metrics.validated());
         long users=jdbc.queryForObject("SELECT count(*) FROM app_user",Long.class),active=jdbc.queryForObject("SELECT count(*) FROM app_user WHERE active",Long.class);
         long groups=jdbc.queryForObject("SELECT count(*) FROM institutional_group WHERE active",Long.class);
         long missing=jdbc.queryForObject("""

@@ -19,8 +19,8 @@ export interface PreparedPreview { artifact: PreviewArtifact | null; signed?: Si
 import { draftViewCache, type DraftView, type PreviewFocus as Focus } from './draft-preview-cache'
 const sectionLabels: Record<Focus, string> = { COVER: 'Portada', JUSTIFICATION: 'Justificación', OBJECTIVE: 'Objetivo', MATRIX: 'Matriz de actividades', ANNEXES: 'Anexos', SIGNATURES: 'Firmas' }
 
-export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepared }: {
-  plan: WorkPlan; draft: Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
+export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepared, event = false }: {
+  event?: boolean; plan: WorkPlan; draft: Pick<WorkPlan, 'title' | 'institutionalUnit' | 'career' | 'justification' | 'objective'>
   step: PlanStep; focus: 'JUSTIFICATION' | 'OBJECTIVE'; dirty: boolean; textDirty: boolean; prepared: PreparedPreview | null
 }) {
   const [result, setResult] = useState<{ value: DraftView; fingerprint: string } | null>(() => {
@@ -132,7 +132,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
   else if (dirty) status = 'Documento preparado · cambios pendientes'
   else if (artifact?.current) status = 'Documento preparado para revisión y firma'
   return <aside id={'document-preview-' + plan.id} tabIndex={-1} className="plan-preview card" aria-label={plan.documentType === 'T1' ? 'Previsualización simultánea del Plan' : 'Previsualización del Informe'}>
-    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : editing ? sectionLabels[section] : 'PDF conservado'} · A4</span></div><div className="plan-preview-actions">
+    <header className="plan-preview-header"><h2 className="sr-only">Vista del documento</h2><div className="plan-preview-state" role="status"><span className={'status-badge ' + (loading || dirty ? 'warning' : 'active')}>{status}</span><span className="plan-preview-section-tag">{signed ? 'PDF firmado' : editing ? event ? ({ ...sectionLabels, OBJECTIVE: plan.documentType === 'T2' ? 'Conclusiones' : 'Objetivos', JUSTIFICATION: plan.documentType === 'T2' ? 'Datos del evento' : 'Justificación', MATRIX: 'Desarrollo del evento' })[section] : sectionLabels[section] : 'PDF conservado'} · A4</span></div><div className="plan-preview-actions">
       {editing && <button type="button" className="secondary icon-only" title="Actualizar vista" aria-label="Actualizar vista" disabled={busy} onClick={() => setRetry(value => value + 1)}><Icon name="refresh" size={16} /></button>}
       <button type="button" className="secondary icon-only" title="Ampliar página" aria-label="Ampliar página" disabled={!image || !!loading || imageError === image} onClick={expand}><Icon name="maximize" size={16} /></button>
     </div></header>
@@ -147,7 +147,7 @@ export function PlanPreview({ plan, draft, step, focus, dirty, textDirty, prepar
       {loadedImage !== image && imageError !== image && <p role="status" className="field-help">Cargando página {page + 1}…</p>}
       <div className={'document-reading-desk' + (stale ? ' is-stale' : '')} aria-busy={!!loading}>
         <button type="button" className="document-page-wrapper plan-preview-paper" onClick={expand} disabled={!!loading || imageError === image} title="Ampliar documento" aria-label="Ampliar documento">
-          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del Plan' : signed ? ' del PDF firmado' : ' del ' + (plan.documentType === 'T1' ? 'Plan T1' : 'Informe ' + plan.documentType))} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
+          <img className="document-page" src={image} width={Math.round(pages[page].width)} height={Math.round(pages[page].height)} alt={'Página ' + (page + 1) + (editing ? ' del borrador A4 del ' + (plan.documentType === 'T1' ? 'Plan' : 'Informe') : signed ? ' del PDF firmado' : ' del ' + (plan.documentType === 'T1' ? 'Plan T1' : 'Informe ' + plan.documentType))} onLoad={() => setLoadedImage(image)} onError={() => setImageError(image)} />
         </button>
       </div>
     </div> : <div className={'plan-preview-empty' + (loading || editing ? ' is-loading' : '')} role="status">

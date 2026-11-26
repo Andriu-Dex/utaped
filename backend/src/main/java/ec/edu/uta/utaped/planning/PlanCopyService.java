@@ -30,7 +30,7 @@ public class PlanCopyService {
         return scope!=null&&jdbc.queryForObject("SELECT count(*) FROM scope_member m JOIN app_user u ON u.id=m.user_id WHERE m.scope_id=? AND m.active AND u.active",Integer.class,scope)==1;
     }
     private boolean eligible(WorkPlanModels.Plan source) {
-        return "T1".equals(source.documentType())&&source.editable()&&source.scopeId()!=null&&single(source.scopeId())
+        return !jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM event_document WHERE work_plan_id=?)",Boolean.class,source.id())&&"T1".equals(source.documentType())&&source.editable()&&source.scopeId()!=null&&single(source.scopeId())
             &&jdbc.queryForObject("SELECT career_id IS NOT NULL FROM organizational_scope WHERE id=?",Boolean.class,source.scopeId());
     }
     @Transactional(readOnly=true) public Options options(UUID sourceId,String email) {
